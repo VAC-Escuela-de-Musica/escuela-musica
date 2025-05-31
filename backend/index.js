@@ -5,10 +5,9 @@ const express = require('express');
 const app = express();
 
 // Define el puerto en el que escuchará el servidor
-// Puedes usar una variable de entorno para el puerto en producción, o un valor por defecto
-const port = process.env.PORT || 1230;
+const port = process.env.PORT || 1230; // Cambiado a 1230 como en tu ejemplo
 
-// Middleware para parsear JSON (opcional, pero muy común si vas a recibir datos JSON)
+// Middleware para parsear JSON
 app.use(express.json());
 
 // Define una ruta de ejemplo para la raíz ('/')
@@ -22,6 +21,28 @@ app.get('/api/saludo', (req, res) => {
 });
 
 // Inicia el servidor y haz que escuche en el puerto especificado
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`Servidor Express escuchando en http://localhost:${port}`);
+});
+
+// Manejador para el evento 'error' del servidor
+server.on('error', (error) => {
+    if (error.syscall !== 'listen') {
+        throw error; // Si no es un error de 'listen', relánzalo
+    }
+
+    // Manejar errores específicos de listen
+    switch (error.code) {
+        case 'EACCES': // Error de permisos
+            console.error(`El puerto ${port} requiere privilegios elevados.`);
+            process.exit(1); // Termina el proceso con código de error
+            break;
+        case 'EADDRINUSE': // Error de puerto en uso
+        console.error(`El puerto ${port} ya está en uso por otra aplicación.`);
+            process.exit(1); // Termina el proceso con código de error
+            break;
+        default:
+            console.error('Ocurrió un error al iniciar el servidor:', error);
+            process.exit(1); // Termina el proceso con código de error
+    }
 });
