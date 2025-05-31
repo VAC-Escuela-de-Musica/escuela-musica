@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 // Importa el módulo Express
 const express = require('express');
 
@@ -5,7 +7,7 @@ const express = require('express');
 const app = express();
 
 // Define el puerto en el que escuchará el servidor
-const port = process.env.PORT || 1230; // Cambiado a 1230 como en tu ejemplo
+const port = process.env.PORT || 1230;
 
 // Middleware para parsear JSON
 app.use(express.json());
