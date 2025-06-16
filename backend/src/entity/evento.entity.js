@@ -5,7 +5,7 @@ const eventoSchema = new mongoose.Schema({
   descripcion: String,
   fecha: Date,
   lugar: String,
-  creadoPor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Generalmente "asistente"
+  creadoPor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
   visible: { type: Boolean, default: true },
   registrados: [
     {
