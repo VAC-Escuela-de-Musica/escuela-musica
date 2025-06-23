@@ -18,5 +18,9 @@ router.use("/auth", authRoutes);
 // Define las rutas para las clases /api/clases
 router.use("/clases", claseRoutes);
 
+router.get("/saludo", (req, res) => {
+  res.send("¡Hola desde el backend!");
+});
+
 // Exporta el enrutador
 export default router;
