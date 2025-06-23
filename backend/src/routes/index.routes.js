@@ -19,5 +19,9 @@ router.use("/users", authenticationMiddleware, userRoutes);
 // Define las rutas para la autenticación /api/auth
 router.use("/auth", authRoutes);
 
+router.get("/saludo", (req, res) => {
+  res.send("¡Hola desde el backend!");
+});
+
 // Exporta el enrutador
 export default router;

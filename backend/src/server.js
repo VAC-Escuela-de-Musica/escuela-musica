@@ -63,6 +63,8 @@ async function setupAPI() {
     handleFatalError(err, "/server.js -> setupAPI");
   }
 }
+const app = express();
+app.use(cors());
 
 // Inicia la API
 setupAPI()
