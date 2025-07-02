@@ -40,5 +40,3 @@ Actualmente en fase de desarrollo inicial. Se ha realizado la organización de a
 Proyecto académico sin licencia específica por el momento.
 
 ---
-
-¿Te gustaría que agregue una sección con instrucciones para levantar el entorno local o una guía de contribución para futuros colaboradores?
