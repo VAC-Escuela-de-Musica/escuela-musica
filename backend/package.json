@@ -6,7 +6,10 @@
   "main": "server.js",
   "scripts": {
     "lint": "standard",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "server": "nodemon src/server.js",
+    "cliente": "cd.. && cd frontend && npm run dev",
+    "start": "concurrently --kill-others-on-fail \"npm run server\" \"npm run cliente\""
   },
   "keywords": [],
   "author": "Brian Cabezas, Bairon Sanhueza, Victor Alguilera, Gerardo Cadin, Cristian Torres",
@@ -24,6 +27,7 @@
     "morgan": "^1.10.0"
   },
   "devDependencies": {
+    "concurrently": "^9.2.0",
     "eslint": "^8.57.1",
     "eslint-config-google": "^0.14.0",
     "jsdoc": "^4.0.4",
