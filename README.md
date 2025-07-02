@@ -1,4 +1,4 @@
-# 🎼 Escuela de Música - Gestión de Tienda y Horarios
+# 🎼 Escuela de Música - Gestión Interna y Marketing
 
 Este repositorio forma parte del proyecto desarrollado para la asignatura **Gestión de Proyectos de Software**. La aplicación web tiene como objetivo facilitar la administración de una escuela de música, incluyendo la gestión de horarios, profesores, alumnos y una tienda de productos musicales.
 
