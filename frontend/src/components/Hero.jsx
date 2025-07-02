@@ -1,8 +1,8 @@
-// src/components/Hero.jsx
 import React from "react";
 import { useState } from "react";
 import heroImg from "../assets/hero.jpg";
 import ActionAreaCard from "./Card.jsx"; // Asegúrate de que la ruta sea correcta
+
 
 const Hero = () => {
 
