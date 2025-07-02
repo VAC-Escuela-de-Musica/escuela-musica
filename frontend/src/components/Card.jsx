@@ -7,16 +7,26 @@ import CardActionArea from '@mui/material/CardActionArea';
 
 export default function ActionAreaCard({ image, title, description }) {
   return (
-    <Card sx={{ maxWidth: 345 }}>
+    <Card 
+      sx={{ 
+        maxWidth: 300, 
+        textAlign: 'center', 
+        paddingY: 2,
+        boxShadow: 3,
+        borderRadius: 3,
+        margin: '0 10px',
+      }}
+    >
       <CardActionArea>
         <CardMedia
           component="img"
-          height="140"
+          height="100"
           image={image}
           alt={title}
+          sx={{ objectFit: 'contain', width: '80px', margin: 'auto', pt: 2 }}
         />
         <CardContent>
-          <Typography gutterBottom variant="h5" component="div">
+          <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
             {title}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
