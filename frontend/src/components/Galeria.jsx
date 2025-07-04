@@ -7,10 +7,12 @@ const imagenes = [
 
 const Galeria = () => {
   return (
-    <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-10">
-      {imagenes.map((img, i) => (
-        <img key={i} src={img} alt={`galeria-${i}`} className="w-full h-24 object-cover rounded-md" />
-      ))}
+    <div className="w-screen h-screen flex items-center justify-center bg-[#222222]">
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 w-11/12 max-w-6xl">
+        {imagenes.map((img, i) => (
+          <img key={i} src={img} alt={`galeria-${i}`} className="w-full h-24 md:h-40 object-cover rounded-md" />
+        ))}
+      </div>
     </div>
   );
 };

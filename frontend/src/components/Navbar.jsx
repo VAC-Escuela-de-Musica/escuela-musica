@@ -31,7 +31,7 @@ export default function ButtonAppBar() {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
-        position="absolute"
+        position="fixed"
         elevation={0}
         sx={{
           backgroundColor: 'transparent',
@@ -45,25 +45,40 @@ export default function ButtonAppBar() {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={toggleDrawer(true)} // ✅ Abrir Drawer
+            onClick={toggleDrawer(true)} //Abrir Drawer
           >
             <MenuIcon />
           </IconButton>
+          <img
+            src="/logo_blanco.svg"
+            alt="Logo de la escuela"
+            style={{ width: 50, height: 50, marginRight: 16 }}
+          />
 
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             VAC Escuela de Música
           </Typography>
 
-          <Button color="inherit">Inicio</Button>
-          <Button color="inherit">Novedades</Button>
-          <Button color="inherit">Nuestro Profesores</Button>
+          <Button color="inherit" component="a" href='#inicio'>Inicio</Button>
+          <Button color="inherit" component="a" href="#carrusel">Novedades</Button>
+          <Button color="inherit" component="a" href='#profesores'>Nuestro Profesores</Button>
           <Button color="inherit">Galería</Button>
           <Button color="inherit">Reseñas</Button>
           <Button color="inherit">Iniciar</Button>
         </Toolbar>
       </AppBar>
 
-      <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
+      <Drawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={toggleDrawer(false)}
+        PaperProps={{
+          sx: {
+            backgroundColor: '#222222',
+            color: '#fff',
+          },
+        }}
+      >
         <Box
           sx={{ width: 250 }}
           role="presentation"

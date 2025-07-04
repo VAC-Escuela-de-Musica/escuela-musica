@@ -1,39 +1,23 @@
-import React, { useState } from "react";
-import imagen from "../assets/imagenprueba.jpg";
-
-const imagenes = [
-  { src: imagen, alt: "Clase 1" },
-  { src: imagen, alt: "Clase 2" },
-  { src: imagen, alt: "Clase 3" },
-];
+import Box from "@mui/material/Box";
+import React from "react";
 
 const CarouselClases = () => {
-  const [index, setIndex] = useState(0);
-
-  const prev = () => setIndex((prev) => (prev === 0 ? imagenes.length - 1 : prev - 1));
-  const next = () => setIndex((prev) => (prev === imagenes.length - 1 ? 0 : prev + 1));
-
   return (
-    <section className="my-12 px-4">
-      <h2 className="text-3xl font-bold text-center mb-6">Últimas Clases</h2>
-      <div className="relative max-w-2xl mx-auto aspect-video">
-  <img
-    src={imagenes[index].src}
-    alt={imagenes[index].alt}
-    className="w-full max-h-64 md:max-h-80 object-cover rounded-xl shadow-md"
-  />
-        <button
-          onClick={prev}
-          className="absolute top-1/2 left-2 -translate-y-1/2 bg-white text-gray-800 p-2 rounded-full shadow hover:bg-gray-100"
+    <section id="carrusel" className="w-screen h-screen bg-[#222222] flex items-center justify-center">
+      {/* Caja principal */}
+      <div className="rounded-3xl shadow-lg w-full max-w-5xl p-10">
+        {/* Título */}
+        <h1
+          className="text-white font-bold mb-8"
+          style={{ fontSize: "2.8em", lineHeight: 1.1 }}
         >
-          ◀
-        </button>
-        <button
-          onClick={next}
-          className="absolute top-1/2 right-2 -translate-y-1/2 bg-white text-gray-800 p-2 rounded-full shadow hover:bg-gray-100"
-        >
-          ▶
-        </button>
+          Nuestras Últimas Clases
+        </h1>
+        {/* Caja galería */}
+        <div className="bg-[#393939] rounded-3xl shadow-lg w-[1200px] h-[600px] flex items-center justify-center mx-auto">
+        {/* Aquí irá tu carrusel */}
+        <span className="text-white text-2xl">Carrusel aquí</span>
+        </div>
       </div>
     </section>
   );

@@ -34,10 +34,19 @@ const toggleSaludo = async () => {
       <img
         src={heroImg}
         alt="Imagen principal"
-        className="absolute inset-0 w-full h-full object-cover brightness-75"
+        className="absolute inset-0 w-full h-full object-cover brightness-60"
       />
-      <div className="relative z-10 flex flex-col items-center justify-center h-full text-white text-center px-4">
-        <h1 className="text-4xl md:text-6xl font-bold mb-4">Descubre tu pasión por la Música</h1>
+      <div id="inicio" className="relative z-10 flex flex-col items-center justify-center h-full text-white text-center px-4">
+        {/* Puedes descomentar la siguiente línea si tienes un logo */}
+        {/* <img
+        //  src="/logo_blanco.svg"
+        //  alt="Logo de la escuela"
+        //  className="w-32 h-32 mb-6 shadow-lg"
+        />
+        */}
+        <div style={{ width: "100%", height: "170px", opacity: 0 }}></div>
+        <h1 className="text-4xl md:text-6xl font-bold mb-4"
+          style={{ fontSize: "5.2em", lineHeight: 1.1 }}>Descubre tu pasión por la Música</h1>
         <p className="text-lg md:text-3xl">En VAC Escuela de Música ofrecemos clases personalizadas de música para todas las edades. Nuestro profesores expertos te guiarán en tu viaje musical.</p>
         <button
         onClick={toggleSaludo}
@@ -45,21 +54,24 @@ const toggleSaludo = async () => {
       >
         {visible ? "ocultar saludo" : "Mostrar saludo"}
       </button>
+
         {mensaje && <p className="mt-4 text-xl">{mensaje}</p>}
         
-        <div className="flex justify-center mt-10 gap-1 flex-wrap max-w-6xl mx-auto">
+        <div style={{ width: "100%", height: "170px", opacity: 0 }}></div>
+
+        <div className="flex justify-center gap-1 flex-wrap max-w-6xl mx-auto mt-8">
           <ActionAreaCard
-            image="/ruta/imagen1.jpg"
+            image="/card1.svg"
             title="Horarios Flexibles"
             description="Aprende a tocar guitarra con profesores expertos."
           />
           <ActionAreaCard
-            image="/ruta/imagen2.jpg"
+            image="/card2.svg"
             title="Multiples Instrumentos"
             description="Clases personalizadas de piano para todos los niveles."
           />
           <ActionAreaCard
-            image="/ruta/imagen3.jpg"
+            image="/card3.svg"
             title="Profesores Expertos"
             description="Desarrolla tu voz con nuestras clases de canto."
           />
@@ -70,3 +82,4 @@ const toggleSaludo = async () => {
 };
 
 export default Hero;
+
