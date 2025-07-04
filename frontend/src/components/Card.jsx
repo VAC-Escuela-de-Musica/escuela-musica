@@ -15,6 +15,8 @@ export default function ActionAreaCard({ image, title, description }) {
         boxShadow: 3,
         borderRadius: 3,
         margin: '0 10px',
+        backgroundColor: '#222222',
+        color: '#fff',
       }}
     >
       <CardActionArea>
@@ -29,7 +31,7 @@ export default function ActionAreaCard({ image, title, description }) {
           <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
             {title}
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          <Typography variant="body2" sx={{ color: '#fff' }}>
             {description}
           </Typography>
         </CardContent>
