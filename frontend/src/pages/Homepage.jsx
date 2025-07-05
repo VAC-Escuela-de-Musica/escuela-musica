@@ -1,20 +1,22 @@
-import Hero from "../components/Hero";
-import Features from "../components/Features";
-import Footer from "../components/Footer";
-import Navbar from "../components/Navbar";
 import React from "react";
-import Card from "@mui/material/Card";
-import ActionAreaCard from "../components/Card";
+import Hero from "../components/Hero";
+import CarouselClases from "../components/Carrusel";
+import Profesores from "../components/Profesores";
+import Galeria from "../components/Galeria";
+import Testimonios from "../components/Testimonios";
+import Footer from "../components/Footer";
 
-
-export default function HomePage() {
+const HomePage = () => {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
+    <div>
       <Hero />
-      <Card />
-      <div className="flex-grow" />
+      <CarouselClases />
+      <Profesores />
+      <Galeria />
+      <Testimonios />
       <Footer />
     </div>
   );
-}
+};
+
+export default HomePage;

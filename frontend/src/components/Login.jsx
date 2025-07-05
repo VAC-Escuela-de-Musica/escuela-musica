@@ -47,7 +47,7 @@ export default function Login() {
         position: 'sticky',
         top: 0,
         zIndex: 10,
-        background: 'linear-gradient(to bottom right, #444444, #000000)', // gris oscuro a negro
+        background: '#444444',
         display: 'flex',
         justifyContent: 'center',
         py: 2,
@@ -63,7 +63,7 @@ export default function Login() {
       <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(to bottom right, #222222, #000000)', // gris oscuro a negro
+        background: '#222222',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
