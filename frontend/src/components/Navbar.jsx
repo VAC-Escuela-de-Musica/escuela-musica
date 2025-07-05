@@ -14,9 +14,11 @@ import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import FacebookIcon from '@mui/icons-material/Facebook';
+import { useNavigate } from 'react-router-dom';
 
 export default function ButtonAppBar() {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const navigate = useNavigate();
 
   const toggleDrawer = (open) => (event) => {
     if (
@@ -26,6 +28,11 @@ export default function ButtonAppBar() {
       return;
     }
     setDrawerOpen(open);
+  };
+
+  const handleAccesoClick = () => {
+    setDrawerOpen(false);
+    navigate('/login');
   };
 
   return (
@@ -45,7 +52,7 @@ export default function ButtonAppBar() {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={toggleDrawer(true)} //Abrir Drawer
+            onClick={toggleDrawer(true)}
           >
             <MenuIcon />
           </IconButton>
@@ -62,9 +69,8 @@ export default function ButtonAppBar() {
           <Button color="inherit" component="a" href='#inicio'>Inicio</Button>
           <Button color="inherit" component="a" href="#carrusel">Novedades</Button>
           <Button color="inherit" component="a" href='#profesores'>Nuestro Profesores</Button>
-          <Button color="inherit">Galería</Button>
-          <Button color="inherit">Reseñas</Button>
-          <Button color="inherit">Iniciar</Button>
+          <Button color="inherit" component="a" href='#galeria'>Galería</Button>
+          <Button color="inherit" component="a" href='#testimonios'>Reseñas</Button>
         </Toolbar>
       </AppBar>
 
@@ -74,22 +80,28 @@ export default function ButtonAppBar() {
         onClose={toggleDrawer(false)}
         PaperProps={{
           sx: {
-            backgroundColor: '#222222',
+            backgroundColor: '#1f2937',
             color: '#fff',
           },
         }}
       >
         <Box
-          sx={{ width: 250 }}
+          sx={{ 
+            width: 250,
+            '& .MuiListItemButton-root': {
+              '&:hover': {
+                backgroundColor: '#374151',
+              }
+            }
+          }}
           role="presentation"
           onClick={toggleDrawer(false)}
           onKeyDown={toggleDrawer(false)}
         >
           <List>
-
             {/* Botón de acceso */}
             <ListItem disablePadding>
-              <ListItemButton>
+              <ListItemButton onClick={handleAccesoClick}>
                 <ListItemText primary="Acceso" />
               </ListItemButton>
             </ListItem>
@@ -105,7 +117,7 @@ export default function ButtonAppBar() {
             <ListItem disablePadding>
               <ListItemButton
                 component="a"
-                href="https://www.google.com/maps/place/VAC+Escuela+de+M%C3%BAsica/data=!4m2!3m1!1s0x0:0x79c67075a6aab5e3?sa=X&ved=1t:2428&ictx=111"
+                href="https://www.google.com/maps/place/VAC+Escuela+de+M%C3%BAsica/"
                 target="_blank"
               >
                 <ListItemText primary="Ubicación" />
@@ -137,7 +149,7 @@ export default function ButtonAppBar() {
           </List>
 
           {/* Divisor */}
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
           {/* Botones de usuario (después de login) */}
           <List>
