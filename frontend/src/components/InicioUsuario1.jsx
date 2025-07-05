@@ -58,7 +58,7 @@ export default function ClippedDrawer() {
         <Divider sx={{ borderColor: '#3F4147' }} />
         <Box sx={{ overflow: 'auto' }}>
           <List>
-            {['Horario', 'Estudiantes', 'Profesores', 'nose'].map((text, index) => (
+            {['Horario', 'Estudiantes', 'Profesores', 'Clases'].map((text, index) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton>
                   <ListItemIcon sx={{ color: '#FFFFFF' }}>
@@ -105,6 +105,7 @@ export default function ClippedDrawer() {
     backgroundColor: '#333333',
     color: '#FFFFFF',
     border: 'none',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '16px',
     fontWeight: 'bold',
