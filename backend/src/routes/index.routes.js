@@ -1,6 +1,8 @@
 "use strict";
 // Importa el modulo 'express' para crear las rutas
 import { Router } from "express";
+// Importa las rutas de Alumnos
+import alumnosRoutes from "./alumnos.routes.js";
 
 /** Enrutador de usuarios  */
 import userRoutes from "./user.routes.js";
@@ -18,6 +20,8 @@ const router = Router();
 router.use("/users", authenticationMiddleware, userRoutes);
 // Define las rutas para la autenticación /api/auth
 router.use("/auth", authRoutes);
+// Define las rutas para los alumnos /api/alumnos
+router.use("/alumnos", authenticationMiddleware, alumnosRoutes);
 
 // Exporta el enrutador
 export default router;
