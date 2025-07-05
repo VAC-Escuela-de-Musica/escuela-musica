@@ -61,15 +61,14 @@ export default function Login() {
       />
       </Box>
       <Box
-      sx={{
-        minHeight: '100vh',
-        background: '#222222',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        p: 2,
-      }}
-    >
+  sx={{
+    background: '#222222',
+    display: 'flex',
+    justifyContent: 'center',
+    mt: 4,
+    mb: 12,
+  }}
+>
         <Paper elevation={6} sx={{ p: 4, maxWidth: 400, width: '100%' }}>
           <Typography variant="h5" fontWeight="bold" gutterBottom>
             Iniciar Sesión
