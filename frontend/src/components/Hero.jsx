@@ -36,6 +36,13 @@ const toggleSaludo = async () => {
         alt="Imagen principal"
         className="absolute inset-0 w-full h-full object-cover brightness-60"
       />
+      
+      <div
+    className="absolute bottom-0 left-0 w-full h-32 z-10 pointer-events-none"
+    style={{
+      background: "linear-gradient(to top, #222222 80%, transparent 100%)"
+    }}
+  />
       <div id="inicio" className="relative z-10 flex flex-col items-center justify-center h-full text-white text-center px-4">
         {/* Puedes descomentar la siguiente línea si tienes un logo */}
         {/* <img
