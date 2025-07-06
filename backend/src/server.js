@@ -16,7 +16,7 @@ import { setupDB } from "./config/configDB.js";
 import { setupMinIO } from "./config/minio.config.js";
 // Importa el handler de errores
 import { handleFatalError, handleError } from "./utils/errorHandler.js";
-import { createRoles, createUsers } from "./config/initialSetup.js";
+import { createUsers } from "./config/initialSetup.js";
 
 /**
  * Inicia el servidor web
@@ -59,8 +59,6 @@ async function setupAPI() {
     await setupMinIO();
     // Inicia el servidor web
     await setupServer();
-    // Inicia la creación de los roles
-    await createRoles();
     // Inicia la creación del usuario admin y user
     await createUsers();
   } catch (err) {

@@ -2,26 +2,14 @@
 
 import { respondSuccess, respondError } from "../utils/resHandler.js";
 import { handleError } from "../utils/errorHandler.js";
-import Role from "../models/role.model.js";
+// import Role from "../models/role.model.js";
+import ROLES from "../constants/roles.constants.js";
 
 /**
- * Obtiene todos los roles
- * @param {Object} req - Objeto de petición
- * @param {Object} res - Objeto de respuesta
+ * Devuelve los roles predefinidos
  */
 async function getRoles(req, res) {
-  try {
-    const roles = await Role.find();
-    
-    if (roles.length === 0) {
-      return respondSuccess(req, res, 204);
-    }
-    
-    respondSuccess(req, res, 200, { data: roles });
-  } catch (error) {
-    handleError(error, "role.controller -> getRoles");
-    respondError(req, res, 500, "Error al obtener los roles");
-  }
+  respondSuccess(req, res, 200, { data: ROLES });
 }
 
 /**
