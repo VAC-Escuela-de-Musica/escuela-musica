@@ -17,7 +17,7 @@ const toggleSaludo = async () => {
     } else {
       // Si no está visible, pedimos el mensaje al backend
       try {
-        const res = await fetch("http://localhost:1230/api/saludo");
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/saludo`);
         const data = await res.text();
         setMensaje(data);
         setVisible(true);

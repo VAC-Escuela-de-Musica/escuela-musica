@@ -39,7 +39,7 @@ const CarouselManager = () => {
     image: null,
   });
 
-  const API_URL = "http://localhost:1230/api/carousel";
+  const API_URL = `${import.meta.env.VITE_API_URL}/carousel`;
 
   // Cargar imágenes al montar el componente
   useEffect(() => {
@@ -60,7 +60,9 @@ const CarouselManager = () => {
       }
 
       const data = await response.json();
-      setImages(data.data || []);
+      console.log("Respuesta del backend:", data);
+      // Asegúrate de que siempre sea un array
+      setImages(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
       setError("Error al cargar las imágenes: " + err.message);
     } finally {
@@ -203,7 +205,7 @@ const CarouselManager = () => {
       )}
 
       <Grid container spacing={3}>
-        {images.map((image) => (
+        {Array.isArray(images) && images.map((image) => (
           <Grid item xs={12} sm={6} md={4} key={image._id}>
             <Card sx={{ backgroundColor: "#333333", color: "white" }}>
               <CardMedia

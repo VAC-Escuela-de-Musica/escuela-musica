@@ -116,7 +116,7 @@ export default function ClippedDrawer() {
           </List>
           <Divider sx={{ borderColor: "#3F4147" }} />
           <List>
-            {["Repositorio Prof.", "modulo1", "modulo2"].map((text, index) => (
+            {["Repositorio Prof.", "Credenciales", "modulo2"].map((text, index) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton>
                   <ListItemIcon sx={{ color: "#FFFFFF" }}>
