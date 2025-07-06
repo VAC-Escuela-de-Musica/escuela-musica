@@ -80,7 +80,7 @@ export default function ButtonAppBar() {
         onClose={toggleDrawer(false)}
         PaperProps={{
           sx: {
-            backgroundColor: '#1f2937',
+            backgroundColor: '#323232',
             color: '#fff',
           },
         }}

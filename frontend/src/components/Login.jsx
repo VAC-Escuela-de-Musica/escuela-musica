@@ -22,6 +22,8 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 export default function Login() {
   const [formData, setFormData] = useState({ email: '', password: '', remember: false });
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -31,9 +33,37 @@ export default function Login() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(`Email: ${formData.email}\nPassword: ${formData.password}\nRemember: ${formData.remember}`);
+    setError("");
+    setLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+        credentials: "include", // Para la cookie de refresh
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || "Error al iniciar sesión");
+        setLoading(false);
+        return;
+      }
+      // Guarda el accessToken en localStorage
+      localStorage.setItem("token", data.data.accessToken);
+      // Redirige al usuario
+      window.location.href = "/usuario";
+    } catch {
+      setError("Error de red o del servidor");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoHome = () => {
@@ -74,9 +104,11 @@ export default function Login() {
             Iniciar Sesión
           </Typography>
 
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            Estamos investigando una interrupción del servicio.
-          </Alert>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
 
           <form onSubmit={handleSubmit} noValidate>
             <TextField
@@ -139,8 +171,9 @@ export default function Login() {
               color="primary"
               fullWidth
               sx={{ mt: 2, mb: 1 }}
+              disabled={loading}
             >
-              Iniciar Sesión
+              {loading ? "Cargando..." : "Iniciar Sesión"}
             </Button>
             <Button
               type="button"
