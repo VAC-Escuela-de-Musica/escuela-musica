@@ -29,7 +29,6 @@ import {
   Email as EmailIcon,
   Badge as BadgeIcon,
 } from "@mui/icons-material";
-import RoleManager from "./RoleManager";
 
 const UserManager = () => {
   const [users, setUsers] = useState([]);
@@ -79,15 +78,20 @@ const UserManager = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/roles`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/roles`);
       if (response.ok) {
         const data = await response.json();
-        setRoles(Array.isArray(data.data) ? data.data : []);
+        // Manejo robusto para cualquier estructura
+        let rolesArray = [];
+        if (Array.isArray(data)) {
+          rolesArray = data;
+        } else if (Array.isArray(data.data)) {
+          rolesArray = data.data;
+        } else if (data.data && Array.isArray(data.data.data)) {
+          rolesArray = data.data.data;
+        }
+        setRoles(rolesArray);
+        console.log("Roles cargados (robusto):", rolesArray);
       }
     } catch (err) {
       console.error("Error al cargar roles:", err);
@@ -98,6 +102,7 @@ const UserManager = () => {
     event.preventDefault();
     
     try {
+      console.log("Datos enviados:", formData);
       const url = editingUser 
         ? `${API_URL}/${editingUser._id}`
         : `${API_URL}`;
@@ -115,6 +120,7 @@ const UserManager = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Error del backend:", errorData);
         throw new Error(errorData.message || "Error al guardar el usuario");
       }
 
@@ -180,6 +186,13 @@ const UserManager = () => {
     user.rut.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleOpenDialog = () => {
+    fetchRoles();
+    setOpenDialog(true);
+  };
+
+  console.log("Estado roles en render:", roles);
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -187,6 +200,8 @@ const UserManager = () => {
       </Box>
     );
   }
+
+  console.log("Estado roles en render:", roles);
 
   return (
     <Box sx={{ p: 3, backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
@@ -197,7 +212,7 @@ const UserManager = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => setOpenDialog(true)}
+          onClick={handleOpenDialog}
           sx={{ backgroundColor: "#4CAF50" }}
         >
           Agregar Usuario
@@ -284,7 +299,6 @@ const UserManager = () => {
             ))}
           </Grid>
         </Box>
-        <RoleManager />
       </Box>
 
       {/* Dialog para agregar/editar usuario */}
@@ -348,7 +362,7 @@ const UserManager = () => {
                     {selected.map((value) => (
                       <Chip 
                         key={value} 
-                        label={getRoleName(value)} 
+                        label={value.charAt(0).toUpperCase() + value.slice(1)} 
                         size="small"
                         sx={{ backgroundColor: "#4CAF50", color: "white" }}
                       />
@@ -356,9 +370,14 @@ const UserManager = () => {
                   </Box>
                 )}
               >
+                {roles.length === 0 && (
+                  <MenuItem disabled value="">
+                    No hay roles disponibles
+                  </MenuItem>
+                )}
                 {roles.map((role) => (
-                  <MenuItem key={role._id} value={role._id}>
-                    {role.name}
+                  <MenuItem key={role} value={role}>
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
                   </MenuItem>
                 ))}
               </Select>
