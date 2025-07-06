@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -28,6 +30,25 @@ body {
   background-color: #222222;
   color: #f9fafb;
 }
+
+:root, body, html, #root {
+  font-family: 'Raleway', sans-serif !important;
+}
+
+*,
+.MuiTypography-root,
+.MuiButton-root,
+.MuiInputBase-root,
+.MuiInputLabel-root,
+.MuiChip-root,
+.MuiCardContent-root,
+.MuiCard-root,
+.MuiDialogTitle-root,
+.MuiDialogContent-root,
+.MuiDialogActions-root {
+  font-family: 'Raleway', sans-serif !important;
+}
+
 /* Estilos para enlaces */
 a {
   font-weight: 500;

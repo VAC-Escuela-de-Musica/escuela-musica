@@ -12,16 +12,26 @@ export async function uploadCarouselImage(file, titulo, descripcion, userId) {
     const fileExtension = file.originalname.split(".").pop();
     const fileName = `carousel-${uuidv4()}.${fileExtension}`;
 
+    // Verificar si MinIO está configurado correctamente
+    if (!process.env.MINIO_ACCESS_KEY || !process.env.MINIO_SECRET_KEY) {
+      throw new Error("MinIO no está configurado correctamente. Verifica las variables de entorno MINIO_ACCESS_KEY y MINIO_SECRET_KEY");
+    }
+
     // Subir archivo a MinIO
-    await minioClient.putObject(
-      MINIO_BUCKET_NAME,
-      fileName,
-      file.buffer,
-      file.size,
-      {
-        "Content-Type": file.mimetype,
-      },
-    );
+    try {
+      await minioClient.putObject(
+        MINIO_BUCKET_NAME,
+        fileName,
+        file.buffer,
+        file.size,
+        {
+          "Content-Type": file.mimetype,
+        },
+      );
+    } catch (minioError) {
+      console.error("Error al subir archivo a MinIO:", minioError);
+      throw new Error("Error al subir archivo a MinIO. Verifica que MinIO esté ejecutándose y configurado correctamente");
+    }
 
     // Generar URL pública
     const url = `http://${process.env.MINIO_ENDPOINT || "localhost"}:${

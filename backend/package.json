@@ -9,7 +9,8 @@
     "dev": "nodemon src/server.js",
     "server": "nodemon src/server.js",
     "cliente": "cd.. && cd frontend && npm run dev",
-    "start": "concurrently --kill-others-on-fail \"npm run server\" \"npm run cliente\""
+    "start": "concurrently --kill-others-on-fail \"npm run server\" \"npm run cliente\"",
+    "check-minio": "node scripts/check-minio.js"
   },
   "keywords": [],
   "author": "Brian Cabezas, Bairon Sanhueza, Victor Alguilera, Gerardo Cadin, Cristian Torres",
