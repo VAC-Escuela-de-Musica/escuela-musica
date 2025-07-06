@@ -31,7 +31,15 @@ export async function uploadImage(req, res) {
     respondSuccess(req, res, 201, { message: "Imagen subida exitosamente", image });
   } catch (err) {
     handleError(err, "/controllers/carousel.controller.js -> uploadImage");
-    respondError(req, res, 500, "Error al subir la imagen");
+    
+    // Proporcionar mensajes de error más específicos
+    if (err.message.includes("MinIO no está configurado")) {
+      respondError(req, res, 500, "Error de configuración: " + err.message);
+    } else if (err.message.includes("Error al subir archivo a MinIO")) {
+      respondError(req, res, 500, "Error de almacenamiento: " + err.message);
+    } else {
+      respondError(req, res, 500, "Error al subir la imagen: " + err.message);
+    }
   }
 }
 

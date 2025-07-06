@@ -18,6 +18,7 @@ import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
 
 import CarouselManager from "./CarouselManager";
+import UserManager from "./UserManager";
 
 const drawerWidth = 240;
 
@@ -118,7 +119,11 @@ export default function ClippedDrawer() {
           <List>
             {["Repositorio Prof.", "Credenciales", "modulo2"].map((text, index) => (
               <ListItem key={text} disablePadding>
-                <ListItemButton>
+                <ListItemButton
+                  onClick={() => {
+                    if (text === "Credenciales") setActiveModule("credenciales");
+                  }}
+                >
                   <ListItemIcon sx={{ color: "#FFFFFF" }}>
                     {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
                   </ListItemIcon>
@@ -162,6 +167,7 @@ export default function ClippedDrawer() {
           </>
         )}
         {activeModule === "carrusel" && <CarouselManager />}
+        {activeModule === "credenciales" && <UserManager />}
         {/* Puedes agregar más módulos así */}
       </Box>
     </Box>
