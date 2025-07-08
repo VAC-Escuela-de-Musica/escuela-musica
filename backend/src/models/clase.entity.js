@@ -23,5 +23,4 @@ const claseSchema = new mongoose.Schema({
   visible: { type: Boolean, default: true },
 });
 
-
 export default mongoose.model("Clase", claseSchema);

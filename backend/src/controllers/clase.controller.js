@@ -3,7 +3,10 @@
 import claseService from "../services/clase.service.js";
 import { handleError } from "../utils/errorHandler.js";
 import { respondError, respondSuccess } from "../utils/resHandler.js";
-
+import { 
+    claseBodySchema, 
+    claseIdSchema, 
+    claseCancelSchema } from "../schema/clase.schema.js";
 
 /**
  * Crea un nuevo horario
@@ -13,19 +16,20 @@ import { respondError, respondSuccess } from "../utils/resHandler.js";
 async function createClase(req, res) {
     try {
         const { body } = req;
-
+        const { error: bodyError } = claseBodySchema.validate(body);
+        if (bodyError) return respondError(req, res, 400, bodyError.message);
+        
         const [newClase, error] = await claseService.createClase(body);
         
-        // Mensaje de error si no se pudo crear el horario
-        if (error) {
-            console.error("Error al crear la clase:", error);
-            return res.status(400).json({ error: "No se pudo crear la clase" });
-        }
+        if (error) return respondError(req, res, 400, error);
+        if (!newClase) {
+            return respondError(req, res, 400, "No se pudo crear la clase");
+        }   
 
         respondSuccess(req, res, 201, newClase);
     } catch (error) {
-        console.error("Error al crear la clase:", error);
-        res.status(500).json({ error: "No se pudo crear la clase" });
+        handleError(error, "clase.controller -> createClase");
+        respondError(req, res, 500, "No se pudo crear la clase");
     }
 }
 
@@ -57,6 +61,8 @@ async function getAllClases(req, res) {
 async function getClaseById(req, res) {
     try {
         const { params } = req;
+        const { error: paramsError } = claseIdSchema.validate(params);
+        if (paramsError) return respondError(req, res, 400, paramsError.message);
 
         const [clase, errorClase] = await claseService.getClaseById(params.id);
 
@@ -77,6 +83,11 @@ async function getClaseById(req, res) {
 async function updateClase(req, res) {
     try {
         const { params, body } = req;
+        const { error: paramsError } = claseIdSchema.validate(params);
+        if (paramsError) return respondError(req, res, 400, paramsError.message);
+
+        const { error: bodyError } = claseBodySchema.validate(body);
+        if (bodyError) return respondError(req, res, 400, bodyError.message);
 
         const [clase, errorClase] = await claseService.updateClase(params.id, body);
 
@@ -97,6 +108,11 @@ async function updateClase(req, res) {
 async function cancelClase(req, res) {
     try {
         const { params, body } = req;
+        const { error: paramsError } = claseIdSchema.validate(params);
+        if (paramsError) return respondError(req, res, 400, paramsError.message);
+
+        const { error: bodyError } = claseCancelSchema.validate(body);
+        if (bodyError) return respondError(req, res, 400, bodyError.message);
 
         const [clase, errorClase] = await claseService.cancelClase(params.id, body);
 
