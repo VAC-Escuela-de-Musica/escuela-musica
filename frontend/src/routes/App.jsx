@@ -1,10 +1,8 @@
-import AlumnosList from "../components/AlumnosList";
-
 function App() {
   return (
     <>
       <h1>Pagina principal</h1>
-      <AlumnosList />
+      {/* Aquí puedes agregar contenido de la página principal, pero sin la lista de alumnos */}
     </>
   );
 }
