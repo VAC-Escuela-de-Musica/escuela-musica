@@ -48,7 +48,7 @@ const UserManager = () => {
 
   const API_URL = `${import.meta.env.VITE_API_URL}/users`;
 
-  // Cargar usuarios al montar el componente
+  // cargar usuarios al montar el componente
   useEffect(() => {
     fetchUsers();
     fetchRoles();
@@ -81,7 +81,6 @@ const UserManager = () => {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/roles`);
       if (response.ok) {
         const data = await response.json();
-        // Manejo robusto para cualquier estructura
         let rolesArray = [];
         if (Array.isArray(data)) {
           rolesArray = data;
@@ -162,7 +161,7 @@ const UserManager = () => {
       username: user.username || "",
       email: user.email || "",
       rut: user.rut || "",
-      password: "", // No mostrar contraseña actual
+      password: "",
       roles: user.roles ? user.roles.map(role => role._id || role) : [],
     });
     setOpenDialog(true);
@@ -179,7 +178,7 @@ const UserManager = () => {
     return role ? role.name : "Rol desconocido";
   };
 
-  // Filtrar usuarios según búsqueda
+  // Filtrar usuarios
   const filteredUsers = users.filter(user =>
     user.username.toLowerCase().includes(search.toLowerCase()) ||
     user.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -301,7 +300,7 @@ const UserManager = () => {
         </Box>
       </Box>
 
-      {/* Dialog para agregar/editar usuario */}
+      {/* agregar/editar usuario */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ backgroundColor: "#333333", color: "white" }}>
           {editingUser ? "Editar Usuario" : "Agregar Nuevo Usuario"}
