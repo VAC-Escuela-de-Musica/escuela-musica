@@ -8,6 +8,7 @@ import express, { urlencoded, json } from "express";
 import morgan from "morgan";
 // Importa el módulo 'cookie-parser' para manejar las cookies
 import cookieParser from "cookie-parser";
+import { csrf } from "lusca";
 /** El enrutador principal */
 import indexRoutes from "./routes/index.routes.js";
 // Importa el archivo 'configDB.js' para crear la conexión a la base de datos
@@ -32,6 +33,8 @@ async function setupServer() {
     server.use(json());
     // Agregamos el middleware para el manejo de cookies
     server.use(cookieParser());
+    // Agregamos el middleware para la protección CSRF
+    server.use(csrf());
     // Agregamos morgan para ver las peticiones que se hacen al servidor
     server.use(morgan("dev"));
     // Agrega el enrutador principal al servidor

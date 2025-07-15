@@ -21,7 +21,8 @@
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.15.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "lusca": "^1.7.0"
   },
   "devDependencies": {
     "eslint": "^8.57.1",
