@@ -32,4 +32,36 @@ async function isAdmin(req, res, next) {
   }
 }
 
-export { isAdmin };
+/**
+ * Middleware para comprobar si el usuario tiene alguno de los roles permitidos
+ * @param {Array<string>} allowedRoles - Roles permitidos
+ */
+function authorizationMiddleware(allowedRoles) {
+  return async (req, res, next) => {
+    try {
+      const user = await User.findOne({ email: req.email });
+      if (!user) {
+        return respondError(req, res, 401, "Usuario no encontrado");
+      }
+      const roles = await Role.find({ _id: { $in: user.roles } });
+      const userRoles = roles.map((r) => r.name);
+      const hasRole = allowedRoles.some((role) => userRoles.includes(role));
+      if (hasRole) {
+        return next();
+      }
+      return respondError(
+        req,
+        res,
+        403,
+        "No tienes permisos para realizar esta acción"
+      );
+    } catch (error) {
+      handleError(
+        error,
+        "authorization.middleware -> authorizationMiddleware"
+      );
+    }
+  };
+}
+
+export { isAdmin, authorizationMiddleware };

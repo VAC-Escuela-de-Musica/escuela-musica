@@ -6,7 +6,18 @@
   "main": "server.js",
   "scripts": {
     "lint": "standard",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "test:minio": "node src/scripts/testMinio.js",
+    "test:upload": "node src/scripts/testUpload.js", 
+    "test:presigned": "node src/scripts/testPresignedUrls.js",
+    "test:images": "node src/scripts/testImageFlows.js",
+    "test:minio:all": "node src/scripts/testMinioComplete.js",
+    "test:presigned-system": "node src/scripts/testPresignedSystem.js",
+    "migrate:presigned": "node src/scripts/migrateMaterials.js migrate",
+    "migrate:rollback": "node src/scripts/migrateMaterials.js rollback",
+    "migrate:check": "node src/scripts/migrateMaterials.js check",
+    "migrate:manual": "node src/scripts/migrateMaterials.js manual",
+    "setup:minio-cors": "node src/scripts/setupMinioCors.js"
   },
   "keywords": [],
   "author": "Brian Cabezas, Bairon Sanhueza, Victor Alguilera, Gerardo Cadin, Cristian Torres",
@@ -20,8 +31,11 @@
     "express": "^5.1.0",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
+    "minio": "^8.0.5",
     "mongoose": "^8.15.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "multer": "^2.0.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "eslint": "^8.57.1",

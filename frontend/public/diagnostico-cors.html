@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnóstico de CORS y MinIO</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    h1 { color: #333; }
+    .box { background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #45a049; }
+    pre { background-color: #eee; padding: 10px; border-radius: 3px; white-space: pre-wrap; }
+    .error { color: #d32f2f; }
+    .success { color: #388e3c; }
+    .loading { color: #1976d2; }
+  </style>
+</head>
+<body>
+  <h1>Diagnóstico de CORS y MinIO</h1>
+  
+  <div class="box">
+    <h2>1. Probar conexión a MinIO</h2>
+    <button id="testMinioBtn">Probar conexión a MinIO</button>
+    <div id="minioResult">Haga clic en el botón para probar</div>
+  </div>
+  
+  <div class="box">
+    <h2>2. Probar CORS con carga directa</h2>
+    <input type="file" id="testFile">
+    <button id="uploadTestBtn">Cargar archivo de prueba</button>
+    <div id="corsResult">Seleccione un archivo y haga clic en el botón</div>
+  </div>
+
+  <div class="box">
+    <h2>3. Información del navegador</h2>
+    <pre id="browserInfo">Cargando...</pre>
+  </div>
+
+  <script>
+    // Información del navegador
+    document.getElementById('browserInfo').textContent = 
+      `User Agent: ${navigator.userAgent}\n` +
+      `Cookies habilitadas: ${navigator.cookieEnabled}\n` +
+      `Lenguaje: ${navigator.language}\n` +
+      `Online: ${navigator.onLine}\n`;
+
+    // Token para autenticación
+    const getToken = () => {
+      return localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+    };
+
+    // Test de conexión a MinIO
+    document.getElementById('testMinioBtn').addEventListener('click', async () => {
+      const resultDiv = document.getElementById('minioResult');
+      resultDiv.innerHTML = '<p class="loading">Probando conexión...</p>';
+      
+      try {
+        const response = await fetch('/api/materials/test-minio', {
+          headers: {
+            'Authorization': `Bearer ${getToken()}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        resultDiv.innerHTML = `
+          <p class="${response.ok ? 'success' : 'error'}">
+            Estado: ${response.ok ? 'OK' : 'Error'} (${response.status})
+          </p>
+          <pre>${JSON.stringify(data, null, 2)}</pre>
+        `;
+      } catch (error) {
+        resultDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+      }
+    });
+
+    // Test de CORS con carga directa
+    document.getElementById('uploadTestBtn').addEventListener('click', async () => {
+      const fileInput = document.getElementById('testFile');
+      const resultDiv = document.getElementById('corsResult');
+      
+      if (!fileInput.files.length) {
+        resultDiv.innerHTML = '<p class="error">Por favor seleccione un archivo</p>';
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      resultDiv.innerHTML = '<p class="loading">Obteniendo URL de subida...</p>';
+      
+      try {
+        // 1. Obtener URL prefirmada
+        const response = await fetch('/api/materials/upload-url', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            extension: file.name.split('.').pop(),
+            contentType: file.type,
+            nombre: 'Archivo de prueba CORS',
+            descripcion: 'Prueba de diagnóstico'
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Error obteniendo URL: ${response.status} ${response.statusText}`);
+        }
+        
+        const { uploadUrl, materialId } = await response.json();
+        resultDiv.innerHTML += `<p>URL obtenida: ${uploadUrl}</p><p class="loading">Subiendo archivo a MinIO...</p>`;
+        
+        // 2. Subir directamente a MinIO
+        const startTime = new Date();
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type
+          }
+        });
+        
+        const endTime = new Date();
+        const timeElapsed = (endTime - startTime) / 1000;
+        
+        if (!uploadResponse.ok) {
+          throw new Error(`Error subiendo a MinIO: ${uploadResponse.status} ${uploadResponse.statusText}`);
+        }
+        
+        resultDiv.innerHTML += `
+          <p class="success">Archivo subido correctamente en ${timeElapsed} segundos</p>
+          <p>ETag: ${uploadResponse.headers.get('ETag')}</p>
+          <p class="loading">Confirmando subida...</p>
+        `;
+        
+        // 3. Confirmar la subida
+        const confirmResponse = await fetch('/api/materials/confirm-upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            materialId
+          })
+        });
+        
+        const confirmData = await confirmResponse.json();
+        
+        resultDiv.innerHTML += `
+          <p class="success">Confirmación completada</p>
+          <pre>${JSON.stringify(confirmData, null, 2)}</pre>
+        `;
+      } catch (error) {
+        resultDiv.innerHTML += `<p class="error">Error: ${error.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>

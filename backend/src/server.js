@@ -8,6 +8,10 @@ import express, { urlencoded, json } from "express";
 import morgan from "morgan";
 // Importa el módulo 'cookie-parser' para manejar las cookies
 import cookieParser from "cookie-parser";
+// Importa el módulo 'path' para manejar rutas de archivos
+import path from "path";
+// Importa el módulo 'url' para manejar URLs
+import { fileURLToPath } from "url";
 /** El enrutador principal */
 import indexRoutes from "./routes/index.routes.js";
 // Importa el archivo 'configDB.js' para crear la conexión a la base de datos
@@ -15,6 +19,8 @@ import { setupDB } from "./config/configDB.js";
 // Importa el handler de errores
 import { handleFatalError, handleError } from "./utils/errorHandler.js";
 import { createRoles, createUsers } from "./config/initialSetup.js";
+// Importa la función para inicializar MinIO
+import { initializeBucket } from "./controllers/presignedOnly.controller.js";
 
 /**
  * Inicia el servidor web
@@ -29,17 +35,28 @@ async function setupServer() {
     // Agrega el middleware para el manejo de datos en formato URL
     server.use(urlencoded({ extended: true }));
     // Agrega el middleware para el manejo de datos en formato JSON
-    server.use(json());
-    // Agregamos el middleware para el manejo de cookies
+    server.use(json());    // Agregamos el middleware para el manejo de cookies
     server.use(cookieParser());
     // Agregamos morgan para ver las peticiones que se hacen al servidor
     server.use(morgan("dev"));
-    // Agrega el enrutador principal al servidor
+    
+    // === Servir archivos estáticos del frontend ===
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const frontendPath = path.join(__dirname, "../../frontend/dist");
+    server.use(express.static(frontendPath));    // Agrega el enrutador principal al servidor
     server.use("/api", indexRoutes);
+    
+    // Redirige cualquier ruta que no sea /api a index.html (SPA)
+    server.use((req, res) => {
+      if (!req.path.startsWith("/api")) {
+        res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
+      }
+    });
 
     // Inicia el servidor en el puerto especificado
     server.listen(PORT, () => {
-      console.log(`=> Servidor corriendo en ${HOST}:${PORT}/api`);
+      console.log(`=> Servidor corriendo en ${HOST}:${PORT}`);
     });
   } catch (err) {
     handleError(err, "/server.js -> setupServer");
@@ -53,6 +70,8 @@ async function setupAPI() {
   try {
     // Inicia la conexión a la base de datos
     await setupDB();
+    // Inicializa MinIO (crear bucket si no existe)
+    await initializeBucket();
     // Inicia el servidor web
     await setupServer();
     // Inicia la creación de los roles

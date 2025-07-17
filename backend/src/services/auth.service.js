@@ -18,10 +18,11 @@ import { handleError } from "../utils/errorHandler.js";
 async function login(user) {
   try {
     const { email, password } = user;
-
+    console.log("Intentando login con:", email);
     const userFound = await User.findOne({ email: email })
       .populate("roles")
       .exec();
+    console.log("Usuario encontrado:", userFound ? userFound.email : null);
     if (!userFound) {
       return [null, null, "El usuario y/o contraseña son incorrectos"];
     }
@@ -30,6 +31,7 @@ async function login(user) {
       password,
       userFound.password
     );
+    console.log("¿Contraseña coincide?", matchPassword);
 
     if (!matchPassword) {
       return [null, null, "El usuario y/o contraseña son incorrectos"];

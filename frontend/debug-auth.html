@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico de Autenticación</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-warning { background-color: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Diagnóstico de Autenticación</h1>
+    
+    <div class="test-section info">
+        <h3>📋 Token Actual</h3>
+        <p>Token en localStorage: <span id="token-status">Verificando...</span></p>
+        <pre id="token-info"></pre>
+        <button class="btn-warning" onclick="clearToken()">🗑️ Limpiar Token</button>
+    </div>
+
+    <div class="test-section">
+        <h3>🧪 Pruebas de Autenticación</h3>
+        <button class="btn-primary" onclick="testAuth()">🔐 Probar Autenticación</button>
+        <button class="btn-success" onclick="testUpload()">📤 Probar Subida Privada</button>
+        <button class="btn-success" onclick="testUploadPublic()">🌐 Probar Subida Pública</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        function decodeToken(token) {
+            try {
+                if (!token) return null;
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function displayTokenInfo() {
+            const token = getToken();
+            const statusEl = document.getElementById('token-status');
+            const infoEl = document.getElementById('token-info');
+
+            if (!token) {
+                statusEl.textContent = '❌ No hay token';
+                infoEl.textContent = 'No se encontró token en localStorage. Por favor, inicia sesión.';
+                return;
+            }
+
+            const payload = decodeToken(token);
+            if (!payload) {
+                statusEl.textContent = '❌ Token inválido';
+                infoEl.textContent = 'El token no se pudo decodificar. Puede estar corrupto.';
+                return;
+            }
+
+            statusEl.textContent = '✅ Token válido';
+            infoEl.textContent = JSON.stringify({
+                email: payload.email,
+                roles: payload.roles,
+                exp: new Date(payload.exp * 1000).toISOString(),
+                valid: payload.exp * 1000 > Date.now()
+            }, null, 2);
+        }
+
+        function addResult(title, success, data) {
+            const resultsEl = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-section ${success ? 'success' : 'error'}`;
+            resultDiv.innerHTML = `
+                <h3>${success ? '✅' : '❌'} ${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            resultsEl.appendChild(resultDiv);
+        }
+
+        async function testAuth() {
+            const token = getToken();
+            if (!token) {
+                addResult('Test de Autenticación', false, { error: 'No hay token' });
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:1230/api/materials/debug-auth', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                addResult('Test de Autenticación', response.ok, {
+                    status: response.status,
+                    data: data
+                });
+            } catch (error) {
+                addResult('Test de Autenticación', false, { error: error.message });
+            }
+        }
+
+        async function testUpload() {
+            const token = getToken();
+            if (!token) {
+                addResult('Test de Subida Privada', false, { error: 'No hay token' });
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:1230/api/materials/upload-url', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        extension: 'pdf',
+                        contentType: 'application/pdf',
+                        nombre: 'Test Privado',
+                        descripcion: 'Test de subida privada',
+                        bucketTipo: 'privado'
+                    })
+                });
+
+                const data = await response.json();
+                addResult('Test de Subida Privada', response.ok, {
+                    status: response.status,
+                    data: data
+                });
+            } catch (error) {
+                addResult('Test de Subida Privada', false, { error: error.message });
+            }
+        }
+
+        async function testUploadPublic() {
+            const token = getToken();
+            if (!token) {
+                addResult('Test de Subida Pública', false, { error: 'No hay token' });
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:1230/api/materials/upload-url', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        extension: 'pdf',
+                        contentType: 'application/pdf',
+                        nombre: 'Test Público',
+                        descripcion: 'Test de subida pública',
+                        bucketTipo: 'publico'
+                    })
+                });
+
+                const data = await response.json();
+                addResult('Test de Subida Pública', response.ok, {
+                    status: response.status,
+                    data: data
+                });
+            } catch (error) {
+                addResult('Test de Subida Pública', false, { error: error.message });
+            }
+        }
+
+        function clearToken() {
+            localStorage.removeItem('token');
+            displayTokenInfo();
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Inicializar
+        displayTokenInfo();
+    </script>
+</body>
+</html>
