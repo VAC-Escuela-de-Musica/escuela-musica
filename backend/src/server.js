@@ -12,9 +12,11 @@ import cookieParser from "cookie-parser";
 import indexRoutes from "./routes/index.routes.js";
 // Importa el archivo 'configDB.js' para crear la conexión a la base de datos
 import { setupDB } from "./config/configDB.js";
+// Importa la configuración de MinIO
+import { setupMinIO } from "./config/minio.config.js";
 // Importa el handler de errores
 import { handleFatalError, handleError } from "./utils/errorHandler.js";
-import { createRoles, createUsers } from "./config/initialSetup.js";
+import { createUsers } from "./config/initialSetup.js";
 
 /**
  * Inicia el servidor web
@@ -53,16 +55,18 @@ async function setupAPI() {
   try {
     // Inicia la conexión a la base de datos
     await setupDB();
+    // Inicia la configuración de MinIO
+    await setupMinIO();
     // Inicia el servidor web
     await setupServer();
-    // Inicia la creación de los roles
-    await createRoles();
     // Inicia la creación del usuario admin y user
     await createUsers();
   } catch (err) {
     handleFatalError(err, "/server.js -> setupAPI");
   }
 }
+const app = express();
+app.use(cors());
 
 // Inicia la API
 setupAPI()

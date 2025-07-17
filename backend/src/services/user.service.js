@@ -1,7 +1,8 @@
 "use strict";
 // Importa el modelo de datos 'User'
 import User from "../models/user.model.js";
-import Role from "../models/role.model.js";
+// import Role from "../models/role.model.js";
+import ROLES from "../constants/roles.constants.js";
 import { handleError } from "../utils/errorHandler.js";
 
 /**
@@ -34,16 +35,16 @@ async function createUser(user) {
     const userFound = await User.findOne({ email: user.email });
     if (userFound) return [null, "El usuario ya existe"];
 
-    const rolesFound = await Role.find({ name: { $in: roles } });
-    if (rolesFound.length === 0) return [null, "El rol no existe"];
-    const myRole = rolesFound.map((role) => role._id);
+    // Validar que todos los roles existan en ROLES
+    const validRoles = roles.every((role) => ROLES.includes(role));
+    if (!validRoles) return [null, "El rol no existe"];
 
     const newUser = new User({
       username,
       rut,
       email,
       password: await User.encryptPassword(password),
-      roles: myRole,
+      roles, // array de strings
     });
     await newUser.save();
 
@@ -88,7 +89,7 @@ async function updateUser(id, user) {
 
     const matchPassword = await User.comparePassword(
       password,
-      userFound.password
+      userFound.password,
     );
 
     if (!matchPassword) {
@@ -109,7 +110,7 @@ async function updateUser(id, user) {
         password: await User.encryptPassword(newPassword || password),
         roles: myRole,
       },
-      { new: true }
+      { new: true },
     );
 
     return [userUpdated, null];

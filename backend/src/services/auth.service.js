@@ -19,9 +19,7 @@ async function login(user) {
   try {
     const { email, password } = user;
 
-    const userFound = await User.findOne({ email: email })
-      .populate("roles")
-      .exec();
+    const userFound = await User.findOne({ email: email }).exec();
     if (!userFound) {
       return [null, null, "El usuario y/o contraseña son incorrectos"];
     }
@@ -35,6 +33,7 @@ async function login(user) {
       return [null, null, "El usuario y/o contraseña son incorrectos"];
     }
 
+    console.log("Roles del usuario encontrado:", userFound.roles);
     const accessToken = jwt.sign(
       { email: userFound.email, roles: userFound.roles },
       ACCESS_JWT_SECRET,
@@ -76,9 +75,7 @@ async function refresh(cookies) {
 
         const userFound = await User.findOne({
           email: user.email,
-        })
-          .populate("roles")
-          .exec();
+        }).exec();
 
         if (!userFound) return [null, "No usuario no autorizado"];
 
