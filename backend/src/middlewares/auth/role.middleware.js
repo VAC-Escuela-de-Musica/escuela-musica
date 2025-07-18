@@ -2,6 +2,7 @@
 
 import { respondError } from "../../utils/responseHandler.util.js";
 import { handleError } from "../../utils/errorHandler.util.js";
+import logger from "../../utils/logger.util.js";
 
 /**
  * Verifica si el usuario tiene alguno de los roles especificados
@@ -34,12 +35,13 @@ const requireRole = (allowedRoles) => {
         userRoles = Array.isArray(req.roles) ? req.roles : [req.roles];
       }
 
-      console.log(`🔐 Verificando roles para ${req.user?.email || req.email}:`, {
-        userRoles,
+      // Log seguro sin información sensible
+      logger.debug('Verificando roles de usuario', {
+        userEmail: req.user?.email || req.email,
+        userRolesCount: userRoles.length,
         allowedRoles,
         hasRoleNames: !!req.user?.roleNames,
-        hasTokenRoles: !!req.user?.roles,
-        tokenRolesType: req.user?.roles ? typeof req.user.roles[0] : 'none'
+        hasTokenRoles: !!req.user?.roles
       });
 
       if (!userRoles.length) {
@@ -49,17 +51,25 @@ const requireRole = (allowedRoles) => {
       const hasRequiredRole = allowedRoles.some(role => userRoles.includes(role));
 
       if (!hasRequiredRole) {
+        logger.warn('Acceso denegado por roles insuficientes', {
+          userEmail: req.user?.email || req.email,
+          userRoles,
+          requiredRoles: allowedRoles,
+          url: req.url,
+          method: req.method
+        });
+        
         return respondError(
           req,
           res,
           403,
-          `Acceso denegado. Se requiere uno de los siguientes roles: ${allowedRoles.join(', ')}. Tus roles: ${userRoles.join(', ')}`
+          `Acceso denegado. Se requiere uno de los siguientes roles: ${allowedRoles.join(', ')}`
         );
       }
 
       next();
     } catch (error) {
-      console.error('Error en requireRole:', error);
+      logger.error('Error en requireRole', { error, context: 'role.middleware' });
       handleError(error, "role.middleware -> requireRole");
       return respondError(req, res, 500, "Error verificando permisos");
     }

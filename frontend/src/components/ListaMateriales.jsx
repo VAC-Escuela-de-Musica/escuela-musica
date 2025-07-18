@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ImageViewer from './ImageViewer';
 import MaterialFilters from './MaterialFilters';
 import { API_ENDPOINTS, API_HEADERS } from '../config/api.js';
+import { logger } from '../utils/logger.js';
 import './darkmode.css';
 
 const ListaMateriales = () => {
@@ -18,17 +19,17 @@ const ListaMateriales = () => {
           throw new Error('No hay token de autenticación');
         }
 
-        console.log('📋 Obteniendo lista de materiales...');
-        console.log('🔑 Token:', token ? 'Presente' : 'Ausente');
-        console.log('🌐 URL del endpoint:', API_ENDPOINTS.materials.list);
+        logger.materials('Obteniendo lista de materiales...');
+        logger.token('Token:', token ? 'Presente' : 'Ausente');
+        logger.endpoint('URL del endpoint:', API_ENDPOINTS.materials.list);
         
         // Usar la configuración centralizada
         const res = await fetch(API_ENDPOINTS.materials.list, {
           headers: API_HEADERS.withAuth()
         });
         
-        console.log('📡 Status de respuesta:', res.status, res.statusText);
-        console.log('📡 Headers de respuesta:', Object.fromEntries(res.headers.entries()));
+        logger.response('Status de respuesta:', res.status, res.statusText);
+        logger.headers('Headers de respuesta:', Object.fromEntries(res.headers.entries()));
         
         if (!res.ok) {
           const errorText = await res.text();
@@ -37,8 +38,8 @@ const ListaMateriales = () => {
         }
         
         const response = await res.json();
-        console.log('✅ Materiales obtenidos - respuesta completa:', response);
-        console.log('🔍 Estructura de respuesta detallada:', {
+        logger.success('Materiales obtenidos - respuesta completa:', response);
+        logger.structure('Estructura de respuesta detallada:', {
           success: response.success,
           statusCode: response.statusCode,
           hasData: !!response.data,
@@ -54,29 +55,29 @@ const ListaMateriales = () => {
         if (response.success && response.data && Array.isArray(response.data)) {
           // Nuevo formato: { success: true, data: [...] }
           materialesData = response.data;
-          console.log('✅ Usando nuevo formato response.data');
+          logger.format('Usando nuevo formato response.data');
         } else if (response.data && Array.isArray(response.data)) {
           // Formato con data: { data: [...] }
           materialesData = response.data;
-          console.log('✅ Usando response.data');
+          logger.format('Usando response.data');
         } else if (Array.isArray(response)) {
           // Formato directo: [...]
           materialesData = response;
-          console.log('✅ Usando response directamente');
+          logger.format('Usando response directamente');
         } else if (response.materiales && Array.isArray(response.materiales)) {
           // Formato legacy: { materiales: [...] }
           materialesData = response.materiales;
-          console.log('✅ Usando response.materiales');
+          logger.format('Usando response.materiales');
         } else {
-          console.warn('⚠️ Formato de respuesta no reconocido, usando array vacío');
+          logger.warn('Formato de respuesta no reconocido, usando array vacío');
           materialesData = [];
         }
         
-        console.log('📋 Materiales finales a mostrar:', materialesData);
-        console.log('📊 Cantidad final de materiales:', materialesData.length);
+        logger.final('Materiales finales a mostrar:', materialesData);
+        logger.finalCount('Cantidad final de materiales:', materialesData.length);
         
         if (materialesData.length > 0) {
-          console.log('📦 Primer material como ejemplo:', materialesData[0]);
+          logger.first('Primer material como ejemplo:', materialesData[0]);
         }
         
         setMateriales(materialesData);
@@ -103,7 +104,7 @@ const ListaMateriales = () => {
   const handleDownload = async (materialId, filename) => {
     try {
       // Ya no necesitamos obtener una URL prefirmada, podemos usar directamente la URL del backend
-      console.log(`📥 Descargando archivo: ${filename}`);
+      logger.download(`Descargando archivo: ${filename}`);
       
       // Buscar el material en la lista para determinar si es público o privado
       const material = materiales.find(m => m._id === materialId);
@@ -128,7 +129,7 @@ const ListaMateriales = () => {
       link.download = filename;
       link.style.display = 'none';
       
-      console.log(`📥 Iniciando descarga: ${link.href.substring(0, 100)}...`);
+      logger.download(`Iniciando descarga: ${link.href.substring(0, 100)}...`);
       
       document.body.appendChild(link);
       link.click();
@@ -146,14 +147,14 @@ const ListaMateriales = () => {
     }
     
     try {
-      console.log(`🗑️ Eliminando material: ${materialId}`);
+      logger.log(`🗑️ Eliminando material: ${materialId}`);
       
       const response = await fetch(API_ENDPOINTS.materials.delete(materialId), {
         method: 'DELETE',
         headers: API_HEADERS.withAuth()
       });
       
-      console.log(`📊 Delete response status: ${response.status}`);
+      logger.data(`Delete response status: ${response.status}`);
       
       if (!response.ok) {
         const errorData = await response.text();
@@ -162,7 +163,7 @@ const ListaMateriales = () => {
       }
       
       const result = await response.json();
-      console.log('✅ Material eliminado exitosamente:', result);
+      logger.success('Material eliminado exitosamente:', result);
       
       // Actualizar la lista local sin recargar la página
       setMateriales(prev => prev.filter(m => m._id !== materialId));
@@ -220,7 +221,7 @@ const ListaMateriales = () => {
   );
   
   if (!materiales.length) {
-    console.log('⚠️ Mostrando mensaje "No hay materiales" porque:', {
+    logger.warn('Mostrando mensaje "No hay materiales" porque:', {
       materialesLength: materiales.length,
       materialesArray: materiales,
       isArray: Array.isArray(materiales)
@@ -261,7 +262,7 @@ const ListaMateriales = () => {
     );
   }
 
-  console.log('✅ Renderizando lista con', materialesFiltrados.length, 'materiales filtrados de', materiales.length, 'totales');
+  logger.finalRender('Renderizando lista con', materialesFiltrados.length, 'materiales filtrados de', materiales.length, 'totales');
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>

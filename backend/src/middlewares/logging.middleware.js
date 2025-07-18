@@ -1,5 +1,3 @@
-"use strict";
-
 import logger from '../utils/logger.util.js';
 
 /**
@@ -67,49 +65,6 @@ export const requestInfo = (req, res, next) => {
   req.timestamp = new Date().toISOString();
   
   next();
-};
-
-/**
- * Middleware para rate limiting básico
- * @param {number} maxRequests - Número máximo de requests
- * @param {number} windowMs - Ventana de tiempo en milisegundos
- */
-export const rateLimiter = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
-  const clients = new Map();
-  
-  return (req, res, next) => {
-    const clientId = req.ip;
-    const now = Date.now();
-    
-    if (!clients.has(clientId)) {
-      clients.set(clientId, { count: 1, resetTime: now + windowMs });
-      return next();
-    }
-    
-    const client = clients.get(clientId);
-    
-    if (now > client.resetTime) {
-      client.count = 1;
-      client.resetTime = now + windowMs;
-      return next();
-    }
-    
-    if (client.count >= maxRequests) {
-      return res.status(429).json({
-        success: false,
-        error: "Demasiadas peticiones. Intenta más tarde.",
-        statusCode: 429,
-        details: {
-          maxRequests,
-          windowMs,
-          retryAfter: Math.ceil((client.resetTime - now) / 1000)
-        }
-      });
-    }
-    
-    client.count++;
-    next();
-  };
 };
 
 /**

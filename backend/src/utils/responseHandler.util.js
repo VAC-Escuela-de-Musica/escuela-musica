@@ -6,13 +6,23 @@
  * @param {Object} res - Objeto de respuesta
  * @param {Number} statusCode - Código de estado para la operación
  * @param {Object} data - Objeto que contiene los datos a enviar
- * @returns {JSON} - Objeto de respuesta JSON con el estado "Success" y los datos proporcionados
+ * @param {String} message - Mensaje opcional de éxito
+ * @returns {JSON} - Objeto de respuesta JSON estandarizado
  */
-function respondSuccess(req, res, statusCode = 200, data = {}) {
-  return res.status(statusCode).json({
-    state: "Success",
+function respondSuccess(req, res, statusCode = 200, data = {}, message = null) {
+  const response = {
+    success: true,
+    statusCode,
     data,
-  });
+    error: null,
+    timestamp: new Date().toISOString()
+  };
+  
+  if (message) {
+    response.message = message;
+  }
+  
+  return res.status(statusCode).json(response);
 }
 
 /**
@@ -23,20 +33,25 @@ function respondSuccess(req, res, statusCode = 200, data = {}) {
  * @param {Number} statusCode - Código de estado para la operación
  * @param {String} message - La descripción del motivo del error
  * @param {Object} details - Información adicional sobre el error
- * @returns {JSON} - El objeto de respuesta JSON con el estado "Error", el mensaje de error y los detalles proporcionados
+ * @returns {JSON} - El objeto de respuesta JSON estandarizado
  */
 function respondError(
   req,
   res,
   statusCode = 500,
-  message = "Couldnt process the request",
+  message = "No se pudo procesar la petición",
   details = {}
 ) {
-  return res.status(statusCode).json({
-    state: "Error",
-    message,
+  const response = {
+    success: false,
+    statusCode,
+    data: null,
+    error: message,
     details,
-  });
+    timestamp: new Date().toISOString()
+  };
+  
+  return res.status(statusCode).json(response);
 }
 
 /**
@@ -46,18 +61,24 @@ function respondError(
  * @param {Object} res - El objeto de respuesta
  * @param {Number} statusCode - El código de estado para la operación
  * @param {String} message - La descripción del motivo del error
- * @returns {JSON} - El objeto de respuesta JSON con el estado "Error" y el mensaje de error proporcionados
+ * @returns {JSON} - El objeto de respuesta JSON estandarizado
  */
 function respondInternalError(
   req,
   res,
   statusCode = 500,
-  message = "Couldnt process the request"
+  message = "Error interno del servidor"
 ) {
-  return res.status(statusCode).json({
-    state: "Error",
-    message,
-  });
+  const response = {
+    success: false,
+    statusCode,
+    data: null,
+    error: message,
+    details: {},
+    timestamp: new Date().toISOString()
+  };
+  
+  return res.status(statusCode).json(response);
 }
 
 export { respondSuccess, respondError, respondInternalError };

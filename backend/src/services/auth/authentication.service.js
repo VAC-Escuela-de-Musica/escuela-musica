@@ -6,8 +6,8 @@ import User from "../../models/user.model.js";
 import jwt from "jsonwebtoken";
 
 import { ACCESS_JWT_SECRET, REFRESH_JWT_SECRET } from "../../config/configEnv.js";
-
 import { handleError } from "../../utils/errorHandler.util.js";
+import logger from "../../utils/logger.util.js";
 
 /**
  * Inicia sesión con un usuario.
@@ -19,15 +19,15 @@ import { handleError } from "../../utils/errorHandler.util.js";
 async function login(user) {
   try {
     const { email, password } = user;
-    console.log("Intentando login con:", email);
+    
+    logger.info("Intento de login", { email });
     
     const userFound = await User.findOne({ email: email })
       .populate("roles")
       .exec();
     
-    console.log("Usuario encontrado:", userFound ? userFound.email : null);
-    
     if (!userFound) {
+      logger.warn("Intento de login fallido: usuario no encontrado", { email });
       return {
         success: false,
         error: "El usuario y/o contraseña son incorrectos",
@@ -36,9 +36,9 @@ async function login(user) {
     }
 
     const matchPassword = await User.comparePassword(password, userFound.password);
-    console.log("¿Contraseña coincide?", matchPassword);
 
     if (!matchPassword) {
+      logger.warn("Intento de login fallido: contraseña incorrecta", { email });
       return {
         success: false,
         error: "El usuario y/o contraseña son incorrectos",
@@ -58,6 +58,8 @@ async function login(user) {
       { expiresIn: "7d" }
     );
 
+    logger.auth("login_success", userFound._id, { email });
+
     return {
       success: true,
       data: {
@@ -73,6 +75,7 @@ async function login(user) {
       error: null
     };
   } catch (error) {
+    logger.error("Error en login", { error, context: "authentication.service" });
     handleError(error, "authentication.service -> login");
     return {
       success: false,

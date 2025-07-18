@@ -31,10 +31,14 @@ export const serveFile = asyncHandler(async (req, res) => {
   
   // Intentar método principal (URL prefirmada)
   try {
+    console.log(`🔍 Preparando descarga para material: ${material.filename}, bucket: ${material.bucketTipo}`);
+    
     const downloadData = await fileService.prepareDownload(material, {
       action: 'view',
       duration: 300
     });
+    
+    console.log(`✅ URL prefirmada generada exitosamente para: ${material.filename}`);
     
     // Auditoría para método presigned
     await auditService.logMaterialAccess(material, req, 'presigned_view', {
@@ -49,26 +53,33 @@ export const serveFile = asyncHandler(async (req, res) => {
     
   } catch (presignedError) {
     console.warn('⚠️ Fallo en URL prefirmada, usando fallback streaming:', presignedError.message);
+    console.warn('⚠️ Stack trace:', presignedError.stack);
     
     // Fallback: streaming a través del backend
-    const fileStream = await fileService.getFileStreamForFallback(material);
-    
-    res.setHeader('Content-Type', material.tipoContenido || 'application/octet-stream');
-    res.setHeader('Content-Disposition', 'inline');
-    res.setHeader('X-Served-By', 'fallback-stream');
-    res.setHeader('Cache-Control', 'public, max-age=300');
-    
-    // Auditoría para fallback
-    await auditService.logMaterialAccess(material, req, 'fallback_stream', {
-      ip: req.ip,
-      userAgent: req.get('User-Agent')
-    });
-    
-    await material.save();
-    
-    console.log(`✅ Archivo servido via fallback: ${material.filename} a ${req.email || 'anónimo'}`);
-    
-    fileStream.pipe(res);
+    try {
+      const fileStream = await fileService.getFileStreamForFallback(material);
+      
+      res.setHeader('Content-Type', material.tipoContenido || 'application/octet-stream');
+      res.setHeader('Content-Disposition', 'inline');
+      res.setHeader('X-Served-By', 'fallback-stream');
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      
+      // Auditoría para fallback
+      await auditService.logMaterialAccess(material, req, 'fallback_stream', {
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      
+      await material.save();
+      
+      console.log(`✅ Archivo servido via fallback: ${material.filename} a ${req.email || 'anónimo'}`);
+      
+      fileStream.pipe(res);
+    } catch (fallbackError) {
+      console.error('❌ Error en fallback streaming:', fallbackError.message);
+      console.error('❌ Stack trace:', fallbackError.stack);
+      return respondError(req, res, 500, "Error al servir el archivo");
+    }
   }
 });
 

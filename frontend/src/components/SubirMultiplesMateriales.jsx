@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { API_ENDPOINTS, API_HEADERS } from '../config/api.js';
+import { logger } from '../utils/logger.js';
 import './darkmode.css';
 
 // Componente para mostrar tiempo transcurrido
@@ -99,13 +100,13 @@ function SubirMultiplesMateriales() {
         const materialData = materiales[i];
         
         setProgreso(`📤 Procesando archivo ${i + 1}/${archivos.length}: ${archivo.file.name}`);
-        console.log(`📤 Subiendo archivo ${i + 1}/${archivos.length}: ${archivo.file.name}`);
+        logger.upload(`Subiendo archivo ${i + 1}/${archivos.length}: ${archivo.file.name}`);
         
         // 1. Obtener URL pre-firmada para subida
         setProgreso(`🔗 Obteniendo URL de subida para: ${archivo.file.name}`);
         const extension = archivo.file.name.split('.').pop();
-        console.log('🔗 Solicitando URL pre-firmada...');
-        console.log('📊 Datos enviados:', {
+        logger.request('Solicitando URL pre-firmada...');
+        logger.data('Datos enviados:', {
           extension,
           contentType: archivo.file.type,
           nombre: materialData.nombre,
@@ -127,28 +128,28 @@ function SubirMultiplesMateriales() {
 
         if (!urlResponse.ok) {
           const errorData = await urlResponse.text();
-          console.error('❌ Error en URL response:', errorData);
+          logger.error('Error en URL response:', errorData);
           throw new Error(`Error obteniendo URL de subida: ${urlResponse.status} - ${errorData}`);
         }
 
         const responseData = await urlResponse.json();
-        console.log('🔍 Respuesta completa del servidor:', responseData);
+        logger.structure('Respuesta completa del servidor:', responseData);
         
         // Extraer datos según la estructura de respuesta del backend
         const { uploadUrl, materialId, filename } = responseData.data || responseData;
-        console.log('✅ URL pre-firmada obtenida:', { uploadUrl, materialId, filename });
+        logger.success('URL pre-firmada obtenida:', { uploadUrl, materialId, filename });
 
         // Validar que tenemos todos los datos necesarios
         if (!uploadUrl || !materialId || !filename) {
-          console.error('❌ Datos incompletos:', { uploadUrl: !!uploadUrl, materialId: !!materialId, filename: !!filename });
+          logger.error('Datos incompletos:', { uploadUrl: !!uploadUrl, materialId: !!materialId, filename: !!filename });
           throw new Error(`Datos incompletos del servidor: uploadUrl=${!!uploadUrl}, materialId=${!!materialId}, filename=${!!filename}`);
         }
 
         // 2. Subir archivo a MinIO usando la URL pre-firmada
         setProgreso(`📤 Subiendo archivo a MinIO: ${archivo.file.name}`);
-        console.log('📤 Subiendo archivo a MinIO...');
-        console.log('🔗 URL de subida:', uploadUrl);
-        console.log('📄 Archivo info:', {
+        logger.upload('Subiendo archivo a MinIO...');
+        logger.url('URL de subida:', uploadUrl);
+        logger.file('Archivo info:', {
           name: archivo.file.name,
           size: archivo.file.size,
           type: archivo.file.type
@@ -161,7 +162,11 @@ function SubirMultiplesMateriales() {
         }, 60000); // 60 segundos timeout
         
         try {
-          const uploadResponse = await fetch(uploadUrl, {
+          // IMPORTANTE: NO enviar Authorization header con URL pre-firmada
+          // Usar fetch original sin interceptor para evitar auth conflicts
+          const originalFetch = window.fetch.__originalFetch || window.fetch;
+          
+          const uploadResponse = await originalFetch(uploadUrl, {
             method: 'PUT',
             body: archivo.file,
             headers: {
@@ -172,15 +177,15 @@ function SubirMultiplesMateriales() {
 
           clearTimeout(timeoutId); // Limpiar timeout si la request se completa
 
-          console.log('📊 Upload response status:', uploadResponse.status);
-          console.log('📊 Upload response headers:', Object.fromEntries(uploadResponse.headers.entries()));
+          logger.data('Upload response status:', uploadResponse.status);
+          logger.headers('Upload response headers:', Object.fromEntries(uploadResponse.headers.entries()));
 
           if (!uploadResponse.ok) {
             const errorText = await uploadResponse.text();
-            console.error('❌ Error en upload response:', errorText);
+            logger.error('Error en upload response:', errorText);
             throw new Error(`Error subiendo archivo a MinIO: ${uploadResponse.status} - ${errorText}`);
           }
-          console.log('✅ Archivo subido a MinIO exitosamente');
+          logger.success('Archivo subido a MinIO exitosamente');
         } catch (uploadError) {
           clearTimeout(timeoutId);
           
@@ -195,7 +200,7 @@ function SubirMultiplesMateriales() {
 
         // 3. Confirmar subida en el backend
         setProgreso(`✅ Confirmando subida: ${archivo.file.name}`);
-        console.log('✅ Confirmando subida...');
+        logger.success('Confirmando subida...');
         const confirmResponse = await fetch(API_ENDPOINTS.materials.confirmUpload, {
           method: 'POST',
           headers: API_HEADERS.withAuth(),
@@ -206,17 +211,17 @@ function SubirMultiplesMateriales() {
           })
         });
 
-        console.log('📊 Confirm response status:', confirmResponse.status);
+        logger.data('Confirm response status:', confirmResponse.status);
 
         if (!confirmResponse.ok) {
           const errorData = await confirmResponse.text();
-          console.error('❌ Error en confirm response:', errorData);
+          logger.error('Error en confirm response:', errorData);
           throw new Error(`Error confirmando subida: ${confirmResponse.status} - ${errorData}`);
         }
 
         const confirmData = await confirmResponse.json();
-        console.log('✅ Confirmación exitosa:', confirmData);
-        console.log(`✅ Archivo completado: ${archivo.file.name}`);
+        logger.success('Confirmación exitosa:', confirmData);
+        logger.success(`Archivo completado: ${archivo.file.name}`);
       }
 
       setProgreso('🎉 ¡Todos los archivos subidos exitosamente!');
@@ -228,8 +233,8 @@ function SubirMultiplesMateriales() {
       document.querySelector('input[type="file"]').value = '';
       
     } catch (error) {
-      console.error('❌ Error en la subida:', error);
-      console.error('❌ Stack trace:', error.stack);
+      logger.error('Error en la subida:', error);
+      logger.stack('Stack trace:', error.stack);
       setProgreso(`❌ Error: ${error.message}`);
       alert(`❌ Error: ${error.message}`);
     } finally {

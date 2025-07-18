@@ -12,6 +12,9 @@ import cookieParser from "cookie-parser";
 import path from "path";
 // Importa el módulo 'url' para manejar URLs
 import { fileURLToPath } from "url";
+// Importa middlewares de seguridad
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 /** El enrutador principal */
 import indexRoutes from "./routes/index.routes.js";
 // Importa el archivo 'configDB.js' para crear la conexión a la base de datos
@@ -30,8 +33,38 @@ async function setupServer() {
     /** Instancia de la aplicacion */
     const server = express();
     server.disable("x-powered-by");
-    // Agregamos los cors
-    server.use(cors({ credentials: true, origin: true }));
+    
+    // === CONFIGURACIÓN DE SEGURIDAD ===
+    // Helmet para headers de seguridad
+    server.use(helmet({
+      contentSecurityPolicy: false, // Deshabilitado para desarrollo
+      crossOriginEmbedderPolicy: false // Deshabilitado para desarrollo
+    }));
+    
+    // Rate limiting
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutos
+      max: 100, // Límite de 100 peticiones por IP por ventana
+      message: {
+        success: false,
+        error: "Demasiadas peticiones desde esta IP, intenta más tarde",
+        statusCode: 429
+      },
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+    server.use(limiter);
+    
+    // CORS configurado por entorno
+    const corsOptions = {
+      origin: process.env.NODE_ENV === 'production' 
+        ? process.env.FRONTEND_URL || 'https://yourdomain.com'
+        : ['http://localhost:3000', 'http://localhost:443', 'http://localhost:5173'],
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    };
+    server.use(cors(corsOptions));
     // Agrega el middleware para el manejo de datos en formato URL
     server.use(urlencoded({ extended: true }));
     // Agrega el middleware para el manejo de datos en formato JSON

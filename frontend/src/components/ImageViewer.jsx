@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { API_ENDPOINTS, API_UTILS } from '../config/api.js';
+import { logger } from '../utils/logger.js';
 import './darkmode.css';
 
-const ImageViewer = ({ material, width = "100px", height = "100px" }) => {
+const ImageViewer = ({ material, width = '100px', height = '100px' }) => {
   const [imageUrl, setImageUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,7 +14,7 @@ const ImageViewer = ({ material, width = "100px", height = "100px" }) => {
         setLoading(true);
         setError(null);
         
-        console.log(`🔄 Cargando imagen: ${material.filename}, ID: ${material._id}, tipo: ${material.bucketTipo}`);
+        logger.loading(`Cargando imagen: ${material.filename}, ID: ${material._id}, tipo: ${material.bucketTipo}`);
         
         // Obtener el token de autenticación solo para materiales privados
         let tokenParam = '';
@@ -31,14 +32,14 @@ const ImageViewer = ({ material, width = "100px", height = "100px" }) => {
           const baseUrl = API_UTILS.config.baseUrl;
           const fullUrl = `${baseUrl}${material.viewUrl}${tokenParam}`;
           setImageUrl(fullUrl);
-          console.log(`🖼️ Cargando imagen con URL de backend: ${fullUrl.substring(0, 100)}...`);
+          logger.backend(`Cargando imagen con URL de backend: ${fullUrl.substring(0, 100)}...`);
         } else {
           // Necesita generar nueva URL para visualización
-          console.log(`🔗 Generando nueva URL para: ${material.filename}`);
+          logger.url(`Generando nueva URL para: ${material.filename}`);
           // Para visualización ahora usamos el endpoint serve directamente 
           const viewUrl = API_ENDPOINTS.files.serve(material._id) + tokenParam;
           setImageUrl(viewUrl);
-          console.log(`✅ URL de visualización generada: ${viewUrl.substring(0, 100)}...`);
+          logger.success(`URL de visualización generada: ${viewUrl.substring(0, 100)}...`);
         }
       } catch (err) {
         console.error(`❌ Error cargando imagen ${material.filename}:`, err);
@@ -168,7 +169,7 @@ const ImageViewer = ({ material, width = "100px", height = "100px" }) => {
           border: '1px solid #ddd'
         }}
         onLoad={() => {
-          console.log(`✅ Imagen cargada exitosamente: ${material.filename}`);
+          logger.imageSuccess(`Imagen cargada exitosamente: ${material.filename}`);
         }}
         onError={(e) => {
           console.error(`❌ Error cargando imagen ${material.filename}:`, e);

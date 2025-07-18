@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { API_ENDPOINTS, API_HEADERS } from '../config/api.js';
+import authService from '../services/auth.service.js';
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -11,23 +11,19 @@ function Login({ onLogin }) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    
     try {
-      const res = await fetch(API_ENDPOINTS.auth.login, {
-        method: "POST",
-        headers: API_HEADERS.basic,
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      const token = (data && data.accessToken) || (data && data.data && data.data.accessToken) || (data && data.data && data.data.token);
-      console.log("Respuesta login:", data, "Token detectado:", token);
-      if (!res.ok || !token) {
-        setError(data.message || "Credenciales incorrectas");
-      } else {
-        localStorage.setItem("token", token);
+      const result = await authService.login(email, password);
+      
+      if (result.success) {
+        console.log("Login exitoso:", result.data);
         if (onLogin) onLogin();
+      } else {
+        setError(result.error || "Error en el inicio de sesión");
       }
     } catch (err) {
-      setError("Error de red");
+      console.error("Error en login:", err);
+      setError("Error de conexión");
     } finally {
       setLoading(false);
     }
