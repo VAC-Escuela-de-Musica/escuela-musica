@@ -28,12 +28,14 @@ const loadUserData = async (req, res, next) => {
     // Establecer datos completos del usuario
     req.user.fullData = user;
     req.user.roleNames = user.roles.map(role => role.name);
+    req.user.id = user._id; // Agregar el ID del usuario
+    req.user.email = user.email; // Agregar el email del usuario
     
     // Asegurar compatibilidad con legacy code
     req.email = req.user.email;
     req.roles = req.user.roleNames;
     
-    console.log(`✅ Datos de usuario cargados: ${user.email}, roles: ${req.user.roleNames.join(', ')}`);
+    console.log(`✅ Datos de usuario cargados: ${user.email}, ID: ${user._id}, roles: ${req.user.roleNames.join(', ')}`);
     
     next();
   } catch (error) {

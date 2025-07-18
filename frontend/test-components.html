@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Frontend Components</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ccc; }
+        .error { color: red; }
+        .success { color: green; }
+        .loading { color: orange; }
+    </style>
+</head>
+<body>
+    <h1>Test Frontend Components</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Basic App Loading</h2>
+        <div id="app-test">
+            <div class="loading">Cargando aplicación...</div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Authentication Status</h2>
+        <div id="auth-test">
+            <div class="loading">Verificando autenticación...</div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: API Connection</h2>
+        <div id="api-test">
+            <div class="loading">Probando conexión API...</div>
+        </div>
+    </div>
+
+    <script>
+        // Test 1: Basic App Loading
+        const testApp = () => {
+            try {
+                const appElement = document.getElementById('app-test');
+                appElement.innerHTML = '<div class="success">✅ App container loaded</div>';
+                return true;
+            } catch (error) {
+                const appElement = document.getElementById('app-test');
+                appElement.innerHTML = `<div class="error">❌ App loading failed: ${error.message}</div>`;
+                return false;
+            }
+        };
+
+        // Test 2: Authentication Status
+        const testAuth = () => {
+            try {
+                const authElement = document.getElementById('auth-test');
+                const token = localStorage.getItem('token');
+                const user = localStorage.getItem('user');
+                
+                if (token && user) {
+                    authElement.innerHTML = `
+                        <div class="success">✅ Token found: ${token.substring(0, 20)}...</div>
+                        <div class="success">✅ User data: ${user}</div>
+                    `;
+                } else {
+                    authElement.innerHTML = '<div class="error">❌ No authentication data found</div>';
+                }
+                return true;
+            } catch (error) {
+                const authElement = document.getElementById('auth-test');
+                authElement.innerHTML = `<div class="error">❌ Auth test failed: ${error.message}</div>`;
+                return false;
+            }
+        };
+
+        // Test 3: API Connection
+        const testAPI = async () => {
+            try {
+                const apiElement = document.getElementById('api-test');
+                const token = localStorage.getItem('token');
+                
+                if (!token) {
+                    apiElement.innerHTML = '<div class="error">❌ No token for API test</div>';
+                    return false;
+                }
+
+                const response = await fetch('http://localhost:3000/api/auth/verify', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    apiElement.innerHTML = `
+                        <div class="success">✅ API connection successful</div>
+                        <div class="success">✅ Response: ${JSON.stringify(data, null, 2)}</div>
+                    `;
+                } else {
+                    apiElement.innerHTML = `<div class="error">❌ API returned error: ${response.status}</div>`;
+                }
+                return true;
+            } catch (error) {
+                const apiElement = document.getElementById('api-test');
+                apiElement.innerHTML = `<div class="error">❌ API test failed: ${error.message}</div>`;
+                return false;
+            }
+        };
+
+        // Run all tests
+        window.onload = () => {
+            testApp();
+            testAuth();
+            testAPI();
+        };
+    </script>
+</body>
+</html>

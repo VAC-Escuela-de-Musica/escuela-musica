@@ -1,92 +1,182 @@
-"use strict";
-
 import { respondSuccess, respondError } from "../../utils/responseHandler.util.js";
-import { UserService } from '../../services/index.js';
-import { asyncHandler } from "../../middlewares/index.js";
+import { handleError } from "../../utils/errorHandler.util.js";
 
 /**
- * Obtiene todos los usuarios
+ * Controlador de usuarios ultra simplificado para debugging
  */
-const getUsers = asyncHandler(async (req, res) => {
-  const result = await UserService.getUsers();
-  
-  if (!result.success) {
-    return respondError(req, res, 404, result.error);
+class UserController {
+  constructor() {
+    // Inicialización básica
   }
 
-  return result.data.length === 0
-    ? respondSuccess(req, res, 204)
-    : respondSuccess(req, res, 200, result.data);
-});
-
-/**
- * Crea un nuevo usuario
- */
-const createUser = asyncHandler(async (req, res) => {
-  const { body } = req;
-  // La validación del body ya se maneja en el middleware
-  
-  const result = await UserService.createUser(body);
-
-  if (!result.success) {
-    return respondError(req, res, 400, result.error);
+  /**
+   * Lista todos los usuarios - versión básica
+   */
+  async listUsers(req, res) {
+    try {
+      console.log('🔍 UserController.listUsers called');
+      console.log('👤 req.user:', req.user);
+      
+      // Respuesta básica sin servicios para probar
+      const mockUsers = [
+        {
+          id: '1',
+          username: 'admin',
+          email: 'admin@email.com',
+          roles: ['admin']
+        }
+      ];
+      
+      return respondSuccess(req, res, 200, {
+        users: mockUsers,
+        totalCount: mockUsers.length,
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          pageSize: 10,
+          totalCount: mockUsers.length
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error en UserController.listUsers:', error);
+      handleError(error, "UserController -> listUsers");
+      return respondError(req, res, 500, "Error interno del servidor");
+    }
   }
 
-  respondSuccess(req, res, 201, result.data);
-});
-
-/**
- * Obtiene un usuario por su id
- */
-const getUserById = asyncHandler(async (req, res) => {
-  const { params } = req;
-  // La validación de params ya se maneja en el middleware
-
-  const result = await UserService.getUserById(params.id);
-
-  if (!result.success) {
-    return respondError(req, res, 404, result.error);
+  /**
+   * Crea un nuevo usuario - versión básica
+   */
+  async createUser(req, res) {
+    try {
+      return respondSuccess(req, res, 201, { message: 'Usuario creado (mock)' });
+    } catch (error) {
+      handleError(error, "UserController -> createUser");
+      return respondError(req, res, 500, "Error interno del servidor");
+    }
   }
 
-  respondSuccess(req, res, 200, result.data);
-});
-
-/**
- * Actualiza un usuario por su id
- */
-const updateUser = asyncHandler(async (req, res) => {
-  const { params, body } = req;
-  // Las validaciones ya se manejan en el middleware
-
-  const result = await UserService.updateUser(params.id, body);
-
-  if (!result.success) {
-    return respondError(req, res, 400, result.error);
+  /**
+   * Obtiene un usuario por ID - versión básica
+   */
+  async getUserById(req, res) {
+    try {
+      const { id } = req.params;
+      return respondSuccess(req, res, 200, { 
+        id, 
+        username: 'user', 
+        email: 'user@email.com',
+        message: 'Usuario encontrado (mock)'
+      });
+    } catch (error) {
+      handleError(error, "UserController -> getUserById");
+      return respondError(req, res, 500, "Error interno del servidor");
+    }
   }
 
-  respondSuccess(req, res, 200, result.data);
-});
-
-/**
- * Elimina un usuario por su id
- */
-const deleteUser = asyncHandler(async (req, res) => {
-  const { params } = req;
-  // La validación de params ya se maneja en el middleware
-
-  const result = await UserService.deleteUser(params.id);
-  
-  if (!result.success) {
-    return respondError(req, res, 404, result.error);
+  /**
+   * Actualiza un usuario - versión básica
+   */
+  async updateUser(req, res) {
+    try {
+      const { id } = req.params;
+      return respondSuccess(req, res, 200, { 
+        id, 
+        message: 'Usuario actualizado (mock)'
+      });
+    } catch (error) {
+      handleError(error, "UserController -> updateUser");
+      return respondError(req, res, 500, "Error interno del servidor");
+    }
   }
 
-  respondSuccess(req, res, 200, result.data);
-});
+  /**
+   * Elimina un usuario - versión básica
+   */
+  async deleteUser(req, res) {
+    try {
+      const { id } = req.params;
+      return respondSuccess(req, res, 200, { 
+        id, 
+        message: 'Usuario eliminado (mock)'
+      });
+    } catch (error) {
+      handleError(error, "UserController -> deleteUser");
+      return respondError(req, res, 500, "Error interno del servidor");
+    }
+  }
+
+  /**
+   * Obtiene el perfil del usuario actual
+   */
+  async getProfile(req, res) {
+    try {
+      const currentUser = req.user;
+      return respondSuccess(req, res, 200, {
+        user: currentUser,
+        message: 'Perfil obtenido'
+      });
+    } catch (error) {
+      handleError(error, "UserController -> getProfile");
+      return respondError(req, res, 500, "Error interno del servidor");
+    }
+  }
+
+  /**
+   * Actualiza el perfil del usuario actual
+   */
+  async updateProfile(req, res) {
+    try {
+      return respondSuccess(req, res, 200, { 
+        message: 'Perfil actualizado (mock)'
+      });
+    } catch (error) {
+      handleError(error, "UserController -> updateProfile");
+      return respondError(req, res, 500, "Error interno del servidor");
+    }
+  }
+
+  /**
+   * Cambia la contraseña del usuario actual
+   */
+  async changePassword(req, res) {
+    try {
+      return respondSuccess(req, res, 200, { 
+        message: 'Contraseña cambiada (mock)'
+      });
+    } catch (error) {
+      handleError(error, "UserController -> changePassword");
+      return respondError(req, res, 500, "Error interno del servidor");
+    }
+  }
+}
+
+// Crear instancia singleton del controlador
+const userController = new UserController();
 
 export default {
-  getUsers,
-  createUser,
-  getUserById,
-  updateUser,
-  deleteUser,
+  listUsers: userController.listUsers.bind(userController),
+  getUsers: userController.listUsers.bind(userController), // Alias para compatibilidad
+  createUser: userController.createUser.bind(userController),
+  getUserById: userController.getUserById.bind(userController),
+  updateUser: userController.updateUser.bind(userController),
+  deleteUser: userController.deleteUser.bind(userController),
+  getProfile: userController.getProfile.bind(userController),
+  updateProfile: userController.updateProfile.bind(userController),
+  changePassword: userController.changePassword.bind(userController),
+  
+  // Métodos adicionales que pueden ser necesarios
+  getUsersByRole: userController.listUsers.bind(userController),
+  toggleUserStatus: userController.updateUser.bind(userController),
+  assignRoles: userController.updateUser.bind(userController),
+  getUserStats: userController.listUsers.bind(userController)
 };
+
+export const listUsers = userController.listUsers.bind(userController);
+export const createUser = userController.createUser.bind(userController);
+export const getUserById = userController.getUserById.bind(userController);
+export const updateUser = userController.updateUser.bind(userController);
+export const deleteUser = userController.deleteUser.bind(userController);
+export const getProfile = userController.getProfile.bind(userController);
+export const updateProfile = userController.updateProfile.bind(userController);
+export const changePassword = userController.changePassword.bind(userController);

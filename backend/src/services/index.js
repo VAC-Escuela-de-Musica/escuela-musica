@@ -35,19 +35,18 @@ export { minioService } from './storage/minio.service.js';
 export { fileService } from './storage/file.service.js';
 export { auditService } from './monitoring/audit.service.js';
 
-// Servicios de autenticación y autorización
-export { default as AuthenticationService } from './auth/authentication.service.js';
-export { default as AuthService } from './auth/authentication.service.js'; // Alias para compatibilidad
+// Servicios de autenticación y autorización (usando named exports)
+export { AuthenticationService } from './auth/authentication.service.js';
 export { AuthorizationService } from './auth/authorization.service.js';
 
 // Servicios de usuario  
-export { default as UserService } from './user/user.service.js';
+export { userService } from './user/user.service.js';
 
 // Servicios de material
-export { default as MaterialService } from './material/material.service.js';
+export { materialService } from './material/material.service.js';
 
 // Servicios de clase
-export { default as ClassService } from './class/class.service.js';
+export { ClassService } from './class/class.service.js';
 
 // Servicios de evento
-export { default as EventService } from './event/event.service.js';
+export { EventService } from './event/event.service.js';

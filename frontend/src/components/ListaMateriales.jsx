@@ -1,428 +1,296 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useMaterials } from '../hooks/useMaterials';
+import { useAuth } from './AuthProvider.jsx';
+import { formatDate, formatFileSize, getFileTypeFromExtension, getFileTypeIcon } from '../utils/helpers';
 import ImageViewer from './ImageViewer';
-import MaterialFilters from './MaterialFilters';
-import { API_ENDPOINTS, API_HEADERS } from '../config/api.js';
-import { logger } from '../utils/logger.js';
-import './darkmode.css';
+import './ListaMateriales.css';
 
 const ListaMateriales = () => {
-  const [materiales, setMateriales] = useState([]);
-  const [materialesFiltrados, setMaterialesFiltrados] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { user } = useAuth();
+  const { materials, loading, error, pagination, fetchMaterials, deleteMaterial, prevPage, nextPage } = useMaterials();
+  
+  // Estados para modales
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
 
   useEffect(() => {
-    const fetchMateriales = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No hay token de autenticación');
-        }
+    if (user) {
+      fetchMaterials();
+    }
+  }, [user, fetchMaterials]);
 
-        logger.materials('Obteniendo lista de materiales...');
-        logger.token('Token:', token ? 'Presente' : 'Ausente');
-        logger.endpoint('URL del endpoint:', API_ENDPOINTS.materials.list);
-        
-        // Usar la configuración centralizada
-        const res = await fetch(API_ENDPOINTS.materials.list, {
-          headers: API_HEADERS.withAuth()
-        });
-        
-        logger.response('Status de respuesta:', res.status, res.statusText);
-        logger.headers('Headers de respuesta:', Object.fromEntries(res.headers.entries()));
-        
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('❌ Error text response:', errorText);
-          throw new Error(`Error HTTP: ${res.status} - ${errorText}`);
-        }
-        
-        const response = await res.json();
-        logger.success('Materiales obtenidos - respuesta completa:', response);
-        logger.structure('Estructura de respuesta detallada:', {
-          success: response.success,
-          statusCode: response.statusCode,
-          hasData: !!response.data,
-          dataType: typeof response.data,
-          dataIsArray: Array.isArray(response.data),
-          dataLength: Array.isArray(response.data) ? response.data.length : 'No es array',
-          allKeys: Object.keys(response)
-        });
-        
-        // Extraer datos usando el nuevo formato de respuesta
-        let materialesData = [];
-        
-        if (response.success && response.data && Array.isArray(response.data)) {
-          // Nuevo formato: { success: true, data: [...] }
-          materialesData = response.data;
-          logger.format('Usando nuevo formato response.data');
-        } else if (response.data && Array.isArray(response.data)) {
-          // Formato con data: { data: [...] }
-          materialesData = response.data;
-          logger.format('Usando response.data');
-        } else if (Array.isArray(response)) {
-          // Formato directo: [...]
-          materialesData = response;
-          logger.format('Usando response directamente');
-        } else if (response.materiales && Array.isArray(response.materiales)) {
-          // Formato legacy: { materiales: [...] }
-          materialesData = response.materiales;
-          logger.format('Usando response.materiales');
+  // Manejar vista previa de imagen
+  const handleImagePreview = (material) => {
+    // Verificar si es una imagen usando ambos campos (compatibilidad)
+    const mimeType = material.mimeType || material.tipoContenido;
+    const imageUrl = material.viewUrl;
+    
+    if (imageUrl && mimeType && 
+        ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mimeType)) {
+      setSelectedImage({
+        url: imageUrl,
+        title: material.title || material.nombre,
+        description: material.description || material.descripcion,
+        fileName: material.title || material.nombre,
+        fileSize: material.fileSize || material.tamaño
+      });
+    } else {
+      console.log('No se puede previsualizar:', { 
+        imageUrl, 
+        mimeType, 
+        isImage: mimeType && mimeType.startsWith('image/') 
+      });
+    }
+  };
+
+  // Manejar eliminación
+  const handleDeleteClick = (material) => {
+    setDeleteConfirmation(material);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteConfirmation) {
+      try {
+        const result = await deleteMaterial(deleteConfirmation._id);
+        if (result.success) {
+          setDeleteConfirmation(null);
+          // El hook ya recarga los materiales automáticamente
         } else {
-          logger.warn('Formato de respuesta no reconocido, usando array vacío');
-          materialesData = [];
+          console.error('Error al eliminar material:', result.error);
+          alert('Error al eliminar el material. Por favor, inténtalo de nuevo.');
         }
-        
-        logger.final('Materiales finales a mostrar:', materialesData);
-        logger.finalCount('Cantidad final de materiales:', materialesData.length);
-        
-        if (materialesData.length > 0) {
-          logger.first('Primer material como ejemplo:', materialesData[0]);
-        }
-        
-        setMateriales(materialesData);
-        setMaterialesFiltrados(materialesData); // Inicializar filtrados con todos los materiales
-        
-      } catch (err) {
-        console.error('❌ Error obteniendo materiales:', err);
-        console.error('❌ Stack trace:', err.stack);
-        
-        // Detectar error de conexión
-        if (err.message.includes('fetch') || err.message.includes('NetworkError') || err.message.includes('Failed to fetch')) {
-          setError('No se puede conectar al servidor backend. Asegúrate de que esté corriendo en http://localhost:1230');
-        } else {
-          setError(err.message);
-        }
-      } finally {
-        setLoading(false);
+      } catch (error) {
+        console.error('Error al eliminar material:', error);
+        alert('Error al eliminar el material. Por favor, inténtalo de nuevo.');
       }
+    }
+  };
+
+  // Obtener icono de tipo de archivo
+  const getFileIcon = (mimeType) => {
+    const icons = {
+      'image/': '🖼️',
+      'application/pdf': '📄',
+      'application/msword': '📝',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '📝',
+      'text/': '📄',
+      'audio/': '🎵',
+      'video/': '🎬',
     };
     
-    fetchMateriales();
-  }, []);
-
-  const handleDownload = async (materialId, filename) => {
-    try {
-      // Ya no necesitamos obtener una URL prefirmada, podemos usar directamente la URL del backend
-      logger.download(`Descargando archivo: ${filename}`);
-      
-      // Buscar el material en la lista para determinar si es público o privado
-      const material = materiales.find(m => m._id === materialId);
-      
-      if (!material) {
-        throw new Error('Material no encontrado');
-      }
-      
-      // Crear enlace de descarga usando la configuración centralizada
-      const link = document.createElement('a');
-      link.href = API_ENDPOINTS.files.download(materialId);
-      
-      // Añadir token si es necesario (material privado)
-      if (material.bucketTipo !== 'publico') {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No hay token de autenticación para material privado');
-        }
-        link.href += `?token=${encodeURIComponent(token)}`;
-      }
-      
-      link.download = filename;
-      link.style.display = 'none';
-      
-      logger.download(`Iniciando descarga: ${link.href.substring(0, 100)}...`);
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-    } catch (error) {
-      console.error('❌ Error descargando:', error);
-      alert(`Error descargando archivo: ${error.message}`);
+    for (const [type, icon] of Object.entries(icons)) {
+      if (mimeType?.startsWith(type)) return icon;
     }
+    return '📎';
   };
 
-  const handleDelete = async (materialId, filename) => {
-    if (!confirm(`¿Estás seguro de eliminar "${filename}"?`)) {
-      return;
-    }
-    
-    try {
-      logger.log(`🗑️ Eliminando material: ${materialId}`);
-      
-      const response = await fetch(API_ENDPOINTS.materials.delete(materialId), {
-        method: 'DELETE',
-        headers: API_HEADERS.withAuth()
-      });
-      
-      logger.data(`Delete response status: ${response.status}`);
-      
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('❌ Error en delete response:', errorData);
-        throw new Error(`Error ${response.status}: ${errorData}`);
-      }
-      
-      const result = await response.json();
-      logger.success('Material eliminado exitosamente:', result);
-      
-      // Actualizar la lista local sin recargar la página
-      setMateriales(prev => prev.filter(m => m._id !== materialId));
-      setMaterialesFiltrados(prev => prev.filter(m => m._id !== materialId));
-      
-      alert('✅ Material eliminado exitosamente');
-      
-    } catch (error) {
-      console.error('❌ Error eliminando:', error);
-      alert(`❌ Error eliminando archivo: ${error.message}`);
-    }
-  };
-
-  if (loading) return (
-    <div style={{ textAlign: 'center', padding: '20px' }}>
-      <p>⏳ Cargando materiales...</p>
-    </div>
-  );
-  
-  if (error) return (
-    <div style={{ textAlign: 'center', padding: '20px' }}>
-      <p style={{ color: 'var(--danger-color)', marginBottom: '15px' }}>❌ Error: {error}</p>
-      
-      {error.includes('conectar al servidor') && (
-        <div className="alert-warning" style={{ 
-          borderRadius: '4px', 
-          padding: '15px', 
-          marginBottom: '15px',
-          textAlign: 'left'
-        }}>
-          <h4 style={{ margin: '0 0 10px 0' }}>🔧 Solución:</h4>
-          <ol style={{ paddingLeft: '20px' }}>
-            <li>Abre una terminal en la carpeta <code>backend</code></li>
-            <li>Ejecuta: <code>npm run dev</code></li>
-            <li>Espera a que aparezca: "Servidor corriendo en localhost:1230"</li>
-            <li>Recarga esta página</li>
-          </ol>
-        </div>
-      )}
-      
-      <button 
-        className="btn-primary"
-        onClick={() => window.location.reload()}
-        style={{
-          padding: '8px 16px',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          color: 'white'
-        }}
-      >
-        🔄 Reintentar
-      </button>
-    </div>
-  );
-  
-  if (!materiales.length) {
-    logger.warn('Mostrando mensaje "No hay materiales" porque:', {
-      materialesLength: materiales.length,
-      materialesArray: materiales,
-      isArray: Array.isArray(materiales)
-    });
+  // Estados de carga y error
+  if (!user) {
     return (
-      <div style={{ textAlign: 'center', padding: '20px' }}>
-        <p>📁 No hay materiales subidos para tu rol.</p>
-        <div style={{ marginTop: '15px' }}>
-          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-            Los materiales visibles dependen de tu rol:
-          </p>
-          <ul style={{ 
-            textAlign: 'left', 
-            display: 'inline-block', 
-            fontSize: '14px', 
-            color: 'var(--text-muted)' 
-          }}>
-            <li>👑 Admin: Ve todos los materiales</li>
-            <li>👨‍🏫 Profesor: Ve sus materiales + públicos</li>
-            <li>👤 Usuario: Solo materiales públicos</li>
-          </ul>
+      <div className="lista-materiales">
+        <div className="no-auth-message">
+          <h2>Acceso Restringido</h2>
+          <p>Debes iniciar sesión para ver los materiales.</p>
         </div>
-        <button 
-          className="btn-primary"
-          onClick={() => window.location.reload()} 
-          style={{ 
-            marginTop: '10px',
-            padding: '8px 16px',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            color: 'white'
-          }}
-        >
-          🔄 Recargar página
-        </button>
       </div>
     );
   }
 
-  logger.finalRender('Renderizando lista con', materialesFiltrados.length, 'materiales filtrados de', materiales.length, 'totales');
+  if (loading) {
+    return (
+      <div className="lista-materiales">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Cargando materiales...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="lista-materiales">
+        <div className="error-container">
+          <h2>Error al cargar materiales</h2>
+          <p>{error}</p>
+          <button className="retry-button" onClick={fetchMaterials}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-    
-      <MaterialFilters 
-        materiales={materiales}
-        onFilterChange={setMaterialesFiltrados}
-      />
-      
-      <div style={{ overflowX: 'auto' }}>
-        <table className="material-table" style={{ 
-          width: '100%', 
-          borderCollapse: 'collapse',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}>
-          <thead>
-            <tr>
-              <th style={{ padding: '12px', textAlign: 'center', width: '100px' }}>
-                🖼️ Vista Previa
-              </th>
-              <th style={{ padding: '12px', textAlign: 'left' }}>
-                📄 Información
-              </th>
-              <th style={{ padding: '12px', textAlign: 'left' }}>
-                👤 Usuario
-              </th>
-              <th style={{ padding: '12px', textAlign: 'left' }}>
-                🔒 Tipo
-              </th>
-              <th style={{ padding: '12px', textAlign: 'left' }}>
-                📅 Fecha
-              </th>
-              <th style={{ padding: '12px', textAlign: 'center' }}>
-                ⚡ Acciones
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {materialesFiltrados.map((material) => (
-              <tr key={material._id}>
-                <td style={{ padding: '12px', textAlign: 'center' }}>
-                  <ImageViewer 
-                    material={material} 
-                    width="80px" 
-                    height="80px" 
-                  />
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <strong>{material.nombre || 'Sin nombre'}</strong>
-                  <br />
-                  <small style={{ color: 'var(--text-muted)' }}>
-                    📁 {material.filename || material.nombreArchivo}
-                  </small>
-                  {material.descripcion && (
-                    <>
-                      <br />
-                      <small style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                        📝 {material.descripcion}
-                      </small>
-                    </>
-                  )}
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span style={{
-                      padding: '2px 6px',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      backgroundColor: 'var(--success-color)',
-                      color: 'white',
-                      textAlign: 'center',
-                      width: 'fit-content'
-                    }}>
-                      👤 Usuario
-                    </span>
-                    <small style={{ color: 'var(--text-muted)' }}>
-                      {material.usuario}
-                    </small>
+    <div className="lista-materiales">
+      {/* Header */}
+      <div className="header">
+        <h1>Materiales</h1>
+        <div className="summary">
+          <span className="welcome">Hola, {user?.nombre || user?.username || user?.email}</span>
+          <span>{pagination?.totalCount || materials?.length || 0} materiales disponibles</span>
+        </div>
+      </div>
+
+      {/* Lista de materiales */}
+      {materials?.length === 0 ? (
+        <div className="no-materials">
+          <h2>No hay materiales disponibles</h2>
+          <p>Los materiales aparecerán aquí cuando estén disponibles.</p>
+        </div>
+      ) : (
+        <>
+          <div className="materials-grid">
+            {materials?.map((material) => (
+              <div key={material._id} className="material-card">
+                <div className="material-card-content">
+                  {/* Header con miniatura e info básica */}
+                  <div className="material-header">
+                    <div 
+                      className="material-thumbnail"
+                      onClick={() => handleImagePreview(material)}
+                      title={material.viewUrl ? "Click para ver imagen completa" : "Vista previa no disponible"}
+                    >
+                      {(material.viewUrl && 
+                       (material.mimeType || material.tipoContenido) &&
+                       ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(material.mimeType || material.tipoContenido)) ? (
+                        <img 
+                          src={material.viewUrl} 
+                          alt={material.title}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'block';
+                          }}
+                        />
+                      ) : (
+                        <span className="material-thumbnail-icon">
+                          {getFileIcon(material.mimeType || material.tipoContenido)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="material-info">
+                      <h3 className="material-title">{material.title}</h3>
+                      {material.description && (
+                        <p className="material-description">{material.description}</p>
+                      )}
+                    </div>
                   </div>
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <span style={{
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    backgroundColor: material.bucketTipo === 'publico' ? 'var(--success-color)' : 'var(--danger-color)',
-                    color: 'white'
-                  }}>
-                    {material.bucketTipo === 'publico' ? '🌐 Público' : '🔒 Privado'}
-                  </span>
-                </td>
-                <td style={{ padding: '12px' }}>
-                  {new Date(material.fechaSubida).toLocaleDateString('es-ES')}
-                </td>
-                <td style={{ padding: '12px', textAlign: 'center' }}>
-                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                    {material.downloadUrl ? (
-                      // Si ya tiene URL directa del backend
+
+                  {/* Metadatos del archivo */}
+                  <div className="material-metadata">
+                    <div className="metadata-item">
+                      <span className="metadata-label">Tipo:</span>
+                      <span className="file-type-badge">
+                        {getFileTypeFromExtension(material.title) || 'Archivo'}
+                      </span>
+                    </div>
+                    <div className="metadata-item">
+                      <span className="metadata-label">Subido:</span>
+                      <span>{formatDate(material.createdAt)}</span>
+                    </div>
+                    <div className="metadata-item">
+                      <span className="metadata-label">Acceso:</span>
+                      <span className={`privacy-badge ${material.isPublic ? 'public' : 'private'}`}>
+                        {material.isPublic ? 'Público' : 'Privado'}
+                      </span>
+                    </div>
+                    <div className="metadata-item">
+                      <span className="metadata-label">Tamaño:</span>
+                      <span>{material.fileSize ? formatFileSize(material.fileSize) : 'N/A'}</span>
+                    </div>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="material-actions">
+                    {material.downloadUrl && (
                       <a 
-                        href={`http://localhost:1230${material.downloadUrl}${material.bucketTipo !== 'publico' ? `?token=${encodeURIComponent(localStorage.getItem('token') || '')}` : ''}`} 
+                        href={material.downloadUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="btn-primary"
-                        style={{
-                          padding: '6px 12px',
-                          color: 'white',
-                          textDecoration: 'none',
-                          borderRadius: '4px',
-                          fontSize: '12px'
-                        }}
+                        className="action-btn download-btn"
                       >
-                        📥 Descargar
+                        ⬇️ Descargar
                       </a>
-                    ) : (
-                      // Fallback por si no tiene URL
-                      <button 
-                        onClick={() => handleDownload(material._id, material.filename)}
-                        className="btn-primary"
-                        style={{
-                          padding: '6px 12px',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        📥 Descargar
-                      </button>
                     )}
-                    
-                    <button 
-                      onClick={() => handleDelete(material._id, material.nombre)}
-                      className="btn-danger"
-                      style={{
-                        padding: '6px 12px',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
+                    <button
+                      onClick={() => handleDeleteClick(material)}
+                      className="action-btn delete-btn"
                     >
                       🗑️ Eliminar
                     </button>
                   </div>
-                  
-                  {material.urlType === 'presigned' && material.urlExpiresAt && (
-                    <div style={{ marginTop: '4px' }}>
-                      <small style={{ color: 'var(--text-muted)' }}>
-                        URL expira: {new Date(material.urlExpiresAt).toLocaleTimeString('es-ES')}
-                      </small>
-                    </div>
-                  )}
-                </td>
-              </tr>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
+
+          {/* Paginación */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="pagination">
+              <button
+                className="pagination-btn"
+                disabled={!pagination.hasPrevPage}
+                onClick={prevPage}
+              >
+                ← Anterior
+              </button>
+              
+              <div className="pagination-info">
+                <span>Página {pagination.page} de {pagination.totalPages}</span>
+                <span>{pagination.totalCount} materiales en total</span>
+              </div>
+              
+              <button
+                className="pagination-btn"
+                disabled={!pagination.hasNextPage}
+                onClick={nextPage}
+              >
+                Siguiente →
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Modal de confirmación de eliminación */}
+      {deleteConfirmation && (
+        <div className="modal-overlay">
+          <div className="confirmation-modal">
+            <div className="modal-header">
+              <h3>Confirmar eliminación</h3>
+            </div>
+            <div className="modal-content">
+              <p>¿Estás seguro de que deseas eliminar este material?</p>
+              <p><strong>{deleteConfirmation.title}</strong></p>
+              <p className="warning-text">Esta acción no se puede deshacer.</p>
+            </div>
+            <div className="modal-actions">
+              <button 
+                onClick={() => setDeleteConfirmation(null)}
+                className="action-btn secondary-btn"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmDelete}
+                className="action-btn danger-btn"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de vista de imagen */}
+      {selectedImage && (
+        <ImageViewer
+          isOpen={!!selectedImage}
+          onClose={() => setSelectedImage(null)}
+          image={selectedImage}
+        />
+      )}
     </div>
   );
 };

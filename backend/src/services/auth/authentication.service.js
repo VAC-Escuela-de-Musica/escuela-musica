@@ -47,13 +47,20 @@ async function login(user) {
     }
 
     const accessToken = jwt.sign(
-      { email: userFound.email, roles: userFound.roles },
+      { 
+        id: userFound._id,
+        email: userFound.email, 
+        roles: userFound.roles 
+      },
       ACCESS_JWT_SECRET,
       { expiresIn: "1d" }
     );
 
     const refreshToken = jwt.sign(
-      { email: userFound.email },
+      { 
+        id: userFound._id,
+        email: userFound.email 
+      },
       REFRESH_JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -127,7 +134,11 @@ async function refresh(cookies) {
         }
 
         const accessToken = jwt.sign(
-          { email: userFound.email, roles: userFound.roles },
+          { 
+            id: userFound._id,
+            email: userFound.email, 
+            roles: userFound.roles 
+          },
           ACCESS_JWT_SECRET,
           { expiresIn: "1d" }
         );
@@ -157,4 +168,62 @@ async function refresh(cookies) {
   }
 }
 
-export default { login, refresh };
+/**
+ * Verifica un token de acceso.
+ * @async
+ * @function verifyToken
+ * @param {string} token - Token de acceso
+ * @returns {Object} Respuesta estandarizada
+ */
+async function verifyToken(token) {
+  try {
+    if (!token) {
+      return {
+        success: false,
+        error: "Token no proporcionado",
+        data: null
+      };
+    }
+
+    const decoded = jwt.verify(token, ACCESS_JWT_SECRET);
+    
+    // Buscar usuario por email del token
+    const userFound = await User.findOne({ email: decoded.email })
+      .populate("roles")
+      .exec();
+
+    if (!userFound) {
+      return {
+        success: false,
+        error: "Usuario no encontrado",
+        data: null
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        user: {
+          id: userFound._id,
+          email: userFound.email,
+          username: userFound.username,
+          roles: userFound.roles
+        }
+      },
+      error: null
+    };
+  } catch (error) {
+    handleError(error, "authentication.service -> verifyToken");
+    return {
+      success: false,
+      error: error.message === "jwt expired" ? "Token expirado" : "Token inválido",
+      data: null
+    };
+  }
+}
+
+// Exportar funciones individuales y como servicio
+export { login, refresh, verifyToken };
+
+// Exportar como servicio principal
+export const AuthenticationService = { login, refresh, verifyToken };

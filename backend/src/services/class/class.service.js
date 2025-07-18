@@ -236,6 +236,6 @@ class ClassService extends BaseService {
   }
 }
 
-// Exportar instancia del servicio
+// Exportar instancia del servicio usando named export
 const classService = new ClassService();
-export default classService;
+export { classService as ClassService };

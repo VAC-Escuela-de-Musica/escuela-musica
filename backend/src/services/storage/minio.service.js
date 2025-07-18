@@ -90,7 +90,8 @@ class MinioService {
       );
       
       return {
-        downloadUrl,
+        url: downloadUrl, // Cambiar downloadUrl por url para consistencia
+        downloadUrl, // Mantener por compatibilidad
         bucket,
         filename,
         expiresIn: duration
@@ -98,6 +99,45 @@ class MinioService {
     } catch (error) {
       console.error('Error generando URL de descarga MinIO:', error);
       throw new Error(`No se pudo generar URL de descarga: ${error.message}`);
+    }
+  }
+
+  /**
+   * Método genérico para generar URLs presignadas
+   */
+  async getPresignedUrl(method = 'GET', bucketType, filename, duration = 3600, responseHeaders = {}) {
+    try {
+      const bucket = this.buckets[bucketType] || this.buckets.private;
+      
+      // Verificar que el bucket existe
+      const bucketExists = await this.client.bucketExists(bucket);
+      if (!bucketExists) {
+        throw new Error(`Bucket ${bucket} no existe`);
+      }
+      
+      let presignedUrl;
+      
+      if (method.toUpperCase() === 'GET') {
+        presignedUrl = await this.client.presignedGetObject(
+          bucket,
+          filename,
+          duration,
+          responseHeaders
+        );
+      } else if (method.toUpperCase() === 'PUT') {
+        presignedUrl = await this.client.presignedPutObject(
+          bucket,
+          filename,
+          duration
+        );
+      } else {
+        throw new Error(`Método ${method} no soportado`);
+      }
+      
+      return presignedUrl;
+    } catch (error) {
+      console.error(`Error generando URL presignada ${method}:`, error);
+      throw new Error(`No se pudo generar URL presignada: ${error.message}`);
     }
   }
   

@@ -1,397 +1,99 @@
 /**
  * Logger inteligente para el frontend que reduce logs en producción
+ * Refactorizado para eliminar duplicación de código
  */
 class Logger {
   constructor() {
     this.isDevelopment = import.meta.env.MODE === 'development';
     this.enabledLevels = this.isDevelopment ? ['log', 'warn', 'error', 'info'] : ['error'];
+    
+    // Configuración de métodos con íconos
+    this.methodConfigs = {
+      // Métodos básicos de consola
+      log: { icon: '', useLevel: true },
+      info: { icon: '', useLevel: true },
+      warn: { icon: '', useLevel: true },
+      error: { icon: '', useLevel: true },
+      
+      // Métodos específicos con íconos
+      upload: { icon: '📤' },
+      download: { icon: '📥' },
+      network: { icon: '🌐' },
+      auth: { icon: '🔐' },
+      materials: { icon: '📋' },
+      images: { icon: '🖼️' },
+      success: { icon: '✅' },
+      process: { icon: '🔄' },
+      data: { icon: '📊' },
+      search: { icon: '🔍' },
+      time: { icon: '⏱️' },
+      config: { icon: '⚙️' },
+      filter: { icon: '🔍' },
+      render: { icon: '🎨' },
+      response: { icon: '📡' },
+      token: { icon: '🔑' },
+      url: { icon: '🔗' },
+      endpoint: { icon: '🌐' },
+      headers: { icon: '📡' },
+      structure: { icon: '🔍' },
+      count: { icon: '📊' },
+      example: { icon: '📦' },
+      type: { icon: '🔄' },
+      id: { icon: '🔄' },
+      loading: { icon: '🔄' },
+      format: { icon: '✅' },
+      list: { icon: '✅' },
+      filtered: { icon: '✅' },
+      total: { icon: '📊' },
+      final: { icon: '📋' },
+      finalCount: { icon: '📊' },
+      first: { icon: '📦' },
+      finalRender: { icon: '✅' },
+      image: { icon: '🖼️' },
+      backend: { icon: '🖼️' },
+      imageSuccess: { icon: '✅' },
+      file: { icon: '📄' },
+      request: { icon: '🔗' },
+      stack: { icon: '❌' }
+    };
+    
+    // Generar métodos dinámicamente
+    this._generateMethods();
   }
 
   /**
-   * Log normal - solo en desarrollo
+   * Genera todos los métodos de logging dinámicamente
    */
-  log(...args) {
-    if (this.enabledLevels.includes('log')) {
-      console.log(...args);
-    }
+  _generateMethods() {
+    Object.entries(this.methodConfigs).forEach(([methodName, config]) => {
+      this[methodName] = (...args) => {
+        if (config.useLevel) {
+          // Métodos que usan niveles específicos (log, info, warn, error)
+          if (this.enabledLevels.includes(methodName)) {
+            console[methodName](...args);
+          }
+        } else {
+          // Métodos personalizados solo en desarrollo
+          if (this.isDevelopment) {
+            console.log(config.icon, ...args);
+          }
+        }
+      };
+    });
   }
 
   /**
-   * Información - solo en desarrollo
+   * Agregar un nuevo método de logging dinámicamente
+   * @param {string} methodName - Nombre del método
+   * @param {string} icon - Ícono a mostrar
    */
-  info(...args) {
-    if (this.enabledLevels.includes('info')) {
-      console.info(...args);
-    }
-  }
-
-  /**
-   * Advertencias - solo en desarrollo
-   */
-  warn(...args) {
-    if (this.enabledLevels.includes('warn')) {
-      console.warn(...args);
-    }
-  }
-
-  /**
-   * Errores - siempre se muestran
-   */
-  error(...args) {
-    if (this.enabledLevels.includes('error')) {
-      console.error(...args);
-    }
-  }
-
-  /**
-   * Logs de subida - solo en desarrollo
-   */
-  upload(...args) {
-    if (this.isDevelopment) {
-      console.log('📤', ...args);
-    }
-  }
-
-  /**
-   * Logs de descarga - solo en desarrollo
-   */
-  download(...args) {
-    if (this.isDevelopment) {
-      console.log('📥', ...args);
-    }
-  }
-
-  /**
-   * Logs de red - solo en desarrollo
-   */
-  network(...args) {
-    if (this.isDevelopment) {
-      console.log('🌐', ...args);
-    }
-  }
-
-  /**
-   * Logs de autenticación - solo en desarrollo
-   */
-  auth(...args) {
-    if (this.isDevelopment) {
-      console.log('🔐', ...args);
-    }
-  }
-
-  /**
-   * Logs de materiales - solo en desarrollo
-   */
-  materials(...args) {
-    if (this.isDevelopment) {
-      console.log('📋', ...args);
-    }
-  }
-
-  /**
-   * Logs de imágenes - solo en desarrollo
-   */
-  images(...args) {
-    if (this.isDevelopment) {
-      console.log('🖼️', ...args);
-    }
-  }
-
-  /**
-   * Logs de éxito - solo en desarrollo
-   */
-  success(...args) {
-    if (this.isDevelopment) {
-      console.log('✅', ...args);
-    }
-  }
-
-  /**
-   * Logs de procesos - solo en desarrollo
-   */
-  process(...args) {
-    if (this.isDevelopment) {
-      console.log('🔄', ...args);
-    }
-  }
-
-  /**
-   * Logs de datos - solo en desarrollo
-   */
-  data(...args) {
-    if (this.isDevelopment) {
-      console.log('📊', ...args);
-    }
-  }
-
-  /**
-   * Logs de búsqueda - solo en desarrollo
-   */
-  search(...args) {
-    if (this.isDevelopment) {
-      console.log('🔍', ...args);
-    }
-  }
-
-  /**
-   * Logs de tiempo - solo en desarrollo
-   */
-  time(...args) {
-    if (this.isDevelopment) {
-      console.log('⏱️', ...args);
-    }
-  }
-
-  /**
-   * Logs de configuración - solo en desarrollo
-   */
-  config(...args) {
-    if (this.isDevelopment) {
-      console.log('⚙️', ...args);
-    }
-  }
-
-  /**
-   * Logs de filtros - solo en desarrollo
-   */
-  filter(...args) {
-    if (this.isDevelopment) {
-      console.log('🔍', ...args);
-    }
-  }
-
-  /**
-   * Logs de renderizado - solo en desarrollo
-   */
-  render(...args) {
-    if (this.isDevelopment) {
-      console.log('🎨', ...args);
-    }
-  }
-
-  /**
-   * Logs de respuesta - solo en desarrollo
-   */
-  response(...args) {
-    if (this.isDevelopment) {
-      console.log('📡', ...args);
-    }
-  }
-
-  /**
-   * Logs de token - solo en desarrollo
-   */
-  token(...args) {
-    if (this.isDevelopment) {
-      console.log('🔑', ...args);
-    }
-  }
-
-  /**
-   * Logs de URL - solo en desarrollo
-   */
-  url(...args) {
-    if (this.isDevelopment) {
-      console.log('🔗', ...args);
-    }
-  }
-
-  /**
-   * Logs de endpoint - solo en desarrollo
-   */
-  endpoint(...args) {
-    if (this.isDevelopment) {
-      console.log('🌐', ...args);
-    }
-  }
-
-  /**
-   * Logs de headers - solo en desarrollo
-   */
-  headers(...args) {
-    if (this.isDevelopment) {
-      console.log('📡', ...args);
-    }
-  }
-
-  /**
-   * Logs de estructura - solo en desarrollo
-   */
-  structure(...args) {
-    if (this.isDevelopment) {
-      console.log('🔍', ...args);
-    }
-  }
-
-  /**
-   * Logs de cantidad - solo en desarrollo
-   */
-  count(...args) {
-    if (this.isDevelopment) {
-      console.log('📊', ...args);
-    }
-  }
-
-  /**
-   * Logs de ejemplo - solo en desarrollo
-   */
-  example(...args) {
-    if (this.isDevelopment) {
-      console.log('📦', ...args);
-    }
-  }
-
-  /**
-   * Logs de tipo - solo en desarrollo
-   */
-  type(...args) {
-    if (this.isDevelopment) {
-      console.log('🔄', ...args);
-    }
-  }
-
-  /**
-   * Logs de ID - solo en desarrollo
-   */
-  id(...args) {
-    if (this.isDevelopment) {
-      console.log('🔄', ...args);
-    }
-  }
-
-  /**
-   * Logs de carga - solo en desarrollo
-   */
-  loading(...args) {
-    if (this.isDevelopment) {
-      console.log('🔄', ...args);
-    }
-  }
-
-  /**
-   * Logs de formato - solo en desarrollo
-   */
-  format(...args) {
-    if (this.isDevelopment) {
-      console.log('✅', ...args);
-    }
-  }
-
-  /**
-   * Logs de lista - solo en desarrollo
-   */
-  list(...args) {
-    if (this.isDevelopment) {
-      console.log('✅', ...args);
-    }
-  }
-
-  /**
-   * Logs de filtrado - solo en desarrollo
-   */
-  filtered(...args) {
-    if (this.isDevelopment) {
-      console.log('✅', ...args);
-    }
-  }
-
-  /**
-   * Logs de total - solo en desarrollo
-   */
-  total(...args) {
-    if (this.isDevelopment) {
-      console.log('📊', ...args);
-    }
-  }
-
-  /**
-   * Logs de final - solo en desarrollo
-   */
-  final(...args) {
-    if (this.isDevelopment) {
-      console.log('📋', ...args);
-    }
-  }
-
-  /**
-   * Logs de cantidad final - solo en desarrollo
-   */
-  finalCount(...args) {
-    if (this.isDevelopment) {
-      console.log('📊', ...args);
-    }
-  }
-
-  /**
-   * Logs de primer elemento - solo en desarrollo
-   */
-  first(...args) {
-    if (this.isDevelopment) {
-      console.log('📦', ...args);
-    }
-  }
-
-  /**
-   * Logs de renderizado final - solo en desarrollo
-   */
-  finalRender(...args) {
-    if (this.isDevelopment) {
-      console.log('✅', ...args);
-    }
-  }
-
-  /**
-   * Logs de imagen - solo en desarrollo
-   */
-  image(...args) {
-    if (this.isDevelopment) {
-      console.log('🖼️', ...args);
-    }
-  }
-
-  /**
-   * Logs de backend - solo en desarrollo
-   */
-  backend(...args) {
-    if (this.isDevelopment) {
-      console.log('🖼️', ...args);
-    }
-  }
-
-  /**
-   * Logs de éxito en carga - solo en desarrollo
-   */
-  imageSuccess(...args) {
-    if (this.isDevelopment) {
-      console.log('✅', ...args);
-    }
-  }
-
-  /**
-   * Logs de archivo - solo en desarrollo
-   */
-  file(...args) {
-    if (this.isDevelopment) {
-      console.log('📄', ...args);
-    }
-  }
-
-  /**
-   * Logs de solicitud - solo en desarrollo
-   */
-  request(...args) {
-    if (this.isDevelopment) {
-      console.log('🔗', ...args);
-    }
-  }
-
-  /**
-   * Logs de stack trace - solo en desarrollo
-   */
-  stack(...args) {
-    if (this.isDevelopment) {
-      console.log('❌', ...args);
-    }
+  addMethod(methodName, icon) {
+    this.methodConfigs[methodName] = { icon };
+    this[methodName] = (...args) => {
+      if (this.isDevelopment) {
+        console.log(icon, ...args);
+      }
+    };
   }
 
   /**
@@ -437,6 +139,41 @@ class Logger {
     if (this.isDevelopment) {
       console.timeEnd(label);
     }
+  }
+
+  /**
+   * Logging estructurado con contexto
+   */
+  withContext(context) {
+    return {
+      log: (...args) => this.log(`[${context}]`, ...args),
+      info: (...args) => this.info(`[${context}]`, ...args),
+      warn: (...args) => this.warn(`[${context}]`, ...args),
+      error: (...args) => this.error(`[${context}]`, ...args),
+      success: (...args) => this.success(`[${context}]`, ...args)
+    };
+  }
+
+  /**
+   * Logging condicional
+   */
+  when(condition, method = 'log') {
+    return (...args) => {
+      if (condition && this[method]) {
+        this[method](...args);
+      }
+    };
+  }
+
+  /**
+   * Obtener configuración actual
+   */
+  getConfig() {
+    return {
+      isDevelopment: this.isDevelopment,
+      enabledLevels: this.enabledLevels,
+      availableMethods: Object.keys(this.methodConfigs)
+    };
   }
 }
 

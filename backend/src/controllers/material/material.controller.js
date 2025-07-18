@@ -44,33 +44,68 @@ export const listMaterialsWithUrls = asyncHandler(async (req, res) => {
   console.log(`📊 Materiales encontrados: ${materials.length}`);
   
   // Generar URLs para frontend usando estrategia inteligente
-  const materialsWithUrls = materials.map(material => {
+  const materialsWithUrls = await Promise.all(materials.map(async (material) => {
     let viewUrl, downloadUrl, downloadStrategy;
     
     if (material.bucketTipo === 'publico' || AuthorizationService.canUserAccessMaterial(req, material)) {
-      // Estrategia basada en el tamaño del archivo
-      if (material.tamaño && material.tamaño > 10 * 1024 * 1024) { // > 10MB
+      try {
+        // Generar URLs presignadas directamente
+        const urls = await fileService.generatePresignedUrls(material);
+        viewUrl = urls.viewUrl;
+        downloadUrl = urls.downloadUrl;
         downloadStrategy = 'presigned';
-        downloadUrl = `/api/materials/${material._id}/download-url`;
-        viewUrl = `/api/materials/${material._id}/view-url`;
-      } else {
-        downloadStrategy = 'hybrid'; // Intentará presigned con fallback
-        // Usar las rutas correctas de files
+      } catch (error) {
+        console.warn('Error generando URLs presignadas, usando fallback:', error.message);
+        // Fallback a URLs del backend
         downloadUrl = `/api/files/download/${material._id}`;
         viewUrl = `/api/files/serve/${material._id}`;
+        downloadStrategy = 'backend';
       }
     }
     
+    // Mapear campos para compatibilidad con frontend
     return {
-      ...material.toObject(),
+      _id: material._id,
+      // Campos originales (compatibilidad con versión anterior)
+      nombre: material.nombre,
+      descripcion: material.descripcion,
+      usuario: material.usuario,
+      fechaSubida: material.fechaSubida,
+      tamaño: material.tamaño,
+      tipoContenido: material.tipoContenido,
+      bucketTipo: material.bucketTipo,
+      // Campos mapeados para nueva versión
+      title: material.nombre,
+      description: material.descripcion,
+      mimeType: material.tipoContenido,
+      fileSize: material.tamaño,
+      createdAt: material.fechaSubida,
+      isPublic: material.bucketTipo === 'publico',
+      userId: material.usuario,
+      // URLs
       viewUrl,
       downloadUrl,
       downloadStrategy,
-      urlType: 'backend'
+      urlType: downloadStrategy === 'presigned' ? 'direct' : 'backend'
     };
-  });
+  }));
   
-  respondSuccess(req, res, 200, materialsWithUrls);
+  console.log(`📊 Materiales con URLs generados: ${materialsWithUrls.length}`);
+  
+  // Estructura de respuesta para paginación
+  const response = {
+    documents: materialsWithUrls,
+    pagination: {
+      page: 1,
+      limit: materialsWithUrls.length,
+      totalCount: materialsWithUrls.length,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPrevPage: false
+    }
+  };
+  
+  respondSuccess(req, res, 200, response);
 });
 
 /**
@@ -127,15 +162,35 @@ export const updateMaterial = asyncHandler(async (req, res) => {
 export const deleteMaterial = asyncHandler(async (req, res) => {
   const { materialId } = req.params;
   
+  console.log('🗑️ deleteMaterial called with materialId:', materialId);
+  console.log('🗑️ req.email:', req.email);
+  console.log('🗑️ req.user:', req.user);
+  
   const material = await Material.findById(materialId);
   if (!material) {
     return respondError(req, res, 404, "Material no encontrado");
   }
   
+  console.log('🗑️ Material found:', {
+    id: material._id,
+    nombre: material.nombre,
+    usuario: material.usuario,
+    fechaSubida: material.fechaSubida
+  });
+  
   // Verificar permisos
+  console.log('🗑️ Permission check:');
+  console.log('  - material.usuario:', material.usuario);
+  console.log('  - req.email:', req.email);
+  console.log('  - Are equal?:', material.usuario === req.email);
+  console.log('  - Is admin?:', AuthorizationService.isUserAdmin(req));
+  
   if (material.usuario !== req.email && !AuthorizationService.isUserAdmin(req)) {
+    console.log('🗑️ Permission denied');
     return respondError(req, res, 403, "Sin permisos para eliminar este material");
   }
+  
+  console.log('🗑️ Permissions verified, proceeding with deletion');
   
   // Eliminar archivo usando el servicio
   const fileDeleted = await fileService.deleteFile(material);
@@ -149,5 +204,6 @@ export const deleteMaterial = asyncHandler(async (req, res) => {
   // Auditoría
   await auditService.logMaterialDeletion(material, { email: req.email });
   
+  console.log('🗑️ Material deleted successfully');
   respondSuccess(req, res, 200, { mensaje: "Material eliminado exitosamente" });
 });

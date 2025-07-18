@@ -23,7 +23,7 @@ const router = Router();
 
 // Aplicar middleware de archivos y rate limiting
 router.use(fileAccessMiddleware);
-router.use(rateLimiter(200, 15 * 60 * 1000)); // 200 requests por 15 minutos para archivos
+router.use(rateLimiter(2000, 15 * 60 * 1000)); // 2000 requests por 15 minutos para archivos (aumentado para desarrollo)
 
 // Nuevas rutas optimizadas con fallback automático y autenticación opcional
 router.get("/serve/:id", 

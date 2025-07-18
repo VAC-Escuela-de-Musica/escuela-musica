@@ -203,6 +203,37 @@ class FileService {
     const bucketType = material.bucketTipo === 'publico' ? 'public' : 'private';
     return await minioService.fileExists(bucketType, material.filename);
   }
+
+  /**
+   * Genera URLs presignadas para vista previa y descarga
+   */
+  async generatePresignedUrls(material, expiryInSeconds = 3600) {
+    try {
+      const bucketType = material.bucketTipo === 'publico' ? 'public' : 'private';
+      const filename = material.filename;
+      
+      console.log(`🔗 Generando URLs presignadas para: ${filename} en bucket ${bucketType}`);
+      
+      // Generar URL de vista (GET)
+      const viewUrl = await minioService.getPresignedUrl('GET', bucketType, filename, expiryInSeconds);
+      
+      // Generar URL de descarga (GET con headers de descarga)
+      const downloadUrl = await minioService.getPresignedUrl('GET', bucketType, filename, expiryInSeconds, {
+        'response-content-disposition': `attachment; filename="${material.nombre || filename}"`
+      });
+      
+      console.log(`✅ URLs generadas exitosamente para ${filename}`);
+      
+      return {
+        viewUrl,
+        downloadUrl,
+        expiresAt: new Date(Date.now() + expiryInSeconds * 1000)
+      };
+    } catch (error) {
+      console.error('❌ Error generando URLs presignadas:', error);
+      throw new Error(`Error generando URLs presignadas: ${error.message}`);
+    }
+  }
 }
 
 export const fileService = new FileService();

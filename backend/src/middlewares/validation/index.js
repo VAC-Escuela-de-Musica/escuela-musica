@@ -15,3 +15,11 @@ export {
   requireFile,
   validateFileName
 } from './file.middleware.js';
+
+export {
+  validateParams,
+  validateQuery,
+  validateBody,
+  sanitizeInput as enhancedSanitizeInput,
+  validatePagination
+} from './enhanced.middleware.js';

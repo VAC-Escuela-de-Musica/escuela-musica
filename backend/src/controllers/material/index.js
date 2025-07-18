@@ -3,7 +3,7 @@ export {
   listMaterialsWithUrls, 
   getMaterialById, 
   updateMaterial, 
-  deleteMaterial 
+  deleteMaterial
 } from './material.controller.js';
 
 export { 

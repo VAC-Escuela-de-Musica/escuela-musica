@@ -292,6 +292,6 @@ class EventService extends BaseService {
   }
 }
 
-// Exportar instancia del servicio
+// Exportar instancia del servicio usando named export
 const eventService = new EventService();
-export default eventService;
+export { eventService as EventService };

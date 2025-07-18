@@ -1,0 +1,279 @@
+import React, { useState, useEffect } from 'react';
+import { useMaterials } from '../hooks/useMaterials';
+import { useAuth } from '../hooks/useAuth';
+import { formatDate, formatFileSize, getFileTypeFromExtension, getFileTypeIcon } from '../utils/helpers';
+import ImageViewer from './ImageViewer';
+import './ListaMateriales.css';
+
+const ListaMateriales = () => {
+  const { user } = useAuth();
+  const { materials, loading, error, pagination, refreshMaterials, deleteMaterial } = useMaterials(1, 12);
+  
+  // Estados para modales
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+
+  useEffect(() => {
+    refreshMaterials();
+  }, [refreshMaterials]);
+
+  // Manejar vista previa de imagen
+  const handleImagePreview = (material) => {
+    if (material.previewUrl && 
+        ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(material.tipoContenido)) {
+      setSelectedImage({
+        url: material.previewUrl,
+        title: material.nombre,
+        description: material.descripcion
+      });
+    }
+  };
+
+  // Manejar eliminación
+  const handleDeleteClick = (material) => {
+    setDeleteConfirmation(material);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteConfirmation) {
+      try {
+        await deleteMaterial(deleteConfirmation._id);
+        setDeleteConfirmation(null);
+        await refreshMaterials();
+      } catch (error) {
+        console.error('Error al eliminar material:', error);
+        alert('Error al eliminar el material. Por favor, inténtalo de nuevo.');
+      }
+    }
+  };
+
+  // Obtener icono de tipo de archivo
+  const getFileIcon = (tipoContenido) => {
+    const icons = {
+      'image/': '🖼️',
+      'application/pdf': '📄',
+      'application/msword': '📝',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '📝',
+      'text/': '📄',
+      'audio/': '🎵',
+      'video/': '🎬',
+    };
+    
+    for (const [type, icon] of Object.entries(icons)) {
+      if (tipoContenido?.startsWith(type)) return icon;
+    }
+    return '📎';
+  };
+
+  // Estados de carga y error
+  if (!user) {
+    return (
+      <div className="lista-materiales">
+        <div className="no-auth-message">
+          <h2>Acceso Restringido</h2>
+          <p>Debes iniciar sesión para ver los materiales.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="lista-materiales">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Cargando materiales...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="lista-materiales">
+        <div className="error-container">
+          <h2>Error al cargar materiales</h2>
+          <p>{error}</p>
+          <button className="retry-button" onClick={refreshMaterials}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="lista-materiales">
+      {/* Header */}
+      <div className="header">
+        <h1>Materiales</h1>
+        <div className="summary">
+          <span className="welcome">Hola, {user.nombre}</span>
+          <span>{pagination?.total || 0} materiales disponibles</span>
+        </div>
+      </div>
+
+      {/* Lista de materiales */}
+      {materials?.length === 0 ? (
+        <div className="no-materials">
+          <h2>No hay materiales disponibles</h2>
+          <p>Los materiales aparecerán aquí cuando estén disponibles.</p>
+        </div>
+      ) : (
+        <>
+          <div className="materials-grid">
+            {materials?.map((material) => (
+              <div key={material._id} className="material-card">
+                <div className="material-card-content">
+                  {/* Header con miniatura e info básica */}
+                  <div className="material-header">
+                    <div 
+                      className="material-thumbnail"
+                      onClick={() => handleImagePreview(material)}
+                      title={material.previewUrl ? "Click para ver imagen completa" : "Vista previa no disponible"}
+                    >
+                      {material.previewUrl && 
+                       ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(material.tipoContenido) ? (
+                        <img 
+                          src={material.previewUrl} 
+                          alt={material.nombre}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'block';
+                          }}
+                        />
+                      ) : (
+                        <span className="material-thumbnail-icon">
+                          {getFileIcon(material.tipoContenido)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="material-info">
+                      <h3 className="material-title">{material.nombre}</h3>
+                      {material.descripcion && (
+                        <p className="material-description">{material.descripcion}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Metadatos del archivo */}
+                  <div className="material-metadata">
+                    <div className="metadata-item">
+                      <span className="metadata-label">Tipo:</span>
+                      <span className="file-type-badge">
+                        {getFileTypeFromExtension(material.nombre) || 'Archivo'}
+                      </span>
+                    </div>
+                    <div className="metadata-item">
+                      <span className="metadata-label">Subido:</span>
+                      <span>{formatDate(material.fechaSubida)}</span>
+                    </div>
+                    <div className="metadata-item">
+                      <span className="metadata-label">Acceso:</span>
+                      <span className={`privacy-badge ${material.bucketTipo}`}>
+                        {material.bucketTipo === 'public' ? 'Público' : 'Privado'}
+                      </span>
+                    </div>
+                    <div className="metadata-item">
+                      <span className="metadata-label">Tamaño:</span>
+                      <span>{material.tamano ? formatFileSize(material.tamano) : 'N/A'}</span>
+                    </div>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="material-actions">
+                    {material.downloadUrl && (
+                      <a 
+                        href={material.downloadUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="action-btn download-btn"
+                      >
+                        ⬇️ Descargar
+                      </a>
+                    )}
+                    <button
+                      onClick={() => handleDeleteClick(material)}
+                      className="action-btn delete-btn"
+                    >
+                      🗑️ Eliminar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Paginación */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="pagination">
+              <button
+                className="pagination-btn"
+                disabled={pagination.currentPage <= 1}
+                onClick={() => pagination.currentPage > 1 && refreshMaterials(pagination.currentPage - 1)}
+              >
+                ← Anterior
+              </button>
+              
+              <div className="pagination-info">
+                <span>Página {pagination.currentPage} de {pagination.totalPages}</span>
+                <span>{pagination.total} materiales en total</span>
+              </div>
+              
+              <button
+                className="pagination-btn"
+                disabled={pagination.currentPage >= pagination.totalPages}
+                onClick={() => pagination.currentPage < pagination.totalPages && refreshMaterials(pagination.currentPage + 1)}
+              >
+                Siguiente →
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Modal de confirmación de eliminación */}
+      {deleteConfirmation && (
+        <div className="modal-overlay">
+          <div className="confirmation-modal">
+            <div className="modal-header">
+              <h3>Confirmar eliminación</h3>
+            </div>
+            <div className="modal-content">
+              <p>¿Estás seguro de que deseas eliminar este material?</p>
+              <p><strong>{deleteConfirmation.nombre}</strong></p>
+              <p className="warning-text">Esta acción no se puede deshacer.</p>
+            </div>
+            <div className="modal-actions">
+              <button 
+                onClick={() => setDeleteConfirmation(null)}
+                className="action-btn secondary-btn"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmDelete}
+                className="action-btn danger-btn"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de vista de imagen */}
+      {selectedImage && (
+        <ImageViewer
+          imageUrl={selectedImage.url}
+          title={selectedImage.title}
+          description={selectedImage.description}
+          onClose={() => setSelectedImage(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default ListaMateriales;

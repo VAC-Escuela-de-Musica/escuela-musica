@@ -84,6 +84,69 @@ class AuthService {
   }
 
   /**
+   * Verifica si el token actual es válido
+   * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+   */
+  async verifyToken() {
+    try {
+      const token = localStorage.getItem('token');
+      console.log('🔍 Verificando token:', { token: token ? 'Existe' : 'No existe' });
+      
+      if (!token) {
+        console.log('❌ No hay token para verificar');
+        return {
+          success: false,
+          error: 'No token found'
+        };
+      }
+
+      console.log('📡 Enviando request a:', API_ENDPOINTS.auth.verify);
+      const response = await fetch(API_ENDPOINTS.auth.verify, {
+        method: 'GET',
+        headers: {
+          ...API_HEADERS.basic,
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('📡 Respuesta del servidor:', { 
+        ok: response.ok, 
+        status: response.status, 
+        statusText: response.statusText 
+      });
+
+      const data = await response.json();
+      console.log('📊 Datos recibidos:', data);
+
+      if (!response.ok) {
+        console.log('❌ Respuesta no exitosa:', data);
+        return {
+          success: false,
+          error: data.error || data.message || 'Token inválido'
+        };
+      }
+
+      // Actualizar datos del usuario si el token es válido
+      if (data.data?.user) {
+        this.user = data.data.user;
+        localStorage.setItem('user', JSON.stringify(this.user));
+        console.log('✅ Usuario actualizado:', this.user);
+      }
+
+      return {
+        success: true,
+        data: { user: data.data?.user || this.user }
+      };
+    } catch (error) {
+      console.error('💥 Error en verifyToken:', error);
+      return {
+        success: false,
+        error: 'Error de red o servidor no disponible'
+      };
+    }
+  }
+
+  /**
    * Cierra sesión del usuario
    */
   async logout() {

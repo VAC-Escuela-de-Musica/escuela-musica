@@ -1,3 +1,3 @@
 "use strict";
 
-export { default as MaterialService } from './material.service.js';
+export { materialService } from './material.service.js';

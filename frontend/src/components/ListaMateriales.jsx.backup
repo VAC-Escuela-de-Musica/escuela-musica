@@ -1,0 +1,418 @@
+import React, { useEffect, useState } from 'react';
+import { useMaterials } from '../hooks/useMaterials.js';
+import { useAuth } from './AuthProvider.jsx';
+import ImageViewer from './ImageViewer';
+import MaterialFilters from './MaterialFilters';
+import { logger } from '../utils/logger.js';
+import './darkmode.css';
+import './ListaMateriales.css';
+
+const ListaMateriales = () => {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({});
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  
+  const { 
+    materials, 
+    loading, 
+    error, 
+    fetchMaterials, 
+    searchMaterials,
+    toggleFavorite,
+    deleteMaterial,
+    pagination,
+    nextPage,
+    prevPage,
+    goToPage,
+    clearError 
+  } = useMaterials();
+  
+  const { user, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchMaterials();
+    }
+  }, [isAuthenticated, fetchMaterials]);
+
+  const handleFilterChange = async (filters) => {
+    setActiveFilters(filters);
+    logger.filters('Aplicando filtros:', filters);
+    
+    // Si hay término de búsqueda, usar búsqueda
+    if (filters.searchTerm) {
+      await searchMaterials(filters.searchTerm, {
+        category: filters.category,
+        level: filters.level,
+        instrument: filters.instrument,
+        tags: filters.tags
+      });
+    } else {
+      // Si no hay búsqueda, usar filtros normales
+      await fetchMaterials({
+        page: 1,
+        filters: {
+          category: filters.category,
+          level: filters.level,
+          instrument: filters.instrument,
+          tags: filters.tags,
+          isPublic: filters.isPublic
+        }
+      });
+    }
+  };
+
+  const handleImageClick = (material) => {
+    if (isImageFile(material.mimeType)) {
+      const imageData = {
+        url: material.viewUrl,
+        title: material.title,
+        description: material.description
+      };
+      setSelectedImage(imageData);
+      setIsImageViewerOpen(true);
+    }
+  };
+
+  const handleFavoriteToggle = async (materialId) => {
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para marcar favoritos');
+      return;
+    }
+    
+    const result = await toggleFavorite(materialId);
+    if (result.success) {
+      logger.success('Favorito actualizado');
+    } else {
+      logger.error('Error actualizando favorito:', result.error);
+    }
+  };
+
+  const handleDeleteClick = (materialId) => {
+    setShowDeleteConfirm(materialId);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (showDeleteConfirm) {
+      const result = await deleteMaterial(showDeleteConfirm);
+      if (result.success) {
+        logger.success('Material eliminado exitosamente');
+      } else {
+        logger.error('Error eliminando material:', result.error);
+        alert('Error al eliminar el material');
+      }
+    }
+    setShowDeleteConfirm(null);
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(null);
+  };
+
+  const isImageFile = (mimeType) => {
+    return mimeType && mimeType.startsWith('image/');
+  };
+
+  const isPDFFile = (mimeType) => {
+    return mimeType === 'application/pdf';
+  };
+
+  const isAudioFile = (mimeType) => {
+    return mimeType && mimeType.startsWith('audio/');
+  };
+
+  const isVideoFile = (mimeType) => {
+    return mimeType && mimeType.startsWith('video/');
+  };
+
+  const getFileIcon = (mimeType) => {
+    if (isImageFile(mimeType)) return '🖼️';
+    if (isPDFFile(mimeType)) return '📄';
+    if (isAudioFile(mimeType)) return '🎵';
+    if (isVideoFile(mimeType)) return '🎬';
+    return '📎';
+  };
+
+  const getMimeTypeLabel = (mimeType) => {
+    if (!mimeType) return 'Desconocido';
+    if (mimeType.startsWith('image/')) return 'Imagen';
+    if (mimeType.startsWith('audio/')) return 'Audio';
+    if (mimeType.startsWith('video/')) return 'Video';
+    if (mimeType === 'application/pdf') return 'PDF';
+    if (mimeType.includes('document')) return 'Documento';
+    if (mimeType.includes('spreadsheet')) return 'Hoja de Cálculo';
+    if (mimeType.includes('presentation')) return 'Presentación';
+    if (mimeType.startsWith('text/')) return 'Texto';
+    return 'Archivo';
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return 'N/A';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getLevelColor = (level) => {
+    switch (level) {
+      case 'beginner': return '#4CAF50';
+      case 'intermediate': return '#FF9800';
+      case 'advanced': return '#F44336';
+      default: return '#9E9E9E';
+    }
+  };
+
+  const getLevelText = (level) => {
+    switch (level) {
+      case 'beginner': return 'Principiante';
+      case 'intermediate': return 'Intermedio';
+      case 'advanced': return 'Avanzado';
+      default: return level || 'No especificado';
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="lista-materiales">
+        <div className="no-auth-message">
+          <h2>Acceso requerido</h2>
+          <p>Debes iniciar sesión para ver los materiales.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="lista-materiales">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Cargando materiales...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="lista-materiales">
+        <div className="error-container">
+          <h2>Error al cargar materiales</h2>
+          <p>{error}</p>
+          <button onClick={clearError} className="retry-button">
+            Intentar de nuevo
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="lista-materiales">
+      <div className="header">
+        <h1>📚 Materiales Educativos</h1>
+        <div className="summary">
+          <span>Total: {pagination.totalCount || (Array.isArray(materials) ? materials.length : 0)} materiales</span>
+          {user && (
+            <span className="welcome">
+              Bienvenido, {user.username || user.email}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <MaterialFilters 
+        onFilterChange={handleFilterChange}
+        loading={loading}
+      />
+
+      {!materials || materials.length === 0 ? (
+        <div className="no-materials">
+          <h2>No hay materiales disponibles</h2>
+          <p>
+            {Object.keys(activeFilters).length > 0 
+              ? 'No se encontraron materiales con los filtros aplicados.'
+              : 'No hay materiales para mostrar en este momento.'
+            }
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="materials-grid">
+            {Array.isArray(materials) && materials.map((material) => (
+              <div key={material._id} className="material-card">
+                {/* Header de la tarjeta */}
+                <div className="material-card-header">
+                  <div className="material-type-badge">
+                    <span className="file-icon">{getFileIcon(material.mimeType)}</span>
+                    <span className="file-type">{getMimeTypeLabel(material.mimeType)}</span>
+                  </div>
+                  <div className="material-actions-header">
+                    <button
+                      onClick={() => handleFavoriteToggle(material._id)}
+                      className={`action-btn favorite-btn ${material.isFavorite ? 'active' : ''}`}
+                      title={material.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                    >
+                      {material.isFavorite ? '❤️' : '🤍'}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(material._id)}
+                      className="action-btn delete-btn"
+                      title="Eliminar material"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+
+                {/* Contenido principal */}
+                <div className="material-card-content">
+                  <h3 className="material-title">{material.title}</h3>
+                  {material.description && (
+                    <p className="material-description">{material.description}</p>
+                  )}
+                  
+                  {/* Información del archivo */}
+                  <div className="material-file-info">
+                    <div className="file-info-item">
+                      <span className="info-label">📁 Tamaño:</span>
+                      <span className="info-value">{formatFileSize(material.fileSize)}</span>
+                    </div>
+                    <div className="file-info-item">
+                      <span className="info-label">📅 Fecha:</span>
+                      <span className="info-value">{formatDate(material.createdAt)}</span>
+                    </div>
+                    <div className="file-info-item">
+                      <span className="info-label">👤 Autor:</span>
+                      <span className="info-value">{material.userId?.username || material.userId?.email || 'Desconocido'}</span>
+                    </div>
+                    <div className="file-info-item">
+                      <span className="info-label">🔐 Privacidad:</span>
+                      <span className={`info-value privacy-badge ${material.isPublic ? 'public' : 'private'}`}>
+                        {material.isPublic ? '🌍 Público' : '🔒 Privado'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Acciones del pie */}
+                <div className="material-card-footer">
+                  {isImageFile(material.mimeType) && (
+                    <button
+                      onClick={() => handleImageClick(material)}
+                      className="action-btn primary-btn"
+                      title="Ver imagen en modal"
+                    >
+                      👁️ Vista Previa
+                    </button>
+                  )}
+                  
+                  {material.viewUrl && (
+                    <a
+                      href={material.viewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="action-btn secondary-btn"
+                      title="Abrir en nueva pestaña"
+                    >
+                      🔗 Abrir
+                    </a>
+                  )}
+                  
+                  {material.downloadUrl && (
+                    <a
+                      href={material.downloadUrl}
+                      download
+                      className="action-btn download-btn"
+                      title="Descargar archivo"
+                    >
+                      ⬇️ Descargar
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Paginación */}
+          {pagination.totalPages > 1 && (
+            <div className="pagination">
+              <button
+                onClick={prevPage}
+                disabled={!pagination.hasPrevPage}
+                className="pagination-btn"
+              >
+                ← Anterior
+              </button>
+              
+              <div className="pagination-info">
+                <span>
+                  Página {pagination.page} de {pagination.totalPages}
+                </span>
+                <span>
+                  ({pagination.totalCount} materiales total)
+                </span>
+              </div>
+              
+              <button
+                onClick={nextPage}
+                disabled={!pagination.hasNextPage}
+                className="pagination-btn"
+              >
+                Siguiente →
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Image Viewer Modal */}
+      <ImageViewer
+        isOpen={isImageViewerOpen}
+        onClose={() => setIsImageViewerOpen(false)}
+        image={selectedImage}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="modal-overlay">
+          <div className="confirmation-modal">
+            <div className="modal-header">
+              <h3>🗑️ Confirmar Eliminación</h3>
+            </div>
+            <div className="modal-content">
+              <p>¿Estás seguro de que quieres eliminar este material?</p>
+              <p className="warning-text">Esta acción no se puede deshacer.</p>
+            </div>
+            <div className="modal-actions">
+              <button
+                onClick={handleDeleteCancel}
+                className="action-btn secondary-btn"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="action-btn danger-btn"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ListaMateriales;

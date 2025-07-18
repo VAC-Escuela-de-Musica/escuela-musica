@@ -1,60 +1,102 @@
-import { useState } from "react";
-import authService from '../services/auth.service.js';
+import { useState, useEffect } from "react";
+import { useAuth } from './AuthProvider.jsx';
 
-function Login({ onLogin }) {
+function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { login, loading, error, clearError, isAuthenticated } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
+    clearError();
     
-    try {
-      const result = await authService.login(email, password);
-      
-      if (result.success) {
-        console.log("Login exitoso:", result.data);
-        if (onLogin) onLogin();
-      } else {
-        setError(result.error || "Error en el inicio de sesión");
-      }
-    } catch (err) {
-      console.error("Error en login:", err);
-      setError("Error de conexión");
-    } finally {
-      setLoading(false);
+    const result = await login(email, password);
+    
+    if (result.success) {
+      console.log("Login exitoso:", result.data);
     }
   };
 
+  // Limpiar errores cuando cambian los inputs
+  useEffect(() => {
+    if (error) {
+      clearError();
+    }
+  }, [email, password, clearError]);
+
   return (
-    <form onSubmit={handleSubmit} style={{maxWidth:400,margin:"2rem auto",padding:20,border:"1px solid #ccc",borderRadius:8}}>
-      <h2>Iniciar sesión</h2>
-      <div style={{marginBottom:10}}>
+    <form onSubmit={handleSubmit}>
+      <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#2c3e50' }}>
+        🎵 Iniciar Sesión
+      </h2>
+      <div style={{marginBottom:15}}>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          Email:
+        </label>
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
-          style={{width:"100%",padding:8}}
+          style={{
+            width:"100%",
+            padding:'10px',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            fontSize: '16px'
+          }}
         />
       </div>
-      <div style={{marginBottom:10}}>
+      <div style={{marginBottom:15}}>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          Contraseña:
+        </label>
         <input
           type="password"
           placeholder="Contraseña"
           value={password}
           onChange={e => setPassword(e.target.value)}
           required
-          style={{width:"100%",padding:8}}
+          style={{
+            width:"100%",
+            padding:'10px',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            fontSize: '16px'
+          }}
         />
       </div>
-      {error && <div style={{color:"red",marginBottom:10}}>{error}</div>}
-      <button type="submit" disabled={loading} style={{width:"100%",padding:10}}>
-        {loading ? "Ingresando..." : "Ingresar"}
+      {error && (
+        <div style={{
+          color:"#e74c3c",
+          marginBottom:15,
+          padding: '10px',
+          backgroundColor: '#fdf2f2',
+          border: '1px solid #e74c3c',
+          borderRadius: '4px',
+          fontSize: '14px'
+        }}>
+          {error}
+        </div>
+      )}
+      <button 
+        type="submit" 
+        disabled={loading} 
+        style={{
+          width:"100%",
+          padding:'12px',
+          backgroundColor: loading ? '#95a5a6' : '#3498db',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          transition: 'background-color 0.3s'
+        }}
+      >
+        {loading ? "Ingresando..." : "Iniciar Sesión"}
       </button>
     </form>
   );

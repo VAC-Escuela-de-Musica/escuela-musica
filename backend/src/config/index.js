@@ -1,6 +1,7 @@
 "use strict";
 
 import { ACCESS_JWT_SECRET, REFRESH_JWT_SECRET, PORT, HOST, DB_URL } from "./configEnv.js";
+import { JWT, MINIO_BUCKETS, RATE_LIMIT } from "../constants/index.js";
 
 /**
  * Configuración centralizada de la aplicación
@@ -26,8 +27,8 @@ export const config = {
   jwt: {
     accessSecret: ACCESS_JWT_SECRET,
     refreshSecret: REFRESH_JWT_SECRET,
-    accessExpiresIn: '1d',
-    refreshExpiresIn: '7d'
+    accessExpiresIn: JWT.ACCESS_EXPIRES_IN,
+    refreshExpiresIn: JWT.REFRESH_EXPIRES_IN
   },
   
   minio: {
@@ -37,8 +38,9 @@ export const config = {
     accessKey: process.env.MINIO_ACCESS_KEY,
     secretKey: process.env.MINIO_SECRET_KEY,
     buckets: {
-      private: process.env.MINIO_BUCKET || 'materiales',
-      public: process.env.MINIO_PUBLIC_BUCKET || 'imagenes-publicas'
+      private: process.env.MINIO_BUCKET || MINIO_BUCKETS.PRIVATE,
+      public: process.env.MINIO_PUBLIC_BUCKET || MINIO_BUCKETS.PUBLIC,
+      temp: process.env.MINIO_TEMP_BUCKET || MINIO_BUCKETS.TEMP
     }
   },
   
@@ -47,6 +49,15 @@ export const config = {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  },
+  
+  rateLimit: {
+    windowMs: RATE_LIMIT.WINDOW_MS,
+    max: RATE_LIMIT.MAX_REQUESTS,
+    auth: {
+      windowMs: RATE_LIMIT.AUTH_WINDOW_MS,
+      max: RATE_LIMIT.AUTH_MAX_REQUESTS
+    }
   },
   
   security: {
@@ -78,5 +89,3 @@ export const config = {
     ]
   }
 };
-
-export default config;

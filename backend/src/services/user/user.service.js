@@ -1,245 +1,344 @@
-"use strict";
-// Importa el modelo de datos 'User'
-import User from "../../models/user.model.js";
-import Role from "../../models/role.model.js";
-import BaseService from "../base.service.js";
-import { handleError } from "../../utils/errorHandler.util.js";
+import { userRepository } from '../../repositories/index.js';
+import { Result } from '../../patterns/Result.js';
+import { handleError } from '../../utils/errorHandler.util.js';
 
 /**
- * Servicio para manejo de usuarios
- * Extiende BaseService para operaciones CRUD estándar
+ * Servicio refactorizado para manejo de usuarios
+ * Usa Repository Pattern para abstracción de datos
  */
-class UserService extends BaseService {
+class UserService {
   constructor() {
-    super(User);
+    this.repository = userRepository;
   }
 
   /**
-   * Obtiene todos los usuarios de la base de datos
-   * @returns {Promise<Object>} Respuesta estandarizada
+   * Obtiene todos los usuarios con paginación
+   * @param {Object} options - Opciones de consulta
+   * @returns {Promise<Result>}
    */
-  async getUsers() {
+  async getUsers(options = {}) {
     try {
-      const users = await User.find()
-        .select("-password")
-        .populate("roles")
-        .exec();
-      
-      if (!users) {
-        return {
-          success: false,
-          error: "No hay usuarios",
-          data: null
-        };
-      }
+      const defaultOptions = {
+        page: 1,
+        limit: 10,
+        sort: { createdAt: -1 },
+        populate: 'roles',
+        select: '-password'
+      };
 
-      return {
-        success: true,
-        data: users,
-        error: null
-      };
+      const mergedOptions = { ...defaultOptions, ...options };
+      return await this.repository.paginate({}, mergedOptions);
     } catch (error) {
-      handleError(error, "UserService -> getUsers");
-      return {
-        success: false,
-        error: error.message,
-        data: null
-      };
+      handleError(error, 'UserService -> getUsers');
+      return Result.error(error.message, 500);
     }
   }
 
   /**
-   * Crea un nuevo usuario en la base de datos
-   * @param {Object} user Objeto de usuario
-   * @returns {Promise<Object>} Respuesta estandarizada
+   * Obtiene usuarios con paginación y filtros
+   * @param {Object} params - Parámetros de paginación y filtros
+   * @returns {Promise<Result>}
    */
-  async createUser(user) {
+  async getUsersWithPagination(params) {
     try {
-      const { username, rut, email, password, roles } = user;
-
-      const userFound = await User.findOne({ email: user.email });
-      if (userFound) {
-        return {
-          success: false,
-          error: "El usuario ya existe",
-          data: null
-        };
-      }
-
-      const rolesFound = await Role.find({ name: { $in: roles } });
-      if (rolesFound.length === 0) {
-        return {
-          success: false,
-          error: "El rol no existe",
-          data: null
-        };
-      }
+      const { page, limit, sort, order, filters } = params;
       
-      const myRole = rolesFound.map((role) => role._id);
-
-      const newUser = new User({
-        username,
-        rut,
-        email,
-        password: await User.encryptPassword(password),
-        roles: myRole,
-      });
-      
-      await newUser.save();
-
-      return {
-        success: true,
-        data: newUser,
-        error: null
+      const options = {
+        page,
+        limit,
+        sort: { [sort]: order === 'desc' ? -1 : 1 },
+        populate: 'roles',
+        select: '-password'
       };
+
+      return await this.repository.searchUsers(filters, options);
     } catch (error) {
-      handleError(error, "UserService -> createUser");
-      return {
-        success: false,
-        error: error.message,
-        data: null
-      };
+      handleError(error, 'UserService -> getUsersWithPagination');
+      return Result.error(error.message, 500);
     }
   }
 
   /**
-   * Obtiene un usuario por su id de la base de datos
-   * @param {string} id Id del usuario
-   * @returns {Promise<Object>} Respuesta estandarizada
+   * Crea un nuevo usuario
+   * @param {Object} userData - Datos del usuario
+   * @returns {Promise<Result>}
    */
-  async getUserById(id) {
+  async createUser(userData) {
     try {
-      const user = await User.findById({ _id: id })
-        .select("-password")
-        .populate("roles")
-        .exec();
-
-      if (!user) {
-        return {
-          success: false,
-          error: "El usuario no existe",
-          data: null
-        };
+      // Verificar si el usuario ya existe
+      const existsResult = await this.repository.checkExistence(userData.email, userData.username);
+      if (existsResult.isError()) {
+        return existsResult;
       }
 
-      return {
-        success: true,
-        data: user,
-        error: null
-      };
+      return await this.repository.create(userData);
     } catch (error) {
-      handleError(error, "UserService -> getUserById");
-      return {
-        success: false,
-        error: error.message,
-        data: null
-      };
+      handleError(error, 'UserService -> createUser');
+      return Result.error(error.message, 500);
     }
   }
 
   /**
-   * Actualiza un usuario por su id en la base de datos
-   * @param {string} id Id del usuario
-   * @param {Object} user Objeto de usuario
-   * @returns {Promise<Object>} Respuesta estandarizada
+   * Obtiene un usuario por ID
+   * @param {string} userId - ID del usuario
+   * @returns {Promise<Result>}
    */
-  async updateUser(id, user) {
+  async getUserById(userId) {
     try {
-      const userFound = await User.findById(id);
-      if (!userFound) {
-        return {
-          success: false,
-          error: "El usuario no existe",
-          data: null
-        };
+      const options = {
+        populate: 'roles',
+        select: '-password'
+      };
+
+      return await this.repository.findById(userId, options);
+    } catch (error) {
+      handleError(error, 'UserService -> getUserById');
+      return Result.error(error.message, 500);
+    }
+  }
+
+  /**
+   * Actualiza un usuario por ID
+   * @param {string} userId - ID del usuario
+   * @param {Object} updateData - Datos a actualizar
+   * @returns {Promise<Result>}
+   */
+  async updateUser(userId, updateData) {
+    try {
+      const options = {
+        populate: 'roles',
+        select: '-password'
+      };
+
+      // Si se actualiza email o username, verificar que no existan
+      if (updateData.email || updateData.username) {
+        const existsResult = await this.repository.checkExistence(
+          updateData.email || '',
+          updateData.username || ''
+        );
+        
+        if (existsResult.isError()) {
+          return existsResult;
+        }
       }
 
-      const { username, email, rut, password, newPassword, roles } = user;
+      return await this.repository.updateById(userId, updateData, options);
+    } catch (error) {
+      handleError(error, 'UserService -> updateUser');
+      return Result.error(error.message, 500);
+    }
+  }
 
-      const matchPassword = await User.comparePassword(
-        password,
-        userFound.password
+  /**
+   * Elimina un usuario por ID
+   * @param {string} userId - ID del usuario
+   * @returns {Promise<Result>}
+   */
+  async deleteUser(userId) {
+    try {
+      return await this.repository.deleteById(userId);
+    } catch (error) {
+      handleError(error, 'UserService -> deleteUser');
+      return Result.error(error.message, 500);
+    }
+  }
+
+  /**
+   * Obtiene el perfil del usuario
+   * @param {string} userId - ID del usuario
+   * @returns {Promise<Result>}
+   */
+  async getUserProfile(userId) {
+    try {
+      return await this.repository.getProfile(userId);
+    } catch (error) {
+      handleError(error, 'UserService -> getUserProfile');
+      return Result.error(error.message, 500);
+    }
+  }
+
+  /**
+   * Actualiza el perfil del usuario
+   * @param {string} userId - ID del usuario
+   * @param {Object} updateData - Datos a actualizar
+   * @returns {Promise<Result>}
+   */
+  async updateUserProfile(userId, updateData) {
+    try {
+      // Verificar contraseña actual si se proporciona nueva contraseña
+      if (updateData.password && updateData.currentPassword) {
+        const user = await this.repository.findById(userId);
+        if (user.isError()) {
+          return user;
+        }
+
+        const verifyResult = await this.repository.verifyCredentials(
+          user.data.email,
+          updateData.currentPassword
+        );
+
+        if (verifyResult.isError()) {
+          return Result.unauthorized('Current password is incorrect');
+        }
+
+        // Actualizar contraseña
+        const passwordResult = await this.repository.updatePassword(userId, updateData.password);
+        if (passwordResult.isError()) {
+          return passwordResult;
+        }
+
+        // Remover campos de contraseña del objeto de actualización
+        const { password, currentPassword, ...restData } = updateData;
+        updateData = restData;
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        const options = {
+          populate: 'roles',
+          select: '-password'
+        };
+
+        return await this.repository.updateById(userId, updateData, options);
+      }
+
+      return await this.repository.getProfile(userId);
+    } catch (error) {
+      handleError(error, 'UserService -> updateUserProfile');
+      return Result.error(error.message, 500);
+    }
+  }
+
+  /**
+   * Cambia la contraseña del usuario
+   * @param {string} userId - ID del usuario
+   * @param {string} currentPassword - Contraseña actual
+   * @param {string} newPassword - Nueva contraseña
+   * @returns {Promise<Result>}
+   */
+  async changePassword(userId, currentPassword, newPassword) {
+    try {
+      const user = await this.repository.findById(userId);
+      if (user.isError()) {
+        return user;
+      }
+
+      const verifyResult = await this.repository.verifyCredentials(
+        user.data.email,
+        currentPassword
       );
 
-      if (!matchPassword) {
-        return {
-          success: false,
-          error: "La contraseña no coincide",
-          data: null
-        };
+      if (verifyResult.isError()) {
+        return Result.unauthorized('Current password is incorrect');
       }
 
-      const rolesFound = await Role.find({ name: { $in: roles } });
-      if (rolesFound.length === 0) {
-        return {
-          success: false,
-          error: "El rol no existe",
-          data: null
-        };
-      }
-
-      const myRole = rolesFound.map((role) => role._id);
-
-      const userUpdated = await User.findByIdAndUpdate(
-        id,
-        {
-          username,
-          email,
-          rut,
-          password: await User.encryptPassword(newPassword || password),
-          roles: myRole,
-        },
-        { new: true }
-      );
-
-      return {
-        success: true,
-        data: userUpdated,
-        error: null
-      };
+      return await this.repository.updatePassword(userId, newPassword);
     } catch (error) {
-      handleError(error, "UserService -> updateUser");
-      return {
-        success: false,
-        error: error.message,
-        data: null
-      };
+      handleError(error, 'UserService -> changePassword');
+      return Result.error(error.message, 500);
     }
   }
 
   /**
-   * Elimina un usuario por su id de la base de datos
-   * @param {string} id Id del usuario
-   * @returns {Promise<Object>} Respuesta estandarizada
+   * Obtiene usuarios por rol
+   * @param {string} roleName - Nombre del rol
+   * @returns {Promise<Result>}
    */
-  async deleteUser(id) {
+  async getUsersByRole(roleName) {
     try {
-      const deletedUser = await User.findByIdAndDelete(id);
-      
-      if (!deletedUser) {
-        return {
-          success: false,
-          error: "El usuario no existe",
-          data: null
-        };
-      }
-
-      return {
-        success: true,
-        data: deletedUser,
-        error: null
-      };
+      return await this.repository.findByRole(roleName);
     } catch (error) {
-      handleError(error, "UserService -> deleteUser");
-      return {
-        success: false,
-        error: error.message,
-        data: null
-      };
+      handleError(error, 'UserService -> getUsersByRole');
+      return Result.error(error.message, 500);
+    }
+  }
+
+  /**
+   * Activa/desactiva un usuario
+   * @param {string} userId - ID del usuario
+   * @param {boolean} isActive - Estado activo
+   * @returns {Promise<Result>}
+   */
+  async toggleUserStatus(userId, isActive) {
+    try {
+      return await this.repository.toggleStatus(userId, isActive);
+    } catch (error) {
+      handleError(error, 'UserService -> toggleUserStatus');
+      return Result.error(error.message, 500);
+    }
+  }
+
+  /**
+   * Asigna roles a un usuario
+   * @param {string} userId - ID del usuario
+   * @param {Array} roleIds - IDs de los roles
+   * @returns {Promise<Result>}
+   */
+  async assignRoles(userId, roleIds) {
+    try {
+      return await this.repository.assignRoles(userId, roleIds);
+    } catch (error) {
+      handleError(error, 'UserService -> assignRoles');
+      return Result.error(error.message, 500);
+    }
+  }
+
+  /**
+   * Obtiene estadísticas de usuarios
+   * @returns {Promise<Result>}
+   */
+  async getUserStats() {
+    try {
+      return await this.repository.getStats();
+    } catch (error) {
+      handleError(error, 'UserService -> getUserStats');
+      return Result.error(error.message, 500);
+    }
+  }
+
+  /**
+   * Verifica las credenciales del usuario
+   * @param {string} email - Email del usuario
+   * @param {string} password - Contraseña del usuario
+   * @returns {Promise<Result>}
+   */
+  async verifyCredentials(email, password) {
+    try {
+      return await this.repository.verifyCredentials(email, password);
+    } catch (error) {
+      handleError(error, 'UserService -> verifyCredentials');
+      return Result.error(error.message, 500);
+    }
+  }
+
+  /**
+   * Busca usuario por email
+   * @param {string} email - Email del usuario
+   * @returns {Promise<Result>}
+   */
+  async findByEmail(email) {
+    try {
+      return await this.repository.findByEmail(email);
+    } catch (error) {
+      handleError(error, 'UserService -> findByEmail');
+      return Result.error(error.message, 500);
+    }
+  }
+
+  /**
+   * Busca usuario por username
+   * @param {string} username - Username del usuario
+   * @returns {Promise<Result>}
+   */
+  async findByUsername(username) {
+    try {
+      return await this.repository.findByUsername(username);
+    } catch (error) {
+      handleError(error, 'UserService -> findByUsername');
+      return Result.error(error.message, 500);
     }
   }
 }
 
-// Exportar instancia del servicio
-const userService = new UserService();
+// Crear instancia singleton
+export const userService = new UserService();
 export default userService;

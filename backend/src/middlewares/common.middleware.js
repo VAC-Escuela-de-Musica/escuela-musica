@@ -78,6 +78,12 @@ export const rateLimiter = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
   const clients = new Map();
   
   return (req, res, next) => {
+    // En desarrollo, ser más permisivo con el rate limiting
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    if (isDevelopment) {
+      maxRequests = maxRequests * 10; // Multiplicar por 10 en desarrollo
+    }
+    
     const clientId = req.ip;
     const now = Date.now();
     
@@ -97,7 +103,7 @@ export const rateLimiter = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
     if (client.count >= maxRequests) {
       return res.status(429).json({
         success: false,
-        error: "Demasiadas peticiones. Intenta más tarde.",
+        error: "Demasiadas peticiones desde esta IP, intenta más tarde",
         statusCode: 429,
         details: {
           maxRequests,

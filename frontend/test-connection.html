@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Frontend-Backend Connection</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ccc; }
+        .error { color: red; }
+        .success { color: green; }
+        .loading { color: orange; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔗 Test Frontend-Backend Connection</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Backend Health Check</h2>
+        <button onclick="testBackendHealth()">Test Backend Health</button>
+        <div id="health-result">Click to test</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Login</h2>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="login-result">Click to test</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Verify Token</h2>
+        <button onclick="testVerifyToken()">Test Verify Token</button>
+        <div id="verify-result">Click to test</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Materials Endpoint</h2>
+        <button onclick="testMaterials()">Test Materials</button>
+        <div id="materials-result">Click to test</div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        async function testBackendHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.innerHTML = '<div class="loading">Testing backend health...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3000/health');
+                if (response.ok) {
+                    resultDiv.innerHTML = '<div class="success">✅ Backend is healthy!</div>';
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Backend returned ${response.status}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Connection error: ${error.message}</div>`;
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = '<div class="loading">Testing login...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@email.com',
+                        password: '123456'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.data.token;
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Login successful!</div>
+                        <div class="success">Token: ${authToken.substring(0, 20)}...</div>
+                        <div class="success">User: ${data.data.user.username}</div>
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<div class="error">❌ Login failed: ${error.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Login error: ${error.message}</div>`;
+            }
+        }
+
+        async function testVerifyToken() {
+            const resultDiv = document.getElementById('verify-result');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ No token available. Please login first.</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading">Testing token verification...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/verify', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Token verification successful!</div>
+                        <div class="success">User: ${data.data.user.username}</div>
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<div class="error">❌ Token verification failed: ${error.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Verification error: ${error.message}</div>`;
+            }
+        }
+
+        async function testMaterials() {
+            const resultDiv = document.getElementById('materials-result');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ No token available. Please login first.</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading">Testing materials endpoint...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/materials', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Materials endpoint successful!</div>
+                        <div class="success">Materials found: ${data.data.length}</div>
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<div class="error">❌ Materials request failed: ${error.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Materials error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

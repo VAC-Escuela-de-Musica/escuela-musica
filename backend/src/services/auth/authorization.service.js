@@ -108,7 +108,6 @@ class AuthorizationService {
   }
 }
 
-export default AuthorizationService;
-
-// También exportar como named export para compatibilidad
+// Exportar usando named export
 export { AuthorizationService };
+

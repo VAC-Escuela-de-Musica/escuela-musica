@@ -19,9 +19,17 @@ dotenv.config({ path: envFilePath });
  */
 function validateEnvironment() {
   const requiredVars = [
+    'PORT',
+    'HOST',
     'DB_URL',
     'ACCESS_JWT_SECRET',
-    'REFRESH_JWT_SECRET'
+    'REFRESH_JWT_SECRET',
+    'MINIO_ENDPOINT',
+    'MINIO_PORT',
+    'MINIO_ACCESS_KEY',
+    'MINIO_SECRET_KEY',
+    'MINIO_BUCKET',
+    'MINIO_PUBLIC_BUCKET'
   ];
   
   const missingVars = requiredVars.filter(varName => !process.env[varName]);

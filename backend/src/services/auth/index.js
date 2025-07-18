@@ -1,3 +1,3 @@
 // Exportar todos los servicios de autenticación
-export { default as AuthService } from './authentication.service.js';
-export { default as AuthorizationService } from './authorization.service.js';
+export { AuthenticationService } from './authentication.service.js';
+export { AuthorizationService } from './authorization.service.js';

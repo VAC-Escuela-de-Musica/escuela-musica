@@ -25,7 +25,7 @@ const router = Router();
 
 // ============= MIDDLEWARES BASE =============
 router.use(sanitizeInput);
-router.use(rateLimiter(100, 15 * 60 * 1000)); // 100 requests por 15 minutos
+router.use(rateLimiter(1000, 15 * 60 * 1000)); // 1000 requests por 15 minutos (aumentado para desarrollo)
 
 // ============= RUTAS QUE REQUIEREN AUTENTICACIÓN =============
 router.use(authenticateJWT);

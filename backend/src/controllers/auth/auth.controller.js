@@ -92,8 +92,40 @@ async function refresh(req, res) {
   }
 }
 
+/**
+ * @name verify
+ * @description Verifica el token de acceso
+ * @param {Object} req - Objeto de petición
+ * @param {Object} res - Objeto de respuesta
+ */
+async function verify(req, res) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return respondError(req, res, 401, "No hay token de autorización");
+    }
+
+    const token = authHeader.split(' ')[1];
+    
+    // Verificar token usando el servicio de autenticación
+    const verifyResult = await AuthenticationService.verifyToken(token);
+    
+    if (!verifyResult.success) {
+      return respondError(req, res, 401, verifyResult.error);
+    }
+
+    respondSuccess(req, res, 200, {
+      user: verifyResult.data.user
+    });
+  } catch (error) {
+    handleError(error, "auth.controller -> verify");
+    respondError(req, res, 500, "Error interno del servidor");
+  }
+}
+
 export default {
   login,
   logout,
   refresh,
+  verify,
 };

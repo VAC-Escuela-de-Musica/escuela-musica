@@ -12,6 +12,7 @@ const router = Router();
 router.post("/login", authController.login);
 router.post("/logout", authController.logout);
 router.get("/refresh", authController.refresh);
+router.get("/verify", authController.verify);
 
 // Exporta el enrutador
 export default router;

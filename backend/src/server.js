@@ -1,22 +1,7 @@
-// Importa el archivo 'configEnv.js' para cargar las variables de entorno
-import { PORT, HOST } from "./config/configEnv.js";
-// Importa el módulo 'cors' para agregar los cors
-import cors from "cors";
-// Importa el módulo 'express' para crear la aplicacion web
-import express, { urlencoded, json } from "express";
-// Importamos morgan para ver las peticiones que se hacen al servidor
-import morgan from "morgan";
-// Importa el módulo 'cookie-parser' para manejar las cookies
-import cookieParser from "cookie-parser";
-// Importa el módulo 'path' para manejar rutas de archivos
-import path from "path";
-// Importa el módulo 'url' para manejar URLs
-import { fileURLToPath } from "url";
-// Importa middlewares de seguridad
-import helmet from "helmet";
-import rateLimit from "express-rate-limit";
-/** El enrutador principal */
-import indexRoutes from "./routes/index.routes.js";
+// Importa la configuración centralizada
+import { config } from "./config/index.js";
+// Importa la aplicación Express configurada
+import { createApp } from "./app.js";
 // Importa el archivo 'configDB.js' para crear la conexión a la base de datos
 import { setupDB } from "./config/configDB.js";
 // Importa el handler de errores
@@ -30,69 +15,18 @@ import { initializeServices } from "./services/index.js";
  */
 async function setupServer() {
   try {
-    /** Instancia de la aplicacion */
-    const server = express();
-    server.disable("x-powered-by");
-    
-    // === CONFIGURACIÓN DE SEGURIDAD ===
-    // Helmet para headers de seguridad
-    server.use(helmet({
-      contentSecurityPolicy: false, // Deshabilitado para desarrollo
-      crossOriginEmbedderPolicy: false // Deshabilitado para desarrollo
-    }));
-    
-    // Rate limiting
-    const limiter = rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutos
-      max: 100, // Límite de 100 peticiones por IP por ventana
-      message: {
-        success: false,
-        error: "Demasiadas peticiones desde esta IP, intenta más tarde",
-        statusCode: 429
-      },
-      standardHeaders: true,
-      legacyHeaders: false,
-    });
-    server.use(limiter);
-    
-    // CORS configurado por entorno
-    const corsOptions = {
-      origin: process.env.NODE_ENV === 'production' 
-        ? process.env.FRONTEND_URL || 'https://yourdomain.com'
-        : ['http://localhost:3000', 'http://localhost:443', 'http://localhost:5173'],
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-    };
-    server.use(cors(corsOptions));
-    // Agrega el middleware para el manejo de datos en formato URL
-    server.use(urlencoded({ extended: true }));
-    // Agrega el middleware para el manejo de datos en formato JSON
-    server.use(json());    // Agregamos el middleware para el manejo de cookies
-    server.use(cookieParser());
-    // Agregamos morgan para ver las peticiones que se hacen al servidor
-    server.use(morgan("dev"));
-    
-    // === Servir archivos estáticos del frontend ===
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
-    const frontendPath = path.join(__dirname, "../../frontend/dist");
-    server.use(express.static(frontendPath));    // Agrega el enrutador principal al servidor
-    server.use("/api", indexRoutes);
-    
-    // Redirige cualquier ruta que no sea /api a index.html (SPA)
-    server.use((req, res) => {
-      if (!req.path.startsWith("/api")) {
-        res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
-      }
-    });
+    // Crea la aplicación Express con toda la configuración
+    const app = createApp();
 
     // Inicia el servidor en el puerto especificado
-    server.listen(PORT, () => {
-      console.log(`=> Servidor corriendo en ${HOST}:${PORT}`);
+    const server = app.listen(config.server.port, () => {
+      console.log(`=> Servidor corriendo en ${config.server.host}:${config.server.port}`);
     });
+
+    return server;
   } catch (err) {
     handleError(err, "/server.js -> setupServer");
+    throw err;
   }
 }
 
