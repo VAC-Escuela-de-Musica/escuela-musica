@@ -1,9 +1,9 @@
-import { fileService } from '../services/file.service.js';
-import { minioService } from '../services/minio.service.js';
-import { auditService } from '../services/audit.service.js';
-import Material from '../models/material.entity.js';
-import { respondSuccess, respondError } from '../utils/resHandler.js';
-import { ACCESS_JWT_SECRET } from "../config/configEnv.js";
+import { fileService } from '../../services/storage/file.service.js';
+import { minioService } from '../../services/storage/minio.service.js';
+import { auditService } from '../../services/audit.service.js';
+import Material from '../../models/material.entity.js';
+import { respondSuccess, respondError } from '../../utils/resHandler.js';
+import { ACCESS_JWT_SECRET } from "../../config/configEnv.js";
 import jwt from "jsonwebtoken";
 
 /**
@@ -238,12 +238,25 @@ export async function healthCheck(req, res) {
  * Función auxiliar que verifica y extrae información del token JWT
  */
 function verifyTokenFromUrl(req, token) {
-  if (token && !req.email) {
+  // Si ya hay datos de usuario del middleware, usar esos
+  if (req.user?.email) {
+    return true;
+  }
+  
+  // Si hay token en la URL, verificarlo
+  if (token) {
     try {
       const decoded = jwt.verify(token, ACCESS_JWT_SECRET);
       
+      // Asignar datos del token tanto al formato legacy como al nuevo
       req.email = decoded.email;
       req.roles = decoded.roles || [];
+      
+      // También crear el objeto user para compatibilidad
+      req.user = {
+        email: decoded.email,
+        roles: decoded.roles || []
+      };
       
       return true;
     } catch (tokenError) {
@@ -251,24 +264,30 @@ function verifyTokenFromUrl(req, token) {
       return false;
     }
   }
-  return !!req.email;
+  
+  // Si no hay token ni datos de usuario
+  return false;
 }
 
 /**
  * Verifica si un usuario puede acceder a un material
  */
 function canUserAccessMaterial(req, material) {
+  // Obtener email y roles del usuario (compatible con ambos sistemas)
+  const userEmail = req.user?.email || req.email;
+  const userRoles = req.user?.roleNames || req.user?.roles || req.roles || [];
+  
   // Admins pueden acceder a todo
-  if (isUserAdmin(req)) return true;
+  if (isUserAdmin({ email: userEmail, roles: userRoles })) return true;
   
   // Material público es accesible para todos
   if (material.bucketTipo === 'publico') return true;
   
   // El dueño puede acceder a su material
-  if (material.usuario === req.email) return true;
+  if (material.usuario === userEmail) return true;
   
   // Profesores pueden acceder a materiales de otros profesores
-  if (isUserProfesor(req)) return true;
+  if (isUserProfesor({ email: userEmail, roles: userRoles })) return true;
   
   return false;
 }
@@ -276,13 +295,23 @@ function canUserAccessMaterial(req, material) {
 /**
  * Verifica si un usuario tiene rol de admin
  */
-function isUserAdmin(req) {
-  return req.roles?.some(role => role.name === 'admin' || role === 'admin');
+function isUserAdmin(user) {
+  if (!user.roles) return false;
+  return user.roles.some(role => 
+    role === 'admin' || 
+    role.name === 'admin' || 
+    (typeof role === 'string' && role === 'admin')
+  );
 }
 
 /**
  * Verifica si un usuario tiene rol de profesor
  */
-function isUserProfesor(req) {
-  return req.roles?.some(role => role.name === 'profesor' || role === 'profesor');
+function isUserProfesor(user) {
+  if (!user.roles) return false;
+  return user.roles.some(role => 
+    role === 'profesor' || 
+    role.name === 'profesor' || 
+    (typeof role === 'string' && role === 'profesor')
+  );
 }

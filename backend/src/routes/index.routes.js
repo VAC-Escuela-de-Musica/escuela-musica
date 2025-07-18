@@ -8,28 +8,57 @@ import authRoutes from "./auth.routes.js";
 import materialRoutes from "./material.routes.js";
 import fileRoutes from "./file.routes.js";
 
-// Middleware de autenticación
-import authenticationMiddleware from "../middlewares/authentication.middleware.js";
+// Middlewares centralizados
+import { 
+  requestLogger,
+  performanceMonitor,
+  securityHeaders,
+  requestInfo,
+  globalErrorHandler,
+  notFoundHandler
+} from "../middlewares/index.js";
 
 // Instancia del enrutador
 const router = Router();
 
-// Rutas para usuarios - requieren autenticación
-router.use("/users", authenticationMiddleware, userRoutes);
+// ============= MIDDLEWARES GLOBALES =============
+router.use(requestInfo);
+router.use(requestLogger);
+router.use(performanceMonitor);
+router.use(securityHeaders);
+
+// ============= DEFINICIÓN DE RUTAS =============
+
+// Health check global del sistema
+router.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Backend funcionando correctamente',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
+// Rutas para usuarios - autenticación manejada en user.routes.js
+router.use("/users", userRoutes);
 
 // Rutas para autenticación - públicas
 router.use("/auth", authRoutes);
 
-// Rutas para materiales - algunas requieren autenticación (definido en material.routes.js)
+// Rutas para materiales - autenticación manejada en material.routes.js
 router.use("/materials", materialRoutes);
 
 // Rutas para archivos - operaciones de archivos optimizadas
 router.use("/files", fileRoutes);
 
-// Redireccionamiento de rutas obsoletas para mantener compatibilidad
+// ============= COMPATIBILIDAD CON RUTAS OBSOLETAS =============
 router.use("/materiales", (req, res) => {
   console.log(`⚠️ Acceso a ruta obsoleta: ${req.method} ${req.originalUrl}`);
   res.redirect(307, req.originalUrl.replace('/materiales', '/materials'));
 });
+
+// ============= MANEJO DE ERRORES =============
+router.use(notFoundHandler);
+router.use(globalErrorHandler);
 
 export default router;

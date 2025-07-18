@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 // Cargar variables de entorno
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const envFilePath = path.resolve(__dirname, '../config/.env');
+const envFilePath = path.resolve(__dirname, '../../config/.env');
 dotenv.config({ path: envFilePath });
 
 class MinioService {

@@ -1,42 +1,81 @@
 import { Router } from "express";
-import authenticationMiddleware from "../middlewares/authentication.middleware.js";
-import { authorizationMiddleware } from "../middlewares/authorization.middleware.js";
+import { 
+  authenticateJWT,
+  loadUserData,
+  requireAdmin,
+  requireAdminOrProfesor,
+  validateMongoId,
+  asyncHandler,
+  sanitizeInput,
+  rateLimiter
+} from "../middlewares/index.js";
 import {
   getUploadUrl,
   confirmUpload,
   listMaterialsWithUrls,
   deleteMaterial,
   testMinioConnection
-} from "../controllers/material.controller.js";
+} from "../controllers/material/index.js";
 import {
   getDownloadUrl,
   healthCheck
-} from "../controllers/file.controller.js";
+} from "../controllers/file/index.js";
 
 const router = Router();
 
+// ============= MIDDLEWARES BASE =============
+router.use(sanitizeInput);
+router.use(rateLimiter(100, 15 * 60 * 1000)); // 100 requests por 15 minutos
+
 // ============= RUTAS QUE REQUIEREN AUTENTICACIÓN =============
-router.use(authenticationMiddleware);
+router.use(authenticateJWT);
+router.use(loadUserData);
 
 // Health checks del sistema
-router.get("/test-minio", authorizationMiddleware(["admin"]), testMinioConnection);
-router.get("/health", healthCheck);
+router.get("/test-minio", 
+  requireAdmin, 
+  asyncHandler(testMinioConnection)
+);
+
+router.get("/health", 
+  asyncHandler(healthCheck)
+);
 
 // Flujo de subida de materiales
-router.post("/upload-url", getUploadUrl);
-router.post("/confirm-upload", confirmUpload);
+router.post("/upload-url", 
+  requireAdminOrProfesor,
+  asyncHandler(getUploadUrl)
+);
+
+router.post("/confirm-upload", 
+  requireAdminOrProfesor,
+  asyncHandler(confirmUpload)
+);
 
 // URLs prefirmadas para descarga (nuevas)
-router.get("/:id/download-url", getDownloadUrl);
-router.get("/:id/view-url", (req, res, next) => {
-  req.query.action = 'view';
-  getDownloadUrl(req, res, next);
-});
+router.get("/:id/download-url", 
+  validateMongoId('id'),
+  asyncHandler(getDownloadUrl)
+);
+
+router.get("/:id/view-url", 
+  validateMongoId('id'),
+  asyncHandler((req, res, next) => {
+    req.query.action = 'view';
+    getDownloadUrl(req, res, next);
+  })
+);
 
 // Listar materiales
-router.get("/", listMaterialsWithUrls);
+router.get("/", 
+  asyncHandler(listMaterialsWithUrls)
+);
 
 // Eliminar material
-router.delete("/:materialId", deleteMaterial);
+router.delete("/:materialId", 
+  validateMongoId('materialId'),
+  requireAdminOrProfesor,
+  asyncHandler(deleteMaterial)
+);
 
 export default router;

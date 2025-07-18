@@ -1,11 +1,11 @@
 "use strict";
 
-import { respondSuccess, respondError } from "../utils/resHandler.js";
-import { handleError } from "../utils/errorHandler.js";
+import { respondSuccess, respondError } from "../../utils/resHandler.js";
+import { handleError } from "../../utils/errorHandler.js";
 
 /** Servicios de autenticación */
-import AuthService from "../services/auth.service.js";
-import { authLoginBodySchema } from "../schema/auth.schema.js";
+import { AuthenticationService } from '../../services/index.js';
+import { authLoginBodySchema } from "../../schema/auth.schema.js";
 
 /**
  * Inicia sesión con un usuario.
@@ -20,7 +20,7 @@ async function login(req, res) {
     const { error: bodyError } = authLoginBodySchema.validate(body);
     if (bodyError) return respondError(req, res, 400, bodyError.message);
 
-    const [accessToken, refreshToken, errorToken] = await AuthService.login(
+    const [accessToken, refreshToken, errorToken] = await AuthenticationService.login(
       body
     );
 
@@ -69,7 +69,7 @@ async function refresh(req, res) {
     const cookies = req.cookies;
     if (!cookies?.jwt) return respondError(req, res, 400, "No hay token");
 
-    const [accessToken, errorToken] = await AuthService.refresh(cookies);
+    const [accessToken, errorToken] = await AuthenticationService.refresh(cookies);
 
     if (errorToken) return respondError(req, res, 400, errorToken);
 

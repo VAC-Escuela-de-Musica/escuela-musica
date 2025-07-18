@@ -8,7 +8,7 @@
     "lint": "standard",
     "dev": "nodemon src/server.js",
     "test:minio": "node src/scripts/testMinio.js",
-    "test:upload": "node src/scripts/testUpload.js", 
+    "test:upload": "node src/scripts/testUpload.js",
     "test:presigned": "node src/scripts/testPresignedUrls.js",
     "test:images": "node src/scripts/testImageFlows.js",
     "test:minio:all": "node src/scripts/testMinioComplete.js",
@@ -25,12 +25,14 @@
     "date-fns": "^2.30.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-validator": "^7.2.1",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "minio": "^8.0.5",
     "mongoose": "^8.15.2",
     "morgan": "^1.10.0",
     "multer": "^2.0.1",
+    "node-fetch": "^3.3.2",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

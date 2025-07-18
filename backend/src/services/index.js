@@ -3,7 +3,7 @@
  * Inicializa buckets de MinIO y configura servicios al arrancar la aplicación
  */
 
-import { minioService } from './minio.service.js';
+import { minioService } from './storage/minio.service.js';
 
 /**
  * Inicializa todos los servicios necesarios
@@ -31,6 +31,14 @@ export async function initializeServices() {
   }
 }
 
-export { minioService } from './minio.service.js';
-export { fileService } from './file.service.js';
-export { auditService } from './audit.service.js';
+export { minioService } from './storage/minio.service.js';
+export { fileService } from './storage/file.service.js';
+export { auditService } from './monitoring/audit.service.js';
+
+// Servicios de autenticación y autorización
+export { default as AuthenticationService } from './auth/authentication.service.js';
+export { default as AuthService } from './auth/authentication.service.js'; // Alias para compatibilidad
+export { AuthorizationService } from './auth/authorization.service.js';
+
+// Servicios de usuario  
+export { default as UserService } from './user/user.service.js';

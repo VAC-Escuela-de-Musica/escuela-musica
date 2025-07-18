@@ -3,25 +3,53 @@
 import { Router } from "express";
 
 /** Controlador de usuarios */
-import usuarioController from "../controllers/user.controller.js";
+import usuarioController from "../controllers/user/user.controller.js";
 
-/** Middlewares de autorización */
-import { isAdmin } from "../middlewares/authorization.middleware.js";
-
-/** Middleware de autenticación */
-import authenticationMiddleware from "../middlewares/authentication.middleware.js";
+/** Middlewares organizados */
+import { 
+  authenticateJWT,
+  loadUserData,
+  requireAdmin,
+  validateMongoId,
+  asyncHandler,
+  sanitizeInput
+} from "../middlewares/index.js";
 
 /** Instancia del enrutador */
 const router = Router();
 
-// Define el middleware de autenticación para todas las rutas
-router.use(authenticationMiddleware);
+// Aplicar middlewares base a todas las rutas
+router.use(sanitizeInput);
+router.use(authenticateJWT);
+router.use(loadUserData);
+
 // Define las rutas para los usuarios
-router.get("/", isAdmin, usuarioController.getUsers);
-router.post("/", isAdmin, usuarioController.createUser);
-router.get("/:id", usuarioController.getUserById);
-router.put("/:id", isAdmin, usuarioController.updateUser);
-router.delete("/:id", isAdmin, usuarioController.deleteUser);
+router.get("/", 
+  requireAdmin, 
+  asyncHandler(usuarioController.getUsers)
+);
+
+router.post("/", 
+  requireAdmin, 
+  asyncHandler(usuarioController.createUser)
+);
+
+router.get("/:id", 
+  validateMongoId('id'),
+  asyncHandler(usuarioController.getUserById)
+);
+
+router.put("/:id", 
+  validateMongoId('id'),
+  requireAdmin, 
+  asyncHandler(usuarioController.updateUser)
+);
+
+router.delete("/:id", 
+  validateMongoId('id'),
+  requireAdmin, 
+  asyncHandler(usuarioController.deleteUser)
+);
 
 // Exporta el enrutador
 export default router;
