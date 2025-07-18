@@ -23,3 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 *.env
+
+# Legacy and backup files
+*.backup.*
+*.refactored.*
+*.old.*
+*.deprecated.*
+test-*
+*.bak
+*.tmp
