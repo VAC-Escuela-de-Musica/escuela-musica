@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap");
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -5,7 +7,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #222222;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -14,6 +16,134 @@
   -webkit-text-size-adjust: 100%;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #222222;
+  color: #f9fafb;
+}
+
+:root,
+body,
+html,
+#root {
+  font-family: "Raleway", sans-serif !important;
+}
+
+*,
+.MuiTypography-root,
+.MuiButton-root,
+.MuiInputBase-root,
+.MuiInputLabel-root,
+.MuiChip-root,
+.MuiCardContent-root,
+.MuiCard-root,
+.MuiDialogTitle-root,
+.MuiDialogContent-root,
+.MuiDialogActions-root {
+  font-family: "Raleway", sans-serif !important;
+}
+
+/* Estilos para enlaces */
 a {
+  font-weight: 500;
+  color: #d97706;
   text-decoration: inherit;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #f59e0b;
+}
+
+/* Estilos para botones */
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #374151;
+  color: #f9fafb;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: #4b5563;
+  border-color: #d97706;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid #d97706;
+  outline-offset: 2px;
+}
+
+/* Estilos para formularios */
+input,
+textarea,
+select {
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  color: #f9fafb;
+  border-radius: 6px;
+  padding: 0.5em 1em;
+  transition: border-color 0.3s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #d97706;
+}
+
+/* Utilidades personalizadas */
+.bg-primary {
+  background-color: #d97706;
+}
+
+.text-primary {
+  color: #d97706;
+}
+
+.border-primary {
+  border-color: #d97706;
+}
+
+/* Animaciones suaves */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #f9fafb;
+  }
+
+  body {
+    background-color: #f9fafb;
+    color: #213547;
+  }
+
+  a:hover {
+    color: #b45309;
+  }
+
+  button {
+    background-color: #f3f4f6;
+    color: #213547;
+  }
+
+  button:hover {
+    background-color: #e5e7eb;
+  }
 }

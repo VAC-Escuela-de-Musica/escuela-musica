@@ -2,6 +2,7 @@
 // Import the 'mongoose' module to create the database connection
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import ROLES from "../constants/roles.constants.js";
 
 // Create the 'users' collection schema
 const userSchema = new mongoose.Schema(
@@ -26,14 +27,15 @@ const userSchema = new mongoose.Schema(
     },
     roles: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Role",
+        type: String,
+        enum: ROLES,
+        required: true,
       },
     ],
   },
   {
     versionKey: false,
-  }
+  },
 );
 
 /** Encrypts the user's password */

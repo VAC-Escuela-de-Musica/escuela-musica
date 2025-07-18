@@ -23,3 +23,12 @@ export const DB_URL = process.env.DB_URL;
 export const ACCESS_JWT_SECRET = process.env.ACCESS_JWT_SECRET;
 /** Refresh token secret */
 export const REFRESH_JWT_SECRET = process.env.REFRESH_JWT_SECRET;
+
+/** MinIO Configuration */
+export const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || "localhost";
+export const MINIO_PORT = parseInt(process.env.MINIO_PORT) || 9000;
+export const MINIO_USE_SSL = process.env.MINIO_USE_SSL === "true";
+export const MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY;
+export const MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY;
+export const MINIO_BUCKET_NAME =
+  process.env.MINIO_BUCKET_NAME || "carousel-images";
