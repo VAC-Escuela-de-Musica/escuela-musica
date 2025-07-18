@@ -2,7 +2,7 @@
 
 import jwt from "jsonwebtoken";
 import { ACCESS_JWT_SECRET } from "../../config/configEnv.js";
-import { handleError } from "../../utils/errorHandler.js";
+import { handleError } from "../../utils/errorHandler.util.js";
 
 /**
  * Middleware de autenticación opcional para rutas públicas de archivos

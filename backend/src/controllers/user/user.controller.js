@@ -1,23 +1,22 @@
 "use strict";
 
-import { respondSuccess, respondError } from "../../utils/resHandler.js";
+import { respondSuccess, respondError } from "../../utils/responseHandler.util.js";
 import { UserService } from '../../services/index.js';
-import { userBodySchema, userIdSchema } from "../../schema/user.schema.js";
 import { asyncHandler } from "../../middlewares/index.js";
 
 /**
  * Obtiene todos los usuarios
  */
 const getUsers = asyncHandler(async (req, res) => {
-  const [usuarios, errorUsuarios] = await UserService.getUsers();
+  const result = await UserService.getUsers();
   
-  if (errorUsuarios) {
-    return respondError(req, res, 404, errorUsuarios);
+  if (!result.success) {
+    return respondError(req, res, 404, result.error);
   }
 
-  return usuarios.length === 0
+  return result.data.length === 0
     ? respondSuccess(req, res, 204)
-    : respondSuccess(req, res, 200, usuarios);
+    : respondSuccess(req, res, 200, result.data);
 });
 
 /**
@@ -25,17 +24,15 @@ const getUsers = asyncHandler(async (req, res) => {
  */
 const createUser = asyncHandler(async (req, res) => {
   const { body } = req;
-  const { error: bodyError } = userBodySchema.validate(body);
-  if (bodyError) return respondError(req, res, 400, bodyError.message);
+  // La validación del body ya se maneja en el middleware
+  
+  const result = await UserService.createUser(body);
 
-  const [newUser, userError] = await UserService.createUser(body);
-
-  if (userError) return respondError(req, res, 400, userError);
-  if (!newUser) {
-    return respondError(req, res, 400, "No se creó el usuario");
+  if (!result.success) {
+    return respondError(req, res, 400, result.error);
   }
 
-  respondSuccess(req, res, 201, newUser);
+  respondSuccess(req, res, 201, result.data);
 });
 
 /**
@@ -43,14 +40,15 @@ const createUser = asyncHandler(async (req, res) => {
  */
 const getUserById = asyncHandler(async (req, res) => {
   const { params } = req;
-  const { error: paramsError } = userIdSchema.validate(params);
-  if (paramsError) return respondError(req, res, 400, paramsError.message);
+  // La validación de params ya se maneja en el middleware
 
-  const [user, errorUser] = await UserService.getUserById(params.id);
+  const result = await UserService.getUserById(params.id);
 
-  if (errorUser) return respondError(req, res, 404, errorUser);
+  if (!result.success) {
+    return respondError(req, res, 404, result.error);
+  }
 
-  respondSuccess(req, res, 200, user);
+  respondSuccess(req, res, 200, result.data);
 });
 
 /**
@@ -58,17 +56,15 @@ const getUserById = asyncHandler(async (req, res) => {
  */
 const updateUser = asyncHandler(async (req, res) => {
   const { params, body } = req;
-  const { error: paramsError } = userIdSchema.validate(params);
-  if (paramsError) return respondError(req, res, 400, paramsError.message);
+  // Las validaciones ya se manejan en el middleware
 
-  const { error: bodyError } = userBodySchema.validate(body);
-  if (bodyError) return respondError(req, res, 400, bodyError.message);
+  const result = await UserService.updateUser(params.id, body);
 
-  const [user, userError] = await UserService.updateUser(params.id, body);
+  if (!result.success) {
+    return respondError(req, res, 400, result.error);
+  }
 
-  if (userError) return respondError(req, res, 400, userError);
-
-  respondSuccess(req, res, 200, user);
+  respondSuccess(req, res, 200, result.data);
 });
 
 /**
@@ -76,19 +72,15 @@ const updateUser = asyncHandler(async (req, res) => {
  */
 const deleteUser = asyncHandler(async (req, res) => {
   const { params } = req;
-  const { error: paramsError } = userIdSchema.validate(params);
-  if (paramsError) return respondError(req, res, 400, paramsError.message);
+  // La validación de params ya se maneja en el middleware
 
-  const user = await UserService.deleteUser(params.id);
-  !user
-    ? respondError(
-        req,
-        res,
-        404,
-        "No se encontró el usuario solicitado",
-        "Verifique el id ingresado"
-      )
-    : respondSuccess(req, res, 200, user);
+  const result = await UserService.deleteUser(params.id);
+  
+  if (!result.success) {
+    return respondError(req, res, 404, result.error);
+  }
+
+  respondSuccess(req, res, 200, result.data);
 });
 
 export default {

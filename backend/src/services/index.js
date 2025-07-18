@@ -42,3 +42,12 @@ export { AuthorizationService } from './auth/authorization.service.js';
 
 // Servicios de usuario  
 export { default as UserService } from './user/user.service.js';
+
+// Servicios de material
+export { default as MaterialService } from './material/material.service.js';
+
+// Servicios de clase
+export { default as ClassService } from './class/class.service.js';
+
+// Servicios de evento
+export { default as EventService } from './event/event.service.js';

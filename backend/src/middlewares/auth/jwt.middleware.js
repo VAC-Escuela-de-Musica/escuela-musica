@@ -2,8 +2,8 @@
 
 import jwt from "jsonwebtoken";
 import { ACCESS_JWT_SECRET } from "../../config/configEnv.js";
-import { respondError } from "../../utils/resHandler.js";
-import { handleError } from "../../utils/errorHandler.js";
+import { respondError } from "../../utils/responseHandler.util.js";
+import { handleError } from "../../utils/errorHandler.util.js";
 
 /**
  * Extrae y valida el token JWT del header Authorization

@@ -8,4 +8,4 @@ const archivoSchema = new mongoose.Schema({
   fechaSubida: { type: Date, default: Date.now }
 });
 
-export default mongoose.model('Archivo', archivoSchema);
+export default mongoose.model('File', archivoSchema);

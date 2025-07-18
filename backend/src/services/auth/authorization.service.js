@@ -2,7 +2,7 @@
 
 import User from "../../models/user.model.js";
 import Role from "../../models/role.model.js";
-import { handleError } from "../../utils/errorHandler.js";
+import { handleError } from "../../utils/errorHandler.util.js";
 
 /**
  * Servicio centralizado para manejar la autorización de usuarios

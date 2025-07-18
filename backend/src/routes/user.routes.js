@@ -15,6 +15,9 @@ import {
   sanitizeInput
 } from "../middlewares/index.js";
 
+import { validateSchema } from "../middlewares/validation/schema.middleware.js";
+import { userBodySchema, userIdSchema } from "../schema/user.schema.js";
+
 /** Instancia del enrutador */
 const router = Router();
 
@@ -30,23 +33,28 @@ router.get("/",
 );
 
 router.post("/", 
-  requireAdmin, 
+  requireAdmin,
+  validateSchema(userBodySchema, 'body'),
   asyncHandler(usuarioController.createUser)
 );
 
 router.get("/:id", 
   validateMongoId('id'),
+  validateSchema(userIdSchema, 'params'),
   asyncHandler(usuarioController.getUserById)
 );
 
 router.put("/:id", 
   validateMongoId('id'),
+  validateSchema(userIdSchema, 'params'),
+  validateSchema(userBodySchema, 'body'),
   requireAdmin, 
   asyncHandler(usuarioController.updateUser)
 );
 
 router.delete("/:id", 
   validateMongoId('id'),
+  validateSchema(userIdSchema, 'params'),
   requireAdmin, 
   asyncHandler(usuarioController.deleteUser)
 );

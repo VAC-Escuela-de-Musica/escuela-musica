@@ -1,6 +1,6 @@
 // Controlador de subida de materiales
-import Material from "../../models/material.entity.js";
-import { respondError, respondSuccess } from "../../utils/resHandler.js";
+import Material from "../../models/material.model.js";
+import { respondError, respondSuccess } from "../../utils/responseHandler.util.js";
 import { fileService } from '../../services/index.js';
 import { auditService } from '../../services/index.js';
 import { AuthorizationService } from '../../services/index.js';

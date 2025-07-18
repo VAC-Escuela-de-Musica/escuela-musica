@@ -1,8 +1,8 @@
 "use strict";
 
 import path from "path";
-import { respondError } from "../../utils/resHandler.js";
-import { handleError } from "../../utils/errorHandler.js";
+import { respondError } from "../../utils/responseHandler.util.js";
+import { handleError } from "../../utils/errorHandler.util.js";
 
 /**
  * Validador genérico de tipos de archivo por extensión

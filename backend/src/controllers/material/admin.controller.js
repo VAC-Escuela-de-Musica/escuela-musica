@@ -1,5 +1,5 @@
 // Controlador de administración de materiales
-import { respondError, respondSuccess } from "../../utils/resHandler.js";
+import { respondError, respondSuccess } from "../../utils/responseHandler.util.js";
 import { asyncHandler } from "../../middlewares/index.js";
 import { minioService } from '../../services/index.js';
 

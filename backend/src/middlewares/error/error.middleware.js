@@ -1,7 +1,7 @@
 "use strict";
 
-import { respondError } from "../../utils/resHandler.js";
-import { handleError } from "../../utils/errorHandler.js";
+import { respondError } from "../../utils/responseHandler.util.js";
+import { handleError } from "../../utils/errorHandler.util.js";
 
 /**
  * Middleware global para manejo de errores

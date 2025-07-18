@@ -7,4 +7,4 @@ const metricaSchema = new mongoose.Schema({
   fecha: { type: Date, default: Date.now },
   generadoPor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 });
-export default mongoose.model('Metrica', metricaSchema);
+export default mongoose.model('Metrics', metricaSchema);

@@ -1,8 +1,8 @@
 "use strict";
 
 import { validationResult } from "express-validator";
-import { respondError } from "../../utils/resHandler.js";
-import { handleError } from "../../utils/errorHandler.js";
+import { respondError } from "../../utils/responseHandler.util.js";
+import { handleError } from "../../utils/errorHandler.util.js";
 
 /**
  * Middleware para validar los resultados de express-validator

@@ -1,8 +1,8 @@
 import { fileService } from '../../services/storage/file.service.js';
 import { minioService } from '../../services/storage/minio.service.js';
 import { auditService } from '../../services/audit.service.js';
-import Material from '../../models/material.entity.js';
-import { respondSuccess, respondError } from '../../utils/resHandler.js';
+import Material from '../../models/material.model.js';
+import { respondSuccess, respondError } from '../../utils/responseHandler.util.js';
 import { ACCESS_JWT_SECRET } from "../../config/configEnv.js";
 import jwt from "jsonwebtoken";
 

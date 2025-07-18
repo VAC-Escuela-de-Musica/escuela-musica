@@ -2,8 +2,8 @@
 import { fileService } from '../../services/index.js';
 import { auditService } from '../../services/index.js';
 import { AuthorizationService } from '../../services/index.js';
-import Material from '../../models/material.entity.js';
-import { respondSuccess, respondError } from '../../utils/resHandler.js';
+import Material from '../../models/material.model.js';
+import { respondSuccess, respondError } from '../../utils/responseHandler.util.js';
 import { asyncHandler } from '../../middlewares/index.js';
 import { ACCESS_JWT_SECRET } from "../../config/configEnv.js";
 import jwt from "jsonwebtoken";

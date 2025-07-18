@@ -2,8 +2,8 @@
 
 import User from "../../models/user.model.js";
 import Role from "../../models/role.model.js";
-import { respondError } from "../../utils/resHandler.js";
-import { handleError } from "../../utils/errorHandler.js";
+import { respondError } from "../../utils/responseHandler.util.js";
+import { handleError } from "../../utils/errorHandler.util.js";
 
 /**
  * Carga los datos completos del usuario autenticado

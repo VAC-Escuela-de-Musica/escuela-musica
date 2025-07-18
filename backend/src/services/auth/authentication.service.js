@@ -7,55 +7,78 @@ import jwt from "jsonwebtoken";
 
 import { ACCESS_JWT_SECRET, REFRESH_JWT_SECRET } from "../../config/configEnv.js";
 
-import { handleError } from "../../utils/errorHandler.js";
+import { handleError } from "../../utils/errorHandler.util.js";
 
 /**
  * Inicia sesión con un usuario.
  * @async
  * @function login
  * @param {Object} user - Objeto de usuario
+ * @returns {Object} Respuesta estandarizada
  */
 async function login(user) {
   try {
     const { email, password } = user;
     console.log("Intentando login con:", email);
+    
     const userFound = await User.findOne({ email: email })
       .populate("roles")
       .exec();
+    
     console.log("Usuario encontrado:", userFound ? userFound.email : null);
+    
     if (!userFound) {
-      return [null, null, "El usuario y/o contraseña son incorrectos"];
+      return {
+        success: false,
+        error: "El usuario y/o contraseña son incorrectos",
+        data: null
+      };
     }
 
-    const matchPassword = await User.comparePassword(
-      password,
-      userFound.password
-    );
+    const matchPassword = await User.comparePassword(password, userFound.password);
     console.log("¿Contraseña coincide?", matchPassword);
 
     if (!matchPassword) {
-      return [null, null, "El usuario y/o contraseña son incorrectos"];
+      return {
+        success: false,
+        error: "El usuario y/o contraseña son incorrectos",
+        data: null
+      };
     }
 
     const accessToken = jwt.sign(
       { email: userFound.email, roles: userFound.roles },
       ACCESS_JWT_SECRET,
-      {
-        expiresIn: "1d",
-      }
+      { expiresIn: "1d" }
     );
 
     const refreshToken = jwt.sign(
       { email: userFound.email },
       REFRESH_JWT_SECRET,
-      {
-        expiresIn: "7d", // 7 días
-      }
+      { expiresIn: "7d" }
     );
 
-    return [accessToken, refreshToken, null];
+    return {
+      success: true,
+      data: {
+        accessToken,
+        refreshToken,
+        user: {
+          id: userFound._id,
+          email: userFound.email,
+          username: userFound.username,
+          roles: userFound.roles
+        }
+      },
+      error: null
+    };
   } catch (error) {
-    handleError(error, "auth.service -> signIn");
+    handleError(error, "authentication.service -> login");
+    return {
+      success: false,
+      error: error.message,
+      data: null
+    };
   }
 }
 
@@ -64,41 +87,70 @@ async function login(user) {
  * @async
  * @function refresh
  * @param {Object} cookies - Objeto de cookies
+ * @returns {Object} Respuesta estandarizada
  */
 async function refresh(cookies) {
   try {
-    if (!cookies.jwt) return [null, "No hay autorización"];
+    if (!cookies.jwt) {
+      return {
+        success: false,
+        error: "No hay autorización",
+        data: null
+      };
+    }
+
     const refreshToken = cookies.jwt;
 
-    const accessToken = await jwt.verify(
-      refreshToken,
-      REFRESH_JWT_SECRET,
-      async (err, user) => {
-        if (err) return [null, "La sesion a caducado, vuelva a iniciar sesion"];
+    return new Promise((resolve) => {
+      jwt.verify(refreshToken, REFRESH_JWT_SECRET, async (err, user) => {
+        if (err) {
+          return resolve({
+            success: false,
+            error: "La sesión ha caducado, vuelva a iniciar sesión",
+            data: null
+          });
+        }
 
-        const userFound = await User.findOne({
-          email: user.email,
-        })
+        const userFound = await User.findOne({ email: user.email })
           .populate("roles")
           .exec();
 
-        if (!userFound) return [null, "No usuario no autorizado"];
+        if (!userFound) {
+          return resolve({
+            success: false,
+            error: "Usuario no autorizado",
+            data: null
+          });
+        }
 
         const accessToken = jwt.sign(
           { email: userFound.email, roles: userFound.roles },
           ACCESS_JWT_SECRET,
-          {
-            expiresIn: "1d",
-          }
+          { expiresIn: "1d" }
         );
 
-        return [accessToken, null];
-      }
-    );
-
-    return accessToken;
+        resolve({
+          success: true,
+          data: {
+            accessToken,
+            user: {
+              id: userFound._id,
+              email: userFound.email,
+              username: userFound.username,
+              roles: userFound.roles
+            }
+          },
+          error: null
+        });
+      });
+    });
   } catch (error) {
-    handleError(error, "auth.service -> refresh");
+    handleError(error, "authentication.service -> refresh");
+    return {
+      success: false,
+      error: error.message,
+      data: null
+    };
   }
 }
 

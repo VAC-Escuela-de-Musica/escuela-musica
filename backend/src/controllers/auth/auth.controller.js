@@ -1,7 +1,7 @@
 "use strict";
 
-import { respondSuccess, respondError } from "../../utils/resHandler.js";
-import { handleError } from "../../utils/errorHandler.js";
+import { respondSuccess, respondError } from "../../utils/responseHandler.util.js";
+import { handleError } from "../../utils/errorHandler.util.js";
 
 /** Servicios de autenticación */
 import { AuthenticationService } from '../../services/index.js';
@@ -20,22 +20,29 @@ async function login(req, res) {
     const { error: bodyError } = authLoginBodySchema.validate(body);
     if (bodyError) return respondError(req, res, 400, bodyError.message);
 
-    const [accessToken, refreshToken, errorToken] = await AuthenticationService.login(
-      body
-    );
+    const loginResult = await AuthenticationService.login(body);
 
-    if (errorToken) return respondError(req, res, 400, errorToken);
+    if (!loginResult.success) {
+      return respondError(req, res, 400, loginResult.error);
+    }
 
-    // * Existen mas opciones de seguirdad para las cookies *//
+    const { accessToken, refreshToken } = loginResult.data;
+
+    // Configurar cookie con refresh token
     res.cookie("jwt", refreshToken, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
     });
 
-    respondSuccess(req, res, 200, { accessToken });
+    respondSuccess(req, res, 200, { 
+      accessToken,
+      user: loginResult.data.user
+    });
   } catch (error) {
     handleError(error, "auth.controller -> login");
-    respondError(req, res, 400, error.message);
+    respondError(req, res, 500, "Error interno del servidor");
   }
 }
 
@@ -67,16 +74,21 @@ async function logout(req, res) {
 async function refresh(req, res) {
   try {
     const cookies = req.cookies;
-    if (!cookies?.jwt) return respondError(req, res, 400, "No hay token");
+    if (!cookies?.jwt) return respondError(req, res, 401, "No hay token de autorización");
 
-    const [accessToken, errorToken] = await AuthenticationService.refresh(cookies);
+    const refreshResult = await AuthenticationService.refresh(cookies);
 
-    if (errorToken) return respondError(req, res, 400, errorToken);
+    if (!refreshResult.success) {
+      return respondError(req, res, 401, refreshResult.error);
+    }
 
-    respondSuccess(req, res, 200, { accessToken });
+    respondSuccess(req, res, 200, { 
+      accessToken: refreshResult.data.accessToken,
+      user: refreshResult.data.user
+    });
   } catch (error) {
     handleError(error, "auth.controller -> refresh");
-    respondError(req, res, 400, error.message);
+    respondError(req, res, 500, "Error interno del servidor");
   }
 }
 
