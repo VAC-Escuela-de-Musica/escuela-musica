@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ImageViewer from './ImageViewer';
 import MaterialFilters from './MaterialFilters';
+import { API_ENDPOINTS, API_HEADERS } from '../config/api.js';
 import './darkmode.css';
 
 const ListaMateriales = () => {
@@ -19,13 +20,11 @@ const ListaMateriales = () => {
 
         console.log('📋 Obteniendo lista de materiales...');
         console.log('🔑 Token:', token ? 'Presente' : 'Ausente');
-        console.log('🌐 URL del endpoint:', 'http://localhost:1230/api/materials/');
+        console.log('🌐 URL del endpoint:', API_ENDPOINTS.materials.list);
         
-        // Usar la nueva ruta de materiales
-        const res = await fetch('http://localhost:1230/api/materials/', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+        // Usar la configuración centralizada
+        const res = await fetch(API_ENDPOINTS.materials.list, {
+          headers: API_HEADERS.withAuth()
         });
         
         console.log('📡 Status de respuesta:', res.status, res.statusText);
@@ -41,26 +40,36 @@ const ListaMateriales = () => {
         console.log('✅ Materiales obtenidos - respuesta completa:', response);
         console.log('🔍 Estructura de respuesta detallada:', {
           success: response.success,
-          message: response.message,
+          statusCode: response.statusCode,
           hasData: !!response.data,
           dataType: typeof response.data,
           dataIsArray: Array.isArray(response.data),
           dataLength: Array.isArray(response.data) ? response.data.length : 'No es array',
-          allKeys: Object.keys(response),
-          responseStringified: JSON.stringify(response, null, 2)
+          allKeys: Object.keys(response)
         });
         
-        // Intentar diferentes formas de extraer los datos
+        // Extraer datos usando el nuevo formato de respuesta
         let materialesData = [];
-        if (response.data && Array.isArray(response.data)) {
+        
+        if (response.success && response.data && Array.isArray(response.data)) {
+          // Nuevo formato: { success: true, data: [...] }
+          materialesData = response.data;
+          console.log('✅ Usando nuevo formato response.data');
+        } else if (response.data && Array.isArray(response.data)) {
+          // Formato con data: { data: [...] }
           materialesData = response.data;
           console.log('✅ Usando response.data');
         } else if (Array.isArray(response)) {
+          // Formato directo: [...]
           materialesData = response;
           console.log('✅ Usando response directamente');
         } else if (response.materiales && Array.isArray(response.materiales)) {
+          // Formato legacy: { materiales: [...] }
           materialesData = response.materiales;
           console.log('✅ Usando response.materiales');
+        } else {
+          console.warn('⚠️ Formato de respuesta no reconocido, usando array vacío');
+          materialesData = [];
         }
         
         console.log('📋 Materiales finales a mostrar:', materialesData);
@@ -103,19 +112,19 @@ const ListaMateriales = () => {
         throw new Error('Material no encontrado');
       }
       
-      // Determinar si necesitamos token (solo para materiales privados)
-      let tokenParam = '';
+      // Crear enlace de descarga usando la configuración centralizada
+      const link = document.createElement('a');
+      link.href = API_ENDPOINTS.files.download(materialId);
+      
+      // Añadir token si es necesario (material privado)
       if (material.bucketTipo !== 'publico') {
         const token = localStorage.getItem('token');
         if (!token) {
           throw new Error('No hay token de autenticación para material privado');
         }
-        tokenParam = `?token=${encodeURIComponent(token)}`;
+        link.href += `?token=${encodeURIComponent(token)}`;
       }
       
-      // Crear enlace de descarga que apunta al endpoint del backend
-      const link = document.createElement('a');
-      link.href = `http://localhost:1230/api/materials/download/${materialId}${tokenParam}`;
       link.download = filename;
       link.style.display = 'none';
       
@@ -137,24 +146,33 @@ const ListaMateriales = () => {
     }
     
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:1230/api/materials/${materialId}`, {
+      console.log(`🗑️ Eliminando material: ${materialId}`);
+      
+      const response = await fetch(API_ENDPOINTS.materials.delete(materialId), {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: API_HEADERS.withAuth()
       });
       
-      if (!res.ok) {
-        throw new Error(`Error eliminando material: ${res.status}`);
+      console.log(`📊 Delete response status: ${response.status}`);
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('❌ Error en delete response:', errorData);
+        throw new Error(`Error ${response.status}: ${errorData}`);
       }
       
-      // Recargar lista después de eliminar
-      window.location.reload();
+      const result = await response.json();
+      console.log('✅ Material eliminado exitosamente:', result);
+      
+      // Actualizar la lista local sin recargar la página
+      setMateriales(prev => prev.filter(m => m._id !== materialId));
+      setMaterialesFiltrados(prev => prev.filter(m => m._id !== materialId));
+      
+      alert('✅ Material eliminado exitosamente');
       
     } catch (error) {
       console.error('❌ Error eliminando:', error);
-      alert(`Error eliminando archivo: ${error.message}`);
+      alert(`❌ Error eliminando archivo: ${error.message}`);
     }
   };
 

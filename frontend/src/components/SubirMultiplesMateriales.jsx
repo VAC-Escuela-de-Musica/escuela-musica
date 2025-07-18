@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_ENDPOINTS, API_HEADERS } from '../config/api.js';
 import './darkmode.css';
 
 // Componente para mostrar tiempo transcurrido
@@ -112,12 +113,9 @@ function SubirMultiplesMateriales() {
           bucketTipo: materialData.bucketTipo
         });
         
-        const urlResponse = await fetch(`http://localhost:1230/api/materials/upload-url`, {
+        const urlResponse = await fetch(API_ENDPOINTS.materials.uploadUrl, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
+          headers: API_HEADERS.withAuth(),
           body: JSON.stringify({
             extension,
             contentType: archivo.file.type,
@@ -198,12 +196,9 @@ function SubirMultiplesMateriales() {
         // 3. Confirmar subida en el backend
         setProgreso(`✅ Confirmando subida: ${archivo.file.name}`);
         console.log('✅ Confirmando subida...');
-        const confirmResponse = await fetch(`http://localhost:1230/api/materials/confirm-upload`, {
+        const confirmResponse = await fetch(API_ENDPOINTS.materials.confirmUpload, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
+          headers: API_HEADERS.withAuth(),
           body: JSON.stringify({
             materialId,
             nombre: materialData.nombre,

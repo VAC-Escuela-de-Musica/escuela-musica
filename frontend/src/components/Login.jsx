@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_ENDPOINTS, API_HEADERS } from '../config/api.js';
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -11,9 +12,9 @@ function Login({ onLogin }) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:1230/api/auth/login", {
+      const res = await fetch(API_ENDPOINTS.auth.login, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: API_HEADERS.basic,
         body: JSON.stringify({ email, password })
       });
       const data = await res.json();
