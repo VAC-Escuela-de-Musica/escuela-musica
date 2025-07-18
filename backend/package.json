@@ -13,10 +13,6 @@
     "test:images": "node src/scripts/testImageFlows.js",
     "test:minio:all": "node src/scripts/testMinioComplete.js",
     "test:presigned-system": "node src/scripts/testPresignedSystem.js",
-    "migrate:presigned": "node src/scripts/migrateMaterials.js migrate",
-    "migrate:rollback": "node src/scripts/migrateMaterials.js rollback",
-    "migrate:check": "node src/scripts/migrateMaterials.js check",
-    "migrate:manual": "node src/scripts/migrateMaterials.js manual",
     "setup:minio-cors": "node src/scripts/setupMinioCors.js"
   },
   "keywords": [],

@@ -19,8 +19,8 @@ import { setupDB } from "./config/configDB.js";
 // Importa el handler de errores
 import { handleFatalError, handleError } from "./utils/errorHandler.js";
 import { createRoles, createUsers } from "./config/initialSetup.js";
-// Importa la función para inicializar MinIO
-import { initializeBucket } from "./controllers/presignedOnly.controller.js";
+// Importa la función para inicializar servicios
+import { initializeServices } from "./services/index.js";
 
 /**
  * Inicia el servidor web
@@ -68,16 +68,32 @@ async function setupServer() {
  */
 async function setupAPI() {
   try {
+    console.log("🚀 Iniciando API de Escuela de Música...");
+    
     // Inicia la conexión a la base de datos
+    console.log("📊 Conectando a la base de datos...");
     await setupDB();
-    // Inicializa MinIO (crear bucket si no existe)
-    await initializeBucket();
+    
+    // Inicializa todos los servicios (MinIO, buckets, etc.)
+    console.log("⚙️ Inicializando servicios...");
+    const servicesInitialized = await initializeServices();
+    if (!servicesInitialized) {
+      console.warn("⚠️ Algunos servicios no se inicializaron correctamente, pero continuando...");
+    }
+    
     // Inicia el servidor web
+    console.log("🌐 Iniciando servidor web...");
     await setupServer();
+    
     // Inicia la creación de los roles
+    console.log("👤 Configurando roles...");
     await createRoles();
+    
     // Inicia la creación del usuario admin y user
+    console.log("👥 Configurando usuarios iniciales...");
     await createUsers();
+    
+    console.log("✅ API iniciada exitosamente");
   } catch (err) {
     handleFatalError(err, "/server.js -> setupAPI");
   }
@@ -85,5 +101,5 @@ async function setupAPI() {
 
 // Inicia la API
 setupAPI()
-  .then(() => console.log("=> API Iniciada exitosamente"))
+  .then(() => console.log("🎉 => API de Escuela de Música lista para usar"))
   .catch((err) => handleFatalError(err, "/server.js -> setupAPI"));

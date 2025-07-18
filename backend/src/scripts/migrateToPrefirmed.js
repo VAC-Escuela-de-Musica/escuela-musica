@@ -1,6 +1,6 @@
 /**
- * Script para migrar materiales desde el sistema legacy al sistema basado en URLs pre-firmadas
- * Este script debe ejecutarse con: npm run migrate:presigned
+ * [OBSOLETO] Script para migrar materiales desde el sistema legacy al sistema basado en URLs pre-firmadas
+ * Este script ya no es necesario ya que la migración se completó, pero se mantiene como referencia histórica.
  */
 
 import mongoose from "mongoose";

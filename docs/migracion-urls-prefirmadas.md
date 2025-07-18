@@ -1,6 +1,8 @@
-# Migración a Sistema de URLs Pre-firmadas
+# [HISTÓRICO] Migración a Sistema de URLs Pre-firmadas
 
 ## Información para Desarrolladores y Administradores
+
+**NOTA: Este documento es histórico y describe una migración ya completada. Se mantiene como documentación del proceso realizado.**
 
 Este documento describe la migración del sistema de gestión de materiales educativos a un enfoque basado exclusivamente en URLs pre-firmadas.
 
@@ -75,7 +77,7 @@ Si encuentras errores como "Archivo original no existe en MinIO", deberás:
 ## Recomendaciones
 
 - Se recomienda eliminar el sistema legacy después de completar la migración
-- Para ajustar tiempos de expiración de URLs, modificar los parámetros en `presignedOnly.controller.js`
+- Para ajustar tiempos de expiración de URLs, modificar los parámetros en `material.controller.js`
 - Considerar implementar Redis en producción para el caché de URLs
 
 ## Próximos Pasos
