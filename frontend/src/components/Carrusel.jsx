@@ -67,12 +67,19 @@ const CarouselClases = () => {
       {/* Caja principal */}
       <div className="rounded-3xl shadow-lg w-full max-w-5xl p-10">
         {/* Título */}
-        <h1
-          className="text-white font-bold mb-8"
-          style={{ fontSize: "2.8em", lineHeight: 1.1 }}
-        >
-          Nuestras Últimas Clases
-        </h1>
+        <Typography 
+        variant="h2" 
+        component="h1" 
+        align="left" 
+        sx={{ 
+          mb: 6, 
+          fontWeight: 'bold',
+          color: '#FFFFFF',
+          fontSize: { xs: '2.5rem', md: '3.5rem' }
+        }}
+      >
+        Nuestras Últimas Clases
+      </Typography>
         {/* Caja galería */}
         <div className="bg-[#393939] rounded-3xl shadow-lg w-[1200px] h-[600px] flex items-center justify-center mx-auto relative overflow-hidden">
           {/* Imagen principal */}

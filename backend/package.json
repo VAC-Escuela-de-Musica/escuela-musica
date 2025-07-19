@@ -28,7 +28,7 @@
     "minio": "^8.0.5",
     "mongoose": "^8.15.2",
     "morgan": "^1.10.0",
-    "multer": "^2.0.1",
+    "multer": "^2.0.2",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

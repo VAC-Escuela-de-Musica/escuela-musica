@@ -1,52 +1,129 @@
 import React from "react";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardMedia from '@mui/material/CardMedia';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
 import mariaImg from "../assets/maria.png";
 
 const profesores = [
   {
     nombre: "María López",
-    descripcion: "Especialista en canto lírico y técnica vocal.",
+    especialidad: "Canto Lírico y Técnica Vocal",
+    descripcion: "Especialista en canto lírico y técnica vocal. Con más de 10 años de experiencia en la enseñanza musical, María ha formado a numerosos estudiantes que han destacado en competencias nacionales e internacionales.",
     imagen: mariaImg,
   },
   {
     nombre: "Carlos Pérez",
-    descripcion: "Profesor de guitarra clásica y eléctrica.",
+    especialidad: "Guitarra Clásica y Eléctrica",
+    descripcion: "Profesor de guitarra clásica y eléctrica. Músico profesional con amplia experiencia en diferentes géneros musicales, desde clásico hasta rock y jazz.",
     imagen: "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=60",
+  },
+  {
+    nombre: "Ana Rodríguez",
+    especialidad: "Piano Clásico",
+    descripcion: "Pianista clásica y profesora de piano. Graduada del Conservatorio Nacional con especialización en pedagogía musical para niños y jóvenes.",
+    imagen: "https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=60",
+  },
+  {
+    nombre: "Luis Martínez",
+    especialidad: "Batería y Percusión",
+    descripcion: "Profesor de batería y percusión. Músico de sesión con experiencia en grabaciones profesionales y presentaciones en vivo.",
+    imagen: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=60",
   },
 ];
 
 const Profesores = () => {
   return (
-    <div id="profesores" className="space-y-16 mt-16 flex flex-col items-center">
-      <h1 className="text-5xl font-bold text-[#232b3b] mb-8">
+    <Box id="profesores" sx={{ py: 8, px: 2 }}>
+      <Typography 
+        variant="h2" 
+        component="h1" 
+        align="left" 
+        sx={{ 
+          mb: 6, 
+          fontWeight: 'bold',
+          color: '#FFFFFF',
+          fontSize: { xs: '2.5rem', md: '3.5rem' }
+        }}
+      >
         Conoce a Nuestros Profesores
-      </h1>
-      {profesores.map((profesor, i) => (
-        <div
-          key={i}
-          className={`flex flex-col md:flex-row items-center justify-center gap-12 w-full max-w-5xl ${
-            i % 2 !== 0 ? "md:flex-row-reverse" : ""
-          }`}
-        >
-          <img
-            src={profesor.imagen}
-            alt={profesor.nombre}
-            className="w-[350px] h-[350px] object-cover rounded-xl shadow-lg"
-          />
-          <div className="flex-1 flex flex-col justify-center items-start text-left">
-            <div className="w-20 h-1 bg-blue-500 mb-4" />
-            <h3 className="text-4xl font-bold text-[#232b3b] mb-4">{profesor.nombre}</h3>
-            <p className="text-gray-500 mb-6">{profesor.descripcion}</p>
-            <a
-              href="#"
-              className="text-blue-400 font-semibold flex items-center group"
+      </Typography>
+      
+      <Grid container spacing={4} maxWidth="lg" sx={{ mx: 'auto' }}>
+        {profesores.map((profesor, index) => (
+          <Grid item xs={12} key={index}>
+            <Card 
+              sx={{ 
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
+                height: { xs: 'auto', md: 400 },
+                borderRadius: 5,
+                '&:hover': {
+                  boxShadow: 6,
+                  transform: 'translateY(-2px)',
+                  transition: 'all 0.3s ease-in-out'
+                }
+              }}
             >
-              Más
-              <span className="ml-1 group-hover:translate-x-1 transition-transform">&rarr;</span>
-            </a>
-          </div>
-        </div>
-      ))}
-    </div>
+              <CardMedia
+                component="img"
+                sx={{ 
+                  width: { xs: '100%', md: 300 },
+                  height: { xs: 200, md: '100%' },
+                  objectFit: 'cover'
+                }}
+                image={profesor.imagen}
+                alt={profesor.nombre}
+              />
+              <CardContent sx={{ 
+                flex: 1, 
+                display: 'flex', 
+                flexDirection: 'column', 
+                justifyContent: 'space-between',
+                p: 3
+              }}>
+                <Box>
+                  <Typography 
+                    gutterBottom 
+                    variant="h4" 
+                    component="h3"
+                    sx={{ 
+                      fontWeight: 'bold',
+                      color: '#232b3b',
+                      mb: 1
+                    }}
+                  >
+                    {profesor.nombre}
+                  </Typography>
+                  <Typography 
+                    variant="h6" 
+                    component="p"
+                    sx={{ 
+                      color: '#666',
+                      mb: 2,
+                      fontStyle: 'italic'
+                    }}
+                  >
+                    {profesor.especialidad}
+                  </Typography>
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      color: '#555',
+                      lineHeight: 1.6
+                    }}
+                  >
+                    {profesor.descripcion}
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
   );
 };
 
