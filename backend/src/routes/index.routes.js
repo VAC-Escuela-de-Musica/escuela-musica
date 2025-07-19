@@ -14,6 +14,9 @@ import carouselRoutes from "./carousel.routes.js";
 /** Enrutador de roles */
 import roleRoutes from "./role.routes.js";
 
+/** Enrutador de tarjetas de profesores */
+import cardsProfesoresRoutes from "./cardsProfesores.routes.js";
+
 /** Middleware de autenticación */
 import authenticationMiddleware from "../middlewares/authentication.middleware.js";
 
@@ -28,6 +31,8 @@ router.use("/auth", authRoutes);
 router.use("/carousel", carouselRoutes);
 // Define las rutas para los roles /api/roles
 router.use("/roles", roleRoutes);
+// Define las rutas para las tarjetas de profesores /api/cards-profesores
+router.use("/cards-profesores", cardsProfesoresRoutes);
 
 router.get("/saludo", (req, res) => {
   res.send("¡Hola desde el backend!");

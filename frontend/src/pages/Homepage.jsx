@@ -1,7 +1,7 @@
 import React from "react";
 import Hero from "../components/Hero";
 import CarouselClases from "../components/Carrusel";
-import Profesores from "../components/Profesores";
+import CardsProfesores from "../components/CardsProfesores";
 import Galeria from "../components/Galeria";
 import Testimonios from "../components/Testimonios";
 import Footer from "../components/Footer";
@@ -11,7 +11,7 @@ const HomePage = () => {
     <div>
       <Hero />
       <CarouselClases />
-      <Profesores />
+      <CardsProfesores />
       <Galeria />
       <Testimonios />
       <Footer />
