@@ -13,7 +13,6 @@ async function getUsers() {
   try {
     const users = await User.find()
       .select("-password")
-      .populate("roles")
       .exec();
     if (!users) return [null, "No hay usuarios"];
 
@@ -32,7 +31,7 @@ async function createUser(user) {
   try {
     const { username, rut, email, password, roles } = user;
 
-    const userFound = await User.findOne({ email: user.email });
+    const userFound = await User.findOne({ email: email });
     if (userFound) return [null, "El usuario ya existe"];
 
     // Validar que todos los roles existan en ROLES
@@ -63,7 +62,6 @@ async function getUserById(id) {
   try {
     const user = await User.findById({ _id: id })
       .select("-password")
-      .populate("roles")
       .exec();
 
     if (!user) return [null, "El usuario no existe"];
@@ -87,29 +85,38 @@ async function updateUser(id, user) {
 
     const { username, email, rut, password, newPassword, roles } = user;
 
-    const matchPassword = await User.comparePassword(
-      password,
-      userFound.password,
-    );
+    // Solo verificar contraseña si se proporciona una nueva
+    if (newPassword && newPassword.trim() !== "") {
+      const matchPassword = await User.comparePassword(
+        password,
+        userFound.password,
+      );
 
-    if (!matchPassword) {
-      return [null, "La contraseña no coincide"];
+      if (!matchPassword) {
+        return [null, "La contraseña actual no coincide"];
+      }
     }
 
-    const rolesFound = await Role.find({ name: { $in: roles } });
-    if (rolesFound.length === 0) return [null, "El rol no existe"];
+    // Validar que todos los roles existan en ROLES
+    const validRoles = roles.every((role) => ROLES.includes(role));
+    if (!validRoles) return [null, "El rol no existe"];
 
-    const myRole = rolesFound.map((role) => role._id);
+    // Preparar los datos de actualización
+    const updateData = {
+      username,
+      email,
+      rut,
+      roles,
+    };
+
+    // Solo actualizar contraseña si se proporciona una nueva
+    if (newPassword && newPassword.trim() !== "") {
+      updateData.password = await User.encryptPassword(newPassword);
+    }
 
     const userUpdated = await User.findByIdAndUpdate(
       id,
-      {
-        username,
-        email,
-        rut,
-        password: await User.encryptPassword(newPassword || password),
-        roles: myRole,
-      },
+      updateData,
       { new: true },
     );
 

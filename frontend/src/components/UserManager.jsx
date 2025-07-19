@@ -64,11 +64,15 @@ const UserManager = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Error al cargar los usuarios");
+        throw new Error("No posee el rol de administrador");
       }
 
       const data = await response.json();
       setUsers(Array.isArray(data.data) ? data.data : []);
+      console.log("Usuarios cargados:", data.data);
+      if (data.data && data.data.length > 0) {
+        console.log("Roles del primer usuario:", data.data[0].roles);
+      }
     } catch (err) {
       setError("Error al cargar los usuarios: " + err.message);
     } finally {
@@ -90,7 +94,7 @@ const UserManager = () => {
           rolesArray = data.data.data;
         }
         setRoles(rolesArray);
-        console.log("Roles cargados (robusto):", rolesArray);
+        console.log("Roles cargados:", rolesArray);
       }
     } catch (err) {
       console.error("Error al cargar roles:", err);
@@ -162,7 +166,7 @@ const UserManager = () => {
       email: user.email || "",
       rut: user.rut || "",
       password: "",
-      roles: user.roles ? user.roles.map(role => role._id || role) : [],
+      roles: user.roles || [], // Los roles ya son strings, no necesitamos mapear
     });
     setOpenDialog(true);
   };
@@ -173,9 +177,9 @@ const UserManager = () => {
     setFormData({ username: "", email: "", rut: "", password: "", roles: [] });
   };
 
-  const getRoleName = (roleId) => {
-    const role = roles.find(r => r._id === roleId);
-    return role ? role.name : "Rol desconocido";
+  const getRoleName = (roleString) => {
+    // Los roles ahora son strings directos, no necesitamos buscar por ID
+    return roleString ? roleString.charAt(0).toUpperCase() + roleString.slice(1) : "Rol desconocido";
   };
 
   // Filtrar usuarios
@@ -190,8 +194,6 @@ const UserManager = () => {
     setOpenDialog(true);
   };
 
-  console.log("Estado roles en render:", roles);
-
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -199,8 +201,6 @@ const UserManager = () => {
       </Box>
     );
   }
-
-  console.log("Estado roles en render:", roles);
 
   return (
     <Box sx={{ p: 3, backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
@@ -265,7 +265,7 @@ const UserManager = () => {
                           {user.roles && user.roles.map((role, index) => (
                             <Chip
                               key={index}
-                              label={getRoleName(role._id || role)}
+                              label={getRoleName(role)}
                               size="small"
                               sx={{ 
                                 backgroundColor: "#4CAF50", 

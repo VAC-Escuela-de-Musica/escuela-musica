@@ -2,7 +2,7 @@
 
 import { respondSuccess, respondError } from "../utils/resHandler.js";
 import UserService from "../services/user.service.js";
-import { userBodySchema, userIdSchema } from "../schema/user.schema.js";
+import { userBodySchema, userUpdateSchema, userIdSchema } from "../schema/user.schema.js";
 import { handleError } from "../utils/errorHandler.js";
 
 /**
@@ -82,7 +82,7 @@ async function updateUser(req, res) {
     const { error: paramsError } = userIdSchema.validate(params);
     if (paramsError) return respondError(req, res, 400, paramsError.message);
 
-    const { error: bodyError } = userBodySchema.validate(body);
+    const { error: bodyError } = userUpdateSchema.validate(body);
     if (bodyError) return respondError(req, res, 400, bodyError.message);
 
     const [user, userError] = await UserService.updateUser(params.id, body);

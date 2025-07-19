@@ -11,12 +11,10 @@
  * @param {Function} next - Función para continuar con la siguiente función
  */
 export function isAdmin(req, res, next) {
-  console.log("Middleware isAdmin - req.roles:", req.roles);
-  console.log("Middleware isAdmin - req.email:", req.email);
+  // Verificar si el usuario tiene el rol "administrador"
   if (req.roles && req.roles.includes("administrador")) {
-    console.log("Usuario autorizado como administrador");
     return next();
   }
-  console.log("Usuario NO autorizado como administrador");
+  
   return res.status(403).json({ message: "No autorizado" });
 }
