@@ -13,6 +13,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
+import AlumnosList from "./AlumnosList";
 
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
@@ -77,7 +78,11 @@ export default function ClippedDrawer() {
             {["Horario", "Estudiantes", "Profesores", "Clases"].map(
               (text, index) => (
                 <ListItem key={text} disablePadding>
-                  <ListItemButton>
+                  <ListItemButton
+                    onClick={() => {
+                      if (text === "Estudiantes") setActiveModule("alumnos");
+                    }}
+                  >
                     <ListItemIcon sx={{ color: "#FFFFFF" }}>
                       {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
                     </ListItemIcon>
@@ -117,20 +122,23 @@ export default function ClippedDrawer() {
           </List>
           <Divider sx={{ borderColor: "#3F4147" }} />
           <List>
-            {["Repositorio Prof.", "Credenciales", "modulo2"].map((text, index) => (
-              <ListItem key={text} disablePadding>
-                <ListItemButton
-                  onClick={() => {
-                    if (text === "Credenciales") setActiveModule("credenciales");
-                  }}
-                >
-                  <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                    {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                  </ListItemIcon>
-                  <ListItemText primary={text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
+            {["Repositorio Prof.", "Credenciales", "modulo2"].map(
+              (text, index) => (
+                <ListItem key={text} disablePadding>
+                  <ListItemButton
+                    onClick={() => {
+                      if (text === "Credenciales")
+                        setActiveModule("credenciales");
+                    }}
+                  >
+                    <ListItemIcon sx={{ color: "#FFFFFF" }}>
+                      {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                    </ListItemIcon>
+                    <ListItemText primary={text} />
+                  </ListItemButton>
+                </ListItem>
+              )
+            )}
           </List>
         </Box>
         <Link
@@ -168,6 +176,7 @@ export default function ClippedDrawer() {
         )}
         {activeModule === "carrusel" && <CarouselManager />}
         {activeModule === "credenciales" && <UserManager />}
+        {activeModule === "alumnos" && <AlumnosList />}
         {/* Puedes agregar más módulos así */}
       </Box>
     </Box>

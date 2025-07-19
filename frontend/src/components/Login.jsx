@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Paper,
@@ -14,13 +14,17 @@ import {
   Button,
   Link,
   Alert,
-} from '@mui/material';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
+} from "@mui/material";
+import AccountCircle from "@mui/icons-material/AccountCircle";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 export default function Login() {
-  const [formData, setFormData] = useState({ email: '', password: '', remember: false });
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    remember: false,
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,7 +33,7 @@ export default function Login() {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -38,17 +42,20 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-        credentials: "include", // Para la cookie de refresh
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_BASE_URL}/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+          credentials: "include", // Para la cookie de refresh
+        }
+      );
       const data = await response.json();
       if (!response.ok) {
         setError(data.message || "Error al iniciar sesión");
@@ -67,39 +74,39 @@ export default function Login() {
   };
 
   const handleGoHome = () => {
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   return (
     <>
       <Box
-      sx={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-        background: '#444444',
-        display: 'flex',
-        justifyContent: 'center',
-        py: 2,
-        mb: 3,
-      }}
-    >
+        sx={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          background: "#444444",
+          display: "flex",
+          justifyContent: "center",
+          py: 2,
+          mb: 3,
+        }}
+      >
         <img
-        src="/logo_blanco.svg"
-        alt="Logo"
-        style={{ height: 112, objectFit: 'contain' }}
-      />
+          src="/logo_blanco.svg"
+          alt="Logo"
+          style={{ height: 112, objectFit: "contain" }}
+        />
       </Box>
       <Box
-  sx={{
-    background: '#222222',
-    display: 'flex',
-    justifyContent: 'center',
-    mt: 4,
-    mb: 12,
-  }}
->
-        <Paper elevation={6} sx={{ p: 4, maxWidth: 400, width: '100%' }}>
+        sx={{
+          background: "#222222",
+          display: "flex",
+          justifyContent: "center",
+          mt: 4,
+          mb: 12,
+        }}
+      >
+        <Paper elevation={6} sx={{ p: 4, maxWidth: 400, width: "100%" }}>
           <Typography variant="h5" fontWeight="bold" gutterBottom>
             Iniciar Sesión
           </Typography>
@@ -130,12 +137,18 @@ export default function Login() {
               }}
             />
 
-            <FormControl fullWidth variant="outlined" size="small" margin="normal" required>
+            <FormControl
+              fullWidth
+              variant="outlined"
+              size="small"
+              margin="normal"
+              required
+            >
               <InputLabel htmlFor="password">Contraseña</InputLabel>
               <OutlinedInput
                 id="password"
                 name="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleChange}
                 endAdornment={
@@ -145,7 +158,11 @@ export default function Login() {
                       edge="end"
                       size="small"
                     >
-                      {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                      {showPassword ? (
+                        <VisibilityOff fontSize="small" />
+                      ) : (
+                        <Visibility fontSize="small" />
+                      )}
                     </IconButton>
                   </InputAdornment>
                 }
