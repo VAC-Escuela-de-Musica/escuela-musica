@@ -27,7 +27,7 @@ function Login() {
   return (
     <form onSubmit={handleSubmit}>
       <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#2c3e50' }}>
-        🎵 Iniciar Sesión
+        Iniciar Sesión
       </h2>
       <div style={{marginBottom:15}}>
         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>

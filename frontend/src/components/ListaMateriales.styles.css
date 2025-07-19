@@ -1,7 +1,7 @@
 /* Lista de Materiales Styles */
 .lista-materiales {
-  padding: 20px;
-  max-width: 1200px;
+  padding: 0 60px;
+  max-width: 1000px;
   margin: 0 auto;
   background-color: var(--bg-color);
   color: var(--text-color);

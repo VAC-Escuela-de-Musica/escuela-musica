@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import authService from '../services/auth.service.js';
-import cacheSystem from '../utils/cache.js';
+
 
 /**
  * Hook principal de autenticación
@@ -22,29 +22,20 @@ export const useAuthState = () => {
       
       if (token) {
         // Verificar si el token ya está en caché
-        const cachedUser = cacheSystem.get('current_user');
-        if (cachedUser) {
-          setUser(cachedUser);
+        const result = await authService.verifyToken();
+        if (result.success) {
+          setUser(result.data.user);
           setIsAuthenticated(true);
         } else {
-          const result = await authService.verifyToken();
-          
-          if (result.success) {
-            setUser(result.data.user);
-            setIsAuthenticated(true);
-            cacheSystem.set('current_user', result.data.user, 300); // Cache por 5 minutos
-          } else {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            cacheSystem.remove('current_user');
-          }
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
         }
       }
     } catch (err) {
       console.error('Error initializing auth:', err);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      cacheSystem.remove('current_user');
+
     } finally {
       setLoading(false);
       setIsInitialized(true);
@@ -72,8 +63,7 @@ export const useAuthState = () => {
         setUser(user);
         setIsAuthenticated(true);
         
-        // Limpiar cache al hacer login
-        cacheSystem.invalidateByEvent('login', 'all');
+
         
         return { success: true, data: user };
       } else {
@@ -108,8 +98,7 @@ export const useAuthState = () => {
       setIsAuthenticated(false);
       setError(null);
       
-      // Limpiar cache al hacer logout
-      cacheSystem.invalidateByEvent('logout', 'all');
+
       
       return { success: true };
     } catch (err) {
