@@ -32,7 +32,35 @@ export default function ButtonAppBar() {
 
   const handleAccesoClick = () => {
     setDrawerOpen(false);
-    navigate('/login');
+    
+    // Verificar si hay un token en localStorage
+    const token = localStorage.getItem("token");
+    
+    if (token) {
+      // Si hay token, verificar si es válido decodificándolo
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+        
+        // Verificar si el token no ha expirado
+        if (payload.exp > currentTime) {
+          // Token válido, redirigir a la interfaz de usuario
+          navigate('/usuario');
+        } else {
+          // Token expirado, limpiarlo y redirigir al login
+          localStorage.removeItem("token");
+          navigate('/login');
+        }
+      } catch (error) {
+        // Token inválido, limpiarlo y redirigir al login
+        console.error("Token inválido:", error);
+        localStorage.removeItem("token");
+        navigate('/login');
+      }
+    } else {
+      // No hay token, redirigir al login
+      navigate('/login');
+    }
   };
 
   return (

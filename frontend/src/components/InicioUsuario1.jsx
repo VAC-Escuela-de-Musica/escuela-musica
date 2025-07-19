@@ -13,6 +13,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
@@ -24,6 +25,13 @@ const drawerWidth = 240;
 
 export default function ClippedDrawer() {
   const [activeModule, setActiveModule] = React.useState("inicio");
+
+  const handleLogout = () => {
+    // Limpiar el token del localStorage
+    localStorage.removeItem("token");
+    // Redirigir al login
+    window.location.href = "/login";
+  };
 
   return (
     <Box
@@ -148,10 +156,34 @@ export default function ClippedDrawer() {
             fontWeight: "bold",
             textAlign: "center",
             textDecoration: "none",
+            marginBottom: "10px",
           }}
         >
           Volver al inicio
         </Link>
+        <button
+          onClick={handleLogout}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            padding: "10px",
+            backgroundColor: "#d32f2f",
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontSize: "16px",
+            fontWeight: "bold",
+            textAlign: "center",
+            textDecoration: "none",
+            gap: "8px",
+          }}
+        >
+          <LogoutIcon style={{ fontSize: "20px" }} />
+          Cerrar Sesión
+        </button>
       </Drawer>
       <Box
         component="main"
