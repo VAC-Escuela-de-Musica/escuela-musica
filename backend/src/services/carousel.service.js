@@ -98,10 +98,21 @@ export async function getAllCarouselImages() {
  */
 export async function updateCarouselImage(imageId, updateData) {
   try {
+    // Define a whitelist of allowed fields
+    const allowedFields = ["titulo", "descripcion", "orden", "activo"];
+    
+    // Filter updateData to include only allowed fields
+    const sanitizedData = Object.keys(updateData)
+      .filter(key => allowedFields.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = updateData[key];
+        return obj;
+      }, {});
+
     const image = await CarouselImage.findByIdAndUpdate(
       imageId,
       {
-        ...updateData,
+        ...sanitizedData,
         fechaActualizacion: new Date(),
       },
       { new: true },

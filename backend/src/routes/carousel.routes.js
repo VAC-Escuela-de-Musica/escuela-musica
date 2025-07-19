@@ -1,5 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
+import rateLimit from "express-rate-limit";
 import {
   uploadImage,
   getImages,
@@ -13,6 +14,13 @@ import verifyJWT from "../middlewares/authentication.middleware.js";
 import { isAdmin } from "../middlewares/authorization.middleware.js";
 
 const router = Router();
+
+// Configurar rate limiter para rutas protegidas
+const protectedRoutesLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // máximo 100 solicitudes por ventana
+  message: "Demasiadas solicitudes desde esta IP, por favor inténtelo de nuevo más tarde.",
+});
 
 // Configurar multer para manejar archivos
 const upload = multer({
@@ -34,7 +42,7 @@ const upload = multer({
 router.get("/", getImages); // Obtener imágenes activas del carrusel
 
 // Rutas protegidas (requieren autenticación)
-router.use(verifyJWT);
+router.use(protectedRoutesLimiter, verifyJWT);
 
 // Rutas de administrador
 router.get("/admin", isAdmin, getAllImages); // Obtener todas las imágenes (admin)
