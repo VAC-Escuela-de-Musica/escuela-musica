@@ -19,6 +19,11 @@ import { Link } from "react-router-dom";
 
 import CarouselManager from "./CarouselManager";
 import UserManager from "./UserManager";
+import Clases from "./Clases";
+import ClasesCrear from "./ClasesCrear";
+import ClasesCanceladas from "./ClasesCanceladas";
+import ClasesPasadas from "./ClasesPasadas";
+import Horario from "./Horario";
 
 const drawerWidth = 240;
 
@@ -77,7 +82,14 @@ export default function ClippedDrawer() {
             {["Horario", "Estudiantes", "Profesores", "Clases"].map(
               (text, index) => (
                 <ListItem key={text} disablePadding>
-                  <ListItemButton>
+                  <ListItemButton
+                    onClick={() => { 
+                      if (text === "Horario") setActiveModule("horario");
+                      /* if (text === "Estudiantes") setActiveModule("estudiantes");
+                      if (text === "Profesores") setActiveModule("profesores"); */
+                      if (text === "Clases") setActiveModule("clases");
+                    }}
+                  >
                     <ListItemIcon sx={{ color: "#FFFFFF" }}>
                       {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
                     </ListItemIcon>
@@ -168,6 +180,11 @@ export default function ClippedDrawer() {
         )}
         {activeModule === "carrusel" && <CarouselManager />}
         {activeModule === "credenciales" && <UserManager />}
+        {activeModule === "horario" && <Horario />}
+        {activeModule === "clases" && <Clases setActiveModule={setActiveModule} />}
+        {activeModule === "clasesCanceladas" && <ClasesCanceladas setActiveModule={setActiveModule} />}
+        {activeModule === "clasesCrear" && <ClasesCrear setActiveModule={setActiveModule} />}
+        {activeModule === "clasesPasadas" && <ClasesPasadas setActiveModule={setActiveModule} />}
         {/* Puedes agregar más módulos así */}
       </Box>
     </Box>

@@ -17,12 +17,11 @@ const claseBodySchema = Joi.object({
     "string.base": "La descripción debe ser de tipo string.",
   }),
 
-//   profesorId: Joi.string().required().messages({
-//     "string.empty": "El ID del profesor no puede estar vacío.",
-//     "any.required": "El ID del profesor es obligatorio.",
-//     "string.base": "El ID del profesor debe ser de tipo string.",
-//  }),
-
+  profesor: Joi.string().required().messages({
+    "string.empty": "El ID del profesor no puede estar vacío.",
+    "any.required": "El ID del profesor es obligatorio.",
+    "string.base": "El ID del profesor debe ser de tipo string.",
+ }),
   sala: Joi.string()
     .valid("Sala 1", "Sala 2", "Sala 3")
     .required()

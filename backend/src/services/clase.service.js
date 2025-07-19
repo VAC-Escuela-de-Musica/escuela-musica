@@ -9,40 +9,39 @@ import { handleError } from "../utils/errorHandler.js";
  * @returns {Promise} Promesa con el objeto clase creado
  */
 async function createClase(clase) {
-    try {
-       const { titulo, descripcion, profesor, sala, horarios = [] } = clase;
+  try {
+    const { titulo, descripcion, profesor, sala, horarios = [] } = clase;
         
-       // implementar logica si el horario ya existe
+    // implementar logica si el horario ya existe
 
-       const newClase = new Clase({
-            titulo,
-            descripcion,
-            profesor,
-            sala,
-            horarios,
-        });
-        await newClase.save();
+    const newClase = new Clase({
+      titulo,
+      descripcion,
+      profesor,
+      sala,
+      horarios,
+    }); 
+    await newClase.save();
 
-        return [newClase, null];
-    } catch (error) {
-        handleError(error, "clase.service -> createClase");
-    }
+    return [newClase, null];
+  } catch (error) {
+      handleError(error, "clase.service -> createClase");
+  }
 }
-
 /**
  * Obtiene todos los horarios de la base de datos
  * @returns {Promise} Promesa con el objeto de los horarios
  */
 async function getAllClases() {
-    try {
-        const clases = await Clase.find();
-        
-        if (!clases) return [null, "No hay clases registradas"];
+  try {
+    const clases = await Clase.find();
 
-        return [clases, null];
-    } catch (error) {
-        handleError(error, "clase.service -> getAllClases");
-    }
+    if (!clases) return [null, "No hay clases registradas"];
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getAllClases");
+  }
 }
 
 /**
@@ -51,16 +50,15 @@ async function getAllClases() {
  * @returns {Promise} 
  */
 async function getClaseById(id) {
-    try {
-        const clase = await Clase.findById(id)
-            .exec();
+  try {
+    const clase = await Clase.findById(id).exec();
 
-        if (!clase) return [null, "Clase no encontrada"];
+    if (!clase) return [null, "Clase no encontrada"];
 
-        return [clase, null];
-    } catch (error) {
-        handleError(error, "clase.service -> getClaseById");
-    }
+    return [clase, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getClaseById");
+  }
 }
 
 /**
@@ -70,28 +68,28 @@ async function getClaseById(id) {
  * @returns {Promise} Promesa con el objeto de horario actualizado
  */
 async function updateClase(id, clase) {
-    try {
-        const claseFound = await Clase.findById(id);
-        if (!claseFound) return [null, "Clase no encontrada"];
+  try {
+    const claseFound = await Clase.findById(id);
+    if (!claseFound) return [null, "Clase no encontrada"];
 
-        const { titulo, descripcion, profesor, sala, horarios = [] } = clase;
+    const { titulo, descripcion, profesor, sala, horarios = [] } = clase;
 
-        const claseUpdated = await Clase.findByIdAndUpdate(
-            id,
-            {
-                titulo,
-                descripcion,
-                profesor,
-                sala,
-                horarios,
-            },
-            { new: true },
-        );
+    const claseUpdated = await Clase.findByIdAndUpdate(
+      id,
+      {
+        titulo,
+        descripcion,
+        profesor,
+        sala,
+        horarios,
+      },
+      { new: true },
+    );
 
-        return [claseUpdated, null];
-    } catch (error) {
-        handleError(error, "clase.service -> updateClase");
-    }
+    return [claseUpdated, null];
+  } catch (error) {
+    handleError(error, "clase.service -> updateClase");
+  }
 }
 
 /**
@@ -100,28 +98,28 @@ async function updateClase(id, clase) {
  * @returns {Promise} Promesa con el objeto de la clase cancelada
  */
 async function cancelClase(id, clase) {
-    try {
-        const claseFound = await Clase.findById(id);
-        if (!claseFound) return [null, "Clase no encontrada"];
+  try {
+    const claseFound = await Clase.findById(id);
+    if (!claseFound) return [null, "Clase no encontrada"];
 
-        const { estado } = clase;
+    const { estado } = clase;
 
-        const claseUpdated = await Clase.findByIdAndUpdate(
-            id,
-            { estado: estado },
-            { new: true },
-        );
+    const claseUpdated = await Clase.findByIdAndUpdate(
+      id,
+      { estado: estado },
+      { new: true },
+    );
 
-        return [claseUpdated, null];
-    } catch (error) {
-        handleError(error, "clase.service -> cancelClase");        
-    }
+    return [claseUpdated, null];
+  } catch (error) {
+    handleError(error, "clase.service -> cancelClase");        
+  }
 }
 
 export default {
-    createClase,
-    getAllClases,
-    getClaseById,
-    updateClase,
-    cancelClase,
+  createClase,
+  getAllClases,
+  getClaseById,
+  updateClase,
+  cancelClase,
 };

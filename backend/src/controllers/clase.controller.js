@@ -54,7 +54,7 @@ async function getAllClases(req, res) {
 }   
 
 /**
- * Actualiza un horario por su id
+ * Obtiene un horario por su id
  * @param {Object} req 
  * @param {Object} res 
  */
