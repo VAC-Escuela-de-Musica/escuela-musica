@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './AuthProvider.jsx';
+import { useAuth } from './AuthContextProvider.jsx';
 
 /**
  * Componente para proteger rutas que requieren autenticación

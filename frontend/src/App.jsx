@@ -1,13 +1,17 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import './App.css'
-import { AuthProvider } from './components/AuthProvider.jsx'
+import { AuthProvider } from './components/AuthContextProvider.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import DashboardLayout from './components/DashboardLayout.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import UploadPage from './pages/UploadPage.jsx'
+import { useTheme } from './hooks/useTheme.js'
 
 function App() {
+  // Inicializar el tema
+  useTheme();
+
   return (
     <AuthProvider>
       <Router>

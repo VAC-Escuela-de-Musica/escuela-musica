@@ -1,17 +1,52 @@
+
+// ...existing code...
+
+
+// ...existing code...
 import React, { useState, useEffect } from 'react';
 import { useMaterials } from '../hooks/useMaterials';
-import { useAuth } from './AuthProvider.jsx';
+import { useAuth } from './AuthContextProvider.jsx';
 import { formatDate, formatFileSize, getFileTypeFromExtension, getFileTypeIcon } from '../utils/helpers';
 import ImageViewer from './ImageViewer';
 import './ListaMateriales.css';
 
 const ListaMateriales = () => {
-  const { user } = useAuth();
+  const { user, isAdmin, isTeacher } = useAuth();
   const { materials, loading, error, pagination, fetchMaterials, deleteMaterial, prevPage, nextPage } = useMaterials();
   
   // Estados para modales
   const [selectedImage, setSelectedImage] = useState(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+  // Estado para vista de lista vs grid
+  const [viewMode, setViewMode] = useState('list'); // 'list' o 'grid'
+  const [expandedRows, setExpandedRows] = useState(new Set());
+
+  // Función para determinar si el usuario puede eliminar un material
+  const canDeleteMaterial = (material) => {
+    // Admin puede eliminar todo
+    if (isAdmin()) return true;
+    
+    // El propietario puede eliminar su propio material
+    if (material.usuario === user?.email) return true;
+    
+    // Nadie más puede eliminar
+    return false;
+  };
+
+  // Funciones para manejo de vistas
+  const toggleViewMode = () => {
+    setViewMode(viewMode === 'grid' ? 'list' : 'grid');
+  };
+
+  const toggleRowExpansion = (materialId) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(materialId)) {
+      newExpanded.delete(materialId);
+    } else {
+      newExpanded.add(materialId);
+    }
+    setExpandedRows(newExpanded);
+  };
 
   useEffect(() => {
     if (user) {
@@ -121,11 +156,21 @@ const ListaMateriales = () => {
     );
   }
 
+
   return (
     <div className="lista-materiales">
       {/* Header */}
       <div className="header">
-        <h1>Materiales</h1>
+        <div className="header-left">
+          <h1>Materiales</h1>
+          <button 
+            onClick={toggleViewMode} 
+            className="view-toggle-btn"
+            title={viewMode === 'grid' ? 'Cambiar a vista de lista' : 'Cambiar a vista de tarjetas'}
+          >
+            {viewMode === 'grid' ? '☰' : '⊞'} {viewMode === 'grid' ? 'Lista' : 'Tarjetas'}
+          </button>
+        </div>
         <div className="summary">
           <span className="welcome">Hola, {user?.nombre || user?.username || user?.email}</span>
           <span>{pagination?.totalCount || materials?.length || 0} materiales disponibles</span>
@@ -140,90 +185,176 @@ const ListaMateriales = () => {
         </div>
       ) : (
         <>
-          <div className="materials-grid">
-            {materials?.map((material) => (
-              <div key={material._id} className="material-card">
-                <div className="material-card-content">
-                  {/* Header con miniatura e info básica */}
-                  <div className="material-header">
-                    <div 
-                      className="material-thumbnail"
-                      onClick={() => handleImagePreview(material)}
-                      title={material.viewUrl ? "Click para ver imagen completa" : "Vista previa no disponible"}
-                    >
-                      {(material.viewUrl && 
-                       (material.mimeType || material.tipoContenido) &&
-                       ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(material.mimeType || material.tipoContenido)) ? (
-                        <img 
-                          src={material.viewUrl} 
-                          alt={material.title}
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'block';
-                          }}
-                        />
-                      ) : (
-                        <span className="material-thumbnail-icon">
-                          {getFileIcon(material.mimeType || material.tipoContenido)}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="material-info">
-                      <h3 className="material-title">{material.title}</h3>
-                      {material.description && (
-                        <p className="material-description">{material.description}</p>
-                      )}
-                    </div>
-                  </div>
+          {/* Vista de Lista Compacta */}
+          {viewMode === 'list' && (
+            <div className="materials-table-container">
+              <div className="materials-table-wrapper">
+                <table className="materials-table">
+                  <thead>
+                    <tr>
+                      <th>Archivo</th>
+                      <th>Tamaño</th>
+                      <th>Fecha de subida</th>
+                      {/* Admin: acceso y acciones, Profesor: solo acciones */}
+                      {isAdmin() && <th>Acceso</th>}
+                      {(isAdmin() || isTeacher()) && <th>Acciones</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {materials?.map((material) => (
+                      <tr key={material._id}>
+                        <td>
+                          <a href={material.downloadUrl} target="_blank" rel="noopener noreferrer" className="file-link">
+                            {/* Icono según el tipo de archivo */}
+                            {getFileTypeFromExtension(material.title) === 'PDF' && (
+                              <span className="file-icon pdf">📄</span>
+                            )}
+                            {getFileTypeFromExtension(material.title) === 'Imagen' && (
+                              <span className="file-icon image">🖼️</span>
+                            )}
+                            {getFileTypeFromExtension(material.title) === 'Audio' && (
+                              <span className="file-icon audio">🎵</span>
+                            )}
+                            {getFileTypeFromExtension(material.title) === 'Video' && (
+                              <span className="file-icon video">🎬</span>
+                            )}
+                            {getFileTypeFromExtension(material.title) === 'Archivo' && (
+                              <span className="file-icon file">📎</span>
+                            )}
+                            {material.title}
+                          </a>
+                        </td>
+                        <td>{material.fileSize ? formatFileSize(material.fileSize) : '-'}</td>
+                        <td>{formatDate(material.createdAt)}</td>
+                        {/* Admin: acceso */}
+                        {isAdmin() && (
+                          <td>
+                            <span className={`privacy-badge ${material.isPublic ? 'public' : 'private'}`}>
+                              {material.isPublic ? 'Público' : 'Privado'}
+                            </span>
+                          </td>
+                        )}
+                        {/* Acciones: admin puede eliminar todo, profesor solo los suyos */}
+                        {(isAdmin() || isTeacher()) && (
+                          <td>
+                            {canDeleteMaterial(material) && (
+                              <button
+                                onClick={() => handleDeleteClick(material)}
+                                className="action-btn delete-btn"
+                                style={{marginLeft: 4}}
+                              >
+                                Eliminar
+                              </button>
+                            )}
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
-                  {/* Metadatos del archivo */}
-                  <div className="material-metadata">
-                    <div className="metadata-item">
-                      <span className="metadata-label">Tipo:</span>
-                      <span className="file-type-badge">
-                        {getFileTypeFromExtension(material.title) || 'Archivo'}
-                      </span>
-                    </div>
-                    <div className="metadata-item">
-                      <span className="metadata-label">Subido:</span>
-                      <span>{formatDate(material.createdAt)}</span>
-                    </div>
-                    <div className="metadata-item">
-                      <span className="metadata-label">Acceso:</span>
-                      <span className={`privacy-badge ${material.isPublic ? 'public' : 'private'}`}>
-                        {material.isPublic ? 'Público' : 'Privado'}
-                      </span>
-                    </div>
-                    <div className="metadata-item">
-                      <span className="metadata-label">Tamaño:</span>
-                      <span>{material.fileSize ? formatFileSize(material.fileSize) : 'N/A'}</span>
-                    </div>
-                  </div>
-
-                  {/* Acciones */}
-                  <div className="material-actions">
-                    {material.downloadUrl && (
-                      <a 
-                        href={material.downloadUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="action-btn download-btn"
+          {/* Vista de Tarjetas Original */}
+          {viewMode === 'grid' && (
+            <div className="materials-grid-container">
+              <div className="materials-grid">
+                {materials?.map((material) => (
+                  <div key={material._id} className="material-card">
+                    <div className="material-card-content">
+                    {/* Header con miniatura e info básica */}
+                    <div className="material-header">
+                      <div 
+                        className="material-thumbnail"
+                        onClick={() => handleImagePreview(material)}
+                        title={material.viewUrl ? "Click para ver imagen completa" : "Vista previa no disponible"}
                       >
-                        ⬇️ Descargar
-                      </a>
-                    )}
-                    <button
-                      onClick={() => handleDeleteClick(material)}
-                      className="action-btn delete-btn"
-                    >
-                      🗑️ Eliminar
-                    </button>
+                        {(material.viewUrl && 
+                         (material.mimeType || material.tipoContenido) &&
+                         ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(material.mimeType || material.tipoContenido)) ? (
+                          <img 
+                            src={material.viewUrl} 
+                            alt={material.title}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'block';
+                            }}
+                          />
+                        ) : (
+                          <span className="material-thumbnail-icon">
+                            {getFileIcon(material.mimeType || material.tipoContenido)}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="material-info">
+                        <h3 className="material-title">{material.title}</h3>
+                        {material.description && (
+                          <p className="material-description">{material.description}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Metadatos del archivo, condicionales por rol */}
+                    <div className="material-metadata">
+                      <div className="metadata-item">
+                        <span className="metadata-label">Tipo:</span>
+                        <span className="file-type-badge">
+                          {getFileTypeFromExtension(material.title) || 'Archivo'}
+                        </span>
+                      </div>
+                      <div className="metadata-item">
+                        <span className="metadata-label">Subido:</span>
+                        <span>{formatDate(material.createdAt)}</span>
+                      </div>
+                      {isAdmin() && (
+                        <div className="metadata-item">
+                          <span className="metadata-label">Acceso:</span>
+                          <span className={`privacy-badge ${material.isPublic ? 'public' : 'private'}`}>
+                            {material.isPublic ? 'Público' : 'Privado'}
+                          </span>
+                        </div>
+                      )}
+                      <div className="metadata-item">
+                        <span className="metadata-label">Tamaño:</span>
+                        <span>{material.fileSize ? formatFileSize(material.fileSize) : 'N/A'}</span>
+                      </div>
+                      {isAdmin() && (
+                        <div className="metadata-item">
+                          <span className="metadata-label">Propietario:</span>
+                          <span>{material.usuario || '-'}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Acciones */}
+                    <div className="material-actions">
+                      {material.downloadUrl && (
+                        <a 
+                          href={material.downloadUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="action-btn download-btn"
+                        >
+                          Descargar
+                        </a>
+                      )}
+                      {(isAdmin() || isTeacher()) && canDeleteMaterial(material) && (
+                        <button
+                          onClick={() => handleDeleteClick(material)}
+                          className="action-btn delete-btn"
+                        >
+                          Eliminar
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
 
           {/* Paginación */}
           {pagination && pagination.totalPages > 1 && (

@@ -1,61 +1,53 @@
 import { useState, useEffect, useCallback } from 'react';
 import authService from '../services/auth.service.js';
+import cacheSystem from '../utils/cache.js';
 
 /**
- * Hook para gestión de autenticación - Versión Simple
+ * Hook principal de autenticación
  */
-const useAuthState = () => {
+export const useAuthState = () => {
   const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   /**
-   * Inicializa la autenticación
-   * Verifica si hay un token válido almacenado
+   * Inicializa la autenticación verificando el token almacenado
    */
   const initializeAuth = useCallback(async () => {
-    console.log('🔍 Inicializando autenticación...');
-
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-
-    if (!token || !userData) {
-      console.log('⚠️ No hay token o datos de usuario almacenados');
-      setIsAuthenticated(false);
-      setUser(null);
-      setLoading(false);
-      setIsInitialized(true);
-      return;
-    }
-
     try {
-      // Verificar token con el backend
-      const result = await authService.verifyToken();
+      setLoading(true);
+      const token = localStorage.getItem('token');
       
-      if (result.success) {
-        console.log('✅ Token válido, usuario autenticado:', result.data.user);
-        setUser(result.data.user);
-        setIsAuthenticated(true);
-      } else {
-        console.log('❌ Token inválido:', result.error);
-        // Limpiar datos inválidos
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setUser(null);
-        setIsAuthenticated(false);
+      if (token) {
+        // Verificar si el token ya está en caché
+        const cachedUser = cacheSystem.get('current_user');
+        if (cachedUser) {
+          setUser(cachedUser);
+          setIsAuthenticated(true);
+        } else {
+          const result = await authService.verifyToken();
+          
+          if (result.success) {
+            setUser(result.data.user);
+            setIsAuthenticated(true);
+            cacheSystem.set('current_user', result.data.user, 300); // Cache por 5 minutos
+          } else {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            cacheSystem.remove('current_user');
+          }
+        }
       }
     } catch (err) {
-      console.error('💥 Error initializing auth:', err);
+      console.error('Error initializing auth:', err);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      setUser(null);
-      setIsAuthenticated(false);
+      cacheSystem.remove('current_user');
     } finally {
       setLoading(false);
       setIsInitialized(true);
-      console.log('🏁 Inicialización completada');
     }
   }, []);
 
@@ -80,7 +72,9 @@ const useAuthState = () => {
         setUser(user);
         setIsAuthenticated(true);
         
-        console.log('Login exitoso:', user);
+        // Limpiar cache al hacer login
+        cacheSystem.invalidateByEvent('login', 'all');
+        
         return { success: true, data: user };
       } else {
         setError(result.error || 'Error en el inicio de sesión');
@@ -96,32 +90,31 @@ const useAuthState = () => {
   }, []);
 
   /**
-   * Cierra la sesión del usuario
+   * Realiza el logout del usuario
    */
   const logout = useCallback(async () => {
     try {
       setLoading(true);
       
-      // Cerrar sesión en el servidor
+      // Llamar al servicio de logout
       await authService.logout();
       
-      // Limpiar localStorage
+      // Limpiar almacenamiento local
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       
-      // Actualizar estado
+      // Limpiar estado
       setUser(null);
       setIsAuthenticated(false);
       setError(null);
       
-      console.log('Logout exitoso');
+      // Limpiar cache al hacer logout
+      cacheSystem.invalidateByEvent('logout', 'all');
+      
+      return { success: true };
     } catch (err) {
-      console.error('Error durante logout:', err);
-      // Limpiar estado local aunque haya error en servidor
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setUser(null);
-      setIsAuthenticated(false);
+      console.error('Error during logout:', err);
+      return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
@@ -163,11 +156,17 @@ const useAuthState = () => {
       const result = await authService.updateProfile(profileData);
       
       if (result.success) {
-        setUser(result.data);
-        localStorage.setItem('user', JSON.stringify(result.data));
-        return { success: true, data: result.data };
+        const updatedUser = result.data;
+        
+        // Actualizar localStorage
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Actualizar estado
+        setUser(updatedUser);
+        
+        return { success: true, data: updatedUser };
       } else {
-        setError(result.error || 'Error al actualizar perfil');
+        setError(result.error || 'Error actualizando perfil');
         return { success: false, error: result.error };
       }
     } catch (err) {
@@ -190,9 +189,9 @@ const useAuthState = () => {
       const result = await authService.changePassword(currentPassword, newPassword);
       
       if (result.success) {
-        return { success: true };
+        return { success: true, data: result.data };
       } else {
-        setError(result.error || 'Error al cambiar contraseña');
+        setError(result.error || 'Error cambiando contraseña');
         return { success: false, error: result.error };
       }
     } catch (err) {
@@ -207,23 +206,28 @@ const useAuthState = () => {
   /**
    * Verifica si el usuario tiene un rol específico
    */
-  const hasRole = useCallback((role) => {
-    return user?.roles?.includes(role) || false;
+  const hasRole = useCallback((roleName) => {
+    if (!user || !user.roles) return false;
+    
+    return user.roles.some(role => 
+      typeof role === 'string' ? role === roleName : role.name === roleName
+    );
   }, [user]);
 
   /**
-   * Verifica si el usuario tiene un permiso específico
+   * Verifica si el usuario tiene permisos específicos
    */
   const hasPermission = useCallback((permission) => {
-    // Lógica de permisos basada en roles
-    if (hasRole('admin')) return true;
-    if (hasRole('teacher') && ['read', 'write', 'upload'].includes(permission)) return true;
-    if (hasRole('student') && ['read'].includes(permission)) return true;
-    return false;
-  }, [hasRole]);
+    if (!user || !user.roles) return false;
+    
+    return user.roles.some(role => {
+      const roleObj = typeof role === 'string' ? { name: role } : role;
+      return roleObj.permissions && roleObj.permissions.includes(permission);
+    });
+  }, [user]);
 
   /**
-   * Verifica si el usuario es administrador
+   * Verifica si el usuario es admin
    */
   const isAdmin = useCallback(() => {
     return hasRole('admin');
@@ -233,18 +237,18 @@ const useAuthState = () => {
    * Verifica si el usuario es profesor
    */
   const isTeacher = useCallback(() => {
-    return hasRole('teacher');
+    return hasRole('teacher') || hasRole('profesor');
   }, [hasRole]);
 
   /**
    * Verifica si el usuario es estudiante
    */
   const isStudent = useCallback(() => {
-    return hasRole('student');
+    return hasRole('student') || hasRole('estudiante');
   }, [hasRole]);
 
   /**
-   * Limpia los errores
+   * Limpia errores
    */
   const clearError = useCallback(() => {
     setError(null);
@@ -256,28 +260,37 @@ const useAuthState = () => {
   const refreshToken = useCallback(async () => {
     try {
       const result = await authService.refreshToken();
-      if (result) {
-        console.log('Token renovado exitosamente');
-        return true;
+      
+      if (result.success) {
+        localStorage.setItem('token', result.data.token);
+        return { success: true };
+      } else {
+        await logout();
+        return { success: false };
       }
-      return false;
     } catch (err) {
-      console.error('Error renovando token:', err);
-      return false;
+      await logout();
+      return { success: false };
     }
-  }, []);
+  }, [logout]);
 
-  // Inicializar autenticación al montar el componente
+  // Efecto para refrescar token periódicamente
   useEffect(() => {
-    initializeAuth();
-  }, [initializeAuth]);
+    if (isAuthenticated) {
+      const interval = setInterval(() => {
+        refreshToken();
+      }, 15 * 60 * 1000); // Refrescar cada 15 minutos
+
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, refreshToken]);
 
   return {
-    // Estados
+    // Estado
     user,
-    isAuthenticated,
     loading,
     error,
+    isAuthenticated,
     isInitialized,
 
     // Acciones
@@ -301,4 +314,5 @@ const useAuthState = () => {
   };
 };
 
+// Exportar por defecto el hook
 export default useAuthState;

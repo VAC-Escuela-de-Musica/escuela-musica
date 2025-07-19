@@ -66,8 +66,6 @@ export async function serveFileWithFallback(req, res) {
     const { id } = req.params;
     const { token } = req.query;
     
-    console.log(`🔍 Solicitando visualización de archivo con ID: ${id}`);
-    
     // Verificar token JWT si se proporciona
     verifyTokenFromUrl(req, token);
     
@@ -139,8 +137,6 @@ export async function downloadFileWithFallback(req, res) {
   try {
     const { id } = req.params;
     const { token } = req.query;
-    
-    console.log(`🔍 Solicitando descarga de archivo con ID: ${id}`);
     
     // Verificar token JWT si se proporciona
     verifyTokenFromUrl(req, token);

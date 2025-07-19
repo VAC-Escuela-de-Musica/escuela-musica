@@ -40,8 +40,6 @@ class MaterialService {
    */
   async getMaterialsWithPagination(params) {
     try {
-      console.log('🔍 getMaterialsWithPagination called with:', params);
-      
       const { page, limit, sort, order, filters, userId } = params;
       
       const options = {
@@ -51,21 +49,14 @@ class MaterialService {
         // Eliminar populate que no existe
       };
 
-      console.log('🔍 Using options:', options);
-      console.log('🔍 userId:', userId);
-
       // Usar findAccessibleMaterials que ahora usa email
       if (userId) {
-        console.log('🔍 Calling findAccessibleMaterials with userEmail:', userId);
         const result = await this.repository.findAccessibleMaterials(userId, options);
-        console.log('🔍 findAccessibleMaterials result:', result);
         return result;
       }
 
       // Para consultas sin usuario, mostrar solo materiales públicos
-      console.log('🔍 No userId, calling findPublicMaterials');
       const result = await this.repository.findPublicMaterials(options);
-      console.log('🔍 findPublicMaterials result:', result);
       return result;
     } catch (error) {
       console.error('❌ Error in getMaterialsWithPagination:', error);
@@ -218,50 +209,28 @@ class MaterialService {
    */
   async deleteMaterial(materialId, userId) {
     try {
-      console.log('🗑️ deleteMaterial service called with:', { materialId, userId });
-      
       // Verificar que el usuario sea el propietario
       const material = await this.repository.findById(materialId);
-      console.log('🗑️ Material found:', material);
       
       if (material.isError()) {
-        console.log('🗑️ Material not found:', material.error);
         return material;
       }
-
-      console.log('🗑️ Material data:', material.data);
-      console.log('🗑️ Material usuario field:', material.data.usuario);
-      console.log('🗑️ Material userId field:', material.data.userId);
-      console.log('🗑️ Current user:', userId);
 
       // El modelo Material usa 'usuario' (email) en lugar de 'userId'
       const materialOwner = material.data.usuario || material.data.userId;
       const materialOwnerStr = materialOwner ? materialOwner.toString() : null;
       
-      console.log('🗑️ Permission check details:');
-      console.log('  - materialOwner type:', typeof materialOwner);
-      console.log('  - materialOwner value:', materialOwner);
-      console.log('  - materialOwnerStr:', materialOwnerStr);
-      console.log('  - userId type:', typeof userId);
-      console.log('  - userId value:', userId);
-      console.log('  - Are they equal?:', materialOwnerStr === userId);
-      
       if (!materialOwnerStr || materialOwnerStr !== userId) {
-        console.log('🗑️ Permission denied. MaterialOwner:', materialOwnerStr, 'CurrentUserId:', userId);
-        
         // Permitir eliminación si el usuario es administrador o profesor
         // (esto debería verificarse mejor, pero para debug permitimos más flexibilidad)
         if (userId && (userId.includes('admin') || userId.includes('profesor'))) {
-          console.log('🗑️ User seems to be admin/teacher, allowing deletion');
+          // Usuario con permisos administrativos
         } else {
           return Result.forbidden('No tienes permisos para eliminar este material');
         }
       }
 
-      console.log('🗑️ Permissions verified, proceeding with deletion');
       const deleteResult = await this.repository.deleteById(materialId);
-      console.log('🗑️ Delete result:', deleteResult);
-      
       return deleteResult;
     } catch (error) {
       console.error('❌ Error in deleteMaterial service:', error);

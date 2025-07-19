@@ -10,11 +10,8 @@ import { asyncHandler } from "../../middlewares/index.js";
  * Genera URL prefirmada para subida con validación de permisos
  */
 export const getUploadUrl = asyncHandler(async (req, res) => {
-  console.log("🔍 === getUploadUrl INICIO ===");
-  
   // Verificar que tenemos email (requisito de autenticación)
   if (!req.email) {
-    console.error("❌ No hay req.email - problema de autenticación");
     return respondError(req, res, 401, "Usuario no autenticado");
   }
   
@@ -23,15 +20,6 @@ export const getUploadUrl = asyncHandler(async (req, res) => {
   const isProfesor = AuthorizationService.isUserProfesor(req);
   
   const { extension, contentType, nombre, descripcion, bucketTipo } = req.body;
-    
-  console.log("📝 Datos recibidos:", {
-    extension,
-    contentType,
-    nombre,
-    descripcion,
-    bucketTipo,
-    userEmail: req.email
-  });
   
   // Validar extensión permitida
   const allowedExtensions = [
@@ -44,7 +32,6 @@ export const getUploadUrl = asyncHandler(async (req, res) => {
   ];
   
   if (!extension || !allowedExtensions.includes(extension.toLowerCase())) {
-    console.error("❌ Extensión no permitida:", extension);
     return respondError(req, res, 400, `Tipo de archivo no permitido: ${extension}. Permitidos: ${allowedExtensions.join(', ')}`);
   }
   
@@ -54,9 +41,7 @@ export const getUploadUrl = asyncHandler(async (req, res) => {
   }
   
   // PRIMERO: Generar el filename usando el servicio
-  console.log("🔧 Generando filename...");
   const filename = fileService.generateUniqueFilename(extension);
-  console.log("✅ Filename generado:", filename);
   
   // SEGUNDO: Pre-registrar el material en BD con el filename
   const materialPendiente = new Material({
@@ -69,7 +54,6 @@ export const getUploadUrl = asyncHandler(async (req, res) => {
   });
   
   await materialPendiente.save();
-  console.log("✅ Material registrado en BD:", materialPendiente._id);
   
   // TERCERO: Usar el servicio para generar la URL con todos los datos
   const uploadData = await fileService.prepareUpload(materialPendiente, {

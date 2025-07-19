@@ -29,6 +29,5 @@ dist-ssr
 *.refactored.*
 *.old.*
 *.deprecated.*
-test-*
 *.bak
 *.tmp

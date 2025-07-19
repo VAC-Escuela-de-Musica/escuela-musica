@@ -1,5 +1,5 @@
 import React, { useEffect, useContext, createContext } from 'react';
-import useAuthState from '../hooks/useAuth.js';
+import { useAuthState } from '../hooks/useAuth.js';
 
 /**
  * Context para autenticación
@@ -14,9 +14,8 @@ export const AuthProvider = ({ children }) => {
   
   // Inicializar autenticación al montar el componente
   useEffect(() => {
-    console.log('🚀 AuthProvider montado, iniciando autenticación...');
     auth.initializeAuth();
-  }, []); // Dependencia vacía para que solo se ejecute una vez
+  }, [auth.initializeAuth]);
   
   return (
     <AuthContext.Provider value={auth}>

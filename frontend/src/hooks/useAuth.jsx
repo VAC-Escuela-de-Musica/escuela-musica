@@ -25,45 +25,34 @@ const useAuthState = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      console.log('🔍 Inicializando autenticación...', { token: token ? 'Existe' : 'No existe' });
-      
       if (token) {
         // Verificar si el token ya está en caché
         const cachedUser = cacheSystem.get('current_user');
         if (cachedUser) {
-          console.log('✅ Usuario encontrado en caché:', cachedUser);
           setUser(cachedUser);
           setIsAuthenticated(true);
         } else {
-          console.log('🔄 Verificando token con el servidor...');
           const result = await authService.verifyToken();
           
-          console.log('📡 Resultado de verificación:', result);
-          
           if (result.success) {
-            console.log('✅ Token válido, estableciendo usuario:', result.data.user);
             setUser(result.data.user);
             setIsAuthenticated(true);
             cacheSystem.set('current_user', result.data.user, 300); // Cache por 5 minutos
           } else {
-            console.log('❌ Token inválido, limpiando storage:', result.error);
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             cacheSystem.remove('current_user');
           }
         }
-      } else {
-        console.log('⚠️ No hay token almacenado');
       }
     } catch (err) {
-      console.error('💥 Error initializing auth:', err);
+      console.error('Error initializing auth:', err);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       cacheSystem.remove('current_user');
     } finally {
       setLoading(false);
       setIsInitialized(true);
-      console.log('🏁 Inicialización completada');
     }
   }, []);
 
@@ -338,7 +327,6 @@ export const AuthProvider = ({ children }) => {
   
   // Inicializar autenticación al montar el componente
   useEffect(() => {
-    console.log('🚀 AuthProvider montado, iniciando autenticación...');
     auth.initializeAuth();
   }, []); // Dependencia vacía para que solo se ejecute una vez
   

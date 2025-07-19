@@ -44,9 +44,3 @@ export { userService } from './user/user.service.js';
 
 // Servicios de material
 export { materialService } from './material/material.service.js';
-
-// Servicios de clase
-export { ClassService } from './class/class.service.js';
-
-// Servicios de evento
-export { EventService } from './event/event.service.js';

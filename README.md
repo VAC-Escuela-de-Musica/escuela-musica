@@ -149,7 +149,7 @@ escuela-musica/
 
 #### Custom Hooks Pattern
 ```jsx
-// useAuth.jsx - Gestión de autenticación
+// useAuth.js - Gestión de autenticación
 const { user, login, logout, loading } = useAuth();
 
 // useMaterials.jsx - Gestión de materiales

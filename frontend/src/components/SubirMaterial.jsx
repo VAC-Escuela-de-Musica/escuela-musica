@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useMaterials } from '../hooks/useMaterials.js';
-import { useAuth } from './AuthProvider.jsx';
+import { useAuth } from './AuthContextProvider.jsx';
 import { logger } from '../utils/logger.js';
 import './darkmode.css';
 import './SubirMaterial.styles.css';
@@ -27,7 +27,7 @@ const SubirMaterial = () => {
     clearError 
   } = useMaterials();
   
-  const { user, isAuthenticated, hasPermission } = useAuth();
+  const { user, isAuthenticated, isAdmin, isTeacher } = useAuth();
 
   const categories = [
     'Partitura',
@@ -215,12 +215,13 @@ const SubirMaterial = () => {
     );
   }
 
-  if (!hasPermission('upload_materials')) {
+  // Solo admins y profesores pueden subir materiales
+  if (!isAdmin() && !isTeacher()) {
     return (
       <div className="subir-material">
         <div className="no-permission-message">
           <h2>Sin permisos</h2>
-          <p>No tienes permisos para subir materiales.</p>
+          <p>Solo los administradores y profesores pueden subir materiales.</p>
         </div>
       </div>
     );

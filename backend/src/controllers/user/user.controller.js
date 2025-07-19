@@ -14,9 +14,6 @@ class UserController {
    */
   async listUsers(req, res) {
     try {
-      console.log('🔍 UserController.listUsers called');
-      console.log('👤 req.user:', req.user);
-      
       // Respuesta básica sin servicios para probar
       const mockUsers = [
         {

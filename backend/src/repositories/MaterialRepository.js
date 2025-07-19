@@ -213,8 +213,6 @@ export class MaterialRepository extends BaseRepository {
    */
   async findAccessibleMaterials(userEmail, options = {}) {
     try {
-      console.log('🔍 findAccessibleMaterials called with:', { userEmail, options });
-      
       // Filtro para materiales accesibles: públicos o del usuario
       const filter = {
         $or: [
@@ -223,10 +221,7 @@ export class MaterialRepository extends BaseRepository {
         ]
       };
       
-      console.log('🔍 Using filter:', filter);
-      
       const result = await this.paginate(filter, options);
-      console.log('📊 findAccessibleMaterials result:', result);
       
       return result;
     } catch (error) {

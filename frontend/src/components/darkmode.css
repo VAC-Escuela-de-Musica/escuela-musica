@@ -1,9 +1,10 @@
 /* Estilos para modo oscuro y claro */
 :root {
   /* Modo claro (por defecto) */
-  --bg-color: #ffffff;
+  --bg-color: #d0d0d0;
+  --bg-secondary: #f0f0f0;
   --text-color: #333333;
-  --text-muted: #666666;
+  --text-muted: #555555; /* Cambiado de #666666 para mejor contraste */
   --heading-color: #333333;
   --border-color: #dee2e6;
   --table-bg: #ffffff;
@@ -24,14 +25,51 @@
   --warning-border: #ffeaa7;
   --warning-text: #856404;
   
+  --danger-bg: #ffebee;
+  --danger-border: #ffcdd2;
+  
   --code-bg: rgba(0,0,0,0.1);
   --code-text: #d63384;
 }
 
-/* Modo oscuro */
+/* Modo oscuro con clases */
+.dark-theme {
+  --bg-color: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --text-color: #e0e0e0;
+  --text-muted: #999999;
+  --heading-color: #ffffff;
+  --border-color: #444444;
+  --table-bg: #2d2d2d;
+  --table-header-bg: #3a3a3a;
+  --table-row-bg: transparent;
+  --primary-color: #4a9eff;
+  --success-color: #4caf50;
+  --danger-color: #f44336;
+  --warning-color: #ff9800;
+  --info-color: #00bcd4;
+  
+  /* Colores de alertas para modo oscuro */
+  --info-bg: #1e3a5f;
+  --info-border: #4a9eff;
+  --info-text: #81c784;
+  
+  --warning-bg: #3d2f00;
+  --warning-border: #ff9800;
+  --warning-text: #ffb74d;
+  
+  --danger-bg: #2d1b1b;
+  --danger-border: #f44336;
+  
+  --code-bg: rgba(255,255,255,0.1);
+  --code-text: #ff6b9d;
+}
+
+/* Fallback para preferencia del sistema (si no hay clase manual) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light-theme):not(.dark-theme) {
     --bg-color: #1a1a1a;
+    --bg-secondary: #2d2d2d;
     --text-color: #e0e0e0;
     --text-muted: #999999;
     --heading-color: #ffffff;
@@ -45,7 +83,6 @@
     --warning-color: #ff9800;
     --info-color: #00bcd4;
     
-    /* Colores de alertas para modo oscuro */
     --info-bg: #1e3a5f;
     --info-border: #4a9eff;
     --info-text: #81c784;
@@ -53,6 +90,9 @@
     --warning-bg: #3d2f00;
     --warning-border: #ff9800;
     --warning-text: #ffb74d;
+    
+    --danger-bg: #2d1b1b;
+    --danger-border: #f44336;
     
     --code-bg: rgba(255,255,255,0.1);
     --code-text: #ff6b9d;
@@ -64,6 +104,13 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Override del root cuando no hay tema manual */
+#root {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  min-height: 100vh;
 }
 
 /* Estilos para tablas */

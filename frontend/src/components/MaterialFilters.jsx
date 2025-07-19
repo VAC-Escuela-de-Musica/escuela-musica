@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useMaterials } from '../hooks/useMaterials.js';
-import { useAuth } from './AuthProvider.jsx';
+import { useAuth } from './AuthContextProvider.jsx';
 import { logger } from '../utils/logger.js';
 import './darkmode.css';
 import './MaterialFilters.styles.css';

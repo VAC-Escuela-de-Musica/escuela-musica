@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { API_ENDPOINTS, API_HEADERS } from '../config/api.js';
 import { logger } from '../utils/logger.js';
 import './darkmode.css';
+import './SubirMultiplesMateriales.css';
 
 // Componente para mostrar tiempo transcurrido
 function TiempoTranscurrido({ inicio }) {
@@ -25,10 +26,10 @@ function TiempoTranscurrido({ inicio }) {
       color: '#666',
       fontFamily: 'monospace'
     }}>
-      ⏱️ Tiempo transcurrido: {minutos}:{segundos.toString().padStart(2, '0')}
+      <span className="timer-icon">⏱️</span> Tiempo transcurrido: {minutos}:{segundos.toString().padStart(2, '0')}
       {tiempo > 30 && (
         <span style={{ color: '#ff9800', marginLeft: '10px' }}>
-          ⚠️ Subida tomando más tiempo del esperado
+          <span className="warning-icon">⚠️</span> Subida tomando más tiempo del esperado
         </span>
       )}
     </div>
@@ -41,6 +42,13 @@ function SubirMultiplesMateriales() {
   const [materiales, setMateriales] = useState([]);
   const [progreso, setProgreso] = useState(''); // Nuevo estado para mostrar progreso
   const [tiempoInicio, setTiempoInicio] = useState(null); // Para mostrar tiempo transcurrido
+  const fileInputRef = useRef(null);
+
+  // Función para obtener la extensión del archivo
+  const getFileExtension = (fileName) => {
+    const lastDotIndex = fileName.lastIndexOf('.');
+    return lastDotIndex !== -1 ? fileName.substring(lastDotIndex + 1).toUpperCase() : '';
+  };
 
   // Función para verificar si el usuario es admin
   const isUserAdmin = () => {
@@ -58,25 +66,60 @@ function SubirMultiplesMateriales() {
 
   const handleChange = (e) => {
     const files = Array.from(e.target.files);
-    // Crear objetos de material para cada archivo
-    const nuevosArchivos = files.map(file => ({
-      file,
-      nombre: file.name.split('.')[0], // nombre sin extensión
-      descripcion: '',
-      bucketTipo: 'privado' // por defecto privado
-    }));
-    setArchivos(nuevosArchivos);
-    setMateriales(nuevosArchivos.map(a => ({
+    if (files.length === 0) return;
+    
+    // Crear objetos de material para cada archivo nuevo
+    const nuevosArchivos = files.map(file => {
+      // Extraer nombre sin extensión (maneja archivos con múltiples puntos)
+      const nombreSinExtension = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+      
+      return {
+        file,
+        nombre: nombreSinExtension,
+        descripcion: '',
+        bucketTipo: 'privado' // por defecto privado
+      };
+    });
+    
+    // Agregar a los archivos existentes
+    const todosLosArchivos = [...archivos, ...nuevosArchivos];
+    const todosMateriales = [...materiales, ...nuevosArchivos.map(a => ({
       ...a,
       nombre: a.nombre,
       descripcion: a.descripcion
-    })));
+    }))];
+    
+    setArchivos(todosLosArchivos);
+    setMateriales(todosMateriales);
+    
+    // Limpiar el input file para permitir seleccionar de nuevo
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    
+    // Mostrar mensaje informativo
+    const mensaje = nuevosArchivos.length === 1 
+      ? `✅ Archivo "${nuevosArchivos[0].file.name}" agregado` 
+      : `✅ ${nuevosArchivos.length} archivos agregados`;
+    console.log(mensaje);
   };
 
   const handleMaterialChange = (index, field, value) => {
     const nuevosMateriales = [...materiales];
     nuevosMateriales[index][field] = value;
     setMateriales(nuevosMateriales);
+  };
+
+  const removeFile = (index) => {
+    const nuevosArchivos = archivos.filter((_, i) => i !== index);
+    const nuevosMateriales = materiales.filter((_, i) => i !== index);
+    setArchivos(nuevosArchivos);
+    setMateriales(nuevosMateriales);
+    
+    // Si no quedan archivos, limpiar el input
+    if (nuevosArchivos.length === 0 && fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -230,7 +273,9 @@ function SubirMultiplesMateriales() {
       // Limpiar formulario
       setArchivos([]);
       setMateriales([]);
-      document.querySelector('input[type="file"]').value = '';
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       
     } catch (error) {
       logger.error('Error en la subida:', error);
@@ -248,141 +293,155 @@ function SubirMultiplesMateriales() {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h2>📁 Subir Materiales</h2>
+    <div className="upload-container">
+      <h1 className="upload-title">
+        Cargar Materiales
+      </h1>
+      <hr className="title-separator" />
       
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '20px' }}>
-          <label htmlFor="archivos" style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
-            Seleccionar archivos:
-          </label>
+        <div className="file-input-section">
+          <h3 className="file-section-title">
+            <span className="config-icon">📁</span> Agregar archivos:
+          </h3>
           <input 
+            ref={fileInputRef}
             id="archivos"
             type="file" 
             multiple 
             onChange={handleChange}
             accept=".pdf,.jpg,.jpeg,.png,.docx,.mp3,.mp4"
-            style={{ 
-              padding: '10px',
-              border: '2px dashed #ccc',
-              borderRadius: '4px',
-              width: '100%'
-            }}
+            className="file-input"
           />
-          <small style={{ color: '#666', marginTop: '5px', display: 'block' }}>
-            Formatos soportados: PDF, JPG, PNG, DOCX, MP3, MP4
+          {archivos.length > 0 && (
+            <div className="selected-files-info">
+              <div className="selected-files-count">
+                <span className="count-icon">📎</span> 
+                {archivos.length} archivo{archivos.length !== 1 ? 's' : ''} seleccionado{archivos.length !== 1 ? 's' : ''}
+              </div>
+              <button 
+                type="button" 
+                className="clear-all-btn"
+                onClick={() => {
+                  setArchivos([]);
+                  setMateriales([]);
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                  }
+                }}
+                title="Limpiar todos los archivos"
+              >
+                🗑️ Limpiar todo
+              </button>
+            </div>
+          )}
+          <small className="file-help-text">
+            Formatos soportados: PDF, JPG, PNG, DOCX, MP3, MP4<br/>
+            <span className="help-tip">💡 Puedes agregar archivos de uno en uno, varios a la vez, e incluso el mismo archivo múltiples veces</span>
           </small>
         </div>
 
         {archivos.length > 0 && (
-          <div style={{ marginBottom: '20px' }}>
-            <h3>📝 Configurar materiales:</h3>
-            {archivos.map((archivo, index) => (
-              <div key={index} style={{ 
-                border: '1px solid #ddd', 
-                padding: '15px', 
-                marginBottom: '10px',
-                borderRadius: '4px',
-                backgroundColor: '#f9f9f9'
-              }}>
-                <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>
-                  📄 {archivo.file.name}
-                </h4>
+          <>
+            <h2 className="config-section-title">
+              Configurar Materiales
+            </h2>
+            <hr className="title-separator" />
+            
+            <div className="materials-config-section">
+              {archivos.map((archivo, index) => (
+              <div key={index} className="material-card">
+                <div className="material-card-header">
+                  <h4 className="material-card-title">
+                    <span className="file-icon">📄</span> 
+                    <span className="file-number">#{index + 1}</span>
+                    <span className="file-name">{archivo.file.name}</span>
+                    <span className="file-extension">{getFileExtension(archivo.file.name)}</span>
+                  </h4>
+                  <button 
+                    type="button"
+                    className="remove-file-btn"
+                    onClick={() => removeFile(index)}
+                    title="Remover archivo"
+                  >
+                    ✕
+                  </button>
+                </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                <div className="material-form-grid">
+                  <div className="form-field">
+                    <label className="form-label">
                       Nombre del material:
                     </label>
                     <input
                       type="text"
                       value={materiales[index]?.nombre || ''}
                       onChange={(e) => handleMaterialChange(index, 'nombre', e.target.value)}
-                      style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                      className="form-input"
                       placeholder="Nombre descriptivo del material"
                     />
                   </div>
                   
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  <div className="form-field">
+                    <label className="form-label">
                       Tipo de acceso:
                     </label>
                     <select
                       value={materiales[index]?.bucketTipo || 'privado'}
                       onChange={(e) => handleMaterialChange(index, 'bucketTipo', e.target.value)}
-                      style={{ width: '100%', padding: '8px', border: '1px solid var(--border-color)', borderRadius: '4px', backgroundColor: 'var(--background-color)', color: 'var(--text-color)' }}
+                      className="form-select"
                     >
-                      <option value="privado">🔒 Privado (solo miembros)</option>
+                      <option value="privado">
+                        <span className="option-icon">🔒</span> Privado (solo miembros)
+                      </option>
                       {isUserAdmin() && (
-                        <option value="publico">🌐 Público (todos pueden ver)</option>
+                        <option value="publico">
+                          <span className="option-icon">🌐</span> Público (todos pueden ver)
+                        </option>
                       )}
                     </select>
                     {!isUserAdmin() && (
-                      <small style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                        ℹ️ Solo usuarios admin pueden subir contenido público
+                      <small className="form-help-text">
+                        <span className="info-icon">ℹ️</span> Solo usuarios admin pueden subir contenido público
                       </small>
                     )}
                   </div>
                 </div>
                 
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                <div className="form-field">
+                  <label className="form-label">
                     Descripción:
                   </label>
                   <textarea
                     value={materiales[index]?.descripcion || ''}
                     onChange={(e) => handleMaterialChange(index, 'descripcion', e.target.value)}
                     rows="3"
-                    style={{ 
-                      width: '100%', 
-                      padding: '8px', 
-                      border: '1px solid #ccc', 
-                      borderRadius: '4px',
-                      resize: 'vertical'
-                    }}
+                    className="form-textarea"
                     placeholder="Descripción opcional del material..."
                   />
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          </>
         )}
 
         <button 
           type="submit" 
           disabled={subiendo || archivos.length === 0}
-          style={{
-            backgroundColor: subiendo ? '#ccc' : '#007bff',
-            color: 'white',
-            padding: '12px 24px',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '16px',
-            cursor: subiendo ? 'not-allowed' : 'pointer',
-            width: '100%'
-          }}
+          className={`submit-button ${subiendo ? 'submit-button--loading' : ''}`}
         >
           {subiendo 
-            ? `⏳ Subiendo archivos...` 
-            : `📤 Subir ${archivos.length} archivo${archivos.length !== 1 ? 's' : ''}`
+            ? (<><span className="loading-icon">⏳</span> Subiendo archivos...</>) 
+            : (<><span className="upload-button-icon">📤</span> Subir {archivos.length} archivo{archivos.length !== 1 ? 's' : ''}</>)
           }
         </button>
       </form>
 
       {(subiendo || progreso) && (
-        <div style={{ 
-          marginTop: '20px', 
-          padding: '15px', 
-          backgroundColor: progreso.includes('❌') ? '#ffebee' : '#e3f2fd', 
-          border: `1px solid ${progreso.includes('❌') ? '#f44336' : '#2196f3'}`,
-          borderRadius: '4px'
-        }}>
-          <p style={{ 
-            margin: 0, 
-            color: progreso.includes('❌') ? '#c62828' : '#1976d2',
-            fontFamily: 'monospace'
-          }}>
-            {progreso || '⏳ Subiendo archivos... Por favor, no cierres esta ventana.'}
+        <div className={`progress-container ${progreso.includes('❌') ? 'progress-container--error' : ''}`}>
+          <p className="progress-text">
+            {progreso || (<><span className="loading-icon">⏳</span> Subiendo archivos... Por favor, no cierres esta ventana.</>)}
           </p>
           
           {tiempoInicio && (
@@ -390,9 +449,9 @@ function SubirMultiplesMateriales() {
           )}
           
           {subiendo && (
-            <div style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
-              💡 Si la subida tarda mucho, verifica:
-              <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
+            <div className="progress-tips">
+              <span className="tip-icon">💡</span> Si la subida tarda mucho, verifica:
+              <ul className="tips-list">
                 <li>Que el backend esté corriendo</li>
                 <li>El tamaño del archivo (archivos grandes tardan más)</li>
                 <li>Tu conexión a internet</li>

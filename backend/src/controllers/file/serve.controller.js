@@ -15,8 +15,6 @@ export const serveFile = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { token } = req.query;
   
-  console.log(`🔍 Solicitando visualización de archivo con ID: ${id}`);
-  
   // Verificar token JWT si se proporciona
   verifyTokenFromUrl(req, token);
   
@@ -31,8 +29,6 @@ export const serveFile = asyncHandler(async (req, res) => {
   
   // Intentar método principal (URL prefirmada)
   try {
-    console.log(`🔍 Preparando descarga para material: ${material.filename}, bucket: ${material.bucketTipo}`);
-    
     const downloadData = await fileService.prepareDownload(material, {
       action: 'view',
       duration: 300

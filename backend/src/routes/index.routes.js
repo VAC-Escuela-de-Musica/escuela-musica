@@ -7,6 +7,7 @@ import userRoutes from "./user.routes.js";
 import authRoutes from "./auth.routes.js";
 import materialRoutes from "./material.routes.js";
 import fileRoutes from "./file.routes.js";
+import adminRoutes from "./admin.routes.js";
 
 // Middlewares centralizados
 import { 
@@ -50,6 +51,9 @@ router.use("/materials", materialRoutes);
 
 // Rutas para archivos - operaciones de archivos optimizadas
 router.use("/files", fileRoutes);
+
+// Rutas de administración - solo para desarrollo
+router.use("/admin", adminRoutes);
 
 // ============= COMPATIBILIDAD CON RUTAS OBSOLETAS =============
 router.use("/materiales", (req, res) => {

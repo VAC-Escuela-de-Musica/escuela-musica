@@ -74,7 +74,6 @@ router.get("/",
 // Eliminar material
 router.delete("/:materialId", 
   validateMongoId('materialId'),
-  requireAdminOrProfesor,
   asyncHandler(deleteMaterial)
 );
 

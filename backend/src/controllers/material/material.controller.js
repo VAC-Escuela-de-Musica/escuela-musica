@@ -10,38 +10,32 @@ import { fileService } from '../../services/index.js';
  * Lista materiales con URLs para frontend
  */
 export const listMaterialsWithUrls = asyncHandler(async (req, res) => {
-  console.log('📋 listMaterialsWithUrls - Iniciando');
-  
   // Verificar permisos
   const isAdmin = AuthorizationService.isUserAdmin(req);
   const isProfesor = AuthorizationService.isUserProfesor(req);
   
   let query = {};
   
-  // Filtrar por permisos
+  // Filtrar por permisos según las reglas de negocio
   if (isAdmin) {
-    // Admin ve todo
-    console.log('👑 Usuario admin: mostrando todos los materiales');
+    // Admin ve todo - sin filtros
+    query = {};
   } else if (isProfesor) {
-    // Profesor ve sus materiales + materiales públicos
-    query = {
-      $or: [
-        { usuario: req.email },
-        { bucketTipo: 'publico' }
-      ]
-    };
-  } else {
-    // Usuario normal ve públicos + sus privados
+    // Profesor ve: archivos públicos + sus propios archivos privados
     query = {
       $or: [
         { bucketTipo: 'publico' },
-        { usuario: req.email }
+        { usuario: req.email, bucketTipo: 'privado' }
       ]
+    };
+  } else {
+    // Usuario normal ve: solo archivos públicos
+    query = {
+      bucketTipo: 'publico'
     };
   }
   
   const materials = await Material.find(query).select('-accesos').sort({ fechaSubida: -1 });
-  console.log(`📊 Materiales encontrados: ${materials.length}`);
   
   // Generar URLs para frontend usando estrategia inteligente
   const materialsWithUrls = await Promise.all(materials.map(async (material) => {
@@ -89,8 +83,6 @@ export const listMaterialsWithUrls = asyncHandler(async (req, res) => {
       urlType: downloadStrategy === 'presigned' ? 'direct' : 'backend'
     };
   }));
-  
-  console.log(`📊 Materiales con URLs generados: ${materialsWithUrls.length}`);
   
   // Estructura de respuesta para paginación
   const response = {
@@ -162,35 +154,18 @@ export const updateMaterial = asyncHandler(async (req, res) => {
 export const deleteMaterial = asyncHandler(async (req, res) => {
   const { materialId } = req.params;
   
-  console.log('🗑️ deleteMaterial called with materialId:', materialId);
-  console.log('🗑️ req.email:', req.email);
-  console.log('🗑️ req.user:', req.user);
-  
   const material = await Material.findById(materialId);
   if (!material) {
     return respondError(req, res, 404, "Material no encontrado");
   }
   
-  console.log('🗑️ Material found:', {
-    id: material._id,
-    nombre: material.nombre,
-    usuario: material.usuario,
-    fechaSubida: material.fechaSubida
-  });
+  // Verificar permisos - Solo el propietario o admin pueden eliminar
+  const isOwner = material.usuario === req.email;
+  const isAdmin = AuthorizationService.isUserAdmin(req);
   
-  // Verificar permisos
-  console.log('🗑️ Permission check:');
-  console.log('  - material.usuario:', material.usuario);
-  console.log('  - req.email:', req.email);
-  console.log('  - Are equal?:', material.usuario === req.email);
-  console.log('  - Is admin?:', AuthorizationService.isUserAdmin(req));
-  
-  if (material.usuario !== req.email && !AuthorizationService.isUserAdmin(req)) {
-    console.log('🗑️ Permission denied');
+  if (!isOwner && !isAdmin) {
     return respondError(req, res, 403, "Sin permisos para eliminar este material");
   }
-  
-  console.log('🗑️ Permissions verified, proceeding with deletion');
   
   // Eliminar archivo usando el servicio
   const fileDeleted = await fileService.deleteFile(material);
@@ -204,6 +179,5 @@ export const deleteMaterial = asyncHandler(async (req, res) => {
   // Auditoría
   await auditService.logMaterialDeletion(material, { email: req.email });
   
-  console.log('🗑️ Material deleted successfully');
   respondSuccess(req, res, 200, { mensaje: "Material eliminado exitosamente" });
 });

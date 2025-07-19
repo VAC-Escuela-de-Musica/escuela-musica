@@ -28,7 +28,7 @@
 ```
 src/
 ├── hooks/                    # Custom Hooks Pattern
-│   ├── useAuth.jsx          # Gestión de autenticación
+│   ├── useAuth.js          # Gestión de autenticación
 │   ├── useMaterials.jsx     # Gestión de materiales
 │   └── useUsers.jsx         # Gestión de usuarios
 ├── components/              # Componentes React
@@ -76,7 +76,7 @@ src/
 
 ### 1. Custom Hooks Implementation
 
-#### `useAuth.jsx`
+#### `useAuth.js`
 ```jsx
 // Antes: Lógica dispersa en componentes
 // Después: Hook centralizado con optimizaciones

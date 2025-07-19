@@ -34,9 +34,9 @@ export const VALIDATION = {
 // Constantes de rate limiting
 export const RATE_LIMIT = {
   WINDOW_MS: 15 * 60 * 1000, // 15 minutos
-  MAX_REQUESTS: 100,
+  MAX_REQUESTS: 2000, // Aumentado para desarrollo
   AUTH_WINDOW_MS: 15 * 60 * 1000, // 15 minutos
-  AUTH_MAX_REQUESTS: 5 // Para login/register
+  AUTH_MAX_REQUESTS: 100 // Aumentado para desarrollo - era 5
 };
 
 // Constantes de JWT

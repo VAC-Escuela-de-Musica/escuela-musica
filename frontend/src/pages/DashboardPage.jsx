@@ -6,14 +6,6 @@ import ListaMateriales from '../components/ListaMateriales';
 const DashboardPage = () => {
   return (
     <div>
-      <h2 style={{ 
-        marginBottom: '2rem', 
-        color: '#2c3e50',
-        fontSize: '2rem',
-        fontWeight: 'bold'
-      }}>
-        📚 Materiales Educativos
-      </h2>
       <ListaMateriales />
     </div>
   );

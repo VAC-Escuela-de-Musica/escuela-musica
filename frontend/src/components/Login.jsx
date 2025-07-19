@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from './AuthProvider.jsx';
+import { useAuth } from './AuthContextProvider.jsx';
 
 function Login() {
   const [email, setEmail] = useState("");

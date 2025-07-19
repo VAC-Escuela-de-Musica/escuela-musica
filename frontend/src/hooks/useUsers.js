@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../components/AuthProvider.jsx';
+import { useAuth } from '../components/AuthContextProvider.jsx';
 
 /**
  * Hook para gestión de usuarios

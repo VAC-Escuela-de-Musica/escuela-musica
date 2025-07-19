@@ -53,8 +53,6 @@ export const downloadFile = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { token } = req.query;
   
-  console.log(`🔍 Solicitando descarga de archivo con ID: ${id}`);
-  
   // Verificar token JWT si se proporciona
   verifyTokenFromUrl(req, token);
   

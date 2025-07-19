@@ -6,14 +6,6 @@ import SubirMultiplesMateriales from '../components/SubirMultiplesMateriales';
 const UploadPage = () => {
   return (
     <div>
-      <h2 style={{ 
-        marginBottom: '2rem', 
-        color: '#2c3e50',
-        fontSize: '2rem',
-        fontWeight: 'bold'
-      }}>
-        📤 Subir Materiales
-      </h2>
       <SubirMultiplesMateriales />
     </div>
   );

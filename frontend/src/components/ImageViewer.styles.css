@@ -27,7 +27,7 @@
   flex-direction: column;
   max-width: 95vw;
   max-height: 95vh;
-  background: white;
+  background: var(--bg-color);
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   overflow: hidden;
@@ -51,8 +51,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .image-info {
@@ -64,13 +64,13 @@
   margin: 0 0 5px 0;
   font-size: 1.3rem;
   font-weight: 600;
-  color: #333;
+  color: var(--heading-color);
 }
 
 .image-description {
   margin: 0;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-muted);
   line-height: 1.4;
 }
 
@@ -141,7 +141,7 @@
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  color: #666;
+  color: #444; /* Cambiado de #666 para mejor contraste */
 }
 
 .loading-spinner {
@@ -223,12 +223,12 @@
 }
 
 .meta-item {
-  color: #666;
+  color: #444; /* Cambiado de #666 para mejor contraste */
   font-size: 0.85rem;
 }
 
 .keyboard-shortcuts {
-  color: #666;
+  color: #444; /* Cambiado de #666 para mejor contraste */
   font-size: 0.8rem;
 }
 
@@ -281,7 +281,7 @@
 
 .file-extension {
   font-size: 0.7rem;
-  color: #666;
+  color: #444; /* Cambiado de #666 para mejor contraste */
   font-weight: 600;
 }
 

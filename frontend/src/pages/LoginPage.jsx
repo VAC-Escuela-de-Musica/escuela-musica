@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import Login from '../components/Login';
-import { useAuth } from '../components/AuthProvider.jsx';
+import { useAuth } from '../components/AuthContextProvider.jsx';
 
 /**
  * Página de login
