@@ -19,6 +19,8 @@ import { Link } from "react-router-dom";
 
 import CarouselManager from "./CarouselManager";
 import UserManager from "./UserManager";
+import HorarioAdmin from "./HorarioAdmin";
+import EmailConfig from "./EmailConfig";
 
 const drawerWidth = 240;
 
@@ -77,7 +79,11 @@ export default function ClippedDrawer() {
             {["Horario", "Estudiantes", "Profesores", "Clases"].map(
               (text, index) => (
                 <ListItem key={text} disablePadding>
-                  <ListItemButton>
+                  <ListItemButton
+                    onClick={() => {
+                      if (text === "Horario") setActiveModule("horario");
+                    }}
+                  >
                     <ListItemIcon sx={{ color: "#FFFFFF" }}>
                       {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
                     </ListItemIcon>
@@ -86,6 +92,16 @@ export default function ClippedDrawer() {
                 </ListItem>
               )
             )}
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={() => setActiveModule("emailConfig")}
+              >
+                <ListItemIcon sx={{ color: "#FFFFFF" }}>
+                  <MailIcon />
+                </ListItemIcon>
+                <ListItemText primary="Configuración Email" />
+              </ListItemButton>
+            </ListItem>
           </List>
           <Divider sx={{ borderColor: "#3F4147" }} />
           <List>
@@ -166,6 +182,8 @@ export default function ClippedDrawer() {
             </Typography>
           </>
         )}
+        {activeModule === "horario" && <HorarioAdmin />}
+        {activeModule === "emailConfig" && <EmailConfig />}
         {activeModule === "carrusel" && <CarouselManager />}
         {activeModule === "credenciales" && <UserManager />}
         {/* Puedes agregar más módulos así */}

@@ -18,7 +18,7 @@ import {
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-
+import.meta.env.VITE_API_URL = "http://localhost:1230/api"
 export default function Login() {
   const [formData, setFormData] = useState({ email: '', password: '', remember: false });
   const [showPassword, setShowPassword] = useState(false);
