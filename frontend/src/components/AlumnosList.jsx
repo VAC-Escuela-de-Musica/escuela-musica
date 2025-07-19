@@ -68,6 +68,9 @@ function AlumnosList() {
     }
   };
 
+  // Asegura que alumnos sea siempre un array
+  const alumnosArray = Array.isArray(alumnos) ? alumnos : [];
+
   return (
     <div>
       <h2>Lista de Alumnos</h2>
@@ -75,32 +78,36 @@ function AlumnosList() {
         Agregar Alumno
       </button>
       <ul>
-        {alumnos.map((alumno) => (
-          <li key={alumno._id} style={{ marginBottom: "1rem" }}>
-            <strong>Nombre:</strong> {alumno.name} <br />
-            <strong>RUT:</strong> {alumno.rut} <br />
-            <strong>Dirección:</strong> {alumno.address} <br />
-            <strong>Teléfono:</strong> {alumno.phone} <br />
-            <strong>Email:</strong> {alumno.email} <br />
-            <strong>Fecha de ingreso:</strong>{" "}
-            {alumno.fechaIngreso
-              ? new Date(alumno.fechaIngreso).toLocaleDateString()
-              : ""}{" "}
-            <br />
-            <button
-              onClick={() => handleEdit(alumno)}
-              style={{ marginRight: "0.5rem" }}
-            >
-              Editar
-            </button>
-            <button
-              onClick={() => handleDelete(alumno)}
-              style={{ color: "red" }}
-            >
-              Eliminar
-            </button>
-          </li>
-        ))}
+        {alumnosArray.length === 0 ? (
+          <li style={{ color: "#888" }}>No hay alumnos registrados.</li>
+        ) : (
+          alumnosArray.map((alumno) => (
+            <li key={alumno._id} style={{ marginBottom: "1rem" }}>
+              <strong>Nombre:</strong> {alumno.name} <br />
+              <strong>RUT:</strong> {alumno.rut} <br />
+              <strong>Dirección:</strong> {alumno.address} <br />
+              <strong>Teléfono:</strong> {alumno.phone} <br />
+              <strong>Email:</strong> {alumno.email} <br />
+              <strong>Fecha de ingreso:</strong>{" "}
+              {alumno.fechaIngreso
+                ? new Date(alumno.fechaIngreso).toLocaleDateString()
+                : ""}{" "}
+              <br />
+              <button
+                onClick={() => handleEdit(alumno)}
+                style={{ marginRight: "0.5rem" }}
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => handleDelete(alumno)}
+                style={{ color: "red" }}
+              >
+                Eliminar
+              </button>
+            </li>
+          ))
+        )}
       </ul>
       {showForm && (
         <AlumnoForm
