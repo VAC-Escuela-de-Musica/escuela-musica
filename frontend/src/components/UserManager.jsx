@@ -48,6 +48,21 @@ const UserManager = () => {
 
   const API_URL = `${import.meta.env.VITE_API_URL}/users`;
 
+  // Función para verificar los roles del usuario actual
+  const getUserRoles = () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return null;
+      
+      // Decodificar el token JWT (solo la parte del payload)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.roles || [];
+    } catch (error) {
+      console.error("Error al decodificar el token:", error);
+      return null;
+    }
+  };
+
   // cargar usuarios al montar el componente
   useEffect(() => {
     fetchUsers();
@@ -57,11 +72,26 @@ const UserManager = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      
+      // Verificar si el usuario tiene token
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("No hay token de autenticación. Por favor, inicia sesión nuevamente.");
+        return;
+      }
+
       const response = await fetch(`${API_URL}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
+
+      if (response.status === 403) {
+        const userRoles = getUserRoles();
+        const rolesText = userRoles ? userRoles.join(", ") : "No se pudieron obtener los roles";
+        setError(`No tienes permisos de administrador para acceder a esta función. Tus roles actuales: ${rolesText}. Contacta al administrador del sistema.`);
+        return;
+      }
 
       if (!response.ok) {
         throw new Error("Error al cargar los usuarios");
