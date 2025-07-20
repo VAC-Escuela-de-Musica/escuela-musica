@@ -97,15 +97,74 @@ class MessagingService {
         };
       }
 
-      const transporter = nodemailer.createTransport({
+      // Configuración específica por proveedor
+      let transporterConfig = {
         host: config.host,
-        port: config.port,
+        port: parseInt(config.port),
         secure: config.secure,
         auth: {
           user: config.user,
           pass: config.password
         }
-      });
+      };
+
+      // Configuraciones específicas por proveedor
+      if (config.host.includes('gmail.com')) {
+        transporterConfig = {
+          service: 'gmail',
+          auth: {
+            user: config.user,
+            pass: config.password
+          }
+        };
+      } else if (config.host.includes('outlook.com') || config.host.includes('hotmail.com')) {
+        transporterConfig = {
+          service: 'outlook',
+          auth: {
+            user: config.user,
+            pass: config.password
+          }
+        };
+      } else if (config.host.includes('yahoo.com')) {
+        transporterConfig = {
+          service: 'yahoo',
+          auth: {
+            user: config.user,
+            pass: config.password
+          }
+        };
+      } else {
+        // Para otros proveedores, usar configuración manual con TLS mejorado
+        transporterConfig = {
+          host: config.host,
+          port: parseInt(config.port),
+          secure: config.secure,
+          auth: {
+            user: config.user,
+            pass: config.password
+          },
+          tls: {
+            rejectUnauthorized: false,
+            minVersion: 'TLSv1.2'
+          },
+          requireTLS: true
+        };
+      }
+
+      const transporter = nodemailer.createTransport(transporterConfig);
+
+      // Verificar la configuración antes de enviar
+      try {
+        await transporter.verify();
+        console.log('Email configuration verified successfully');
+      } catch (verifyError) {
+        console.error('Email configuration verification failed:', verifyError);
+        return {
+          success: false,
+          error: verifyError.message,
+          message: 'Error en la configuración de email. Verifica las credenciales.'
+        };
+      }
 
       const result = await transporter.sendMail({
         from: `"${config.fromName}" <${config.fromEmail || config.user}>`,

@@ -21,7 +21,15 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction
+  ListItemSecondaryAction,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Link
 } from '@mui/material';
 import {
   Email as EmailIcon,
@@ -31,7 +39,10 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon
+  Error as ErrorIcon,
+  ExpandMore as ExpandMoreIcon,
+  Help as HelpIcon,
+  Security as SecurityIcon
 } from '@mui/icons-material';
 import messagingService from '../services/messagingService';
 
@@ -39,9 +50,6 @@ const EmailConfig = () => {
   const [emailConfig, setEmailConfig] = useState({
     enabled: false,
     provider: 'gmail',
-    host: '',
-    port: '',
-    secure: true,
     user: '',
     password: '',
     fromName: '',
@@ -59,6 +67,43 @@ const EmailConfig = () => {
   const [testEmail, setTestEmail] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Configuraciones automáticas por proveedor
+  const providerConfigs = {
+    gmail: {
+      name: 'Gmail',
+      host: 'smtp.gmail.com',
+      port: '587',
+      secure: true,
+      instructions: 'Usa tu contraseña de aplicación de Gmail (no tu contraseña normal)',
+      helpUrl: 'https://support.google.com/accounts/answer/185833'
+    },
+    outlook: {
+      name: 'Outlook/Hotmail',
+      host: 'smtp-mail.outlook.com',
+      port: '587',
+      secure: true,
+      instructions: 'Usa tu contraseña de aplicación de Microsoft',
+      helpUrl: 'https://support.microsoft.com/en-us/account-billing/using-app-passwords-with-apps-that-don-t-support-two-step-verification-5896ed9b-4263-e681-128a-a6f2979a7944'
+    },
+    yahoo: {
+      name: 'Yahoo Mail',
+      host: 'smtp.mail.yahoo.com',
+      port: '587',
+      secure: true,
+      instructions: 'Usa tu contraseña de aplicación de Yahoo',
+      helpUrl: 'https://help.yahoo.com/kb/generate-third-party-passwords-sln15241.html'
+    },
+    custom: {
+      name: 'Otro proveedor',
+      host: '',
+      port: '',
+      secure: true,
+      instructions: 'Configuración manual para otros proveedores',
+      helpUrl: ''
+    }
+  };
 
   // Cargar configuración al montar el componente
   useEffect(() => {
@@ -96,24 +141,30 @@ const EmailConfig = () => {
   };
 
   const handleProviderChange = (provider) => {
-    const configs = {
-      gmail: { host: 'smtp.gmail.com', port: '587', secure: true },
-      outlook: { host: 'smtp-mail.outlook.com', port: '587', secure: true },
-      yahoo: { host: 'smtp.mail.yahoo.com', port: '587', secure: true },
-      custom: { host: '', port: '', secure: true }
-    };
-
+    const config = providerConfigs[provider];
     setEmailConfig(prev => ({
       ...prev,
       provider,
-      ...configs[provider]
+      host: config.host,
+      port: config.port,
+      secure: config.secure
     }));
   };
 
   const saveEmailConfig = async () => {
+    if (!emailConfig.user || !emailConfig.password || !emailConfig.fromName || !emailConfig.fromEmail) {
+      setStatus({ type: 'error', message: 'Por favor completa todos los campos requeridos' });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const response = await messagingService.saveEmailConfig(emailConfig);
+      const configToSave = {
+        ...emailConfig,
+        ...providerConfigs[emailConfig.provider]
+      };
+      
+      const response = await messagingService.saveEmailConfig(configToSave);
       if (response.success) {
         setStatus({ type: 'success', message: 'Configuración guardada correctamente' });
       } else {
@@ -193,17 +244,24 @@ const EmailConfig = () => {
     }
   };
 
+  const currentProvider = providerConfigs[emailConfig.provider];
+
   return (
     <Box sx={{ p: 3, backgroundColor: '#222222', minHeight: '100vh', color: '#ffffff' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
         <EmailIcon sx={{ fontSize: 40, color: '#2196F3' }} />
-        <Typography variant="h4" component="h1">
-          Configuración de Email
-        </Typography>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#ffffff' }}>
+            Configuración de Email
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#cccccc' }}>
+            Configura el envío de emails desde tu cuenta
+          </Typography>
+        </Box>
       </Box>
 
-      {/* Alert de estado */}
+      {/* Status Alert */}
       {status.message && (
         <Alert 
           severity={status.type} 
@@ -215,14 +273,15 @@ const EmailConfig = () => {
       )}
 
       <Grid container spacing={3}>
-        {/* Configuración de SMTP */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3, backgroundColor: '#333333' }}>
-            <Typography variant="h6" sx={{ mb: 2, color: '#ffffff' }}>
-              <SettingsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              Configuración SMTP
-            </Typography>
+        {/* Configuración Principal */}
+        <Grid item xs={12} md={8}>
+          <Paper sx={{ p: 3, backgroundColor: '#333333', color: '#ffffff' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+              <SettingsIcon sx={{ color: '#2196F3' }} />
+              <Typography variant="h6">Configuración Básica</Typography>
+            </Box>
 
+            {/* Habilitar/Deshabilitar */}
             <FormControlLabel
               control={
                 <Switch
@@ -232,252 +291,409 @@ const EmailConfig = () => {
                 />
               }
               label="Habilitar envío de emails"
-              sx={{ color: '#ffffff', mb: 2 }}
+              sx={{ mb: 3 }}
             />
 
             {emailConfig.enabled && (
               <>
-                <TextField
-                  select
-                  fullWidth
-                  label="Proveedor de Email"
-                  value={emailConfig.provider}
-                  onChange={(e) => handleProviderChange(e.target.value)}
-                  sx={{ mb: 2, '& .MuiOutlinedInput-root': { color: '#ffffff' } }}
-                >
-                  <option value="gmail">Gmail</option>
-                  <option value="outlook">Outlook/Hotmail</option>
-                  <option value="yahoo">Yahoo</option>
-                  <option value="custom">Personalizado</option>
-                </TextField>
+                {/* Proveedor de Email */}
+                <FormControl fullWidth sx={{ mb: 3 }}>
+                  <InputLabel sx={{ color: '#cccccc' }}>Proveedor de Email</InputLabel>
+                  <Select
+                    value={emailConfig.provider}
+                    onChange={(e) => handleProviderChange(e.target.value)}
+                    sx={{ 
+                      color: '#ffffff',
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#555555' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#2196F3' }
+                    }}
+                  >
+                    <MenuItem value="gmail">Gmail</MenuItem>
+                    <MenuItem value="outlook">Outlook/Hotmail</MenuItem>
+                    <MenuItem value="yahoo">Yahoo Mail</MenuItem>
+                    <MenuItem value="custom">Otro proveedor</MenuItem>
+                  </Select>
+                </FormControl>
 
+                {/* Información del proveedor */}
+                <Card sx={{ mb: 3, backgroundColor: '#444444' }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                      <SecurityIcon sx={{ color: '#FF9800' }} />
+                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        {currentProvider.name}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ color: '#cccccc', mb: 2 }}>
+                      {currentProvider.instructions}
+                    </Typography>
+                    {currentProvider.helpUrl && (
+                      <Link 
+                        href={currentProvider.helpUrl} 
+                        target="_blank" 
+                        rel="noopener"
+                        sx={{ color: '#2196F3', textDecoration: 'none' }}
+                      >
+                        📖 Ver instrucciones paso a paso
+                      </Link>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Campos de configuración */}
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label="Servidor SMTP"
-                      value={emailConfig.host}
-                      onChange={(e) => handleConfigChange('host', e.target.value)}
-                      sx={{ '& .MuiOutlinedInput-root': { color: '#ffffff' } }}
+                      label="Email del remitente"
+                      value={emailConfig.user}
+                      onChange={(e) => handleConfigChange('user', e.target.value)}
+                      placeholder="tu-email@gmail.com"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { borderColor: '#555555' },
+                          '&:hover fieldset': { borderColor: '#2196F3' },
+                          '&.Mui-focused fieldset': { borderColor: '#2196F3' }
+                        },
+                        '& .MuiInputLabel-root': { color: '#cccccc' },
+                        '& .MuiInputBase-input': { color: '#ffffff' }
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label="Puerto"
-                      value={emailConfig.port}
-                      onChange={(e) => handleConfigChange('port', e.target.value)}
-                      sx={{ '& .MuiOutlinedInput-root': { color: '#ffffff' } }}
+                      label="Contraseña de aplicación"
+                      type="password"
+                      value={emailConfig.password}
+                      onChange={(e) => handleConfigChange('password', e.target.value)}
+                      placeholder="Contraseña de aplicación"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { borderColor: '#555555' },
+                          '&:hover fieldset': { borderColor: '#2196F3' },
+                          '&.Mui-focused fieldset': { borderColor: '#2196F3' }
+                        },
+                        '& .MuiInputLabel-root': { color: '#cccccc' },
+                        '& .MuiInputBase-input': { color: '#ffffff' }
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Nombre del remitente"
+                      value={emailConfig.fromName}
+                      onChange={(e) => handleConfigChange('fromName', e.target.value)}
+                      placeholder="Tu Nombre"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { borderColor: '#555555' },
+                          '&:hover fieldset': { borderColor: '#2196F3' },
+                          '&.Mui-focused fieldset': { borderColor: '#2196F3' }
+                        },
+                        '& .MuiInputLabel-root': { color: '#cccccc' },
+                        '& .MuiInputBase-input': { color: '#ffffff' }
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Email de respuesta"
+                      value={emailConfig.fromEmail}
+                      onChange={(e) => handleConfigChange('fromEmail', e.target.value)}
+                      placeholder="respuesta@tudominio.com"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { borderColor: '#555555' },
+                          '&:hover fieldset': { borderColor: '#2196F3' },
+                          '&.Mui-focused fieldset': { borderColor: '#2196F3' }
+                        },
+                        '& .MuiInputLabel-root': { color: '#cccccc' },
+                        '& .MuiInputBase-input': { color: '#ffffff' }
+                      }}
                     />
                   </Grid>
                 </Grid>
 
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={emailConfig.secure}
-                      onChange={(e) => handleConfigChange('secure', e.target.checked)}
-                      sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#2196F3' } }}
-                    />
-                  }
-                  label="Conexión segura (TLS/SSL)"
-                  sx={{ color: '#ffffff', mt: 1 }}
-                />
-
-                <Divider sx={{ my: 2, borderColor: '#666666' }} />
-
-                <TextField
-                  fullWidth
-                  label="Email"
-                  value={emailConfig.user}
-                  onChange={(e) => handleConfigChange('user', e.target.value)}
-                  sx={{ mb: 2, '& .MuiOutlinedInput-root': { color: '#ffffff' } }}
-                />
-
-                <TextField
-                  fullWidth
-                  type="password"
-                  label="Contraseña de aplicación"
-                  value={emailConfig.password}
-                  onChange={(e) => handleConfigChange('password', e.target.value)}
-                  sx={{ mb: 2, '& .MuiOutlinedInput-root': { color: '#ffffff' } }}
-                />
-
-                <TextField
-                  fullWidth
-                  label="Nombre del remitente"
-                  value={emailConfig.fromName}
-                  onChange={(e) => handleConfigChange('fromName', e.target.value)}
-                  sx={{ mb: 2, '& .MuiOutlinedInput-root': { color: '#ffffff' } }}
-                />
-
-                <TextField
-                  fullWidth
-                  label="Email del remitente"
-                  value={emailConfig.fromEmail}
-                  onChange={(e) => handleConfigChange('fromEmail', e.target.value)}
-                  sx={{ mb: 2, '& .MuiOutlinedInput-root': { color: '#ffffff' } }}
-                />
-
-                <Button
-                  variant="contained"
-                  onClick={saveEmailConfig}
-                  disabled={isLoading}
+                {/* Configuración avanzada */}
+                <Accordion 
                   sx={{ 
-                    backgroundColor: '#2196F3',
-                    '&:hover': { backgroundColor: '#1976D2' }
+                    mt: 3, 
+                    backgroundColor: '#444444',
+                    '&:before': { display: 'none' }
                   }}
                 >
-                  {isLoading ? 'Guardando...' : 'Guardar Configuración'}
-                </Button>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#cccccc' }} />}>
+                    <Typography sx={{ color: '#ffffff' }}>
+                      ⚙️ Configuración Avanzada (Opcional)
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Typography variant="body2" sx={{ color: '#cccccc', mb: 2 }}>
+                      Solo modifica estos valores si tu proveedor lo requiere específicamente.
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          fullWidth
+                          label="Servidor SMTP"
+                          value={currentProvider.host}
+                          disabled
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': { borderColor: '#555555' }
+                            },
+                            '& .MuiInputLabel-root': { color: '#cccccc' },
+                            '& .MuiInputBase-input': { color: '#888888' }
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          fullWidth
+                          label="Puerto"
+                          value={currentProvider.port}
+                          disabled
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': { borderColor: '#555555' }
+                            },
+                            '& .MuiInputLabel-root': { color: '#cccccc' },
+                            '& .MuiInputBase-input': { color: '#888888' }
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={currentProvider.secure}
+                              disabled
+                              sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#2196F3' } }}
+                            />
+                          }
+                          label="Conexión segura (SSL/TLS)"
+                        />
+                      </Grid>
+                    </Grid>
+                  </AccordionDetails>
+                </Accordion>
+
+                {/* Botones de acción */}
+                <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+                  <Button
+                    variant="contained"
+                    onClick={saveEmailConfig}
+                    disabled={isLoading}
+                    sx={{
+                      backgroundColor: '#2196F3',
+                      '&:hover': { backgroundColor: '#1976D2' }
+                    }}
+                  >
+                    {isLoading ? 'Guardando...' : 'Guardar Configuración'}
+                  </Button>
+                </Box>
               </>
             )}
           </Paper>
         </Grid>
 
-        {/* Prueba de configuración */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3, backgroundColor: '#333333' }}>
-            <Typography variant="h6" sx={{ mb: 2, color: '#ffffff' }}>
-              <SendIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              Prueba de Configuración
-            </Typography>
+        {/* Panel de Prueba */}
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 3, backgroundColor: '#333333', color: '#ffffff' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+              <SendIcon sx={{ color: '#4CAF50' }} />
+              <Typography variant="h6">Probar Configuración</Typography>
+            </Box>
 
             <TextField
               fullWidth
               label="Email de prueba"
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
-              placeholder="destinatario@email.com"
-              sx={{ mb: 2, '& .MuiOutlinedInput-root': { color: '#ffffff' } }}
+              placeholder="email@ejemplo.com"
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': { borderColor: '#555555' },
+                  '&:hover fieldset': { borderColor: '#4CAF50' },
+                  '&.Mui-focused fieldset': { borderColor: '#4CAF50' }
+                },
+                '& .MuiInputLabel-root': { color: '#cccccc' },
+                '& .MuiInputBase-input': { color: '#ffffff' }
+              }}
             />
 
             <Button
+              fullWidth
               variant="contained"
               onClick={testEmailConfig}
-              disabled={!emailConfig.enabled || !testEmail || isLoading}
-              sx={{ 
+              disabled={isLoading || !emailConfig.enabled}
+              sx={{
                 backgroundColor: '#4CAF50',
-                '&:hover': { backgroundColor: '#45a049' }
+                '&:hover': { backgroundColor: '#388E3C' },
+                '&:disabled': { backgroundColor: '#666666' }
               }}
             >
               {isLoading ? 'Enviando...' : 'Enviar Email de Prueba'}
             </Button>
 
-            <Box sx={{ mt: 2, p: 2, backgroundColor: '#444444', borderRadius: 1 }}>
-              <Typography variant="body2" sx={{ color: '#cccccc' }}>
-                💡 Para Gmail, usa una contraseña de aplicación en lugar de tu contraseña normal.
-                <br />
-                🔒 La contraseña de aplicación es más segura y necesaria si tienes 2FA habilitado.
-              </Typography>
-            </Box>
-          </Paper>
-        </Grid>
-
-        {/* Plantillas de Email */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3, backgroundColor: '#333333' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6" sx={{ color: '#ffffff' }}>
-                Plantillas de Email
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={addEmailTemplate}
-                sx={{ 
-                  backgroundColor: '#FF9800',
-                  '&:hover': { backgroundColor: '#F57C00' }
-                }}
-              >
-                Agregar Plantilla
-              </Button>
-            </Box>
-
-            <List>
-              {emailTemplates.map((template) => (
-                <ListItem key={template.id} sx={{ border: '1px solid #666666', mb: 1, borderRadius: 1 }}>
-                  <ListItemText
-                    primary={template.name}
-                    secondary={`Asunto: ${template.subject}`}
-                    sx={{ color: '#ffffff' }}
-                  />
-                  <ListItemSecondaryAction>
-                    <IconButton
-                      onClick={() => editEmailTemplate(template)}
-                      sx={{ color: '#2196F3', mr: 1 }}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => deleteEmailTemplate(template.id)}
-                      sx={{ color: '#f44336' }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              ))}
-            </List>
-
-            {emailTemplates.length === 0 && (
-              <Typography variant="body2" sx={{ color: '#cccccc', textAlign: 'center', py: 3 }}>
-                No hay plantillas configuradas. Crea una nueva plantilla para empezar.
+            {!emailConfig.enabled && (
+              <Typography variant="body2" sx={{ color: '#FF9800', mt: 1, textAlign: 'center' }}>
+                Habilita el email primero para poder probar
               </Typography>
             )}
           </Paper>
         </Grid>
       </Grid>
 
-      {/* Dialog para plantillas */}
+      {/* Plantillas de Email */}
+      <Paper sx={{ p: 3, mt: 3, backgroundColor: '#333333', color: '#ffffff' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <EmailIcon sx={{ color: '#FF9800' }} />
+            <Typography variant="h6">Plantillas de Email</Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={addEmailTemplate}
+            sx={{
+              backgroundColor: '#FF9800',
+              '&:hover': { backgroundColor: '#F57C00' }
+            }}
+          >
+            Nueva Plantilla
+          </Button>
+        </Box>
+
+        {emailTemplates.length === 0 ? (
+          <Typography variant="body2" sx={{ color: '#cccccc', textAlign: 'center', py: 4 }}>
+            No hay plantillas configuradas. Crea una para empezar.
+          </Typography>
+        ) : (
+          <List>
+            {emailTemplates.map((template) => (
+              <ListItem
+                key={template.id}
+                sx={{
+                  backgroundColor: '#444444',
+                  mb: 1,
+                  borderRadius: 1,
+                  '&:hover': { backgroundColor: '#555555' }
+                }}
+              >
+                <ListItemText
+                  primary={template.name}
+                  secondary={`Asunto: ${template.subject}`}
+                  sx={{ color: '#ffffff' }}
+                />
+                <ListItemSecondaryAction>
+                  <IconButton
+                    onClick={() => editEmailTemplate(template)}
+                    sx={{ color: '#2196F3', mr: 1 }}
+                  >
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => deleteEmailTemplate(template.id)}
+                    sx={{ color: '#f44336' }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItemSecondaryAction>
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </Paper>
+
+      {/* Dialog para Plantillas */}
       <Dialog 
         open={openTemplateDialog} 
         onClose={() => setOpenTemplateDialog(false)}
         maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: { backgroundColor: '#333333', color: '#ffffff' }
+        }}
       >
-        <DialogTitle sx={{ backgroundColor: '#333333', color: '#ffffff' }}>
+        <DialogTitle>
           {editingTemplate ? 'Editar Plantilla' : 'Nueva Plantilla'}
         </DialogTitle>
-        <DialogContent sx={{ backgroundColor: '#333333', color: '#ffffff' }}>
-          <TextField
-            fullWidth
-            label="Nombre de la plantilla"
-            value={newTemplate.name}
-            onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
-            sx={{ mb: 2, mt: 1, '& .MuiOutlinedInput-root': { color: '#ffffff' } }}
-          />
-          <TextField
-            fullWidth
-            label="Asunto del email"
-            value={newTemplate.subject}
-            onChange={(e) => setNewTemplate({ ...newTemplate, subject: e.target.value })}
-            sx={{ mb: 2, '& .MuiOutlinedInput-root': { color: '#ffffff' } }}
-          />
-          <TextField
-            fullWidth
-            multiline
-            rows={6}
-            label="Contenido del email"
-            value={newTemplate.content}
-            onChange={(e) => setNewTemplate({ ...newTemplate, content: e.target.value })}
-            placeholder="Escribe el contenido del email aquí..."
-            sx={{ '& .MuiOutlinedInput-root': { color: '#ffffff' } }}
-          />
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Nombre de la plantilla"
+                value={newTemplate.name}
+                onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: '#555555' },
+                    '&:hover fieldset': { borderColor: '#2196F3' },
+                    '&.Mui-focused fieldset': { borderColor: '#2196F3' }
+                  },
+                  '& .MuiInputLabel-root': { color: '#cccccc' },
+                  '& .MuiInputBase-input': { color: '#ffffff' }
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Asunto del email"
+                value={newTemplate.subject}
+                onChange={(e) => setNewTemplate(prev => ({ ...prev, subject: e.target.value }))}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: '#555555' },
+                    '&:hover fieldset': { borderColor: '#2196F3' },
+                    '&.Mui-focused fieldset': { borderColor: '#2196F3' }
+                  },
+                  '& .MuiInputLabel-root': { color: '#cccccc' },
+                  '& .MuiInputBase-input': { color: '#ffffff' }
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={6}
+                label="Contenido del email"
+                value={newTemplate.content}
+                onChange={(e) => setNewTemplate(prev => ({ ...prev, content: e.target.value }))}
+                placeholder="Escribe el contenido del email aquí. Puedes usar variables como {{nombre}}, {{email}}, etc."
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: '#555555' },
+                    '&:hover fieldset': { borderColor: '#2196F3' },
+                    '&.Mui-focused fieldset': { borderColor: '#2196F3' }
+                  },
+                  '& .MuiInputLabel-root': { color: '#cccccc' },
+                  '& .MuiInputBase-input': { color: '#ffffff' }
+                }}
+              />
+            </Grid>
+          </Grid>
         </DialogContent>
-        <DialogActions sx={{ backgroundColor: '#333333' }}>
+        <DialogActions>
           <Button 
             onClick={() => setOpenTemplateDialog(false)}
-            sx={{ color: '#ffffff' }}
+            sx={{ color: '#cccccc' }}
           >
             Cancelar
           </Button>
-          <Button 
+          <Button
             onClick={saveEmailTemplate}
             variant="contained"
             sx={{
-              backgroundColor: '#4CAF50',
-              '&:hover': { backgroundColor: '#45a049' }
+              backgroundColor: '#2196F3',
+              '&:hover': { backgroundColor: '#1976D2' }
             }}
           >
             Guardar Plantilla
