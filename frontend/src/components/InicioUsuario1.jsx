@@ -21,6 +21,7 @@ import { Link } from "react-router-dom";
 import CarouselManager from "./CarouselManager";
 import UserManager from "./UserManager";
 import CardsProfesoresManager from "./CardsProfesoresManager";
+import TestimoniosManager from "./TestimoniosManager";
 
 const drawerWidth = 240;
 
@@ -202,6 +203,7 @@ export default function ClippedDrawer() {
         {activeModule === "carrusel" && <CarouselManager />}
         {activeModule === "credenciales" && <UserManager />}
         {activeModule === "presentacion" && <CardsProfesoresManager />}
+        {activeModule === "resenas" && <TestimoniosManager />}
         {/* Puedes agregar más módulos así */}
       </Box>
     </Box>
