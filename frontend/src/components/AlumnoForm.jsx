@@ -11,6 +11,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  InputAdornment,
 } from "@mui/material";
 
 // --- FUNCIÓN DE FORMATEO DE RUT ---
@@ -66,34 +67,28 @@ function parseDateFromCL(clDateStr) {
 
 const tipoCursoOpciones = ["Grupal", "Individual"];
 const modalidadOpciones = ["Presencial", "Online"];
-const diasSemana = [
-  "Lunes",
-  "Martes",
-  "Miércoles",
-  "Jueves",
-  "Viernes",
-  "Sábado",
-  "Domingo",
-];
-const horas = Array.from({ length: 24 }, (_, h) => [
-  `${h.toString().padStart(2, "0")}:00`,
-  `${h.toString().padStart(2, "0")}:30`,
-]).flat();
+const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 
 function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
+  const safeInitialData = initialData || {};
+
+  // Solo los 8 dígitos del teléfono, sin el prefijo
+  const getTelefonoSinPrefijo = (tel) =>
+    tel && tel.startsWith("+569") ? tel.slice(4) : tel || "";
+
   const [form, setForm] = useState({
     // Datos del alumno
     nombreAlumno: "",
     rutAlumno: "",
     edadAlumno: "",
     direccion: "",
-    telefonoAlumno: "",
+    telefonoAlumno: getTelefonoSinPrefijo(safeInitialData.telefonoAlumno),
     email: "",
     fechaIngreso: "",
     // Datos del apoderado
     nombreApoderado: "",
     rutApoderado: "",
-    telefonoApoderado: "",
+    telefonoApoderado: getTelefonoSinPrefijo(safeInitialData.telefonoApoderado),
     // Otros datos
     rrss: "",
     conocimientosPrevios: false,
@@ -111,14 +106,18 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     modalidadClase: "",
     dia: "",
     hora: "",
-    ...initialData,
+    ...safeInitialData,
   });
   const [error, setError] = useState("");
 
-  // --- handleChange con formateo de RUT y fecha ---
+  // --- handleChange con formateo de RUT, fecha y teléfonos ---
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "rutAlumno" || name === "rutApoderado") {
+    if (name === "telefonoAlumno" || name === "telefonoApoderado") {
+      // Solo permite 8 dígitos numéricos
+      const soloNumeros = value.replace(/[^0-9]/g, "").slice(0, 8);
+      setForm({ ...form, [name]: soloNumeros });
+    } else if (name === "rutAlumno" || name === "rutApoderado") {
       setForm({ ...form, [name]: formatRut(value) });
     } else if (name === "fechaIngreso") {
       setForm({ ...form, fechaIngreso: formatDateToCL(value) });
@@ -128,13 +127,13 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
   };
 
   useEffect(() => {
-    if (initialData && initialData.fechaIngreso) {
+    if (safeInitialData && safeInitialData.fechaIngreso) {
       setForm((prev) => ({
         ...prev,
-        fechaIngreso: formatDateToCL(initialData.fechaIngreso),
+        fechaIngreso: formatDateToCL(safeInitialData.fechaIngreso),
       }));
     }
-  }, [initialData]);
+  }, [safeInitialData]);
 
   const handleSelectChange = (e) => {
     const { name, value } = e.target;
@@ -155,8 +154,16 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     }
     // Unir día y hora en clase
     const clase = form.dia && form.hora ? `${form.dia} ${form.hora}` : "";
+    // Teléfonos: agregar el prefijo antes de enviar
+    const telefonoAlumno = "+569" + (form.telefonoAlumno || "");
+    const telefonoApoderado = "+569" + (form.telefonoApoderado || "");
     try {
-      await onSubmit({ ...form, clase });
+      await onSubmit({
+        ...form,
+        clase,
+        telefonoAlumno,
+        telefonoApoderado,
+      });
     } catch (err) {
       setError(err.message || "Error al guardar el alumno");
     }
@@ -201,7 +208,9 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           </Typography>
         )}
         <Typography variant="h5" sx={{ mb: 2 }}>
-          {initialData && initialData._id ? "Editar Alumno" : "Agregar Alumno"}
+          {safeInitialData && safeInitialData._id
+            ? "Editar Alumno"
+            : "Agregar Alumno"}
         </Typography>
         <Typography variant="h6" sx={{ mt: 2 }}>
           Datos del Apoderado
@@ -233,6 +242,13 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           fullWidth
           margin="normal"
           variant="filled"
+          inputProps={{ maxLength: 8 }}
+          helperText="Ejemplo: +569XXXXXXXX"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">+569</InputAdornment>
+            ),
+          }}
         />
         <TextField
           label="Dirección"
@@ -240,6 +256,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           value={form.direccion}
           onChange={handleChange}
           fullWidth
+          required
           margin="normal"
           variant="filled"
         />
@@ -271,12 +288,18 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           label="Edad Alumno"
           name="edadAlumno"
           value={form.edadAlumno}
-          onChange={handleChange}
+          onChange={(e) => {
+            // Solo permite números positivos y máximo 2 dígitos
+            let val = e.target.value.replace(/[^0-9]/g, "").slice(0, 2);
+            setForm({ ...form, edadAlumno: val });
+          }}
           type="number"
           required
           fullWidth
           margin="normal"
           variant="filled"
+          inputProps={{ min: 1, max: 99 }}
+          helperText="Edad entre 1 y 99 años"
         />
         <TextField
           label="Teléfono Alumno"
@@ -286,6 +309,13 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           fullWidth
           margin="normal"
           variant="filled"
+          inputProps={{ maxLength: 8 }}
+          helperText="Ejemplo: +569XXXXXXXX"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">+569</InputAdornment>
+            ),
+          }}
         />
         <TextField
           label="Email"
@@ -444,6 +474,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           fullWidth
           margin="normal"
           variant="filled"
+          required
         />
         {/* Select para Tipo de Curso */}
         <FormControl fullWidth margin="normal" variant="filled">
@@ -496,23 +527,18 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
             ))}
           </Select>
         </FormControl>
-        {/* Select para Hora */}
-        <FormControl fullWidth margin="normal" variant="filled">
-          <InputLabel id="hora-label">Hora</InputLabel>
-          <Select
-            labelId="hora-label"
-            name="hora"
-            value={form.hora}
-            onChange={handleSelectChange}
-            required
-          >
-            {horas.map((hora) => (
-              <MenuItem key={hora} value={hora}>
-                {hora}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        {/* Campo de texto para Hora */}
+        <TextField
+          label="Hora (HH:mm)"
+          name="hora"
+          value={form.hora}
+          onChange={handleChange}
+          placeholder="Ej: 16:00"
+          fullWidth
+          margin="normal"
+          variant="filled"
+          required
+        />
         <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
           <Button type="submit" variant="contained" color="primary">
             Guardar
