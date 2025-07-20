@@ -14,12 +14,12 @@ import {
   } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from "@mui/icons-material/Cancel";
-import History from "@mui/icons-material/History";
 import EditIcon from "@mui/icons-material/Edit";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { es } from "date-fns/locale";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/clases`;
 
@@ -38,23 +38,66 @@ export default function Clases({ setActiveModule }) {
   const [openDialog, setOpenDialog] = useState(false);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [claseSeleccionada, setClaseSeleccionada] = useState(null);
+  const [filtroActivo, setFiltroActivo] = useState("hoy");
 
-  const fetchClases = async () => {
+  const fetchTodayClases = async () => {
+    try {
+      const response = await fetch(`${API_URL}/today`);
+      if (!response.ok) {
+        throw new Error("Error al obtener las clases de hoy");
+      }
+      const data = await response.json();
+      setClases(data.data);
+    } catch (error) {
+      console.error(error);
+      setMensajeError("Error al obtener las clases de hoy");
+    }
+  };
+
+  const fetchNextClases = async () => {
+    try {
+      const response = await fetch(`${API_URL}/next`);
+      if (!response.ok) {
+        throw new Error("Error al obtener las próximas clases");
+      }
+      const data = await response.json();
+      setClases(data.data);
+    } catch (error) {
+      console.error(error);
+      setMensajeError("Error al obtener las próximas clases");
+    }
+  };
+
+  const fetchAllClases = async () => {
     try {
       const response = await fetch(`${API_URL}/all`);
       if (!response.ok) {
-        throw new Error("Error al obtener las clases");
+        throw new Error("Error al obtener todas las clases");
       }
       const data = await response.json();
-      console.log("Clases obtenidas:", data);
       setClases(data.data);
     } catch (error) {
-      console.error("Error al obtener las clases:", error);
+      console.error(error);
+      setMensajeError("Error al obtener todas las clases");
+    }
+  };
+
+  const fetchPreviousClases = async () => {
+    try {
+      const response = await fetch(`${API_URL}/previous`);
+      if (!response.ok) {
+        throw new Error("Error al obtener las clases anteriores");
+      }
+      const data = await response.json();
+      setClases(data.data);
+    } catch (error) {
+      console.error(error);
+      setMensajeError("Error al obtener las clases anteriores");
     }
   };
 
   useEffect(() => {
-    fetchClases();
+    fetchTodayClases();
   }, []);
 
   const handleGuardarClase = async () => {
@@ -67,7 +110,6 @@ export default function Clases({ setActiveModule }) {
       return;
     }
 
-    // Formatear fecha y horas
     const pad = n => n.toString().padStart(2, "0");
     const dia = `${pad(selectedDate.getDate())}-${pad(selectedDate.getMonth()+1)}-${selectedDate.getFullYear()}`;
     const formatHora = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -110,7 +152,15 @@ export default function Clases({ setActiveModule }) {
       setHoraFin(null);
       setEditarClase(null);
       setOpenDialog(false);
-      fetchClases();
+      if (filtroActivo === "hoy") {
+        fetchTodayClases();
+      } else if (filtroActivo === "proximas") {
+        fetchNextClases();
+      } else if (filtroActivo === "todas") {
+        fetchAllClases();
+      } else {
+        fetchPreviousClases();
+      }
     } catch (error) {
       console.error(error);
       setMensajeError("Error al actualizar la clase");
@@ -128,7 +178,15 @@ export default function Clases({ setActiveModule }) {
         throw new Error("Error al cancelar la clase");
       }
       setMensajeExito("Clase cancelada con éxito");
-      fetchClases();
+      if (filtroActivo === "hoy") {
+        fetchTodayClases();
+      } else if (filtroActivo === "proximas") {
+        fetchNextClases();
+      } else if (filtroActivo === "todas") {
+        fetchAllClases();
+      } else {
+        fetchPreviousClases();
+      }
     } catch (error) {
       console.error(error);
       setMensajeError("Error al cancelar la clase");
@@ -157,13 +215,12 @@ export default function Clases({ setActiveModule }) {
   const maxDate = new Date(currentYear + 1, 11, 31); 
 
   return (
-    <Box sx={{ p: 3, backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
+    <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
       <Typography variant="h4" component="h1" sx={{ marginBottom: 2 }}>
         Gestión de las clases
       </Typography>
-      <Box>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-start", gap: 2, marginBottom: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-start", gap: 2, marginBottom: 2 }}>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -181,25 +238,79 @@ export default function Clases({ setActiveModule }) {
             >
             Clases canceladas
           </Button>
-
-          <Button
-            onClick={() => setActiveModule("clasesPasadas")}
-            variant="outlined"
-            startIcon={< History />}
-            sx={{ borderColor: "#2274A5", color: "#ffffff" }}
-          >
-            Clases Pasadas
-          </Button>
         </Box>
 
-        <Typography variant="h5" gutterBottom>Listado de clases</Typography>
-        
+        <Box display={"flex"} justifyContent="space-between" alignItems="center" sx={{ marginBottom: 2 }}>
+          <Typography variant="h5" gutterBottom>
+            {filtroActivo === "hoy" && "Listado de clases de hoy"}
+            {filtroActivo === "proximas" && "Listado de próximas clases"}
+            {filtroActivo === "todas" && "Listado de todas las clases"}
+            {filtroActivo === "anteriores" && "Listado de clases anteriores"}
+          </Typography>
+          <Box display="flex" gap={1}>
+
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setFiltroActivo("anteriores");
+                fetchPreviousClases();
+              }}
+              sx={{ color:"#ffffff", borderColor: "#ffffff", height: "fit-content", width: '125px' }}
+              disabled={filtroActivo === "anteriores"}
+            >
+              Anteriores
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setFiltroActivo("hoy");
+                fetchTodayClases();
+              }}
+              disabled={filtroActivo === "hoy"}
+              sx={{ color:"#ffffff", borderColor: "#ffffff", height: "fit-content", width: '125px' }}
+            >
+              Hoy
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setFiltroActivo("proximas");
+                fetchNextClases();
+              }}
+              disabled={filtroActivo === "proximas"}
+              sx={{ color:"#ffffff", borderColor: "#ffffff", height: "fit-content", width: '125px' }}
+            >
+              Próximas
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setFiltroActivo("todas");
+                fetchAllClases();
+              }}
+              disabled={filtroActivo === "todas"}
+              sx={{ color:"#ffffff", borderColor: "#ffffff", height: "fit-content", width: '125px' }}
+            >
+              Todas
+            </Button>
+          </Box>
+        </Box>
+
+      <Box>
         {clases.length === 0 ? (
-          <Typography>No hay clases disponibles.</Typography>
+          <Typography>
+            {filtroActivo === "hoy" && "No hay clases programadas para hoy."}
+            {filtroActivo === "proximas" && "No hay próximas clases programadas."}
+            {filtroActivo === "todas" && "No hay clases disponibles."}
+            {filtroActivo === "anteriores" && "No hay clases anteriores registradas."}
+          </Typography>
         ) : (
           clases.map((clase, index) => (
-            <Box key={index} sx={{ p: 2, mb: 2, border: "1px solid #ffffff", borderRadius: 2 }}>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box display="flex" justifyContent="space-between" alignItems="center"
+              key={index} sx={{ p: 2, mb: 2, border: "1px solid #ffffff", borderRadius: 2 }}>
                   <Box> 
                     <Typography><strong>Título:</strong> {clase.titulo}</Typography>
                     <Typography><strong>Descripción:</strong> {clase.descripcion}</Typography>
@@ -233,11 +344,12 @@ export default function Clases({ setActiveModule }) {
                       Cancelar
                     </Button>
                   </Box>
-              </Box>
             </Box>
           ))
         )}
+      </Box>
 
+      <>
         {/* Formulario para editar clase */}
         {editarClase && (
           <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
@@ -318,7 +430,7 @@ export default function Clases({ setActiveModule }) {
                   <MenuItem value="Sala 3">Sala 3</MenuItem>
                 </TextField>
 
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
                   <Box display="flex" gap={2}>
                     <DatePicker
                       label="Fecha"
@@ -424,7 +536,7 @@ export default function Clases({ setActiveModule }) {
             </Button>
           </DialogActions>
         </Dialog>
-      </Box>
+      </>
 
       <Snackbar 
         open={!!mensajeExito} 

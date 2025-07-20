@@ -13,6 +13,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { ArrowCircleLeftOutlined } from "@mui/icons-material";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/clases`;
 
@@ -92,10 +93,11 @@ export default function ClasesCrear({ setActiveModule }) {
   };
 
   return (
-    <Box sx={{ p: 3, backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
+    <Box sx={{backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
       <Button 
         variant="outlined" 
         sx={{ borderColor: "#ffffff", color: "#ffffff", mb: 2 }}
+        startIcon={<ArrowCircleLeftOutlined />}
         onClick={() => setActiveModule("clases")}
       >
         Volver a Clases

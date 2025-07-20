@@ -116,10 +116,348 @@ async function cancelClase(id, clase) {
   }
 }
 
+/**
+ * Obtiene las clases del día actual
+ * @returns {Promise} Promesa con las clases del día
+ */
+async function getTodayClases() {
+  try {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yyyy = today.getFullYear();
+    const formattedDate = `${dd}-${mm}-${yyyy}`;
+
+    const clases = await Clase.find({
+      horarios: {
+        $elemMatch: {
+          dia: formattedDate,
+        },
+      },
+    });
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getTodayClases");
+  }
+}
+
+/**
+ * Obtiene las clases de los días siguientes
+ * @returns {Promise} Promesa con las clases de los días siguientes
+ */
+async function getNextClases() {
+  try {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yyyy = today.getFullYear();
+    const formattedDate = `${dd}-${mm}-${yyyy}`;
+
+    const clases = await Clase.find({
+      horarios: {
+        $elemMatch: {
+          dia: { $gt: formattedDate },
+        },
+      },
+    });
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getNextClases");
+  }
+}
+
+/**
+ * Obtiene todas las clases canceladas
+ * @returns {Promise} Promesa con las clases canceladas
+ */
+async function getCanceledClases() {
+  try {
+    const clases = await Clase.find({ estado: "cancelada" });
+    if (!clases) return [null, "No hay clases canceladas"];
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getCanceledClases");
+  }
+}
+
+/**
+ * Obtiene las clases de los días anteriores
+ * @returns {Promise} Promesa con las clases de los días anteriores
+ */
+async function getPreviousClases() {
+  try {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yyyy = today.getFullYear();
+    const formattedDate = `${dd}-${mm}-${yyyy}`;
+    const clases = await Clase.find({
+      horarios: {
+        $elemMatch: {
+          dia: { $lt: formattedDate },
+        },
+      },
+    });
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getPreviousClases");
+  }
+}
+
+/**
+ * Obtiene las clases canceladas de los días anteriores
+ * @returns {Promise} Promesa con las clases canceladas anteriores
+ */
+async function getPreviousCanceledClases() {
+  try {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yyyy = today.getFullYear();
+    const formattedDate = `${dd}-${mm}-${yyyy}`;
+
+    const clases = await Clase.find({
+      estado: "cancelada",
+      horarios: {
+        $elemMatch: {
+          dia: { $lt: formattedDate },
+        },
+      },
+    });
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getPreviousCanceledClases");
+  }
+}
+
+/**
+ * Obtiene las clases canceladas del día actual
+ * @returns {Promise} Promesa con las clases canceladas del día
+ */
+async function getTodayCanceledClases() {
+  try {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yyyy = today.getFullYear();
+    const formattedDate = `${dd}-${mm}-${yyyy}`;
+
+    const clases = await Clase.find({
+      estado: "cancelada",
+      horarios: {
+        $elemMatch: {
+          dia: formattedDate,
+        },
+      },
+    });
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getTodayCanceledClases");
+  }
+}
+
+/**
+ * Obtiene las clases canceladas de los días siguientes
+ * @returns {Promise} Promesa con las clases canceladas de los días siguientes
+ */
+async function getNextCanceledClases() {
+  try {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yyyy = today.getFullYear();
+    const formattedDate = `${dd}-${mm}-${yyyy}`;
+
+    const clases = await Clase.find({
+      estado: "cancelada",
+      horarios: {
+        $elemMatch: {
+          dia: { $gt: formattedDate },
+        },
+      },
+    });
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getNextCanceledClases");
+  }
+}
+
+/**
+ * Obtiene las clases de un día específico con filtros opcionales (sala, horaInicio, horaFin)
+ * @param {Object} filtros
+ * @param {string} filtros.fecha - Formato dd-mm-yyyy
+ * @param {string} [filtros.sala]
+ * @param {string} [filtros.horaInicio] - Formato HH:mm
+ * @param {string} [filtros.horaFin] - Formato HH:mm
+ * @returns {Promise} Promesa con las clases del día filtradas
+ */
+async function getHorarioDia({ fecha, sala, horaInicio, horaFin }) {
+  try {
+    if (!fecha) return [null, "La fecha es requerida"];
+
+    const query = {
+      estado: "programada",
+      horarios: {
+        $elemMatch: {
+          dia: fecha,
+        },
+      },
+    };
+
+    if (sala && sala !== "0") {
+      query.sala = sala;
+    }
+
+    if (horaInicio && horaFin) {
+      query.horarios.$elemMatch.horaInicio = { $lte: horaFin };
+      query.horarios.$elemMatch.horaFin = { $gte: horaInicio };
+    } else if (horaInicio) {
+      query.horarios.$elemMatch.horaFin = { $gte: horaInicio };
+    } else if (horaFin) {
+      query.horarios.$elemMatch.horaInicio = { $lte: horaFin };
+    }
+
+    const clases = await Clase.find(query);
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getHorarioDia");
+  }
+}
+
+/**
+ * Obtiene las clases de una semana específica con filtros opcionales (sala, horaInicio, horaFin)
+ * @param {Object} filtros
+ * @param {string} filtros.fecha - Formato dd-mm-yyyy
+ * @param {string} [filtros.sala]
+ * @param {string} [filtros.horaInicio] - Formato HH:mm
+ * @param {string} [filtros.horaFin] - Formato HH:mm
+ * @returns {Promise} Promesa con las clases de la semana filtradas
+ */
+async function getHorarioSemana({ fecha, sala, horaInicio, horaFin }) {
+  try {
+    if (!fecha) return [null, "La fecha es requerida"];
+
+    const [dd, mm, yyyy] = fecha.split("-").map(Number);
+    const startDate = new Date(yyyy, mm - 1, dd);
+
+    
+    const dayOfWeek = startDate.getDay(); 
+    const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(startDate);
+    monday.setDate(monday.getDate() + offset);
+
+    const diasSemana = [];
+    for (let i = 0; i < 5; i++) { 
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const diaStr = `${d.getDate().toString().padStart(2, "0")}-${(d.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}-${d.getFullYear()}`;
+      diasSemana.push(diaStr);
+    }
+
+    const query = {
+      estado: "programada",
+      horarios: {
+        $elemMatch: {
+          dia: { $in: diasSemana },
+        },
+      },
+    };
+
+    if (sala && sala !== "0") {
+      query.sala = sala;
+    }
+
+    if (horaInicio && horaFin) {
+      query.horarios.$elemMatch.horaInicio = { $lte: horaFin };
+      query.horarios.$elemMatch.horaFin = { $gte: horaInicio };
+    } else if (horaInicio) {
+      query.horarios.$elemMatch.horaFin = { $gte: horaInicio };
+    } else if (horaFin) {
+      query.horarios.$elemMatch.horaInicio = { $lte: horaFin };
+    }
+
+    const clases = await Clase.find(query);
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getHorarioSemana");
+  }
+}
+
+/**
+ * Obtiene las clases de un mes específico con filtros opcionales (sala, horaInicio, horaFin)
+ * @param {Object} filtros
+ * @param {string} filtros.fecha - Formato dd-mm-yyyy
+ * @param {string} [filtros.sala]
+ * @param {string} [filtros.horaInicio] - Formato HH:mm
+ * @param {string} [filtros.horaFin] - Formato HH:mm
+ * @returns {Promise} Promesa con las clases del mes filtradas
+ */
+async function getHorarioMes({ mes, year, sala, horaInicio, horaFin }) {
+  try {
+    if (mes == null || year == null) return [null, "Mes y año son requeridos"];
+
+    const primerDia = new Date(year, mes - 1, 1);
+    const ultimoDia = new Date(year, mes, 0);
+
+    const formatDate = (d) => `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
+
+    const diasMes = [];
+    for (let d = new Date(primerDia); d <= ultimoDia; d.setDate(d.getDate() + 1)) {
+      diasMes.push(formatDate(d));
+    }
+
+    const query = {
+      estado: "programada",
+      "horarios.dia": { $in: diasMes },
+    };
+
+    if (sala && sala !== "0") {
+      query.sala = sala;
+    }
+
+    if (horaInicio && horaFin) {
+      query["horarios.horaInicio"] = { $lte: horaFin };
+      query["horarios.horaFin"] = { $gte: horaInicio };
+    } else if (horaInicio) {
+      query["horarios.horaFin"] = { $gte: horaInicio };
+    } else if (horaFin) {
+      query["horarios.horaInicio"] = { $lte: horaFin };
+    }
+
+    const clases = await Clase.find(query);
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getHorarioMes");
+  }
+}
+
+
 export default {
   createClase,
   getAllClases,
   getClaseById,
   updateClase,
   cancelClase,
+  getTodayClases,
+  getNextClases,
+  getCanceledClases,
+  getPreviousClases,
+  getPreviousCanceledClases,
+  getTodayCanceledClases,
+  getNextCanceledClases,
+  getHorarioDia,
+  getHorarioSemana,
+  getHorarioMes,
 };
