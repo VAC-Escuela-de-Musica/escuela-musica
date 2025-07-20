@@ -12,7 +12,13 @@ import {
   Select,
   MenuItem,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
 } from "@mui/material";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 // --- FUNCIÓN DE FORMATEO DE RUT ---
 function formatRut(value) {
@@ -30,23 +36,12 @@ function formatRut(value) {
   return `${cuerpoFormateado}-${dv}`;
 }
 
-// --- FUNCIÓN DE VALIDACIÓN DE RUT ---
+// --- FUNCIÓN DE VALIDACIÓN DE RUT SOLO FORMATO ---
 function validateRut(rut) {
   if (!rut) return false;
-  const clean = rut.replace(/[^0-9kK]/g, "").toUpperCase();
-  if (clean.length < 2) return false;
-  const cuerpo = clean.slice(0, -1);
-  let dv = clean.slice(-1);
-  let suma = 0;
-  let multiplo = 2;
-  for (let i = cuerpo.length - 1; i >= 0; i--) {
-    suma += parseInt(cuerpo[i], 10) * multiplo;
-    multiplo = multiplo < 7 ? multiplo + 1 : 2;
-  }
-  let dvEsperado = 11 - (suma % 11);
-  dvEsperado =
-    dvEsperado === 11 ? "0" : dvEsperado === 10 ? "K" : dvEsperado.toString();
-  return dv === dvEsperado;
+  // Solo valida el formato: XX.XXX.XXX-X o X.XXX.XXX-X o XXXXXXXX-X
+  const regex = /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$|^\d{7,8}-[\dkK]$/;
+  return regex.test(rut);
 }
 
 // --- FORMATEO Y PARSEO DE FECHA CHILENA ---
@@ -76,6 +71,12 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
   const getTelefonoSinPrefijo = (tel) =>
     tel && tel.startsWith("+569") ? tel.slice(4) : tel || "";
 
+  // Inicializa la fecha en formato chileno si viene en formato ISO
+  const initialFechaIngreso =
+    safeInitialData.fechaIngreso && safeInitialData.fechaIngreso.includes("-")
+      ? formatDateToCL(safeInitialData.fechaIngreso)
+      : safeInitialData.fechaIngreso || "";
+
   const [form, setForm] = useState({
     // Datos del alumno
     nombreAlumno: "",
@@ -84,7 +85,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     direccion: "",
     telefonoAlumno: getTelefonoSinPrefijo(safeInitialData.telefonoAlumno),
     email: "",
-    fechaIngreso: "",
+    fechaIngreso: initialFechaIngreso,
     // Datos del apoderado
     nombreApoderado: "",
     rutApoderado: "",
@@ -107,8 +108,10 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     dia: "",
     hora: "",
     ...safeInitialData,
+    fechaIngreso: initialFechaIngreso,
   });
   const [error, setError] = useState("");
+  const [showError, setShowError] = useState(false);
 
   // --- handleChange con formateo de RUT, fecha y teléfonos ---
   const handleChange = (e) => {
@@ -143,15 +146,34 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    // Validación de RUT
+    setShowError(false);
+
+    // Validaciones extra
+    if (!form.nombreAlumno || form.nombreAlumno.length < 3) {
+      setError(
+        "El nombre del alumno es obligatorio y debe tener al menos 3 letras."
+      );
+      setShowError(true);
+      return;
+    }
     if (!validateRut(form.rutAlumno)) {
-      setError("El RUT del alumno no es válido.");
+      setError("El RUT del alumno no es válido. Debe tener puntos y guion.");
+      setShowError(true);
+      return;
+    }
+    if (!form.fechaIngreso || form.fechaIngreso.length !== 10) {
+      setError(
+        "La fecha de ingreso es obligatoria y debe tener el formato DD-MM-AAAA."
+      );
+      setShowError(true);
       return;
     }
     if (form.rutApoderado && !validateRut(form.rutApoderado)) {
       setError("El RUT del apoderado no es válido.");
+      setShowError(true);
       return;
     }
+
     // Unir día y hora en clase
     const clase = form.dia && form.hora ? `${form.dia} ${form.hora}` : "";
     // Teléfonos: agregar el prefijo antes de enviar
@@ -163,11 +185,19 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
         clase,
         telefonoAlumno,
         telefonoApoderado,
+        // La fecha se envía en formato chileno
+        fechaIngreso: form.fechaIngreso,
       });
     } catch (err) {
       setError(err.message || "Error al guardar el alumno");
+      setShowError(true);
     }
   };
+
+  // Para mostrar la fecha en el input tipo date, conviértela de chileno a ISO
+  const fechaIngresoISO = form.fechaIngreso
+    ? parseDateFromCL(form.fechaIngreso)
+    : "";
 
   return (
     <Box
@@ -177,7 +207,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
         left: 0,
         width: "100vw",
         height: "100vh",
-        background: "rgba(0, 0, 0, 0.5)",
+        background: "rgba(0, 0, 0, 0.2)",
         display: "flex",
         alignItems: "flex-start",
         justifyContent: "center",
@@ -185,34 +215,79 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
         pt: 10,
       }}
     >
+      {/* Modal tipo Windows para errores */}
+      <Dialog
+        open={showError && !!error}
+        onClose={() => setShowError(false)}
+        PaperProps={{
+          sx: {
+            minWidth: 340,
+            maxWidth: 400,
+            border: "2px solid #1976d2",
+            borderRadius: 2,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+            background: "#fff",
+            pt: 2,
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{ display: "flex", alignItems: "center", gap: 1, pb: 0 }}
+        >
+          <ErrorOutlineIcon color="error" sx={{ fontSize: 32 }} />
+          <span
+            style={{ fontWeight: 500, fontSize: "1.1rem", color: "#1976d2" }}
+          >
+            Error
+          </span>
+          <Box sx={{ flex: 1 }} />
+          <IconButton onClick={() => setShowError(false)} size="small">
+            <span
+              style={{ fontWeight: "bold", fontSize: 18, color: "#1976d2" }}
+            >
+              ×
+            </span>
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ textAlign: "center", py: 2 }}>
+          <Typography sx={{ color: "#222", fontSize: "1.05rem" }}>
+            {error}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
+          <Button
+            onClick={() => setShowError(false)}
+            variant="contained"
+            color="primary"
+            autoFocus
+          >
+            Aceptar
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Box
         component="form"
         onSubmit={handleSubmit}
         sx={{
-          background: "#444",
-          color: "#fff",
+          background: "#f5f5f5",
+          color: "#222",
           p: 3,
-          borderRadius: 2,
+          borderRadius: 3,
           minWidth: 280,
           maxWidth: 400,
           width: "90vw",
           maxHeight: "90vh",
           mx: "auto",
           overflowY: "auto",
-          boxShadow: 4,
+          boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
         }}
       >
-        {error && (
-          <Typography color="error" sx={{ mb: 2 }}>
-            {error}
-          </Typography>
-        )}
-        <Typography variant="h5" sx={{ mb: 2 }}>
+        <Typography variant="h5" sx={{ mb: 2, color: "#222" }}>
           {safeInitialData && safeInitialData._id
             ? "Editar Alumno"
             : "Agregar Alumno"}
         </Typography>
-        <Typography variant="h6" sx={{ mt: 2 }}>
+        <Typography variant="h6" sx={{ mt: 2, color: "#444" }}>
           Datos del Apoderado
         </Typography>
         <Divider sx={{ mb: 2 }} />
@@ -223,7 +298,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           onChange={handleChange}
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
         <TextField
           label="RUT Apoderado"
@@ -232,7 +307,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           onChange={handleChange}
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
         <TextField
           label="Teléfono Apoderado"
@@ -241,7 +316,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           onChange={handleChange}
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
           inputProps={{ maxLength: 8 }}
           helperText="Ejemplo: +569XXXXXXXX"
           InputProps={{
@@ -258,9 +333,9 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           fullWidth
           required
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
-        <Typography variant="h6" sx={{ mt: 2 }}>
+        <Typography variant="h6" sx={{ mt: 2, color: "#444" }}>
           Datos del Alumno
         </Typography>
         <Divider sx={{ mb: 2 }} />
@@ -272,7 +347,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           required
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
         <TextField
           label="RUT Alumno"
@@ -282,7 +357,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           required
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
         <TextField
           label="Edad Alumno"
@@ -297,7 +372,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           required
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
           inputProps={{ min: 1, max: 99 }}
           helperText="Edad entre 1 y 99 años"
         />
@@ -308,7 +383,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           onChange={handleChange}
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
           inputProps={{ maxLength: 8 }}
           helperText="Ejemplo: +569XXXXXXXX"
           InputProps={{
@@ -324,20 +399,26 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           onChange={handleChange}
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
         <TextField
           label="Fecha de Ingreso"
           name="fechaIngreso"
-          value={parseDateFromCL(form.fechaIngreso)}
-          onChange={handleChange}
-          type="date"
+          value={form.fechaIngreso}
+          onChange={(e) => {
+            let val = e.target.value.replace(/[^0-9]/g, "");
+            if (val.length > 2) val = val.slice(0, 2) + "-" + val.slice(2);
+            if (val.length > 5) val = val.slice(0, 5) + "-" + val.slice(5, 9);
+            val = val.slice(0, 10); // Limita a DD-MM-AAAA
+            setForm({ ...form, fechaIngreso: val });
+          }}
           fullWidth
           margin="normal"
-          InputLabelProps={{ shrink: true }}
-          variant="filled"
+          variant="outlined"
+          helperText="Formato: DD-MM-AAAA"
+          placeholder="Ej: 19-07-2025"
         />
-        <Typography variant="h6" sx={{ mt: 2 }}>
+        <Typography variant="h6" sx={{ mt: 2, color: "#444" }}>
           Otros Datos
         </Typography>
         <Divider sx={{ mb: 2 }} />
@@ -348,7 +429,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           onChange={handleChange}
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
         <FormControlLabel
           control={
@@ -375,7 +456,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           placeholder="Ej: Guitarra, Piano"
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
         <TextField
           label="Estilos Musicales (Separados por comas)"
@@ -390,7 +471,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           placeholder="Ej: Rock, Jazz"
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
         <TextField
           label="Otro Estilo"
@@ -399,7 +480,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           onChange={handleChange}
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
         <TextField
           label="Referente Musical"
@@ -408,7 +489,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           onChange={handleChange}
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
         <FormControlLabel
           control={
@@ -429,7 +510,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           onChange={handleChange}
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
         <FormControlLabel
           control={
@@ -450,7 +531,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           onChange={handleChange}
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
         <TextField
           label="Observaciones"
@@ -461,9 +542,9 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           rows={4}
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
         />
-        <Typography variant="h6" sx={{ mt: 2 }}>
+        <Typography variant="h6" sx={{ mt: 2, color: "#444" }}>
           Datos de Clase
         </Typography>
         <TextField
@@ -473,11 +554,11 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           onChange={handleChange}
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
           required
         />
         {/* Select para Tipo de Curso */}
-        <FormControl fullWidth margin="normal" variant="filled">
+        <FormControl fullWidth margin="normal" variant="outlined">
           <InputLabel id="tipoCurso-label">Tipo de Curso</InputLabel>
           <Select
             labelId="tipoCurso-label"
@@ -485,6 +566,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
             value={form.tipoCurso}
             onChange={handleSelectChange}
             required
+            label="Tipo de Curso"
           >
             {tipoCursoOpciones.map((op) => (
               <MenuItem key={op} value={op}>
@@ -494,7 +576,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           </Select>
         </FormControl>
         {/* Select para Modalidad de Clase */}
-        <FormControl fullWidth margin="normal" variant="filled">
+        <FormControl fullWidth margin="normal" variant="outlined">
           <InputLabel id="modalidadClase-label">Modalidad de Clase</InputLabel>
           <Select
             labelId="modalidadClase-label"
@@ -502,6 +584,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
             value={form.modalidadClase}
             onChange={handleSelectChange}
             required
+            label="Modalidad de Clase"
           >
             {modalidadOpciones.map((op) => (
               <MenuItem key={op} value={op}>
@@ -511,7 +594,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           </Select>
         </FormControl>
         {/* Select para Día */}
-        <FormControl fullWidth margin="normal" variant="filled">
+        <FormControl fullWidth margin="normal" variant="outlined">
           <InputLabel id="dia-label">Día</InputLabel>
           <Select
             labelId="dia-label"
@@ -519,6 +602,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
             value={form.dia}
             onChange={handleSelectChange}
             required
+            label="Día"
           >
             {diasSemana.map((dia) => (
               <MenuItem key={dia} value={dia}>
@@ -536,7 +620,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           placeholder="Ej: 16:00"
           fullWidth
           margin="normal"
-          variant="filled"
+          variant="outlined"
           required
         />
         <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>

@@ -31,7 +31,7 @@ function AlumnosList() {
     setShowForm(true);
   };
   const handleDelete = async (alumno) => {
-    if (window.confirm(`¿Eliminar a ${alumno.name}?`)) {
+    if (window.confirm(`¿Eliminar a ${alumno.nombreAlumno}?`)) {
       try {
         await deleteAlumno(alumno._id);
         fetchAlumnos();
@@ -82,29 +82,94 @@ function AlumnosList() {
           <li style={{ color: "#888" }}>No hay alumnos registrados.</li>
         ) : (
           alumnosArray.map((alumno) => (
-            <li key={alumno._id} style={{ marginBottom: "1rem" }}>
-              <strong>Nombre:</strong> {alumno.name} <br />
-              <strong>RUT:</strong> {alumno.rut} <br />
-              <strong>Dirección:</strong> {alumno.address} <br />
-              <strong>Teléfono:</strong> {alumno.phone} <br />
+            <li
+              key={alumno._id}
+              style={{
+                marginBottom: "2rem",
+                padding: "1rem",
+                border: "1px solid #ccc",
+                borderRadius: "8px",
+                background: "#23272f",
+                color: "#f5f5f5",
+              }}
+            >
+              {/* Datos del Alumno */}
+              <h3 style={{ marginBottom: "0.5rem", color: "#444" }}>
+                Datos del Alumno
+              </h3>
+              <strong>Nombre Alumno:</strong> {alumno.nombreAlumno} <br />
+              <strong>RUT Alumno:</strong> {alumno.rutAlumno} <br />
+              <strong>Edad Alumno:</strong> {alumno.edadAlumno} <br />
+              <strong>Teléfono Alumno:</strong> {alumno.telefonoAlumno} <br />
               <strong>Email:</strong> {alumno.email} <br />
-              <strong>Fecha de ingreso:</strong>{" "}
-              {alumno.fechaIngreso
-                ? new Date(alumno.fechaIngreso).toLocaleDateString()
+              <strong>Fecha de Ingreso:</strong> {alumno.fechaIngreso} <br />
+              <hr style={{ margin: "1rem 0" }} />
+              {/* Datos de Clase */}
+              <h3 style={{ marginBottom: "0.5rem", color: "#444" }}>
+                Datos de Clase
+              </h3>
+              <strong>Curso:</strong> {alumno.curso} <br />
+              <strong>Tipo de Curso:</strong> {alumno.tipoCurso} <br />
+              <strong>Modalidad de Clase:</strong> {alumno.modalidadClase}{" "}
+              <br />
+              <strong>Día:</strong>{" "}
+              {alumno.clase ? alumno.clase.split(" ")[0] : ""} <br />
+              <strong>Hora:</strong>{" "}
+              {alumno.clase ? alumno.clase.split(" ")[1] : ""} <br />
+              <hr style={{ margin: "1rem 0" }} />
+              {/* Otros Datos */}
+              <h3 style={{ marginBottom: "0.5rem", color: "#444" }}>
+                Otros Datos
+              </h3>
+              <strong>RRSS:</strong> {alumno.rrss} <br />
+              <strong>Conocimientos Previos:</strong>{" "}
+              {alumno.conocimientosPrevios ? "Sí" : "No"} <br />
+              <strong>Instrumentos:</strong>{" "}
+              {Array.isArray(alumno.instrumentos)
+                ? alumno.instrumentos.join(", ")
                 : ""}{" "}
               <br />
-              <button
-                onClick={() => handleEdit(alumno)}
-                style={{ marginRight: "0.5rem" }}
-              >
-                Editar
-              </button>
-              <button
-                onClick={() => handleDelete(alumno)}
-                style={{ color: "red" }}
-              >
-                Eliminar
-              </button>
+              <strong>Estilos Musicales:</strong>{" "}
+              {Array.isArray(alumno.estilosMusicales)
+                ? alumno.estilosMusicales.join(", ")
+                : ""}{" "}
+              <br />
+              <strong>Otro Estilo:</strong> {alumno.otroEstilo} <br />
+              <strong>Referente Musical:</strong> {alumno.referenteMusical}{" "}
+              <br />
+              <strong>Condición de Aprendizaje:</strong>{" "}
+              {alumno.condicionAprendizaje ? "Sí" : "No"} <br />
+              <strong>Detalle Condición de Aprendizaje:</strong>{" "}
+              {alumno.detalleCondicionAprendizaje} <br />
+              <strong>Condición Médica:</strong>{" "}
+              {alumno.condicionMedica ? "Sí" : "No"} <br />
+              <strong>Detalle Condición Médica:</strong>{" "}
+              {alumno.detalleCondicionMedica} <br />
+              <strong>Observaciones:</strong> {alumno.observaciones} <br />
+              <hr style={{ margin: "1rem 0" }} />
+              {/* Datos del Apoderado */}
+              <h3 style={{ marginBottom: "0.5rem", color: "#444" }}>
+                Datos del Apoderado
+              </h3>
+              <strong>Nombre Apoderado:</strong> {alumno.nombreApoderado} <br />
+              <strong>RUT Apoderado:</strong> {alumno.rutApoderado} <br />
+              <strong>Teléfono Apoderado:</strong> {alumno.telefonoApoderado}{" "}
+              <br />
+              <strong>Dirección:</strong> {alumno.direccion} <br />
+              <div style={{ marginTop: "1rem" }}>
+                <button
+                  onClick={() => handleEdit(alumno)}
+                  style={{ marginRight: "0.5rem" }}
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => handleDelete(alumno)}
+                  style={{ color: "red" }}
+                >
+                  Eliminar
+                </button>
+              </div>
             </li>
           ))
         )}
