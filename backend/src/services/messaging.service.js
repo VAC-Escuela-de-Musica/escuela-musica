@@ -147,7 +147,7 @@ class MessagingService {
             rejectUnauthorized: false,
             minVersion: 'TLSv1.2'
           },
-          requireTLS: true
+          requireTLS: config.requireTLS || true
         };
       }
 
@@ -390,6 +390,24 @@ class MessagingService {
    * @returns {Object} - Estado de la configuración
    */
   checkConfiguration() {
+    // Verificar configuración de email desde archivo
+    let emailConfigured = false;
+    try {
+      const configPath = path.join(process.cwd(), 'email-config.json');
+      if (fs.existsSync(configPath)) {
+        const configData = fs.readFileSync(configPath, 'utf8');
+        const emailConfig = JSON.parse(configData);
+        emailConfigured = emailConfig.enabled && emailConfig.user && emailConfig.password;
+      }
+    } catch (error) {
+      console.error('Error verificando configuración de email:', error);
+    }
+
+    // Si no hay configuración en archivo, verificar variables de entorno
+    if (!emailConfigured) {
+      emailConfigured = !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
+    }
+
     const config = {
       whatsapp: {
         twilio: {
@@ -410,7 +428,7 @@ class MessagingService {
         }
       },
       email: {
-        configured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD),
+        configured: emailConfigured,
         missing: []
       }
     };
@@ -422,9 +440,11 @@ class MessagingService {
     // Verificar variables de Callmebot
     if (!process.env.CALLMEBOT_API_KEY) config.whatsapp.callmebot.missing.push('CALLMEBOT_API_KEY');
     
-    // Verificar variables de email
-    if (!process.env.EMAIL_USER) config.email.missing.push('EMAIL_USER');
-    if (!process.env.EMAIL_PASSWORD) config.email.missing.push('EMAIL_PASSWORD');
+    // Verificar variables de email (solo si no hay configuración en archivo)
+    if (!emailConfigured) {
+      if (!process.env.EMAIL_USER) config.email.missing.push('EMAIL_USER');
+      if (!process.env.EMAIL_PASSWORD) config.email.missing.push('EMAIL_PASSWORD');
+    }
 
     return config;
   }

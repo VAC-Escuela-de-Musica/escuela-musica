@@ -44,13 +44,32 @@ class EmailConfigController {
       const config = req.body;
       const configPath = path.join(process.cwd(), 'email-config.json');
       
+      console.log('Guardando configuración de email:', {
+        user: config.user,
+        host: config.host,
+        port: config.port,
+        secure: config.secure,
+        enabled: config.enabled
+      });
+      
       // Validar configuración
       if (!config.user || !config.password) {
         return respondError(req, res, 400, 'Email y contraseña son requeridos');
       }
 
+      // Asegurar que la configuración tenga los valores correctos para Gmail
+      if (config.host && config.host.includes('gmail.com')) {
+        config.secure = false;
+        config.requireTLS = true;
+        config.port = '587';
+      }
+
       // Guardar configuración en archivo
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      const configJson = JSON.stringify(config, null, 2);
+      console.log('Configuración JSON a guardar:', configJson);
+      
+      fs.writeFileSync(configPath, configJson);
+      console.log('✅ Configuración guardada en:', configPath);
       
       return respondSuccess(req, res, 200, {
         message: 'Configuración guardada correctamente',
@@ -91,15 +110,38 @@ class EmailConfigController {
       
       // Crear transportador temporal con la nueva configuración
       const nodemailer = (await import('nodemailer')).default;
-      const testTransporter = nodemailer.createTransport({
+      
+      let transporterConfig = {
         host: config.host,
-        port: config.port,
+        port: parseInt(config.port),
         secure: config.secure,
         auth: {
           user: config.user,
           pass: config.password
         }
-      });
+      };
+
+      // Configuración específica para Gmail
+      if (config.host.includes('gmail.com')) {
+        transporterConfig = {
+          service: 'gmail',
+          auth: {
+            user: config.user,
+            pass: config.password
+          }
+        };
+      } else {
+        // Para otros proveedores, agregar configuración TLS
+        if (config.requireTLS) {
+          transporterConfig.requireTLS = true;
+        }
+        transporterConfig.tls = {
+          rejectUnauthorized: false,
+          minVersion: 'TLSv1.2'
+        };
+      }
+
+      const testTransporter = nodemailer.createTransport(transporterConfig);
 
       // Enviar email de prueba
       const result = await testTransporter.sendMail({

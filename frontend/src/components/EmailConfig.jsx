@@ -75,7 +75,8 @@ const EmailConfig = () => {
       name: 'Gmail',
       host: 'smtp.gmail.com',
       port: '587',
-      secure: true,
+      secure: false,
+      requireTLS: true,
       instructions: 'Usa tu contraseña de aplicación de Gmail (no tu contraseña normal)',
       helpUrl: 'https://support.google.com/accounts/answer/185833'
     },
@@ -83,7 +84,8 @@ const EmailConfig = () => {
       name: 'Outlook/Hotmail',
       host: 'smtp-mail.outlook.com',
       port: '587',
-      secure: true,
+      secure: false,
+      requireTLS: true,
       instructions: 'Usa tu contraseña de aplicación de Microsoft',
       helpUrl: 'https://support.microsoft.com/en-us/account-billing/using-app-passwords-with-apps-that-don-t-support-two-step-verification-5896ed9b-4263-e681-128a-a6f2979a7944'
     },
@@ -91,7 +93,8 @@ const EmailConfig = () => {
       name: 'Yahoo Mail',
       host: 'smtp.mail.yahoo.com',
       port: '587',
-      secure: true,
+      secure: false,
+      requireTLS: true,
       instructions: 'Usa tu contraseña de aplicación de Yahoo',
       helpUrl: 'https://help.yahoo.com/kb/generate-third-party-passwords-sln15241.html'
     },
