@@ -88,13 +88,17 @@ function AlumnosList() {
                 marginBottom: "2rem",
                 padding: "1rem",
                 border: "1px solid #ccc",
-                borderRadius: "8px",
+                borderRadius: "12px",
                 background: "#23272f",
                 color: "#f5f5f5",
+                maxWidth: "600px",
+                marginLeft: "auto",
+                marginRight: "auto",
+                boxShadow: "0 2px 12px rgba(0, 0, 0, 0.12)",
               }}
             >
               {/* Datos del Alumno */}
-              <h3 style={{ marginBottom: "0.5rem", color: "#444" }}>
+              <h3 style={{ marginBottom: "0.5rem", color: "#fff" }}>
                 Datos del Alumno
               </h3>
               <strong>Nombre Alumno:</strong> {alumno.nombreAlumno} <br />
@@ -105,7 +109,7 @@ function AlumnosList() {
               <strong>Fecha de Ingreso:</strong> {alumno.fechaIngreso} <br />
               <hr style={{ margin: "1rem 0" }} />
               {/* Datos de Clase */}
-              <h3 style={{ marginBottom: "0.5rem", color: "#444" }}>
+              <h3 style={{ marginBottom: "0.5rem", color: "#fff" }}>
                 Datos de Clase
               </h3>
               <strong>Curso:</strong> {alumno.curso} <br />
@@ -118,7 +122,7 @@ function AlumnosList() {
               {alumno.clase ? alumno.clase.split(" ")[1] : ""} <br />
               <hr style={{ margin: "1rem 0" }} />
               {/* Otros Datos */}
-              <h3 style={{ marginBottom: "0.5rem", color: "#444" }}>
+              <h3 style={{ marginBottom: "0.5rem", color: "#fff" }}>
                 Otros Datos
               </h3>
               <strong>RRSS:</strong> {alumno.rrss} <br />
@@ -148,7 +152,7 @@ function AlumnosList() {
               <strong>Observaciones:</strong> {alumno.observaciones} <br />
               <hr style={{ margin: "1rem 0" }} />
               {/* Datos del Apoderado */}
-              <h3 style={{ marginBottom: "0.5rem", color: "#444" }}>
+              <h3 style={{ marginBottom: "0.5rem", color: "#fff" }}>
                 Datos del Apoderado
               </h3>
               <strong>Nombre Apoderado:</strong> {alumno.nombreApoderado} <br />
