@@ -1,3 +1,13 @@
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Configurar dotenv para cargar desde la raíz del backend
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const envPath = path.resolve(__dirname, "../.env");
+dotenv.config({ path: envPath });
+
 import { setupMinIO } from "../src/config/minio.config.js";
 import minioClient, { MINIO_BUCKET_NAME } from "../src/config/minio.config.js";
 
@@ -25,7 +35,7 @@ MINIO_PORT=9000
 MINIO_USE_SSL=false
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
-MINIO_BUCKET_NAME=carousel-images
+MINIO_BUCKET_NAME=gps-vac-images
       `);
       return;
     }

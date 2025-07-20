@@ -6,6 +6,7 @@ import {
   MINIO_ACCESS_KEY, 
   MINIO_SECRET_KEY, 
   MINIO_BUCKET_NAME,
+  MINIO_PUBLIC_BUCKET,
 } from "./configEnv.js";
 import { handleError } from "../utils/errorHandler.js";
 
@@ -57,5 +58,5 @@ export async function setupMinIO() {
   }
 }
 
-export { MINIO_BUCKET_NAME };
+export { MINIO_BUCKET_NAME, MINIO_PUBLIC_BUCKET };
 export default minioClient;

@@ -18,10 +18,10 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
 
-import CarouselManager from "./CarouselManager";
 import UserManager from "./UserManager";
 import CardsProfesoresManager from "./CardsProfesoresManager";
 import TestimoniosManager from "./TestimoniosManager";
+import GaleriaManager from "./GaleriaManager";
 
 const drawerWidth = 240;
 
@@ -101,15 +101,12 @@ export default function ClippedDrawer() {
           <List>
             {[
               "Imágenes Galería",
-              "Imágenes Carrusel",
               "Presentación Prof.",
               "Gestionar Reseñas",
             ].map((text, index) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton
                   onClick={() => {
-                    if (text === "Imágenes Carrusel")
-                      setActiveModule("carrusel");
                     if (text === "Imágenes Galería") setActiveModule("galeria");
                     if (text === "Presentación Prof.")
                       setActiveModule("presentacion");
@@ -200,7 +197,7 @@ export default function ClippedDrawer() {
             </Typography>
           </>
         )}
-        {activeModule === "carrusel" && <CarouselManager />}
+        {activeModule === "galeria" && <GaleriaManager />}
         {activeModule === "credenciales" && <UserManager />}
         {activeModule === "presentacion" && <CardsProfesoresManager />}
         {activeModule === "resenas" && <TestimoniosManager />}

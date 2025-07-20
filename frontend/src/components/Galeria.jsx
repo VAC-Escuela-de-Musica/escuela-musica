@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
@@ -10,6 +10,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import Card from '@mui/material/Card';
 import CardMedia from '@mui/material/CardMedia';
 import CardContent from '@mui/material/CardContent';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 
 function srcset(image, size, rows = 1, cols = 1) {
   return {
@@ -23,6 +25,35 @@ function srcset(image, size, rows = 1, cols = 1) {
 const Galeria = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [openModal, setOpenModal] = useState(false);
+  const [galeria, setGaleria] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+  // Fetch galería from backend
+  useEffect(() => {
+    const fetchGaleria = async () => {
+      try {
+        const response = await fetch(`${API_URL}/galeria/active`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Galería recibida:', data.data);
+          setGaleria(data.data || []);
+        } else {
+          console.error('Error fetching galería');
+          setError('Error al cargar la galería');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        setError('Error de conexión');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGaleria();
+  }, [API_URL]);
 
   const handleImageClick = (item) => {
     if (item.descripcion) {
@@ -35,6 +66,40 @@ const Galeria = () => {
     setOpenModal(false);
     setSelectedImage(null);
   };
+
+  if (loading) {
+    return (
+      <Box id="galeria" sx={{ py: 8, px: { xs: 1, md: 3 }, bgcolor: '#222222', textAlign: 'center' }}>
+        <CircularProgress sx={{ color: 'white' }} />
+        <Typography variant="h6" sx={{ color: 'white', mt: 2 }}>
+          Cargando galería...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box id="galeria" sx={{ py: 8, px: { xs: 1, md: 3 }, bgcolor: '#222222', textAlign: 'center' }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Typography variant="h6" sx={{ color: 'white' }}>
+          No se pudo cargar la galería
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (galeria.length === 0) {
+    return (
+      <Box id="galeria" sx={{ py: 8, px: { xs: 1, md: 3 }, bgcolor: '#222222', textAlign: 'center' }}>
+        <Typography variant="h6" sx={{ color: 'white' }}>
+          No hay imágenes disponibles en la galería
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box id="galeria" sx={{ py: 8, px: { xs: 1, md: 3 }, bgcolor: '#222222' }}>
@@ -66,9 +131,9 @@ const Galeria = () => {
           cols={4}
           rowHeight={160}
         >
-          {itemData.map((item) => (
+          {galeria.map((item) => (
             <ImageListItem 
-              key={item.img} 
+              key={item._id} 
               cols={item.cols || 1} 
               rows={item.rows || 1}
               sx={{ 
@@ -81,8 +146,8 @@ const Galeria = () => {
               onClick={() => handleImageClick(item)}
             >
               <img
-                {...srcset(item.img, 160, item.rows, item.cols)}
-                alt={item.title}
+                {...srcset(item.imagen, 160, item.rows, item.cols)}
+                alt={item.titulo}
                 loading="lazy"
                 style={{ 
                   borderRadius: 8,
@@ -91,7 +156,7 @@ const Galeria = () => {
               />
               {item.descripcion && (
                 <ImageListItemBar
-                  title={item.title}
+                  title={item.titulo}
                   sx={{
                     background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)',
                     borderBottomLeftRadius: 8,
@@ -144,8 +209,8 @@ const Galeria = () => {
           
           <CardMedia
             component="img"
-            image={selectedImage?.img}
-            alt={selectedImage?.title}
+            image={selectedImage?.imagen}
+            alt={selectedImage?.titulo}
             sx={{ 
               width: '100%',
               height: { xs: 300, md: 400 },
@@ -160,7 +225,7 @@ const Galeria = () => {
               gutterBottom
               sx={{ fontWeight: 'bold', color: '#232b3b' }}
             >
-              {selectedImage?.title}
+              {selectedImage?.titulo}
             </Typography>
             
             <Typography 
@@ -179,78 +244,5 @@ const Galeria = () => {
     </Box>
   );
 };
-
-// Datos de ejemplo - puedes reemplazar con tus propias imágenes
-const itemData = [
-  {
-    img: 'https://images.unsplash.com/photo-1551963831-b3b1ca40c98e',
-    title: 'Clase de Matemáticas',
-    descripcion: 'Nuestros estudiantes participando activamente en una clase de matemáticas avanzadas, donde desarrollan habilidades de pensamiento crítico y resolución de problemas.',
-    rows: 2,
-    cols: 2,
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1551782450-a2132b4ba21d',
-    title: 'Laboratorio de Ciencias',
-    descripcion: 'Experimentos prácticos en nuestro laboratorio de ciencias, donde los estudiantes aprenden a través de la experimentación y el descubrimiento.',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1522770179533-24471fcdba45',
-    title: 'Tecnología Educativa',
-    descripcion: 'Integrando tecnología moderna en nuestras aulas para preparar a los estudiantes para el futuro digital.',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1444418776041-9c7e33cc5a9c',
-    title: 'Actividades Deportivas',
-    descripcion: 'Promoviendo la salud física y el trabajo en equipo a través de nuestras actividades deportivas y recreativas.',
-    cols: 2,
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1533827432537-70133748f5c8',
-    title: 'Arte y Creatividad',
-    descripcion: 'Desarrollando la creatividad y expresión artística de nuestros estudiantes en nuestras clases de arte.',
-    cols: 2,
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62',
-    title: 'Biblioteca y Lectura',
-    descripcion: 'Fomentando el amor por la lectura y la investigación en nuestra biblioteca completamente equipada.',
-    rows: 2,
-    cols: 2,
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1516802273409-68526ee1bdd6',
-    title: 'Actividades Extracurriculares',
-    descripcion: 'Enriqueciendo la experiencia educativa con actividades extracurriculares que complementan el aprendizaje académico.',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1518756131217-31eb79b20e8f',
-    title: 'Medio Ambiente',
-    descripcion: 'Cultivando la conciencia ambiental y el respeto por la naturaleza en nuestros espacios verdes.',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1597645587822-e99fa5d45d25',
-    title: 'Eventos Institucionales',
-    descripcion: 'Celebrando los logros y creando memorias inolvidables en nuestros eventos institucionales.',
-    rows: 2,
-    cols: 2,
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1567306301408-9b74779a11af',
-    title: 'Cafetería Estudiantil',
-    descripcion: 'Proporcionando un espacio acogedor para que los estudiantes disfruten de sus alimentos y socialicen.',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1471357674240-e1a485acb3e1',
-    title: 'Patio de Recreo',
-    descripcion: 'Espacios de recreación donde los estudiantes pueden descansar, jugar y desarrollar habilidades sociales.',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1589118949245-7d38baf380d6',
-    title: 'Transporte Escolar',
-    descripcion: 'Servicio de transporte seguro y confiable para facilitar el acceso de nuestros estudiantes a la institución.',
-    cols: 2,
-  },
-];
 
 export default Galeria;
