@@ -4,7 +4,6 @@ import {
   Typography,
   Card,
   CardContent,
-  CardActions,
   Button,
   IconButton,
   Dialog,
@@ -54,7 +53,7 @@ const TestimoniosManager = () => {
     activo: true
   });
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchTestimonios();
@@ -295,79 +294,182 @@ const TestimoniosManager = () => {
         </Box>
       </Box>
 
-      <Grid container spacing={2}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {testimonios.map((testimonio, index) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={testimonio._id}>
-            <Card sx={{ 
-              height: '320px', 
-              bgcolor: '#2a2a2a', 
-              color: 'white',
-              position: 'relative'
-            }}>
-              <CardContent sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <Card key={testimonio._id} sx={{ 
+            bgcolor: '#2a2a2a', 
+            color: 'white',
+            position: 'relative'
+          }}>
+              {/* Botones de acción en la esquina superior derecha */}
+              <Box sx={{ 
+                position: 'absolute', 
+                top: 8, 
+                right: 8, 
+                zIndex: 10,
+                display: 'flex',
+                gap: 0.5
+              }}>
+                <IconButton
+                  size="small"
+                  onClick={() => handleToggleStatus(testimonio._id)}
+                  sx={{ 
+                    backgroundColor: testimonio.activo 
+                      ? 'rgba(76, 175, 80, 0.1)' 
+                      : 'rgba(255, 152, 0, 0.1)',
+                    color: testimonio.activo ? '#4caf50' : '#f44336',
+                    width: 28,
+                    height: 28,
+                    '&:hover': {
+                      backgroundColor: testimonio.activo 
+                        ? 'rgba(76, 175, 80, 0.2)' 
+                        : 'rgba(255, 152, 0, 0.2)',
+                    }
+                  }}
+                  title={testimonio.activo ? "Ocultar testimonio" : "Mostrar testimonio"}
+                >
+                  {testimonio.activo ? <VisibilityIcon sx={{ fontSize: 16 }} /> : <VisibilityOffIcon sx={{ fontSize: 16 }} />}
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={() => handleOpenDialog(testimonio)}
+                  sx={{ 
+                    backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                    color: '#2196f3',
+                    width: 28,
+                    height: 28,
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.2)',
+                    }
+                  }}
+                  title="Editar testimonio"
+                >
+                  <EditIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={() => handleDelete(testimonio._id)}
+                  sx={{ 
+                    backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                    color: '#f44336',
+                    width: 28,
+                    height: 28,
+                    '&:hover': {
+                      backgroundColor: 'rgba(211, 47, 47, 0.2)',
+                    }
+                  }}
+                  title="Eliminar testimonio"
+                >
+                  <DeleteIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Box>
+
+              <CardContent sx={{ p: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  {/* Avatar */}
                   <Avatar 
                     src={testimonio.foto} 
                     alt={testimonio.nombre}
-                    sx={{ width: 40, height: 40, mr: 1 }}
+                    sx={{ width: 56, height: 56, flexShrink: 0 }}
                   />
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                      {testimonio.nombre}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#888' }}>
+                  
+                  {/* Información principal */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          fontWeight: 'bold',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {testimonio.nombre}
+                      </Typography>
+                      <Chip 
+                        label={testimonio.activo ? 'Activo' : 'Inactivo'}
+                        size="small"
+                        color={testimonio.activo ? 'success' : 'default'}
+                        sx={{ fontSize: '0.7rem', flexShrink: 0 }}
+                      />
+                    </Box>
+                    
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#888',
+                        mb: 1,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
                       {testimonio.cargo}
                     </Typography>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                      <Rating 
+                        value={testimonio.estrellas} 
+                        readOnly 
+                        size="small"
+                        sx={{ '& .MuiRating-iconFilled': { color: '#FFD700' } }}
+                      />
+                      <Typography variant="caption" sx={{ color: '#666' }}>
+                        Orden: {testimonio.orden}
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Chip 
-                    label={testimonio.activo ? 'Activo' : 'Inactivo'}
-                    size="small"
-                    color={testimonio.activo ? 'success' : 'default'}
-                    sx={{ fontSize: '0.7rem' }}
-                  />
-                </Box>
-
-                <Rating 
-                  value={testimonio.estrellas} 
-                  readOnly 
-                  size="small"
-                  sx={{ mb: 1, '& .MuiRating-iconFilled': { color: '#FFD700' } }}
-                />
-
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    mb: 1, 
-                    flexGrow: 1,
-                    fontStyle: 'italic',
-                    overflow: 'hidden',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: 'vertical',
-                    textOverflow: 'ellipsis'
-                  }}
-                >
-                  "{testimonio.opinion}"
-                </Typography>
-
-                {testimonio.institucion && (
-                  <Typography variant="caption" sx={{ color: '#888', mb: 1 }}>
-                    {testimonio.institucion}
-                  </Typography>
-                )}
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="caption" sx={{ color: '#666' }}>
-                    Orden: {testimonio.orden}
-                  </Typography>
-                  <Box>
+                  
+                  {/* Información secundaria */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        fontStyle: 'italic',
+                        lineHeight: 1.5,
+                        overflow: 'hidden',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        textOverflow: 'ellipsis',
+                        mb: 1
+                      }}
+                    >
+                      "{testimonio.opinion}"
+                    </Typography>
+                    
+                    {testimonio.institucion && (
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          color: '#888',
+                          fontWeight: 'bold',
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {testimonio.institucion}
+                      </Typography>
+                    )}
+                  </Box>
+                  
+                  {/* Controles de reordenamiento */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                     {reorderMode && (
                       <>
                         <IconButton
                           size="small"
                           onClick={() => handleReorder(testimonio._id, 'up')}
                           disabled={index === 0}
-                          sx={{ color: 'white', p: 0.5 }}
+                          sx={{ 
+                            color: 'white', 
+                            p: 0.5,
+                            '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+                          }}
                         >
                           <ArrowUpIcon fontSize="small" />
                         </IconButton>
@@ -375,7 +477,11 @@ const TestimoniosManager = () => {
                           size="small"
                           onClick={() => handleReorder(testimonio._id, 'down')}
                           disabled={index === testimonios.length - 1}
-                          sx={{ color: 'white', p: 0.5 }}
+                          sx={{ 
+                            color: 'white', 
+                            p: 0.5,
+                            '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+                          }}
                         >
                           <ArrowDownIcon fontSize="small" />
                         </IconButton>
@@ -384,34 +490,9 @@ const TestimoniosManager = () => {
                   </Box>
                 </Box>
               </CardContent>
-
-              <CardActions sx={{ p: 1, bgcolor: '#333' }}>
-                <IconButton
-                  size="small"
-                  onClick={() => handleToggleStatus(testimonio._id)}
-                  sx={{ color: testimonio.activo ? '#4caf50' : '#f44336' }}
-                >
-                  {testimonio.activo ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={() => handleOpenDialog(testimonio)}
-                  sx={{ color: '#2196f3' }}
-                >
-                  <EditIcon />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={() => handleDelete(testimonio._id)}
-                  sx={{ color: '#f44336' }}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </CardActions>
             </Card>
-          </Grid>
         ))}
-      </Grid>
+      </Box>
 
       {/* Dialog para crear/editar */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
