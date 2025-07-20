@@ -7,7 +7,78 @@ import {
   TextField,
   Typography,
   Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
+
+// --- FUNCIÓN DE FORMATEO DE RUT ---
+function formatRut(value) {
+  let clean = value.replace(/[^0-9kK]/g, "").toUpperCase();
+  if (clean.length < 2) return clean;
+  const cuerpo = clean.slice(0, -1);
+  const dv = clean.slice(-1);
+  let cuerpoFormateado = "";
+  let i = cuerpo.length;
+  while (i > 3) {
+    cuerpoFormateado = "." + cuerpo.slice(i - 3, i) + cuerpoFormateado;
+    i -= 3;
+  }
+  cuerpoFormateado = cuerpo.slice(0, i) + cuerpoFormateado;
+  return `${cuerpoFormateado}-${dv}`;
+}
+
+// --- FUNCIÓN DE VALIDACIÓN DE RUT ---
+function validateRut(rut) {
+  if (!rut) return false;
+  const clean = rut.replace(/[^0-9kK]/g, "").toUpperCase();
+  if (clean.length < 2) return false;
+  const cuerpo = clean.slice(0, -1);
+  let dv = clean.slice(-1);
+  let suma = 0;
+  let multiplo = 2;
+  for (let i = cuerpo.length - 1; i >= 0; i--) {
+    suma += parseInt(cuerpo[i], 10) * multiplo;
+    multiplo = multiplo < 7 ? multiplo + 1 : 2;
+  }
+  let dvEsperado = 11 - (suma % 11);
+  dvEsperado =
+    dvEsperado === 11 ? "0" : dvEsperado === 10 ? "K" : dvEsperado.toString();
+  return dv === dvEsperado;
+}
+
+// --- FORMATEO Y PARSEO DE FECHA CHILENA ---
+function formatDateToCL(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
+function parseDateFromCL(clDateStr) {
+  if (!clDateStr) return "";
+  const [day, month, year] = clDateStr.split("-");
+  return `${year}-${month}-${day}`;
+}
+
+const tipoCursoOpciones = ["Grupal", "Individual"];
+const modalidadOpciones = ["Presencial", "Online"];
+const diasSemana = [
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+  "Domingo",
+];
+const horas = Array.from({ length: 24 }, (_, h) => [
+  `${h.toString().padStart(2, "0")}:00`,
+  `${h.toString().padStart(2, "0")}:30`,
+]).flat();
 
 function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
   const [form, setForm] = useState({
@@ -44,27 +115,48 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
   });
   const [error, setError] = useState("");
 
+  // --- handleChange con formateo de RUT y fecha ---
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    if (name === "rutAlumno" || name === "rutApoderado") {
+      setForm({ ...form, [name]: formatRut(value) });
+    } else if (name === "fechaIngreso") {
+      setForm({ ...form, fechaIngreso: formatDateToCL(value) });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   useEffect(() => {
     if (initialData && initialData.fechaIngreso) {
       setForm((prev) => ({
         ...prev,
-        fechaIngreso: new Date(initialData.fechaIngreso)
-          .toISOString()
-          .split("T")[0],
+        fechaIngreso: formatDateToCL(initialData.fechaIngreso),
       }));
     }
   }, [initialData]);
 
+  const handleSelectChange = (e) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    // Validación de RUT
+    if (!validateRut(form.rutAlumno)) {
+      setError("El RUT del alumno no es válido.");
+      return;
+    }
+    if (form.rutApoderado && !validateRut(form.rutApoderado)) {
+      setError("El RUT del apoderado no es válido.");
+      return;
+    }
+    // Unir día y hora en clase
+    const clase = form.dia && form.hora ? `${form.dia} ${form.hora}` : "";
     try {
-      await onSubmit(form);
+      await onSubmit({ ...form, clase });
     } catch (err) {
       setError(err.message || "Error al guardar el alumno");
     }
@@ -80,10 +172,10 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
         height: "100vh",
         background: "rgba(0, 0, 0, 0.5)",
         display: "flex",
-        alignItems: "flex-start", // Alinea arriba
+        alignItems: "flex-start",
         justifyContent: "center",
         zIndex: 1000,
-        pt: 10, // Solo margen superior
+        pt: 10,
       }}
     >
       <Box
@@ -207,7 +299,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
         <TextField
           label="Fecha de Ingreso"
           name="fechaIngreso"
-          value={form.fechaIngreso}
+          value={parseDateFromCL(form.fechaIngreso)}
           onChange={handleChange}
           type="date"
           fullWidth
@@ -341,6 +433,9 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           margin="normal"
           variant="filled"
         />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Datos de Clase
+        </Typography>
         <TextField
           label="Curso"
           name="curso"
@@ -350,42 +445,74 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           margin="normal"
           variant="filled"
         />
-        <TextField
-          label="Tipo de Curso"
-          name="tipoCurso"
-          value={form.tipoCurso}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="filled"
-        />
-        <TextField
-          label="Modalidad de Clase"
-          name="modalidadClase"
-          value={form.modalidadClase}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="filled"
-        />
-        <TextField
-          label="Día"
-          name="dia"
-          value={form.dia}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="filled"
-        />
-        <TextField
-          label="Hora"
-          name="hora"
-          value={form.hora}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="filled"
-        />
+        {/* Select para Tipo de Curso */}
+        <FormControl fullWidth margin="normal" variant="filled">
+          <InputLabel id="tipoCurso-label">Tipo de Curso</InputLabel>
+          <Select
+            labelId="tipoCurso-label"
+            name="tipoCurso"
+            value={form.tipoCurso}
+            onChange={handleSelectChange}
+            required
+          >
+            {tipoCursoOpciones.map((op) => (
+              <MenuItem key={op} value={op}>
+                {op}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {/* Select para Modalidad de Clase */}
+        <FormControl fullWidth margin="normal" variant="filled">
+          <InputLabel id="modalidadClase-label">Modalidad de Clase</InputLabel>
+          <Select
+            labelId="modalidadClase-label"
+            name="modalidadClase"
+            value={form.modalidadClase}
+            onChange={handleSelectChange}
+            required
+          >
+            {modalidadOpciones.map((op) => (
+              <MenuItem key={op} value={op}>
+                {op}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {/* Select para Día */}
+        <FormControl fullWidth margin="normal" variant="filled">
+          <InputLabel id="dia-label">Día</InputLabel>
+          <Select
+            labelId="dia-label"
+            name="dia"
+            value={form.dia}
+            onChange={handleSelectChange}
+            required
+          >
+            {diasSemana.map((dia) => (
+              <MenuItem key={dia} value={dia}>
+                {dia}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {/* Select para Hora */}
+        <FormControl fullWidth margin="normal" variant="filled">
+          <InputLabel id="hora-label">Hora</InputLabel>
+          <Select
+            labelId="hora-label"
+            name="hora"
+            value={form.hora}
+            onChange={handleSelectChange}
+            required
+          >
+            {horas.map((hora) => (
+              <MenuItem key={hora} value={hora}>
+                {hora}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
           <Button type="submit" variant="contained" color="primary">
             Guardar
