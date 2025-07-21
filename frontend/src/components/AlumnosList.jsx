@@ -31,8 +31,7 @@ function AlumnosList() {
   const [editingAlumno, setEditingAlumno] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
-  const [showFichas, setShowFichas] = useState(false);
-  const [expandedId, setExpandedId] = useState(null); // Para expandir ficha
+  const [expandedId, setExpandedId] = useState(null);
 
   const fetchAlumnos = () => {
     getAlumnos()
@@ -313,26 +312,43 @@ function AlumnosList() {
 
   return (
     <Box sx={{ padding: 2 }}>
-      <Typography variant="h4" color="primary" sx={{ mb: 2 }}>
+      <Typography variant="h4" sx={{ color: "#fff", mb: 2 }}>
         Lista de Alumnos
       </Typography>
-      <Button
-        variant="contained"
-        color="primary"
-        startIcon={<AddIcon />}
-        sx={{
-          textTransform: "uppercase",
-          fontWeight: "bold",
-          fontSize: 16,
-          px: 3,
-          py: 1.5,
-          borderRadius: 1,
-          mb: 3,
-        }}
-        onClick={handleCreate}
-      >
-        Agregar Alumno
-      </Button>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+        <TextField
+          label="Buscar alumno por nombre, email o RUT..."
+          variant="outlined"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{
+            flex: 1,
+            background: "#222",
+            input: { color: "#fff" },
+            label: { color: "#aaa" },
+            borderRadius: 1,
+          }}
+          InputProps={{
+            sx: { color: "#fff" },
+          }}
+        />
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<AddIcon />}
+          sx={{
+            textTransform: "uppercase",
+            fontWeight: "bold",
+            fontSize: 16,
+            px: 3,
+            py: 1.5,
+            borderRadius: 1,
+          }}
+          onClick={handleCreate}
+        >
+          Agregar Alumno
+        </Button>
+      </Box>
       <Grid container spacing={3}>
         {filteredAlumnos.length === 0 ? (
           <Grid item xs={12}>
@@ -355,7 +371,6 @@ function AlumnosList() {
           onClose={handleCloseForm}
         />
       )}
-      {/* El apartado de ficha de alumno NO se modifica */}
     </Box>
   );
 }
