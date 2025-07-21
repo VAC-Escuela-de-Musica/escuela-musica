@@ -85,7 +85,7 @@ export const materialFiltersSchema = Joi.object({
  */
 export const userFiltersSchema = Joi.object({
   role: Joi.string()
-    .valid('admin', 'user', 'teacher', 'student')
+    .valid('administrador', 'profesor')
     .optional(),
   isActive: Joi.boolean()
     .optional(),

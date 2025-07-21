@@ -5,7 +5,7 @@
 // ...existing code...
 import React, { useState, useEffect } from 'react';
 import { useMaterials } from '../hooks/useMaterials';
-import { useAuth } from './AuthContextProvider.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { formatDate, formatFileSize, getFileTypeFromExtension, getFileTypeIcon } from '../utils/helpers';
 import ImageViewer from './ImageViewer';
 import './ListaMateriales.css';

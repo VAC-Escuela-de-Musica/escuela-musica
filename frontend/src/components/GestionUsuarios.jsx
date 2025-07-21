@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useUsers } from '../hooks/useUsers.js';
-import { useAuth } from './AuthContextProvider.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { logger } from '../utils/logger.js';
 import './darkmode.css';
 import './GestionUsuarios.styles.css';

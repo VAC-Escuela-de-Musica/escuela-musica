@@ -30,6 +30,11 @@ router.use(rateLimiter(1000, 15 * 60 * 1000)); // 1000 requests por 15 minutos (
 // ============= RUTAS QUE REQUIEREN AUTENTICACIÓN =============
 router.use(authenticateJWT);
 router.use(loadUserData);
+// Middleware de debug para todas las rutas de este router (ahora después de autenticación)
+router.use((req, res, next) => {
+  console.log(`[MATERIAL] ${req.method} ${req.originalUrl} | user: ${req.user?.username || 'anonimo'}`);
+  next();
+});
 
 // Health checks del sistema
 router.get("/test-minio", 

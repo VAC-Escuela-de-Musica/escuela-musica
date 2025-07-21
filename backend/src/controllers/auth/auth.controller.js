@@ -100,24 +100,38 @@ async function refresh(req, res) {
  */
 async function verify(req, res) {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return respondError(req, res, 401, "No hay token de autorización");
+    console.log("🔍 [AUTH-VERIFY] Iniciando verificación");
+    console.log("🔍 [AUTH-VERIFY] req.user existe:", !!req.user);
+    console.log("🔍 [AUTH-VERIFY] req.user.email:", req.user?.email);
+    console.log("🔍 [AUTH-VERIFY] req.user.fullData existe:", !!req.user?.fullData);
+    
+    // El middleware loadUserData ya ha cargado los datos completos del usuario
+    if (!req.user || !req.user.fullData) {
+      console.log("❌ [AUTH-VERIFY] Usuario no autenticado - req.user:", req.user);
+      return respondError(req, res, 401, "Usuario no autenticado");
     }
 
-    const token = authHeader.split(' ')[1];
-    
-    // Verificar token usando el servicio de autenticación
-    const verifyResult = await AuthenticationService.verifyToken(token);
-    
-    if (!verifyResult.success) {
-      return respondError(req, res, 401, verifyResult.error);
-    }
+    const user = req.user.fullData;
+    console.log("🔍 [AUTH-VERIFY] Usuario encontrado:");
+    console.log("  - ID:", user._id);
+    console.log("  - Email:", user.email);
+    console.log("  - Username:", user.username);
+    console.log("  - Roles:", user.roles);
+    console.log("  - Roles length:", user.roles?.length);
 
-    respondSuccess(req, res, 200, {
-      user: verifyResult.data.user
-    });
+    const responseData = {
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        roles: user.roles || []
+      }
+    };
+
+    console.log("✅ [AUTH-VERIFY] Enviando respuesta exitosa:", responseData);
+    respondSuccess(req, res, 200, responseData);
   } catch (error) {
+    console.error("💥 [AUTH-VERIFY] Error en verify:", error);
     handleError(error, "auth.controller -> verify");
     respondError(req, res, 500, "Error interno del servidor");
   }

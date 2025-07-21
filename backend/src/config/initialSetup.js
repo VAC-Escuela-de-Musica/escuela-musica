@@ -1,7 +1,8 @@
 "use strict";
+// Importa el modelo de datos 'User'
+import User from "../models/user.model.js";
 // Importa el modelo de datos 'Role'
 import Role from "../models/role.model.js";
-import User from "../models/user.model.js";
 
 /**
  * Crea los roles por defecto en la base de datos.
@@ -17,9 +18,8 @@ async function createRoles() {
     if (count > 0) return;
 
     await Promise.all([
-      new Role({ name: "user" }).save(),
-      new Role({ name: "admin" }).save(),
-      new Role({ name: "profesor" }).save(), // Agrega el rol profesor
+      new Role({ name: "administrador" }).save(),
+      new Role({ name: "profesor" }).save(),
     ]);
     console.log("* => Roles creados exitosamente");
   } catch (error) {
@@ -38,21 +38,13 @@ async function createUsers() {
     const count = await User.estimatedDocumentCount();
     if (count > 0) return;
 
-    const admin = await Role.findOne({ name: "admin" });
-    const user = await Role.findOne({ name: "user" });
+    const admin = await Role.findOne({ name: "administrador" });
     const profesor = await Role.findOne({ name: "profesor" });
 
     await Promise.all([
       new User({
-        username: "user",
-        email: "user@email.com",
-        rut: "12345678-9",
-        password: await User.encryptPassword("user123"),
-        roles: [user._id],
-      }).save(),
-      new User({
-        username: "admin",
-        email: "admin@email.com",
+        username: "administrador",
+        email: "administrador@email.com",
         rut: "12345678-0",
         password: await User.encryptPassword("admin123"),
         roles: [admin._id],
@@ -65,9 +57,9 @@ async function createUsers() {
         roles: [profesor._id],
       }).save(),
     ]);
-    console.log("* => Users creados exitosamente");
+    // ...existing code...
   } catch (error) {
-    console.error(error);
+    // ...existing code...
   }
 }
 

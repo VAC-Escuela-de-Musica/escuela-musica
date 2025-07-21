@@ -99,20 +99,7 @@ npm install
 npm start
 ```
 
-### Variables de Entorno
-```bash
-# Backend (.env)
-PORT=1230
-MONGODB_URI=mongodb://localhost:27017/escuela-musica
-JWT_SECRET=your-secret-key
-MINIO_ENDPOINT=localhost
-MINIO_PORT=9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
 
-# Frontend (.env)
-VITE_API_URL=http://localhost:1230
-```
 
 ---
 
@@ -179,6 +166,29 @@ escuela-musica/
 - **Backend:** Ver `backend/README.md`
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
 - **Contacto:** Equipo de desarrollo VAC-Escuela-de-Musica
+
+---
+
+## 📊 Estado del Proyecto
+- **Fase actual:** Desarrollo activo y pruebas funcionales.
+- **Roadmap:** Integración de nuevas funcionalidades, mejora de cobertura de tests y despliegue automatizado.
+- **Issues y soporte:** Reporta problemas en el repositorio o contacta al equipo.
+
+## 📜 Licencia
+Este proyecto se distribuye bajo la licencia MIT. Consulta el archivo LICENSE para más detalles.
+
+## ☁️ Despliegue y ejecución
+- **Local:** Sigue los pasos de instalación rápida.
+- **Producción:** Configura variables de entorno, utiliza PM2 o Docker para backend, y sirve el frontend con Nginx o similar.
+- **Documentación técnica:** Ver carpeta `docs/` y archivos README específicos.
+
+## 🆘 Soporte y contribución
+- Para soporte técnico, abre un issue en GitHub.
+- Para contribuir, revisa las guías en `CONTRIBUTING.md` y sigue el flujo de ramas (`dev`, `funcionalidad/*`).
+
+---
+
+*Última actualización: 21 de julio de 2025*
 
 ---
 

@@ -79,17 +79,17 @@ const requireRole = (allowedRoles) => {
 /**
  * Verifica si el usuario es administrador
  */
-const requireAdmin = requireRole(['admin']);
+const requireAdmin = requireRole(['administrador']);
 
 /**
  * Verifica si el usuario es administrador o profesor
  */
-const requireAdminOrProfesor = requireRole(['admin', 'profesor']);
+const requireAdminOrProfesor = requireRole(['administrador', 'profesor']);
 
 /**
  * Verifica si el usuario es administrador, profesor o alumno
  */
-const requireAuthenticated = requireRole(['admin', 'profesor', 'alumno']);
+const requireAuthenticated = requireRole(['administrador', 'profesor']);
 
 /**
  * Middleware más específico para verificar si es propietario del recurso o admin

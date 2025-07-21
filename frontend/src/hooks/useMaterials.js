@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from '../components/AuthContextProvider.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { API_ENDPOINTS } from '../config/api.js';
 
 /**

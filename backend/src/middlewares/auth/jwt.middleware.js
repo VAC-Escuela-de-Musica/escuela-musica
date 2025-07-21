@@ -41,7 +41,11 @@ const extractJWT = (req, res, next) => {
  */
 const verifyJWT = (req, res, next) => {
   try {
+    console.log("🔍 [JWT-VERIFY] Iniciando verificación de JWT");
+    console.log("🔍 [JWT-VERIFY] Token existe:", !!req.token);
+    
     if (!req.token) {
+      console.log("❌ [JWT-VERIFY] No hay token");
       return respondError(
         req,
         res,
@@ -53,16 +57,28 @@ const verifyJWT = (req, res, next) => {
 
     jwt.verify(req.token, ACCESS_JWT_SECRET, (err, decoded) => {
       if (err) {
+        console.error("❌ [JWT-VERIFY] Error verificando token:", err.message);
         return respondError(req, res, 403, "No autorizado", "Token inválido o expirado");
       }
+      
+      console.log("🔍 [JWT-VERIFY] Token decodificado:", {
+        email: decoded.email,
+        id: decoded.id,
+        roles: decoded.roles,
+        rolesLength: decoded.roles?.length
+      });
+      
       req.user = {
         email: decoded.email,
         roles: decoded.roles,
         id: decoded.id || decoded._id
       };
+      
+      console.log("✅ [JWT-VERIFY] req.user configurado:", req.user);
       next();
     });
   } catch (error) {
+    console.error("💥 [JWT-VERIFY] Error inesperado:", error);
     handleError(error, "jwt.middleware -> verifyJWT");
   }
 };

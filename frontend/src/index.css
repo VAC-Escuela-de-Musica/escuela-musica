@@ -1,44 +1,78 @@
+
+@import url("https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap");
+/* Forzar el ancho 100% en todos los niveles del DatePicker y sus descendientes */
+.MuiPickersTextField-root,
+.MuiPickersTextField-root .MuiFormControl-root,
+.MuiPickersTextField-root .MuiInputBase-root,
+.MuiPickersTextField-root input {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #222222;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
-}
-
-a {
-  font-weight: 500;
-  color: var(--primary-color);
-  text-decoration: inherit;
-}
-a:hover {
-  filter: brightness(1.1);
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  padding: 0;
-  background-color: var(--bg-color);
-  color: var(--text-color);
   min-width: 320px;
   min-height: 100vh;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  background-color: #222222;
+  color: #f9fafb;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-  color: var(--heading-color);
+:root,
+body,
+html,
+#root {
+  font-family: "Raleway", sans-serif !important;
 }
 
+*,
+.MuiTypography-root,
+.MuiButton-root,
+.MuiInputBase-root,
+.MuiInputLabel-root,
+.MuiChip-root,
+.MuiCardContent-root,
+.MuiCard-root,
+.MuiDialogTitle-root,
+.MuiDialogContent-root,
+.MuiDialogActions-root {
+  font-family: "Raleway", sans-serif !important;
+}
+
+/* Estilos para enlaces */
+a {
+  font-weight: 500;
+  color: #d97706;
+  text-decoration: inherit;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #f59e0b;
+}
+
+/* Estilos para botones */
 button {
   border-radius: 8px;
   border: 1px solid var(--border-color);
@@ -46,31 +80,81 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: var(--bg-secondary);
-  color: var(--text-color);
+  background-color: #374151;
+  color: #f9fafb;
   cursor: pointer;
-  transition: border-color 0.25s, background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
+
 button:hover {
-  border-color: var(--primary-color);
-  filter: brightness(0.95);
+  background-color: #4b5563;
+  border-color: #d97706;
 }
+
 button:focus,
 button:focus-visible {
-  outline: 2px solid var(--primary-color);
+  outline: 2px solid #d97706;
   outline-offset: 2px;
 }
 
-/* Textura granulada solo para modo claro */
-body:not(.dark-theme) {
-  background-image: 
-    radial-gradient(circle at 1px 1px, rgba(0,0,0,0.15) 1px, transparent 0);
-  background-size: 15px 15px;
+/* Estilos para formularios */
+input,
+textarea,
+select {
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  color: #f9fafb;
+  border-radius: 6px;
+  padding: 0.5em 1em;
+  transition: border-color 0.3s ease;
 }
 
-/* Textura granulada para modo oscuro */
-.dark-theme body {
-  background-image: 
-    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0);
-  background-size: 15px 15px;
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #d97706;
+}
+
+/* Utilidades personalizadas */
+.bg-primary {
+  background-color: #d97706;
+}
+
+.text-primary {
+  color: #d97706;
+}
+
+.border-primary {
+  border-color: #d97706;
+}
+
+/* Animaciones suaves */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #f9fafb;
+  }
+
+  body {
+    background-color: #f9fafb;
+    color: #213547;
+  }
+
+  a:hover {
+    color: #b45309;
+  }
+
+  button {
+    background-color: #f3f4f6;
+    color: #213547;
+  }
+
+  button:hover {
+    background-color: #e5e7eb;
+  }
 }

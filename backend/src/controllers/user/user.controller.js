@@ -18,9 +18,15 @@ class UserController {
       const mockUsers = [
         {
           id: '1',
-          username: 'admin',
-          email: 'admin@email.com',
-          roles: ['admin']
+          username: 'administrador',
+          email: 'administrador@email.com',
+          roles: ['administrador']
+        },
+        {
+          id: '2',
+          username: 'profesor',
+          email: 'profesor@email.com',
+          roles: ['profesor']
         }
       ];
       

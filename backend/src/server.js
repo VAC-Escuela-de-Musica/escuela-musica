@@ -1,9 +1,20 @@
-// Importa la configuración centralizada
-import { config } from "./config/index.js";
-// Importa la aplicación Express configurada
-import { createApp } from "./app.js";
+// Importa el archivo 'configEnv.js' para cargar las variables de entorno
+import { PORT, HOST } from "./config/configEnv.js";
+import path from "node:path";
+// Importa el módulo 'cors' para agregar los cors
+import cors from "cors";
+// Importa el módulo 'express' para crear la aplicacion web
+import express, { urlencoded, json } from "express";
+// Importamos morgan para ver las peticiones que se hacen al servidor
+import morgan from "morgan";
+// Importa el módulo 'cookie-parser' para manejar las cookies
+import cookieParser from "cookie-parser";
+/** El enrutador principal */
+import indexRoutes from "./routes/index.routes.js";
 // Importa el archivo 'configDB.js' para crear la conexión a la base de datos
 import { setupDB } from "./config/configDB.js";
+// Importa la configuración de MinIO
+import { setupMinIO } from "./config/minio.config.js";
 // Importa el handler de errores
 import { handleFatalError, handleError } from "./utils/errorHandler.util.js";
 import { createRoles, createUsers } from "./config/initialSetup.js";
@@ -15,12 +26,34 @@ import { initializeServices } from "./services/index.js";
  */
 async function setupServer() {
   try {
-    // Crea la aplicación Express con toda la configuración
-    const app = createApp();
+    /** Instancia de la aplicacion */
+    const app = express();
+    app.disable("x-powered-by");
+    // Agregamos los cors
+    app.use(cors({ credentials: true, origin: true }));
+    // Agrega el middleware para el manejo de datos en formato URL
+    app.use(urlencoded({ extended: true }));
+    // Agrega el middleware para el manejo de datos en formato JSON
+    app.use(json());
+    // Agregamos el middleware para el manejo de cookies
+    app.use(cookieParser());
+    // Agregamos morgan para ver las peticiones que se hacen al servidor
+    app.use(morgan("dev"));
+    // Agrega el enrutador principal al servidor
+    app.use("/api", indexRoutes);
+
+    // === Servir archivos estáticos del frontend (dist) ===
+    const distPath = path.resolve(process.cwd(), "../frontend/dist");
+    app.use(express.static(distPath));
+
+    // Para SPA: redirige cualquier ruta que NO empiece con /api al index.html del frontend
+    app.get(/^\/(?!api).*/, (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
 
     // Inicia el servidor en el puerto especificado
-    const server = app.listen(config.server.port, () => {
-      console.log(`=> Servidor corriendo en ${config.server.host}:${config.server.port}`);
+    const server = app.listen(PORT, () => {
+      console.log(`=> Servidor corriendo en ${HOST}:${PORT}`);
     });
 
     return server;
@@ -62,9 +95,12 @@ async function setupAPI() {
     
     console.log("✅ API iniciada exitosamente");
   } catch (err) {
+    console.error("[API] Error en setupAPI:", err);
     handleFatalError(err, "/server.js -> setupAPI");
   }
 }
+const app = express();
+app.use(cors());
 
 // Inicia la API
 setupAPI()

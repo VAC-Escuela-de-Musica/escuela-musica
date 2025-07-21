@@ -21,4 +21,11 @@ const minioClient = new Client({
 
 const BUCKET = process.env.MINIO_BUCKET;
 
-export { minioClient, BUCKET };
+
+// Puedes implementar la función setupMinIO aquí si necesitas lógica de inicialización
+function setupMinIO() {
+  // Ejemplo: verificar si el bucket existe, crear si no existe, etc.
+  // Por ahora es un placeholder
+}
+
+export { minioClient, BUCKET, setupMinIO };

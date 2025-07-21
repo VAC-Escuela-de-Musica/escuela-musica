@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../components/AuthContextProvider.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import './DashboardLayout.css';
 
@@ -32,7 +32,7 @@ const DashboardLayout = () => {
               
               {/* Solo mostrar para admins y profesores */}
               {(isAdmin() || isTeacher()) && (
-                <Link to="/upload" className="nav-link">
+                <Link to="/dashboard/upload" className="nav-link">
                   <span className="nav-icon">📤</span> Cargar
                 </Link>
               )}

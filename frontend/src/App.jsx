@@ -1,12 +1,19 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import './App.css'
-import { AuthProvider } from './components/AuthContextProvider.jsx'
-import ProtectedRoute from './components/ProtectedRoute.jsx'
-import DashboardLayout from './components/DashboardLayout.jsx'
-import LoginPage from './pages/LoginPage.jsx'
-import DashboardPage from './pages/DashboardPage.jsx'
-import UploadPage from './pages/UploadPage.jsx'
-import { useTheme } from './hooks/useTheme.js'
+import DashboardLayout from "./components/DashboardLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
+import DashboardPage from "./pages/DashboardPage";
+import UploadPage from "./pages/UploadPage";
+
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useTheme } from '@mui/material/styles';
+import React, { Suspense, lazy } from "react";
+const HomePage = lazy(() => import("./pages/Homepage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const InicioUsuario = lazy(() => import("./pages/paginaUsuario"));
+const AlumnosPage = lazy(() => import("./pages/AlumnosPage"));
+
+import Navbar from "./components/Navbar";
+import Loader from "./components/Loader";
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   // Inicializar el tema
@@ -14,33 +21,37 @@ function App() {
 
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Ruta pública - Login */}
-          <Route path="/login" element={<LoginPage />} />
-          
-          {/* Rutas protegidas */}
-          <Route path="/" element={
-            <ProtectedRoute>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }>
-            {/* Ruta por defecto redirige al dashboard */}
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            
-            {/* Dashboard principal */}
-            <Route path="dashboard" element={<DashboardPage />} />
-            
-            {/* Página de subida */}
-            <Route path="upload" element={<UploadPage />} />
-          </Route>
-          
-          {/* Ruta catch-all - redirige al dashboard */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Router>
+      <Routes>
+        {/* Landing page pública */}
+        <Route path="/" element={
+          <Suspense fallback={<Loader />}>
+            <HomePage />
+          </Suspense>
+        } />
+
+        {/* Ruta pública - Login */}
+        <Route path="/login" element={
+          <Suspense fallback={<Loader />}>
+            <LoginPage />
+          </Suspense>
+        } />
+
+        {/* Rutas protegidas bajo /dashboard */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<DashboardPage />} />
+          <Route path="upload" element={<UploadPage />} />
+        </Route>
+
+        {/* Ruta catch-all - redirige a la landing */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      {/* Fin de las rutas */}
     </AuthProvider>
   )
 }
 
-export default App
+export default App;

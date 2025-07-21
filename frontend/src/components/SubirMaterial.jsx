@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useMaterials } from '../hooks/useMaterials.js';
-import { useAuth } from './AuthContextProvider.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { logger } from '../utils/logger.js';
 import './darkmode.css';
 import './SubirMaterial.styles.css';

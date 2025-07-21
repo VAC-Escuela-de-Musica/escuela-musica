@@ -25,6 +25,15 @@ const router = Router();
 router.use(fileAccessMiddleware);
 router.use(rateLimiter(2000, 15 * 60 * 1000)); // 2000 requests por 15 minutos para archivos (aumentado para desarrollo)
 
+// ============= RUTAS QUE REQUIEREN AUTENTICACIÓN =============
+router.use(authenticateJWT);
+router.use(loadUserData);
+// Middleware de debug para todas las rutas de este router (ahora después de autenticación)
+router.use((req, res, next) => {
+  console.log(`[FILE] ${req.method} ${req.originalUrl} | user: ${req.user?.username || 'anonimo'}`);
+  next();
+});
+
 // Nuevas rutas optimizadas con fallback automático y autenticación opcional
 router.get("/serve/:id", 
   validateMongoId('id'),
