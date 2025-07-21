@@ -63,23 +63,20 @@
 - Padding y margen bien adaptados a móvil y desktop.
 
 ## 6. Pasos Sugeridos para Refactorización
-1. Crear carpeta `AlumnoForm/` y mover el componente principal.
-2. Extraer subcomponentes por sección (ver punto 3).
-3. Extraer validadores y utilidades a archivos aparte.
-4. Unificar lógica de arrays y booleans.
-5. Eliminar duplicidad de campos.
-6. Mejorar accesibilidad y documentar props.
-7. Modularizar estilos y constantes.
 
-## 7. Referencias de Patrones y Buenas Prácticas
-- [Atomic Design](https://bradfrost.com/blog/post/atomic-web-design/)
-- [Single Responsibility Principle](https://en.wikipedia.org/wiki/Single-responsibility_principle)
-- [React Component Patterns](https://react.dev/learn/component-patterns)
-- [Material UI Best Practices](https://mui.com/material-ui/guides/composition/)
+- [x] 1. Crear carpeta `AlumnoForm/` y mover el componente principal.
+- [x] 2. Extraer subcomponentes por sección (ver punto 3).
+- [x] 3. Extraer validadores y utilidades a archivos aparte.
+- [x] 4. Unificar lógica de arrays y booleans.
+- [x] 5. Eliminar duplicidad de campos.
+- [x] 6. Mejorar accesibilidad y documentar props.
+- [x] 7. Modularizar estilos y constantes.
+
+> **Nota:** Todos los cambios y detalles de implementación deben registrarse en el archivo `AlumnoForm.changelog.md` con fecha, motivo, resumen y archivos afectados. Este documento principal solo debe marcar el avance general y servir como guía de trabajo, no para registrar detalles de cambios.
 
 ---
 
-_Este archivo sirve como guía estructurada y referencia rápida para futuras consultas y para planificar la refactorización del componente AlumnoForm._
+_Este archivo sirve como guía rápida para futuras consultas y para planificar la refactorización del componente AlumnoForm. El registro detallado de cambios está en el changelog._
 
 ## Flujo de Datos
 - Recibe `initialData`, `onSubmit`, `onClose` como props.
@@ -112,3 +109,9 @@ _Este archivo sirve como guía estructurada y referencia rápida para futuras co
 ---
 
 _Este archivo sirve como guía rápida para futuras consultas y para planificar la refactorización del componente AlumnoForm._
+
+## [21-07-2025] Refactorización iniciada
+- Se creó la estructura modular en `components/AlumnoForm/`.
+- Se generaron los archivos base para subcomponentes, utilidades, validadores y constantes.
+- Se consultó y respetó el changelog y las notas de refactorización antes de migrar lógica.
+- Próximo paso: migrar lógica y campos del formulario original a los subcomponentes.
