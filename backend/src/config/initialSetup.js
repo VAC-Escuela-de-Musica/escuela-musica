@@ -19,7 +19,7 @@ async function createUsers() {
         email: "user@email.com",
         rut: "12345678-9",
         password: await User.encryptPassword("user123"),
-        roles: ["estudiante"],
+        roles: ["estudiante"], //ver si se implementa
       }).save(),
       new User({
         username: "admin",

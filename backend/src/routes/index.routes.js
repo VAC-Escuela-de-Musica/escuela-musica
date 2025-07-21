@@ -17,6 +17,9 @@ import carouselRoutes from "./carousel.routes.js";
 /** Enrutador de roles */
 import roleRoutes from "./role.routes.js";
 
+/** Enrutador de mensajería */
+import messagingRoutes from "./messaging.routes.js";
+
 /** Middleware de autenticación */
 import authenticationMiddleware from "../middlewares/authentication.middleware.js";
 
@@ -31,10 +34,16 @@ router.use("/auth", authRoutes);
 router.use("/carousel", carouselRoutes);
 // Define las rutas para los roles /api/roles
 router.use("/roles", roleRoutes);
-router.use("/alumnos", authenticationMiddleware, alumnosRoutes);
+// Define las rutas para la mensajería /api/messaging
+router.use("/messaging", messagingRoutes);
 
 router.get("/saludo", (req, res) => {
   res.send("¡Hola desde el backend!");
+});
+
+// Ruta para /api
+router.get("/", (req, res) => {
+  res.send("API Escuela de Música funcionando");
 });
 
 // Exporta el enrutador

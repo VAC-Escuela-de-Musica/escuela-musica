@@ -51,7 +51,7 @@ async function setupServer() {
 
     // Inicia el servidor en el puerto especificado
     server.listen(PORT, () => {
-      // ...existing code...
+      console.log(`=> Servidor corriendo en ${HOST}:${PORT}/api`);
     });
   } catch (err) {
     handleError(err, "/server.js -> setupServer");
@@ -86,5 +86,5 @@ app.use(cors());
 
 // Inicia la API
 setupAPI()
-  // ...existing code...
+  .then(() => console.log("=> API Iniciada exitosamente"))
   .catch((err) => handleFatalError(err, "/server.js -> setupAPI"));
