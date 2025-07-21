@@ -16,12 +16,45 @@ const minDate = new Date(currentYear, 0, 1);
 const maxDate = new Date(currentYear + 1, 11, 31); 
 
 export default function HorarioSemana() {
+  const fetchAutenticado = async (url, options = {}) => {
+    const token = localStorage.getItem("token");
+    const headers = {
+      "Authorization": `Bearer ${token}`,
+      ...options.headers
+    };
+
+    const response = await fetch(url, {
+      ...options,
+      headers
+    });
+
+    return response;
+  };
+
   const [fecha, setFecha] = useState(new Date());
   const [horaInicio, setHoraInicio] = useState(null);
   const [horaFin, setHoraFin] = useState(null);
   const [sala, setSala] = useState("0"); 
-
   const [clasesSemana, setClasesSemana] = useState([]);
+  const [autorizado, setAutorizado] = useState(true);
+  const [nombresProfesores, setNombresProfesores] = useState({});
+  const [profesor, setProfesor] = useState("0");
+  const [listaProfesores, setListaProfesores] = useState([]);
+
+  const obtenerNombreProfesor = async (id) => {
+    if (nombresProfesores[id]) return nombresProfesores[id];
+    try {
+      const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setNombresProfesores(prev => ({ ...prev, [id]: data.data.username }));
+        return data.data.username;
+      }
+    } catch (error) {
+      console.error("Error al obtener nombre del profesor:", error);
+    }
+    return id;
+  };
 
   useEffect(() => {
     const fetchClasesSemana = async () => {
@@ -46,142 +79,221 @@ export default function HorarioSemana() {
             hour12: false,
           });
         }
+        if (profesor && profesor !== "0") {
+          params.profesor = profesor;
+        }
         const queryString = new URLSearchParams(params).toString();
-        const response = await fetch(`${API_URL}/horario/semana?${queryString}`);
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_URL}/horario/semana?${queryString}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (response.status === 403) {
+          setAutorizado(false);
+          return;
+        }
         if (!response.ok) {
           throw new Error(`Error HTTP: ${response.status}`);
         }
         const data = await response.json();
         setClasesSemana(data.data);
+        data.data.forEach(clase => {
+          if (clase.profesor && !nombresProfesores[clase.profesor]) {
+            obtenerNombreProfesor(clase.profesor);
+          }
+        });
       } catch (error) {
         console.error("Error al obtener clases semanales:", error);
       }
     };
 
     fetchClasesSemana();
-  }, [fecha, sala, horaInicio, horaFin]);
+  }, [fecha, sala, horaInicio, horaFin, profesor]);
+
+  useEffect(() => {
+    const cargarProfesores = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_URL}/profesores`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) throw new Error("Error al obtener profesores");
+        const data = await response.json();
+        setListaProfesores(data.data);
+      } catch (error) {
+        console.error("Error al cargar profesores:", error);
+      }
+    };
+    cargarProfesores();
+  }, []);
 
   const mesAno = fecha.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
 
   const noHayClases = !clasesSemana || clasesSemana.length === 0;
+  
+  if (!autorizado) {
+    return (
+      <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
+        <Typography variant="h5" gutterBottom>
+          No tienes permisos para acceder a esta sección.
+        </Typography>
+        <Typography>
+          Puedes navegar a otro módulo desde el menú lateral.
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
       <Box sx={{ padding: 2, backgroundColor: "#333", color: "white" }}>
 
-        <Box 
-          display={"flex"} 
-          justifyContent="space-between" 
-          alignItems="center" 
-          mb={2}
-        >
-          <Typography variant="h5" gutterBottom>
-            Filtros:
-          </Typography>
+          <Box display="flex" alignItems="center" justifyContent="start" gap={2}>
+    <Typography variant="h6" marginRight={3}>
+      Filtros:
+    </Typography>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+      <DatePicker
+        label="Selecciona una fecha"
+        format="dd/MM/yyyy"
+        value={fecha}
+        onChange={setFecha}
+        minDate={minDate}
+        maxDate={maxDate}
+        slotProps={{
+          textField: {
+            variant: "filled",
+            InputProps: { style: { backgroundColor: "#333", color: "white" } },
+            InputLabelProps: { style: { color: "white" } },
+            sx: { "& .MuiSvgIcon-root": { color: "white" } },
+            style: { width: "180px" }
+          }
+        }}
+      />
+      <TimePicker
+        label="Hora de inicio"
+        ampm={false}
+        value={horaInicio}
+        onChange={setHoraInicio}
+        slotProps={{
+          textField: {
+            variant: "filled",
+            InputProps: { style: { backgroundColor: "#333", color: "white" } },
+            InputLabelProps: { style: { color: "white" } },
+            sx: { "& .MuiSvgIcon-root": { color: "white" } },
+            style: { width: "160px" }
+          }
+        }}
+      />
+      <TimePicker
+        label="Hora de fin"
+        ampm={false}
+        value={horaFin}
+        onChange={setHoraFin}
+        slotProps={{
+          textField: {
+            variant: "filled",
+            InputProps: { style: { backgroundColor: "#333", color: "white" } },
+            InputLabelProps: { style: { color: "white" } },
+            sx: { "& .MuiSvgIcon-root": { color: "white" } },
+            style: { width: "160px" }
+          }
+        }}
+      />
+    </LocalizationProvider>
+    <TextField
+      label="Sala"
+      select
+      value={sala}
+      onChange={e => setSala(e.target.value)}
+      sx={{
+        minWidth: 130,
+        width: '170px',
+        color: "white",
+        "& .MuiSelect-icon": { color: "white" },
+        "& .MuiFilledInput-root": {
+          height: "52px",
+          display: "flex",
+          alignItems: "center"
+        }
+      }}
+      variant="filled"
+      margin="dense"
+      InputProps={{ style: { backgroundColor: "#333", color: "white" } }}
+      InputLabelProps={{ style: { color: "white" } }}
+      SelectProps={{
+        native: false,
+        IconComponent: (props) => <ArrowDropDownIcon {...props} sx={{ color: "white" }} />,
+        MenuProps: {
+          PaperProps: {
+            style: {
+              backgroundColor: "#333",
+              color: "white",
+            }
+          }
+        }
+      }}
+    >
+      <MenuItem value="0">Todas las salas</MenuItem>
+      <MenuItem value="Sala 1">Sala 1</MenuItem>
+      <MenuItem value="Sala 2">Sala 2</MenuItem>
+      <MenuItem value="Sala 3">Sala 3</MenuItem>
+    </TextField>
+    <TextField
+      label="Profesor"
+      select
+      fullWidth
+      variant="filled"
+      margin="dense"
+      value={profesor}
+      onChange={(e) => setProfesor(e.target.value)}
+      sx={{
+        minWidth: 130,
+        width: "220px",
+        color: "white",
+        "& .MuiSelect-icon": { color: "white" },
+        "& .MuiFilledInput-root": {
+          height: "52px",
+          display: "flex",
+          alignItems: "center"
+        }
+      }}
+      InputProps={{
+        style: { backgroundColor: "#333", color: "white" },
+        sx: {
+          "& .MuiSvgIcon-root": {
+            color: "white"
+          }
+        }
+      }}
+      InputLabelProps={{ style: { color: "white" }}}
+      SelectProps={{
+        native: false,
+        MenuProps: {
+          PaperProps: {
+            style: {
+              backgroundColor: "#333",
+              color: "white",
+            }
+          }
+        }
+      }}
+    >
+      <MenuItem value="0" sx={{ color: "white" }}>Todos los profesores</MenuItem>
+      {listaProfesores.map((prof) => (
+        <MenuItem key={prof._id} value={prof._id}>
+          {prof.username}
+        </MenuItem>
+      ))}
+    </TextField>
+  </Box>
 
-          <Box display="flex" gap={2} alignItems="flex-end">
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-            <DatePicker
-                label="Selecciona una fecha"
-                format="dd/MM/yyyy"
-                value={fecha}
-                onChange={setFecha}
-                minDate={minDate}
-                maxDate={maxDate}
-                slotProps={{
-                  textField: {
-                    variant: "filled",
-                    InputProps: { style: { backgroundColor: "#333", color: "white"} },
-                    InputLabelProps: { style: { color: "white" } },
-                    sx: {
-                      "& .MuiSvgIcon-root": { color: "white" },
-                    }
-                  }
-                }}
-              />
-
-              <TimePicker
-                label="Hora de inicio"
-                ampm={false}
-                value={horaInicio}
-                onChange={setHoraInicio}
-                slotProps={{
-                  textField: {
-                    variant: "filled",
-                    InputProps: { style: { backgroundColor: "#333", color: "white"} },
-                    InputLabelProps: { style: { color: "white" } },
-                    sx: {
-                      "& .MuiSvgIcon-root": { color: "white" },
-                    }
-                  }
-                }}
-              />
-
-              <TimePicker
-                label="Hora de fin"
-                ampm={false}
-                value={horaFin}
-                onChange={setHoraFin}
-                slotProps={{
-                  textField: {
-                    variant: "filled",
-                    InputProps: { style: { backgroundColor: "#333", color: "white"} },
-                    InputLabelProps: { style: { color: "white" } },
-                    sx: {
-                      "& .MuiSvgIcon-root": { color: "white" },
-                    }
-                  }
-                }}
-              />
-          </LocalizationProvider>
-          <TextField
-            label="Sala"
-            select
-            value={sala}
-            onChange={e => setSala(e.target.value)}
-            sx={{
-              minWidth: 130,
-              height: "52px",
-              width: '170px',
-              "& .MuiSelect-icon": {
-                color: "white"
-              }
-            }}
-            variant="filled"
-            margin="dense"
-            InputProps={{
-              style: { backgroundColor: "#333", color: "white" }
-            }}
-            InputLabelProps={{ style: { color: "white" }}}
-            SelectProps={{
-              native: false,
-              IconComponent: (props) => <ArrowDropDownIcon {...props} sx={{ color: "white" }} />,
-              MenuProps: {
-                PaperProps: {
-                  style: {
-                    backgroundColor: "#333",
-                    color: "white",
-                  }
-                }
-              }
-            }}
-          >
-            <MenuItem value="0">Todas las salas</MenuItem>
-            <MenuItem value="Sala 1">Sala 1</MenuItem>
-            <MenuItem value="Sala 2">Sala 2</MenuItem>
-            <MenuItem value="Sala 3">Sala 3</MenuItem>
-          </TextField>
-          </Box>
-
-        </Box>
-
-        <Box display={"flex"} justifyContent="center" mb={1}>
-          <Typography variant="h6" gutterBottom sx={{ textTransform: "capitalize" }}>
+        <Typography variant="h6" align="center" sx={{ mt: 3, mb: 3 }}>
             {mesAno}
           </Typography>
-        </Box>
 
-        
-      
       <Grid container columns={5} spacing={2}>
         {diasSemana.map((dia) => {
           const index = diasSemana.indexOf(dia);
@@ -236,12 +348,12 @@ export default function HorarioSemana() {
                           textAlign: "left",
                         }}
                       >
-                        <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                          {clase.titulo}
-                        </Typography>
-                        <Typography variant="caption">Sala: {clase.sala}</Typography><br />
+                        <Typography variant="h7" sx={{ fontWeight: "bold" }}>{clase.titulo}</Typography><br />
+                        <Typography variant="caption">{nombresProfesores[clase.profesor] || "Cargando nombre del profesor..."}</Typography><br />
+                        { !nombresProfesores[clase.profesor] && obtenerNombreProfesor(clase.profesor) }
+                        <Typography variant="caption">{clase.sala}</Typography><br />
                         <Typography variant="caption">
-                          Horario: {clase.horarios[0].horaInicio} - {clase.horarios[0].horaFin}
+                          {clase.horarios[0].horaInicio} - {clase.horarios[0].horaFin}
                         </Typography>
                       </Box>
                     ))}

@@ -9,36 +9,41 @@ export default function Clases() {
   
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        {active === "dia" && "Horario diario"}
-        {active === "semanal" && "Horario semanal"}
-        {active === "mes" && "Horario mensual"}
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h4" gutterBottom>
+          {active === "dia" && "Horario diario"}
+          {active === "semanal" && "Horario semanal"}
+          {active === "mes" && "Horario mensual"}
+        </Typography>
 
-      <Box display={"flex"} alignItems="left" gap={1} mb={2}>
-        <Button
-          onClick={() => setActive("dia")}
-          variant="outlined"
-          sx={{ color: "#ffffff", borderColor: "#ffffff", height: "fit-content" }}
-        >
-          Por día
-        </Button>
+        <Box display="flex" gap={1}>
+          <Button
+            disabled={active === "dia"}
+            onClick={() => setActive("dia")}
+            variant="outlined"
+            sx={{ color: "#ffffff", borderColor: "#ffffff", height: "fit-content" }}
+          >
+            Por día
+          </Button>
 
-        <Button
-          onClick={() => setActive("semanal")}
-          variant="outlined"
-          sx={{ color: "#ffffff", borderColor: "#ffffff", height: "fit-content" }}
-        >
-          Semanal
-        </Button>
+          <Button
+            disabled={active === "semanal"}
+            onClick={() => setActive("semanal")}
+            variant="outlined"
+            sx={{ color: "#ffffff", borderColor: "#ffffff", height: "fit-content" }}
+          >
+            Semanal
+          </Button>
 
-        <Button
-          onClick={() => setActive("mes")}
-          variant="outlined"
-          sx={{ color: "#ffffff", borderColor: "#ffffff", height: "fit-content" }}
-        >
-          Mensual
-        </Button>
+          <Button
+            disabled={active === "mes"}
+            onClick={() => setActive("mes")}
+            variant="outlined"
+            sx={{ color: "#ffffff", borderColor: "#ffffff", height: "fit-content" }}
+          >
+            Mensual
+          </Button>
+        </Box>
       </Box>
 
       {active === "dia" && <HorarioDia />}

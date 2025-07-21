@@ -1,23 +1,52 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Box, Typography } from '@mui/material';
 import { ArrowCircleLeftOutlined } from '@mui/icons-material';
-import { useEffect } from 'react';
-import EditIcon from '@mui/icons-material/Edit';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/clases`;
 
 const ClasesCanceladas = ({ setActiveModule }) => {
   const [canceledClases, setCanceledClases] = useState([]);
   const [filtroActivo, setFiltroActivo] = useState("todas");
+  const [nombresProfesores, setNombresProfesores] = useState({});
+
+  const fetchAutenticado = async (url, options = {}) => {
+    const token = localStorage.getItem("token");
+    const headers = {
+      "Authorization": `Bearer ${token}`,
+      ...options.headers
+    };
+
+    const response = await fetch(url, {
+      ...options,
+      headers
+    });
+
+    return response;
+  };
+
+  // Función para obtener el nombre del profesor por ID
+  const obtenerNombreProfesor = async (id) => {
+    if (!id || nombresProfesores[id]) return;
+    try {
+      const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setNombresProfesores(prev => ({ ...prev, [id]: data.data.username }));
+      }
+    } catch (error) {
+      console.error("Error al obtener nombre del profesor:", error);
+    }
+  };
 
   const fetchCanceledClasses = async () => {
     try {
-      const response = await fetch(`${API_URL}/canceled_all`);
+      const response = await fetchAutenticado(`${API_URL}/canceled_all`);
       if (!response.ok) {
         throw new Error("Error al obtener las clases canceladas.");
       }
       const data = await response.json();
       setCanceledClases(data.data);
+      data.data.forEach(clase => obtenerNombreProfesor(clase.profesor));
     } catch (error) {
       console.error(error);
       setCanceledClases([]);
@@ -26,12 +55,13 @@ const ClasesCanceladas = ({ setActiveModule }) => {
 
   const fetchPreviousCanceledClasses = async () => {
     try {
-      const response = await fetch(`${API_URL}/canceled_previous`);
+      const response = await fetchAutenticado(`${API_URL}/canceled_previous`);
       if (!response.ok) {
         throw new Error("Error al obtener las clases canceladas anteriores.");
       }
       const data = await response.json();
       setCanceledClases(data.data);
+      data.data.forEach(clase => obtenerNombreProfesor(clase.profesor));
     } catch (error) {
       console.error(error);
       setCanceledClases([]);
@@ -40,12 +70,13 @@ const ClasesCanceladas = ({ setActiveModule }) => {
 
   const fetchTodayCanceledClasses = async () => {
     try {
-      const response = await fetch(`${API_URL}/canceled_today`);
+      const response = await fetchAutenticado(`${API_URL}/canceled_today`);
       if (!response.ok) {
         throw new Error("Error al obtener las clases canceladas de hoy.");
       }
       const data = await response.json();
       setCanceledClases(data.data);
+      data.data.forEach(clase => obtenerNombreProfesor(clase.profesor));
     } catch (error) {
       console.error(error);
       setCanceledClases([]);
@@ -54,12 +85,13 @@ const ClasesCanceladas = ({ setActiveModule }) => {
 
   const fetchNextCanceledClasses = async () => {
     try {
-      const response = await fetch(`${API_URL}/canceled_next`);
+      const response = await fetchAutenticado(`${API_URL}/canceled_next`);
       if (!response.ok) {
         throw new Error("Error al obtener las clases canceladas próximas.");
       }
       const data = await response.json();
       setCanceledClases(data.data);
+      data.data.forEach(clase => obtenerNombreProfesor(clase.profesor));
     } catch (error) {
       console.error(error);
       setCanceledClases([]);
@@ -173,11 +205,12 @@ const ClasesCanceladas = ({ setActiveModule }) => {
                 <Typography><strong>Título:</strong> {clase.titulo}</Typography>
                 <Typography><strong>Descripción:</strong> {clase.descripcion}</Typography>
                 <Typography><strong>Estado:</strong> {clase.estado}</Typography>
+                <Typography><strong>Profesor:</strong> {nombresProfesores[clase.profesor] }</Typography>
                 <Typography><strong>Sala:</strong> {clase.sala}</Typography>
                 <Typography><strong>Fecha:</strong> {clase.horarios[0].dia}</Typography>
                 <Typography><strong>Hora Inicio:</strong> {clase.horarios[0].horaInicio}</Typography>
                 <Typography><strong>Hora Fin:</strong> {clase.horarios[0].horaFin}</Typography>
-                <Typography><strong>Profesor:</strong> {clase.profesor}</Typography>
+                
               </Box>
             </Box>
           ))

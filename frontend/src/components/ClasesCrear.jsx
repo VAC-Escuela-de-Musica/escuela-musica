@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -22,15 +22,40 @@ export default function ClasesCrear({ setActiveModule }) {
   const [descripcion, setDescripcion] = useState("");
   const [sala, setSala] = useState("");
   const [profesor, setProfesor] = useState("");
+  const [listaProfesores, setListaProfesores] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [horaInicio, setHoraInicio] = useState(null);
   const [horaFin, setHoraFin] = useState(null);
   const [mensajeExito, setMensajeExito] = useState("");
   const [mensajeError, setMensajeError] = useState("");
+  const [autorizado, setAutorizado] = useState(true);
 
   const currentYear = new Date().getFullYear();
   const maxDate = new Date(currentYear +1, 11, 31);
   const minDate = new Date(currentYear, 0, 1);
+
+  useEffect(() => {
+    const cargarProfesores = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_URL}/profesores`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (!response.ok) {
+          throw new Error("Error al obtener profesores");
+        }
+        const data = await response.json();
+        setListaProfesores(data.data);
+      } catch (error) {
+        console.error("Error al cargar profesores:", error);
+        setMensajeError("No se pudieron cargar los profesores.");
+      }
+    };
+
+    cargarProfesores();
+  }, []);
 
   const handleGuardarClase = async () => {
     if (!titulo || !descripcion || !sala || !selectedDate || !horaInicio || !horaFin) {
@@ -64,18 +89,26 @@ export default function ClasesCrear({ setActiveModule }) {
 
     try {
       console.log("Enviando al backend:", nuevaClase);
+      const token = localStorage.getItem("token");
       const response = await fetch(`${API_URL}/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify(nuevaClase),
       });
 
+      if (response.status === 403) {
+        setAutorizado(false);
+        return;
+      }
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Detalles del error:", errorText);
-        setMensajeError("Error al guardar la clase");
+        const parsedError = JSON.parse(errorText);
+        setMensajeError(parsedError.message || "Error al guardar la clase.");
         return;
       }
 
@@ -91,6 +124,19 @@ export default function ClasesCrear({ setActiveModule }) {
       console.error("Error al guardar la clase:", error);
     }
   };
+
+  if (!autorizado) {
+    return (
+      <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white", p: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          No tienes permisos para acceder a esta sección.
+        </Typography>
+        <Typography>
+          Puedes navegar a otro módulo desde el menú lateral.
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
@@ -129,15 +175,41 @@ export default function ClasesCrear({ setActiveModule }) {
         />
         <TextField
           label="Profesor"
-          
+          select
+          required
           fullWidth
           variant="filled"
           margin="dense"
-          InputProps={{ style: { backgroundColor: "#333", color: "white" } }}
-          InputLabelProps={{ style: { color: "white" } }}
           value={profesor}
           onChange={(e) => setProfesor(e.target.value)}
-        />
+          InputProps={{ 
+            style: { backgroundColor: "#333", color: "white" },
+            sx: {
+              "& .MuiSvgIcon-root": {
+                color: "white"
+              }
+            }
+         }}
+          InputLabelProps={{ style: { color: "white" }}}
+          SelectProps={{
+            native: false,
+            MenuProps: {
+              PaperProps: {
+                style: {
+                  backgroundColor: "#333",
+                  color: "white",
+                }
+              }
+            }
+          }}
+        >
+          <MenuItem disabled value="" sx={{ color: "white" }}>Elegir profesor</MenuItem>
+          {listaProfesores.map((prof) => (
+            <MenuItem key={prof._id} value={prof._id}>
+              {prof.username}
+            </MenuItem>
+          ))}
+        </TextField>
         <TextField
           label="Sala"
           select
@@ -148,7 +220,12 @@ export default function ClasesCrear({ setActiveModule }) {
           value={sala}
           onChange={(e) => setSala(e.target.value)}
           InputProps={{
-            style: { backgroundColor: "#333", color: "white" }
+            style: { backgroundColor: "#333", color: "white" },
+            sx: {
+              "& .MuiSvgIcon-root": {
+                color: "white"
+              }
+            }
           }}
           InputLabelProps={{ style: { color: "white" }}}
           SelectProps={{

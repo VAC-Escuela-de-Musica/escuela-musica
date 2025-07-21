@@ -11,14 +11,48 @@ const API_URL = `${import.meta.env.VITE_API_URL}/clases`;
 export default function HorarioMes() {
     const [fecha, setFecha] = useState(new Date());
     const [clasesMes, setClasesMes] = useState([]);
-    const [ horaInicio, setHoraInicio ] = useState(null);
-    const [ horaFin, setHoraFin ] = useState(null);
-    const [ sala, setSala ] = useState("0"); 
+    const [horaInicio, setHoraInicio] = useState(null);
+    const [horaFin, setHoraFin] = useState(null);
+    const [sala, setSala] = useState("0"); 
     const [showError, setShowError] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [autorizado, setAutorizado] = useState(true);
+    const [nombresProfesores, setNombresProfesores] = useState({});
+    // Agregar estados para profesor y listaProfesores
+    const [profesor, setProfesor] = useState("0");
+    const [listaProfesores, setListaProfesores] = useState([]);
+
+    const fetchAutenticado = async (url, options = {}) => {
+      const token = localStorage.getItem("token");
+      const headers = {
+        "Authorization": `Bearer ${token}`,
+        ...options.headers
+      };
+
+      const response = await fetch(url, {
+        ...options,
+        headers
+      });
+
+      return response;
+    };
+
+    const obtenerNombreProfesor = async (id) => {
+    if (nombresProfesores[id]) return nombresProfesores[id];
+    try {
+      const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setNombresProfesores(prev => ({ ...prev, [id]: data.data.username }));
+        return data.data.username;
+      }
+    } catch (error) {
+      console.error("Error al obtener nombre del profesor:", error);
+    }
+    return id;
+  };
 
     useEffect(() => {
-        // Validación: la hora de inicio no puede ser mayor a la de fin
         if (horaInicio && horaFin && horaInicio > horaFin) {
             setErrorMessage("La hora de inicio no puede ser mayor que la hora de fin.");
             setShowError(true);
@@ -40,12 +74,33 @@ export default function HorarioMes() {
                 if (horaInicioStr) queryParams.append("horaInicio", horaInicioStr);
                 if (horaFinStr) queryParams.append("horaFin", horaFinStr);
                 if (sala && sala !== "0") queryParams.append("sala", sala);
+                // Agregar filtro de profesor si corresponde
+                if (profesor && profesor !== "0") {
+                  queryParams.append("profesor", profesor);
+                }
 
-                const response = await fetch(`${API_URL}/horario/mes?${queryParams.toString()}`);
+                const token = localStorage.getItem("token");
+                const response = await fetch(`${API_URL}/horario/mes?${queryParams.toString()}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                if (response.status === 403) {
+                    setAutorizado(false);
+                    return;
+                }
 
                 if (response.ok) {
                     const data = await response.json();
                     setClasesMes(data.data || []);
+                    if (data.data) {
+                      const idsFaltantes = data.data
+                        .map(clase => clase.profesor)
+                        .filter(id => id && !nombresProfesores[id]);
+                      for (const id of idsFaltantes) {
+                        await obtenerNombreProfesor(id);
+                      }
+                    }
                 } else {
                     setClasesMes([]);
                 }
@@ -54,168 +109,249 @@ export default function HorarioMes() {
             }
         };
         fetchClasesMes();
-    }, [fecha, horaInicio, horaFin, sala]);
+    }, [fecha, horaInicio, horaFin, sala, profesor]);
+
+    // Cargar profesores al montar el componente
+    useEffect(() => {
+      const cargarProfesores = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const response = await fetch(`${API_URL}/profesores`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (!response.ok) {
+            throw new Error("Error al obtener profesores");
+          }
+          const data = await response.json();
+          setListaProfesores(data.data);
+        } catch (error) {
+          console.error("Error al cargar profesores:", error);
+          // Si quieres mostrar error visual, podrías usar setErrorMessage aquí
+        }
+      };
+      cargarProfesores();
+    }, []);
 
     const mesAno = fecha.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
 
     const noHayClases = clasesMes.length === 0;
 
+    if (!autorizado) {
+    return (
+      <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
+        <Typography variant="h5" gutterBottom>
+          No tienes permisos para acceder a esta sección.
+        </Typography>
+        <Typography>
+          Puedes navegar a otro módulo desde el menú lateral.
+        </Typography>
+      </Box>
+    );
+  }
+
     return (
         <Box sx={{ padding: 2, backgroundColor: "#333", color: "white" }}>
             
-            <Box display={"flex"} justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h5" gutterBottom>
-                    Filtros:
-                </Typography>
-                <Box sx={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
-                    <FormControl sx={{ minWidth: 120 }}>
-                        <InputLabel sx={{ color: "white" }}>Mes</InputLabel>
-                        <Select
-                        value={fecha.getMonth()}
-                        label="Mes"
-                        onChange={(e) => {
-                            const nuevaFecha = new Date(fecha);
-                            nuevaFecha.setMonth(e.target.value);
-                            setFecha(new Date(nuevaFecha)); 
-                        }}
-                        sx={{
-                            color: "white",
-                            "& .MuiSelect-icon": {
-                                color: "white"
-                            }
-                        }}
-                        MenuProps={{
-                          PaperProps: {
-                            sx: {
-                              backgroundColor: "#333",
-                              color: "white"
-                            }
-                          }
-                        }}
-                        >
-                        {[
-                            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-                        ].map((mes, idx) => (
-                            <MenuItem key={mes} value={idx}>
-                            {mes}
-                            </MenuItem>
-                        ))}
-                        </Select>
-                    </FormControl>
+            <Box display="flex" alignItems="center" justifyContent="start" gap={2}>
+              <Typography variant="h6" marginRight={3}>
+                Filtros:
+              </Typography>
 
-                    <FormControl sx={{ minWidth: 120 }}>
-                        <InputLabel sx={{ color: "white" }}>Año</InputLabel>
-                        <Select
-                        value={fecha.getFullYear()}
-                        label="Año"
-                        onChange={(e) => {
-                            const nuevaFecha = new Date(fecha);
-                            nuevaFecha.setFullYear(e.target.value);
-                            setFecha(new Date(nuevaFecha)); 
-                        }}
-                        sx={{
-                            color: "white",
-                            "& .MuiSelect-icon": {
-                                color: "white"
-                            }
-                        }}
-                        MenuProps={{
-                          PaperProps: {
-                            sx: {
-                              backgroundColor: "#333",
-                              color: "white"
-                            }
-                          }
-                        }}
-                        >
-                        {[new Date().getFullYear(), new Date().getFullYear() + 1].map((año) => (
-                            <MenuItem key={año} value={año}>
-                            {año}
-                            </MenuItem>
-                        ))}
-                        </Select>
-                    </FormControl>
+              <FormControl>
+                <InputLabel sx={{ color: "white" }}>Mes</InputLabel>
+                <Select
+                  value={fecha.getMonth()}
+                  label="Mes"
+                  onChange={(e) => {
+                    const nuevaFecha = new Date(fecha);
+                    nuevaFecha.setMonth(e.target.value);
+                    setFecha(new Date(nuevaFecha));
+                  }}
+                  sx={{
+                    color: "white",
+                    width: 140,
+                    "& .MuiSelect-icon": {
+                      color: "white"
+                    }
+                  }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        backgroundColor: "#333",
+                        color: "white"
+                      }
+                    }
+                  }}
+                >
+                  {[
+                    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+                  ].map((mes, idx) => (
+                    <MenuItem key={mes} value={idx}>
+                      {mes}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-                    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                      <TimePicker
-                        label="Hora de inicio"
-                        ampm={false}
-                        value={horaInicio}
-                        onChange={setHoraInicio}
-                        slotProps={{
-                          textField: {
-                            variant: "filled",
-                            InputProps: { style: { backgroundColor: "#333", color: "white"} },
-                            InputLabelProps: { style: { color: "white" } },
-                            sx: {
-                              "& .MuiSvgIcon-root": { color: "white" },
-                            }
-                          }
-                        }}
-                      />
-                      <TimePicker
-                        label="Hora de fin"
-                        ampm={false}
-                        value={horaFin}
-                        onChange={setHoraFin}
-                        slotProps={{
-                          textField: {
-                            variant: "filled",
-                            InputProps: { style: { backgroundColor: "#333", color: "white"} },
-                            InputLabelProps: { style: { color: "white" } },
-                            sx: {
-                              "& .MuiSvgIcon-root": { color: "white" },
-                            }
-                          }
-                        }}
-                      />
-                    </LocalizationProvider>
+              <FormControl>
+                <InputLabel sx={{ color: "white" }}>Año</InputLabel>
+                <Select
+                  value={fecha.getFullYear()}
+                  label="Año"
+                  onChange={(e) => {
+                    const nuevaFecha = new Date(fecha);
+                    nuevaFecha.setFullYear(e.target.value);
+                    setFecha(new Date(nuevaFecha));
+                  }}
+                  sx={{
+                    color: "white",
+                    width: 90,
+                    "& .MuiSelect-icon": {
+                      color: "white"
+                    }
+                  }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        backgroundColor: "#333",
+                        color: "white"
+                      }
+                    }
+                  }}
+                >
+                  {[new Date().getFullYear(), new Date().getFullYear() + 1].map((año) => (
+                    <MenuItem key={año} value={año}>
+                      {año}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-                    <TextField
-                                  label="Sala"
-                                  select
-                                  value={sala}
-                                  onChange={e => setSala(e.target.value)}
-                                  sx={{
-                                    minWidth: 130,
-                                    height: "52px",
-                                    width: '170px',
-                                    color: "white",
-                                    "& .MuiSelect-icon": {
-                                      color: "white"
-                                    }
-                                  }}
-                                  variant="filled"
-                                  margin="dense"
-                                  InputProps={{
-                                    style: { backgroundColor: "#333", color: "white" }
-                                  }}
-                                  InputLabelProps={{ style: { color: "white" }}}
-                                  SelectProps={{
-                                    native: false,
-                                    MenuProps: {
-                                      PaperProps: {
-                                        style: {
-                                          backgroundColor: "#333",
-                                          color: "white",
-                                        }
-                                      }
-                                    }
-                                  }}
-                                >
-                                  <MenuItem value="0">Todas las salas</MenuItem>
-                                  <MenuItem value="Sala 1">Sala 1</MenuItem>
-                                  <MenuItem value="Sala 2">Sala 2</MenuItem>
-                                  <MenuItem value="Sala 3">Sala 3</MenuItem>
-                                </TextField>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                <TimePicker
+                  label="Hora de inicio"
+                  ampm={false}
+                  value={horaInicio}
+                  onChange={setHoraInicio}
+                  slotProps={{
+                    textField: {
+                      variant: "filled",
+                      InputProps: { style: { backgroundColor: "#333", color: "white" } },
+                      InputLabelProps: { style: { color: "white" } },
+                      sx: { "& .MuiSvgIcon-root": { color: "white" } },
+                      style: { width: "160px" }
+                    }
+                  }}
+                />
+                <TimePicker
+                  label="Hora de fin"
+                  ampm={false}
+                  value={horaFin}
+                  onChange={setHoraFin}
+                  slotProps={{
+                    textField: {
+                      variant: "filled",
+                      InputProps: { style: { backgroundColor: "#333", color: "white" } },
+                      InputLabelProps: { style: { color: "white" } },
+                      sx: { "& .MuiSvgIcon-root": { color: "white" } },
+                      style: { width: "160px" }
+                    }
+                  }}
+                />
+              </LocalizationProvider>
 
-                    
-                </Box>
+              <TextField
+                label="Sala"
+                select
+                value={sala}
+                onChange={e => setSala(e.target.value)}
+                sx={{
+                  minWidth: 130,
+                  width: '170px',
+                  color: "white",
+                  "& .MuiSelect-icon": { color: "white" },
+                  "& .MuiFilledInput-root": {
+                    height: "52px",
+                    display: "flex",
+                    alignItems: "center"
+                  }
+                }}
+                variant="filled"
+                margin="dense"
+                InputProps={{ style: { backgroundColor: "#333", color: "white" } }}
+                InputLabelProps={{ style: { color: "white" } }}
+                SelectProps={{
+                  native: false,
+                  MenuProps: {
+                    PaperProps: {
+                      style: {
+                        backgroundColor: "#333",
+                        color: "white",
+                      }
+                    }
+                  }
+                }}
+              >
+                <MenuItem value="0">Todas las salas</MenuItem>
+                <MenuItem value="Sala 1">Sala 1</MenuItem>
+                <MenuItem value="Sala 2">Sala 2</MenuItem>
+                <MenuItem value="Sala 3">Sala 3</MenuItem>
+              </TextField>
+
+              <TextField
+                label="Profesor"
+                select
+                fullWidth
+                variant="filled"
+                margin="dense"
+                value={profesor}
+                onChange={(e) => setProfesor(e.target.value)}
+                sx={{
+                  minWidth: 130,
+                  width: "220px",
+                  color: "white",
+                  "& .MuiSelect-icon": { color: "white" },
+                  "& .MuiFilledInput-root": {
+                    height: "52px",
+                    display: "flex",
+                    alignItems: "center"
+                  }
+                }}
+                InputProps={{
+                  style: { backgroundColor: "#333", color: "white" },
+                  sx: {
+                    "& .MuiSvgIcon-root": {
+                      color: "white"
+                    }
+                  }
+                }}
+                InputLabelProps={{ style: { color: "white" }}}
+                SelectProps={{
+                  native: false,
+                  MenuProps: {
+                    PaperProps: {
+                      style: {
+                        backgroundColor: "#333",
+                        color: "white",
+                      }
+                    }
+                  }
+                }}
+              >
+                <MenuItem value="0" sx={{ color: "white" }}>Todos los profesores</MenuItem>
+                {listaProfesores.map((prof) => (
+                  <MenuItem key={prof._id} value={prof._id}>
+                    {prof.username}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Box>
 
 
-            <Typography variant="h6" align="center" sx={{ textTransform: "capitalize", mb: 2 }}>
+            <Typography variant="h6" align="center" sx={{ mt: 3, mb: 3 }}>
                 {mesAno}
             </Typography>
 
@@ -255,9 +391,11 @@ export default function HorarioMes() {
                       {clases.map((clase, i) => (
                         <Box key={i} sx={{ mb: 1 }}>
                           <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>{clase.titulo}</Typography>
-                          <Typography variant="body2">{clase.descripcion}</Typography>
-                          <Typography variant="body2">Sala: {clase.sala}</Typography>
-                          <Typography variant="body2">Horario: {clase.horario.horaInicio} - {clase.horario.horaFin}</Typography>
+                          <Typography variant="body2">
+                            {nombresProfesores[clase.profesor] || "Cargando nombre del profesor..."}
+                          </Typography>
+                          <Typography variant="body2">{clase.sala}</Typography>
+                          <Typography variant="body2">{clase.horario.horaInicio} - {clase.horario.horaFin}</Typography>
                         </Box>
                       ))}
                     </Box>

@@ -7,6 +7,7 @@ import {
     claseBodySchema, 
     claseIdSchema, 
     claseCancelSchema } from "../schema/clase.schema.js";
+import User from "../models/user.model.js";
 
 /**
  * Crea un nuevo horario
@@ -258,13 +259,14 @@ async function getNextCanceledClases(req, res) {
  */
 async function getHorarioDia(req, res) {
     try {
-        const { fecha, sala, horaInicio, horaFin } = req.query;
+        const { fecha, sala, horaInicio, horaFin, profesor } = req.query;
 
         const [clases, errorClases] = await claseService.getHorarioDia({
             fecha,
             sala,
             horaInicio,
             horaFin,
+            profesor,
         });
 
         if (errorClases) return respondError(req, res, 404, errorClases);
@@ -283,13 +285,14 @@ async function getHorarioDia(req, res) {
  */
 async function getHorarioSemana(req, res) {
     try {
-        const { fecha, sala, horaInicio, horaFin } = req.query;
+        const { fecha, sala, horaInicio, horaFin, profesor } = req.query;
 
         const [clases, errorClases] = await claseService.getHorarioSemana({
             fecha,
             sala,
             horaInicio,
             horaFin,
+            profesor,
         });
 
         if (errorClases) return respondError(req, res, 404, errorClases);
@@ -308,7 +311,7 @@ async function getHorarioSemana(req, res) {
  */
 async function getHorarioMes(req, res) {
     try {
-        const { mes, year, sala, horaInicio, horaFin } = req.query;
+        const { mes, year, sala, horaInicio, horaFin, profesor } = req.query;
 
         if (!mes || !year) return respondError(req, res, 400, "Mes y año son requeridos");
 
@@ -318,6 +321,7 @@ async function getHorarioMes(req, res) {
             sala,
             horaInicio,
             horaFin,
+            profesor,
         });
 
         if (errorClases) return respondError(req, res, 404, errorClases);
@@ -329,6 +333,42 @@ async function getHorarioMes(req, res) {
     }
 }
 
+/**
+ * Obiene los profesores
+ * @param {Object} req 
+ * @param {Object} res
+ */
+async function getProfesores(req, res) {
+    try {
+        const profesores = await User.find({ roles: "profesor" }).select("_id username");
+        if (!profesores || profesores.length === 0) {
+            return respondError(req, res, 404, "No se encontraron profesores");
+        }
+        respondSuccess(req, res, 200, profesores);
+    } catch (error) {
+        handleError(error, "clase.controller -> getProfesores");
+        respondError(req, res, 500, "Error al obtener los profesores");
+    }
+}
+
+/**
+ * Obtiene un profesor por su id
+ * @param {Object} req
+ * @param {Object} res
+ */
+async function getProfesorById(req, res) {
+    try {
+        const { id } = req.params;
+        const profesor = await User.findById(id).select("username");
+        if (!profesor) {
+            return respondError(req, res, 404, "Profesor no encontrado");
+        }
+        respondSuccess(req, res, 200, profesor);
+    } catch (error) {
+        handleError(error, "clase.controller -> getProfesorById");
+        respondError(req, res, 500, "Error al obtener el profesor");
+    }
+}
 
 export default { 
     createClase,
@@ -346,4 +386,6 @@ export default {
     getHorarioDia,
     getHorarioSemana,
     getHorarioMes,
+    getProfesores,
+    getProfesorById,
 };

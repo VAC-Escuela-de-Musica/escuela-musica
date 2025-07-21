@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const claseSchema = new mongoose.Schema({
   titulo: String,
   descripcion: String,
-  profesor: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Solo "profesor"
+  profesor: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   sala: String,
   horarios: [
     {

@@ -39,15 +39,53 @@ export default function Clases({ setActiveModule }) {
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [claseSeleccionada, setClaseSeleccionada] = useState(null);
   const [filtroActivo, setFiltroActivo] = useState("hoy");
+  const [autorizado, setAutorizado] = useState(true);
+  const [listaProfesores, setListaProfesores] = useState([]);
+  const [nombresProfesores, setNombresProfesores] = useState({});
+
+  const obtenerNombreProfesor = async (id) => {
+    if (nombresProfesores[id]) return nombresProfesores[id];
+    try {
+      const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setNombresProfesores(prev => ({ ...prev, [id]: data.data.username }));
+        return data.data.username;
+      }
+    } catch (error) {
+      console.error("Error al obtener nombre del profesor:", error);
+    }
+    return id;
+  };
+
+  const fetchAutenticado = async (url, options = {}) => {
+    const token = localStorage.getItem("token");
+    const headers = {
+      "Authorization": `Bearer ${token}`,
+      ...options.headers
+    };
+
+    const response = await fetch(url, {
+      ...options,
+      headers
+    });
+
+    return response;
+  };
 
   const fetchTodayClases = async () => {
     try {
-      const response = await fetch(`${API_URL}/today`);
+      const response = await fetchAutenticado(`${API_URL}/today`);
+      if (response.status === 403) {
+        setAutorizado(false);
+        return;
+      }
       if (!response.ok) {
         throw new Error("Error al obtener las clases de hoy");
       }
       const data = await response.json();
       setClases(data.data);
+      data.data.forEach(clase => obtenerNombreProfesor(clase.profesor));
     } catch (error) {
       console.error(error);
       setMensajeError("Error al obtener las clases de hoy");
@@ -56,12 +94,17 @@ export default function Clases({ setActiveModule }) {
 
   const fetchNextClases = async () => {
     try {
-      const response = await fetch(`${API_URL}/next`);
+      const response = await fetchAutenticado(`${API_URL}/next`);
+      if (response.status === 403) {
+        setAutorizado(false);
+        return;
+      }
       if (!response.ok) {
         throw new Error("Error al obtener las próximas clases");
       }
       const data = await response.json();
       setClases(data.data);
+      data.data.forEach(clase => obtenerNombreProfesor(clase.profesor));
     } catch (error) {
       console.error(error);
       setMensajeError("Error al obtener las próximas clases");
@@ -70,12 +113,17 @@ export default function Clases({ setActiveModule }) {
 
   const fetchAllClases = async () => {
     try {
-      const response = await fetch(`${API_URL}/all`);
+      const response = await fetchAutenticado(`${API_URL}/all`);
+      if (response.status === 403) {
+        setAutorizado(false);
+        return;
+      }
       if (!response.ok) {
         throw new Error("Error al obtener todas las clases");
       }
       const data = await response.json();
       setClases(data.data);
+      data.data.forEach(clase => obtenerNombreProfesor(clase.profesor));
     } catch (error) {
       console.error(error);
       setMensajeError("Error al obtener todas las clases");
@@ -84,12 +132,17 @@ export default function Clases({ setActiveModule }) {
 
   const fetchPreviousClases = async () => {
     try {
-      const response = await fetch(`${API_URL}/previous`);
+      const response = await fetchAutenticado(`${API_URL}/previous`);
+      if (response.status === 403) {
+        setAutorizado(false);
+        return;
+      }
       if (!response.ok) {
         throw new Error("Error al obtener las clases anteriores");
       }
       const data = await response.json();
       setClases(data.data);
+      data.data.forEach(clase => obtenerNombreProfesor(clase.profesor));
     } catch (error) {
       console.error(error);
       setMensajeError("Error al obtener las clases anteriores");
@@ -97,7 +150,19 @@ export default function Clases({ setActiveModule }) {
   };
 
   useEffect(() => {
+    const fetchProfesores = async () => {
+      try {
+        const response = await fetchAutenticado(`${API_URL}/profesores`);
+        if (response.ok) {
+          const data = await response.json();
+          setListaProfesores(data.data);
+        }
+      } catch (error) {
+        console.error("Error al cargar los profesores:", error);
+      }
+    };
     fetchTodayClases();
+    fetchProfesores();
   }, []);
 
   const handleGuardarClase = async () => {
@@ -131,7 +196,7 @@ export default function Clases({ setActiveModule }) {
     try {
       let response;
       if (editarClase) {
-        response = await fetch(`${API_URL}/update/${editarClase._id}`, {
+        response = await fetchAutenticado(`${API_URL}/update/${editarClase._id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(nuevaClase)
@@ -139,7 +204,14 @@ export default function Clases({ setActiveModule }) {
       }
 
       if (!response.ok) {
-        throw new Error("Error al actualizar la clase");
+        const errorText = await response.text();
+        try {
+          const parsedError = JSON.parse(errorText);
+          setMensajeError(parsedError.message || "Error al actualizar la clase");
+        } catch {
+          setMensajeError("Error al actualizar la clase");
+        }
+        return;
       }
 
       setMensajeExito("Clase actualizada con éxito");
@@ -169,7 +241,7 @@ export default function Clases({ setActiveModule }) {
 
   const handleCancelarClase = async (id) => {
     try {
-      const response = await fetch(`${API_URL}/cancel/${id}`, {
+      const response = await fetchAutenticado(`${API_URL}/cancel/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado: "cancelada" }),
@@ -213,6 +285,19 @@ export default function Clases({ setActiveModule }) {
   const currentYear = new Date().getFullYear();
   const minDate = new Date(currentYear, 0, 1); 
   const maxDate = new Date(currentYear + 1, 11, 31); 
+
+  if (!autorizado) {
+    return (
+      <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white", p: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          No tienes permisos para acceder a esta sección.
+        </Typography>
+        <Typography>
+          Puedes navegar a otro módulo desde el menú lateral.
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
@@ -315,11 +400,11 @@ export default function Clases({ setActiveModule }) {
                     <Typography><strong>Título:</strong> {clase.titulo}</Typography>
                     <Typography><strong>Descripción:</strong> {clase.descripcion}</Typography>
                     <Typography><strong>Estado:</strong> {clase.estado}</Typography>
+                    <Typography><strong>Profesor:</strong> {nombresProfesores[clase.profesor]}</Typography>
                     <Typography><strong>Sala:</strong> {clase.sala}</Typography>
                     <Typography><strong>Fecha:</strong> {clase.horarios[0].dia}</Typography>
                     <Typography><strong>Hora Inicio:</strong> {clase.horarios[0].horaInicio}</Typography>
                     <Typography><strong>Hora Fin:</strong> {clase.horarios[0].horaFin}</Typography>
-                    <Typography><strong>Profesor:</strong> {clase.profesor}</Typography>
                   </Box>
                   <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mb: 1 }}>
                     <Button
@@ -389,18 +474,45 @@ export default function Clases({ setActiveModule }) {
                 />
                 <TextField
                   label="Profesor"
+                  select
+                  required
+                  fullWidth
                   variant="filled"
-                  
-                  defaultValue={"684ce20e4e023535fc7066da"}
+                  margin="dense"
                   value={profesor}
                   onChange={e => setProfesor(e.target.value)}
-                  InputProps={{ style: { backgroundColor: "#333", color: "white" } }}
-                  InputLabelProps={{ style: { color: "white" } }}
-                  required
-                />
+                  InputProps={{ 
+                    style: { backgroundColor: "#333", color: "white" },
+                    sx: {
+                      "& .MuiSvgIcon-root": {
+                        color: "white"
+                      }
+                    }
+                  }}
+                  InputLabelProps={{ style: { color: "white" }}}
+                  SelectProps={{
+                    native: false,
+                    MenuProps: {
+                      PaperProps: {
+                        style: {
+                          backgroundColor: "#333",
+                          color: "white",
+                        }
+                      }
+                    }
+                  }}
+                >
+                  <MenuItem disabled value="" sx={{ color: "white" }}>Escoger profesor</MenuItem>
+                  {listaProfesores.map((prof) => (
+                    <MenuItem key={prof._id} value={prof._id}>
+                      {prof.username}
+                    </MenuItem>
+                  ))}
+                </TextField>
                 <TextField
                   select
                   label="Sala"
+                  required
                   variant="filled"
                   value={sala}
                   onChange={e => setSala(e.target.value)}
@@ -423,7 +535,6 @@ export default function Clases({ setActiveModule }) {
                       },
                     }
                   }}
-                  required
                 >
                   <MenuItem value="Sala 1">Sala 1</MenuItem>
                   <MenuItem value="Sala 2">Sala 2</MenuItem>

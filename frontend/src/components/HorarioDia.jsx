@@ -6,6 +6,21 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { es } from "date-fns/locale";
 
+const fetchAutenticado = async (url, options = {}) => {
+  const token = localStorage.getItem("token");
+  const headers = {
+    "Authorization": `Bearer ${token}`,
+    ...options.headers
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers
+  });
+
+  return response;
+};
+
 const API_URL = `${import.meta.env.VITE_API_URL}/clases`;
 
 export default function HorarioDia() {
@@ -17,7 +32,25 @@ export default function HorarioDia() {
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const fechaCompleta = fecha.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const [autorizado, setAutorizado] = useState(true);
+  const [nombresProfesores, setNombresProfesores] = useState({});
+  const [listaProfesores, setListaProfesores] = useState([]);
+  const [profesor, setProfesor] = useState("0");
 
+  const obtenerNombreProfesor = async (id) => {
+    if (nombresProfesores[id]) return nombresProfesores[id];
+    try {
+      const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setNombresProfesores(prev => ({ ...prev, [id]: data.data.username }));
+        return data.data.username;
+      }
+    } catch (error) {
+      console.error("Error al obtener nombre del profesor:", error);
+    }
+    return id;
+  };
 
   useEffect(() => {
     const fetchClases = async () => {
@@ -49,11 +82,17 @@ export default function HorarioDia() {
       if (sala && sala !== "0") {
         queryParams.append("sala", sala);
       }
+      if (profesor && profesor !== "0") {
+        queryParams.append("profesor", profesor);
+      }
 
       try {
-        const response = await fetch(`${API_URL}/horario/dia?${queryParams.toString()}`);
+        const response = await fetchAutenticado(`${API_URL}/horario/dia?${queryParams.toString()}`);
+        if (response.status === 403) {
+          setAutorizado(false);
+          return;
+        }
         const data = await response.json();
-        console.log("Datos recibidos:", data);
         setClasesFiltradas(
           (data.data || []).sort((a, b) => {
             const h1 = a.horarios[0]?.horaInicio || "";
@@ -67,21 +106,70 @@ export default function HorarioDia() {
     };
 
     fetchClases();
-  }, [fecha, horaInicio, horaFin, sala]);
+  }, [fecha, horaInicio, horaFin, sala, profesor]);
+
+  useEffect(() => {
+    const cargarProfesores = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_URL}/profesores`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (!response.ok) {
+          throw new Error("Error al obtener profesores");
+        }
+        const data = await response.json();
+        setListaProfesores(data.data);
+      } catch (error) {
+        console.error("Error al cargar profesores:", error);
+        setErrorMessage("No se pudieron cargar los profesores.");
+        setShowError(true);
+      }
+    };
+
+  const cargarNombresFaltantes = async () => {
+    if (!clasesFiltradas.length) return;
+
+    const idsFaltantes = clasesFiltradas
+      .map(clase => clase.profesor)
+      .filter(id => id && !nombresProfesores[id]);
+
+    for (const id of idsFaltantes) {
+      await obtenerNombreProfesor(id);
+    }
+  };
+
+  cargarNombresFaltantes();
+    cargarProfesores();
+}, [clasesFiltradas]);
 
   const currentYear = new Date().getFullYear();
   const minDate = new Date(currentYear, 0, 1); 
   const maxDate = new Date(currentYear + 1, 11, 31); 
 
+  if (!autorizado) {
+    return (
+      <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
+        <Typography variant="h5" gutterBottom>
+          No tienes permisos para acceder a esta sección.
+        </Typography>
+        <Typography>
+          Puedes navegar a otro módulo desde el menú lateral.
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <>
       <Box sx={{ padding: 2, backgroundColor: "#333", color: "white" }}>
-      <Box display={"flex"} justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6" gutterBottom>
-          Filtros:
-        </Typography>
-
-        <Box display="flex" gap={2} alignItems="flex-end">
+        
+        <Box display="flex" alignItems="center" justifyContent="start" gap={2}>
+          <Typography variant="h6" marginRight={3}>
+            Filtros:
+          </Typography>
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
             <DatePicker
               label="Selecciona una fecha"
@@ -97,7 +185,8 @@ export default function HorarioDia() {
                   InputLabelProps: { style: { color: "white" } },
                   sx: {
                     "& .MuiSvgIcon-root": { color: "white" },
-                  }
+                  },
+                  style: { width: "180px" }
                 }
               }}
             />
@@ -114,7 +203,8 @@ export default function HorarioDia() {
                   InputLabelProps: { style: { color: "white" } },
                   sx: {
                     "& .MuiSvgIcon-root": { color: "white" },
-                  }
+                  },
+                  style: { width: "160px" }
                 }
               }}
             />
@@ -131,7 +221,8 @@ export default function HorarioDia() {
                   InputLabelProps: { style: { color: "white" } },
                   sx: {
                     "& .MuiSvgIcon-root": { color: "white" },
-                  }
+                  },
+                  style: { width: "160px" }
                 }
               }}
             />
@@ -143,11 +234,13 @@ export default function HorarioDia() {
               onChange={e => setSala(e.target.value)}
               sx={{
                 minWidth: 130,
-                height: "52px",
                 width: '170px',
                 color: "white",
-                "& .MuiSelect-icon": {
-                  color: "white"
+                "& .MuiSelect-icon": { color: "white" },
+                "& .MuiFilledInput-root": {
+                  height: "52px",
+                  display: "flex",
+                  alignItems: "center"
                 }
               }}
               variant="filled"
@@ -173,14 +266,61 @@ export default function HorarioDia() {
               <MenuItem value="Sala 2">Sala 2</MenuItem>
               <MenuItem value="Sala 3">Sala 3</MenuItem>
             </TextField>
-        </Box>
+            <TextField
+                      label="Profesor"
+                      select
+                      fullWidth
+                      variant="filled"
+                      margin="dense"
+                      value={profesor}
+                      onChange={(e) => setProfesor(e.target.value)}
+                      sx={{
+                        minWidth: 130,
+                        width: "220px",
+                        color: "white",
+                        "& .MuiSelect-icon": { color: "white" },
+                        "& .MuiFilledInput-root": {
+                          height: "52px",
+                          display: "flex",
+                          alignItems: "center"
+                        }
+                      }}
+                      InputProps={{ 
+                        style: { backgroundColor: "#333", color: "white" },
+                        sx: {
+                          "& .MuiSvgIcon-root": {
+                            color: "white"
+                          }
+                        }
+                     }}
+                      InputLabelProps={{ style: { color: "white" }}}
+                      SelectProps={{
+                        native: false,
+                        MenuProps: {
+                          PaperProps: {
+                            style: {
+                              backgroundColor: "#333",
+                              color: "white",
+                            }
+                          }
+                        }
+                      }}
+                    >
+                      <MenuItem value="0" sx={{ color: "white" }}>Todos los profesores</MenuItem>
+                      {listaProfesores.map((prof) => (
+                        <MenuItem key={prof._id} value={prof._id}>
+                          {prof.username}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+        
       </Box>
       
-      <Typography variant="h6" align="center" sx={{ mb: 3, textTransform: "capitalize" }}>
+      <Typography variant="h6" align="center" sx={{ mt: 3, mb: 3 }}>
         {fechaCompleta}
       </Typography>
 
-      <Box mt={3}>
+      <Box>
         {clasesFiltradas.length === 0 ? (
           <Typography
           variant="h6" sx={{ textAlign: "center", mt: 4, color: "#ccc" }}
@@ -191,20 +331,14 @@ export default function HorarioDia() {
               display={"flex"} justifyContent={"space-between"} alignItems={"center"} 
               key={clase._id || index} sx={{ p: 2, mb: 2, border: "1px solid #555", borderRadius: 2, backgroundColor: "#444" }}>
               <Box>
-                <Typography variant="h6">{clase.titulo}</Typography>
+                <Typography variant="h6" sx={{ fontWeight: "bold" }}>{clase.titulo}</Typography>
+                <Typography variant="body2">{nombresProfesores[clase.profesor] || "Cargando nombre del profesor..."}</Typography>
                 <Typography variant="body2">{clase.sala}</Typography>
                 <Typography variant="body2">
-                  Hora: {clase.horarios[0].horaInicio} – {clase.horarios[0].horaFin}
+                  {clase.horarios[0].horaInicio} – {clase.horarios[0].horaFin}
                 </Typography>
               </Box>
               <Box>
-                {/* <Button
-                  variant="outlined"
-                  sx={{ color: "#ffffff", borderColor: "#ffffff", height: "fit-content" }}
-
-                >
-                  Detalles
-                </Button> */}
               </Box>
               
             </Box>

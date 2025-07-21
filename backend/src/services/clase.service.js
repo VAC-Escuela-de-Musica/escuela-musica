@@ -12,7 +12,34 @@ async function createClase(clase) {
   try {
     const { titulo, descripcion, profesor, sala, horarios = [] } = clase;
         
-    // implementar logica si el horario ya existe
+    for (const horario of horarios) {
+      const { dia, horaInicio, horaFin } = horario;
+
+      const claseExistente = await Clase.findOne({
+        sala,
+        horarios: {
+          $elemMatch: {
+            dia,
+            $or: [
+              {
+                horaInicio: { $lt: horaFin, $gte: horaInicio },
+              },
+              {
+                horaFin: { $gt: horaInicio, $lte: horaFin },
+              },
+              {
+                horaInicio: { $lte: horaInicio },
+                horaFin: { $gte: horaFin },
+              },
+            ],
+          },
+        },
+      });
+
+      if (claseExistente) {
+        return [null, "Ya existe una clase programada en la sala y horario seleccionado"];
+      }
+    }
 
     const newClase = new Clase({
       titulo,
@@ -73,6 +100,36 @@ async function updateClase(id, clase) {
     if (!claseFound) return [null, "Clase no encontrada"];
 
     const { titulo, descripcion, profesor, sala, horarios = [] } = clase;
+
+    for (const horario of horarios) {
+      const { dia, horaInicio, horaFin } = horario;
+
+      const claseExistente = await Clase.findOne({
+        _id: { $ne: id },
+        sala,
+        horarios: {
+          $elemMatch: {
+            dia,
+            $or: [
+              {
+                horaInicio: { $lt: horaFin, $gte: horaInicio },
+              },
+              {
+                horaFin: { $gt: horaInicio, $lte: horaFin },
+              },
+              {
+                horaInicio: { $lte: horaInicio },
+                horaFin: { $gte: horaFin },
+              },
+            ],
+          },
+        },
+      });
+
+      if (claseExistente) {
+        return [null, "Ya existe una clase programada en la sala y horario seleccionado"];
+      }
+    }
 
     const claseUpdated = await Clase.findByIdAndUpdate(
       id,
@@ -298,7 +355,7 @@ async function getNextCanceledClases() {
  * @param {string} [filtros.horaFin] - Formato HH:mm
  * @returns {Promise} Promesa con las clases del día filtradas
  */
-async function getHorarioDia({ fecha, sala, horaInicio, horaFin }) {
+async function getHorarioDia({ fecha, sala, horaInicio, horaFin, profesor }) {
   try {
     if (!fecha) return [null, "La fecha es requerida"];
 
@@ -313,6 +370,10 @@ async function getHorarioDia({ fecha, sala, horaInicio, horaFin }) {
 
     if (sala && sala !== "0") {
       query.sala = sala;
+    }
+
+    if (profesor && profesor !== "0") {
+      query.profesor = profesor;
     }
 
     if (horaInicio && horaFin) {
@@ -341,7 +402,7 @@ async function getHorarioDia({ fecha, sala, horaInicio, horaFin }) {
  * @param {string} [filtros.horaFin] - Formato HH:mm
  * @returns {Promise} Promesa con las clases de la semana filtradas
  */
-async function getHorarioSemana({ fecha, sala, horaInicio, horaFin }) {
+async function getHorarioSemana({ fecha, sala, horaInicio, horaFin, profesor }) {
   try {
     if (!fecha) return [null, "La fecha es requerida"];
 
@@ -377,6 +438,10 @@ async function getHorarioSemana({ fecha, sala, horaInicio, horaFin }) {
       query.sala = sala;
     }
 
+    if (profesor && profesor !== "0") {
+      query.profesor = profesor;
+    }
+
     if (horaInicio && horaFin) {
       query.horarios.$elemMatch.horaInicio = { $lte: horaFin };
       query.horarios.$elemMatch.horaFin = { $gte: horaInicio };
@@ -403,7 +468,7 @@ async function getHorarioSemana({ fecha, sala, horaInicio, horaFin }) {
  * @param {string} [filtros.horaFin] - Formato HH:mm
  * @returns {Promise} Promesa con las clases del mes filtradas
  */
-async function getHorarioMes({ mes, year, sala, horaInicio, horaFin }) {
+async function getHorarioMes({ mes, year, sala, horaInicio, horaFin, profesor }) {
   try {
     if (mes == null || year == null) return [null, "Mes y año son requeridos"];
 
@@ -424,6 +489,10 @@ async function getHorarioMes({ mes, year, sala, horaInicio, horaFin }) {
 
     if (sala && sala !== "0") {
       query.sala = sala;
+    }
+
+    if (profesor && profesor !== "0") {
+      query.profesor = profesor;
     }
 
     if (horaInicio && horaFin) {
