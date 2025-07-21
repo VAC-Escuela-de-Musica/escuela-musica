@@ -26,20 +26,29 @@ async function login(user) {
 
     const matchPassword = await User.comparePassword(
       password,
-      userFound.password
+      userFound.password,
     );
 
     if (!matchPassword) {
       return [null, null, "El usuario y/o contraseña son incorrectos"];
     }
 
-    console.log("Roles del usuario encontrado:", userFound.roles);
+    // Asegurarse de que los roles sean siempre strings (nombres de roles)
+    let roles = userFound.roles;
+    if (Array.isArray(roles)) {
+      roles = roles.map(r => typeof r === "string" ? r : String(r));
+    } else if (typeof roles === "string") {
+      roles = [roles];
+    } else {
+      roles = [];
+    }
+    // ...existing code...
     const accessToken = jwt.sign(
-      { email: userFound.email, roles: userFound.roles },
+      { email: userFound.email, roles },
       ACCESS_JWT_SECRET,
       {
-        expiresIn: "1d",
-      }
+        expiresIn: "1h",
+      },
     );
 
     const refreshToken = jwt.sign(
@@ -47,7 +56,7 @@ async function login(user) {
       REFRESH_JWT_SECRET,
       {
         expiresIn: "7d", // 7 días
-      }
+      },
     );
 
     return [accessToken, refreshToken, null];
@@ -84,11 +93,11 @@ async function refresh(cookies) {
           ACCESS_JWT_SECRET,
           {
             expiresIn: "1d",
-          }
+          },
         );
 
         return [accessToken, null];
-      }
+      },
     );
 
     return accessToken;

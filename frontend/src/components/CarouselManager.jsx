@@ -31,8 +31,14 @@ const CarouselManager = () => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingImage, setEditingImage] = useState(null);
+  const [openDialog, setOpenDialog] = useState(() => {
+    const saved = localStorage.getItem("carousel_openDialog");
+    return saved === "true";
+  });
+  const [editingImage, setEditingImage] = useState(() => {
+    const saved = localStorage.getItem("carousel_editingImage");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [formData, setFormData] = useState({
     titulo: "",
     descripcion: "",
@@ -60,7 +66,7 @@ const CarouselManager = () => {
       }
 
       const data = await response.json();
-      console.log("Respuesta del backend:", data);
+      // ...existing code...
       // Asegúrate de que siempre sea un array
       setImages(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
@@ -166,12 +172,16 @@ const CarouselManager = () => {
       image: null,
     });
     setOpenDialog(true);
+    localStorage.setItem("carousel_editingImage", JSON.stringify(image));
+    localStorage.setItem("carousel_openDialog", "true");
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingImage(null);
     setFormData({ titulo: "", descripcion: "", image: null });
+    localStorage.setItem("carousel_editingImage", JSON.stringify(null));
+    localStorage.setItem("carousel_openDialog", "false");
   };
 
   if (loading) {

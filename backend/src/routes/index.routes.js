@@ -2,6 +2,9 @@
 // Importa el modulo 'express' para crear las rutas
 import { Router } from "express";
 
+/** Enrutador de alumnos */
+import alumnosRoutes from "./alumnos.routes.js";
+
 /** Enrutador de usuarios  */
 import userRoutes from "./user.routes.js";
 

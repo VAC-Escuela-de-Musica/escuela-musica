@@ -90,10 +90,10 @@ const UserManager = () => {
           rolesArray = data.data.data;
         }
         setRoles(rolesArray);
-        console.log("Roles cargados (robusto):", rolesArray);
+        // ...existing code...
       }
     } catch (err) {
-      console.error("Error al cargar roles:", err);
+      // ...existing code...
     }
   };
 
@@ -101,7 +101,7 @@ const UserManager = () => {
     event.preventDefault();
     
     try {
-      console.log("Datos enviados:", formData);
+      // ...existing code...
       const url = editingUser 
         ? `${API_URL}/${editingUser._id}`
         : `${API_URL}`;
@@ -119,7 +119,7 @@ const UserManager = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error del backend:", errorData);
+        // ...existing code...
         throw new Error(errorData.message || "Error al guardar el usuario");
       }
 
@@ -165,12 +165,16 @@ const UserManager = () => {
       roles: user.roles ? user.roles.map(role => role._id || role) : [],
     });
     setOpenDialog(true);
+    localStorage.setItem("users_editingUser", JSON.stringify(user));
+    localStorage.setItem("users_openDialog", "true");
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingUser(null);
     setFormData({ username: "", email: "", rut: "", password: "", roles: [] });
+    localStorage.setItem("users_editingUser", JSON.stringify(null));
+    localStorage.setItem("users_openDialog", "false");
   };
 
   const getRoleName = (roleId) => {
@@ -190,7 +194,7 @@ const UserManager = () => {
     setOpenDialog(true);
   };
 
-  console.log("Estado roles en render:", roles);
+  // ...existing code...
 
   if (loading) {
     return (

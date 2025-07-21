@@ -1,5 +1,6 @@
 import CarouselImage from "../models/carousel.entity.js";
 import minioClient, { MINIO_BUCKET_NAME } from "../config/minio.config.js";
+import { MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_ENDPOINT, MINIO_PORT } from "../config/configEnv.js";
 import { handleError } from "../utils/errorHandler.js";
 import { v4 as uuidv4 } from "uuid";
 
@@ -13,7 +14,7 @@ export async function uploadCarouselImage(file, titulo, descripcion, userId) {
     const fileName = `carousel-${uuidv4()}.${fileExtension}`;
 
     // Verificar si MinIO está configurado correctamente
-    if (!process.env.MINIO_ACCESS_KEY || !process.env.MINIO_SECRET_KEY) {
+    if (!MINIO_ACCESS_KEY || !MINIO_SECRET_KEY) {
       throw new Error("MinIO no está configurado correctamente. Verifica las variables de entorno MINIO_ACCESS_KEY y MINIO_SECRET_KEY");
     }
 
@@ -34,7 +35,7 @@ export async function uploadCarouselImage(file, titulo, descripcion, userId) {
     }
 
     // Generar URL pública
-    const url = `http://${process.env.MINIO_ENDPOINT || "localhost"}:${
+    const url = `http://${MINIO_ENDPOINT || "localhost"}:${
       process.env.MINIO_PORT || 9000
     }/${MINIO_BUCKET_NAME}/${fileName}`;
     

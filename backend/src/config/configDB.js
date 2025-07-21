@@ -16,9 +16,12 @@ import { handleError } from "../utils/errorHandler.js";
 
 async function setupDB() {
   try {
+    console.log("[DB] Intentando conectar a la base de datos...", DB_URL);
     await connect(DB_URL);
-    console.log("=> Conectado a la base de datos");
+    console.log("[DB] Conexión exitosa a la base de datos");
+    // ...existing code...
   } catch (err) {
+    console.error("[DB] Error al conectar a la base de datos:", err);
     handleError(err, "/configDB.js -> setupDB");
   }
 }

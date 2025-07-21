@@ -13,6 +13,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
+import AlumnosList from "./AlumnosList";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 
 import coverImage from "../assets/cover.png";
@@ -27,7 +28,9 @@ import WhatsAppConfig from "./WhatsAppConfig";
 const drawerWidth = 240;
 
 export default function ClippedDrawer() {
-  const [activeModule, setActiveModule] = React.useState("inicio");
+  const [activeModule, setActiveModule] = React.useState(() => {
+    return localStorage.getItem("activeModule") || "inicio";
+  });
 
   return (
     <Box
@@ -125,15 +128,24 @@ export default function ClippedDrawer() {
             ].map((text, index) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton
-                  onClick={() => {
-                    if (text === "Imágenes Carrusel")
-                      setActiveModule("carrusel");
-                    if (text === "Imágenes Galería") setActiveModule("galeria");
-                    if (text === "Presentación Prof.")
-                      setActiveModule("presentacion");
-                    if (text === "Gestionar Reseñas")
-                      setActiveModule("resenas");
-                  }}
+                    onClick={() => {
+                      if (text === "Imágenes Carrusel") {
+                        setActiveModule("carrusel");
+                        localStorage.setItem("activeModule", "carrusel");
+                      }
+                      if (text === "Imágenes Galería") {
+                        setActiveModule("galeria");
+                        localStorage.setItem("activeModule", "galeria");
+                      }
+                      if (text === "Presentación Prof.") {
+                        setActiveModule("presentacion");
+                        localStorage.setItem("activeModule", "presentacion");
+                      }
+                      if (text === "Gestionar Reseñas") {
+                        setActiveModule("resenas");
+                        localStorage.setItem("activeModule", "resenas");
+                      }
+                    }}
                 >
                   <ListItemIcon sx={{ color: "#FFFFFF" }}>
                     {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
@@ -145,20 +157,25 @@ export default function ClippedDrawer() {
           </List>
           <Divider sx={{ borderColor: "#3F4147" }} />
           <List>
-            {["Repositorio Prof.", "Credenciales", "modulo2"].map((text, index) => (
-              <ListItem key={text} disablePadding>
-                <ListItemButton
-                  onClick={() => {
-                    if (text === "Credenciales") setActiveModule("credenciales");
-                  }}
-                >
-                  <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                    {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                  </ListItemIcon>
-                  <ListItemText primary={text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
+            {["Repositorio Prof.", "Credenciales", "modulo2"].map(
+              (text, index) => (
+                <ListItem key={text} disablePadding>
+                  <ListItemButton
+                    onClick={() => {
+                      if (text === "Credenciales") {
+                        setActiveModule("credenciales");
+                        localStorage.setItem("activeModule", "credenciales");
+                      }
+                    }}
+                  >
+                    <ListItemIcon sx={{ color: "#FFFFFF" }}>
+                      {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                    </ListItemIcon>
+                    <ListItemText primary={text} />
+                  </ListItemButton>
+                </ListItem>
+              )
+            )}
           </List>
         </Box>
         <Link
@@ -199,6 +216,7 @@ export default function ClippedDrawer() {
         {activeModule === "whatsappConfig" && <WhatsAppConfig />}
         {activeModule === "carrusel" && <CarouselManager />}
         {activeModule === "credenciales" && <UserManager />}
+        {activeModule === "alumnos" && <AlumnosList />}
         {/* Puedes agregar más módulos así */}
       </Box>
     </Box>

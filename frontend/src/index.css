@@ -1,11 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url("https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap");
+/* Forzar el ancho 100% en todos los niveles del DatePicker y sus descendientes */
+.MuiPickersTextField-root,
+.MuiPickersTextField-root .MuiFormControl-root,
+.MuiPickersTextField-root .MuiInputBase-root,
+.MuiPickersTextField-root input {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+}
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -17,6 +24,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
 }
 
 html {
@@ -31,8 +39,11 @@ body {
   color: #f9fafb;
 }
 
-:root, body, html, #root {
-  font-family: 'Raleway', sans-serif !important;
+:root,
+body,
+html,
+#root {
+  font-family: "Raleway", sans-serif !important;
 }
 
 *,
@@ -46,7 +57,7 @@ body {
 .MuiDialogTitle-root,
 .MuiDialogContent-root,
 .MuiDialogActions-root {
-  font-family: 'Raleway', sans-serif !important;
+  font-family: "Raleway", sans-serif !important;
 }
 
 /* Estilos para enlaces */
@@ -87,7 +98,9 @@ button:focus-visible {
 }
 
 /* Estilos para formularios */
-input, textarea, select {
+input,
+textarea,
+select {
   background-color: #374151;
   border: 1px solid #4b5563;
   color: #f9fafb;
@@ -96,7 +109,9 @@ input, textarea, select {
   transition: border-color 0.3s ease;
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   outline: none;
   border-color: #d97706;
 }
@@ -124,21 +139,21 @@ input:focus, textarea:focus, select:focus {
     color: #213547;
     background-color: #f9fafb;
   }
-  
+
   body {
     background-color: #f9fafb;
     color: #213547;
   }
-  
+
   a:hover {
     color: #b45309;
   }
-  
+
   button {
     background-color: #f3f4f6;
     color: #213547;
   }
-  
+
   button:hover {
     background-color: #e5e7eb;
   }
