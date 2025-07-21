@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import whatsappWebService from './whatsappWeb.service.js';
 
 class MessagingService {
   constructor() {
@@ -193,7 +194,45 @@ class MessagingService {
   }
 
   /**
-   * Envía un mensaje usando WhatsApp Web API (simulación)
+   * Envía un mensaje usando WhatsApp Web API
+   * @param {string} to - Número de teléfono del destinatario
+   * @param {string} message - Contenido del mensaje
+   * @returns {Promise<Object>} - Resultado del envío
+   */
+  async sendWhatsAppWeb(to, message) {
+    try {
+      // Inicializar WhatsApp Web si no está listo
+      const status = whatsappWebService.getStatus();
+      if (!status.initialized) {
+        await whatsappWebService.initialize();
+      }
+      
+      // Si no está listo, devolver error con información del QR
+      if (!status.ready) {
+        const qrInfo = whatsappWebService.getQrCode();
+        return {
+          success: false,
+          error: 'WhatsApp Web no está autenticado',
+          message: 'Necesitas escanear el código QR para autenticar WhatsApp Web',
+          qrCode: qrInfo.qrCode,
+          needsAuth: true
+        };
+      }
+      
+      // Enviar mensaje usando WhatsApp Web
+      return await whatsappWebService.sendMessage(to, message);
+    } catch (error) {
+      console.error('Error sending WhatsApp Web message:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Error al enviar mensaje de WhatsApp Web'
+      };
+    }
+  }
+
+  /**
+   * Envía un mensaje usando WhatsApp Web API (simulación - fallback)
    * @param {string} to - Número de teléfono del destinatario
    * @param {string} message - Contenido del mensaje
    * @returns {Promise<Object>} - Resultado del envío
@@ -410,6 +449,10 @@ class MessagingService {
 
     const config = {
       whatsapp: {
+        web: {
+          configured: true, // Siempre disponible
+          missing: []
+        },
         twilio: {
           configured: false, // Deshabilitado para pruebas
           missing: ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_WHATSAPP_NUMBER']
@@ -447,6 +490,30 @@ class MessagingService {
     }
 
     return config;
+  }
+
+  /**
+   * Obtiene el estado de WhatsApp Web
+   * @returns {Object} - Estado de WhatsApp Web
+   */
+  getWhatsAppWebStatus() {
+    return whatsappWebService.getStatus();
+  }
+
+  /**
+   * Inicializa WhatsApp Web
+   * @returns {Promise<Object>} - Resultado de la inicialización
+   */
+  async initializeWhatsAppWeb() {
+    return await whatsappWebService.initialize();
+  }
+
+  /**
+   * Obtiene el código QR de WhatsApp Web
+   * @returns {Object} - Información del código QR
+   */
+  getWhatsAppWebQR() {
+    return whatsappWebService.getQrCode();
   }
 }
 

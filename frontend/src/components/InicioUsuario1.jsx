@@ -13,6 +13,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
@@ -21,6 +22,7 @@ import CarouselManager from "./CarouselManager";
 import UserManager from "./UserManager";
 import HorarioAdmin from "./HorarioAdmin";
 import EmailConfig from "./EmailConfig";
+import WhatsAppConfig from "./WhatsAppConfig";
 
 const drawerWidth = 240;
 
@@ -100,6 +102,16 @@ export default function ClippedDrawer() {
                   <MailIcon />
                 </ListItemIcon>
                 <ListItemText primary="Configuración Email" />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={() => setActiveModule("whatsappConfig")}
+              >
+                <ListItemIcon sx={{ color: "#FFFFFF" }}>
+                  <WhatsAppIcon />
+                </ListItemIcon>
+                <ListItemText primary="Configuración WhatsApp" />
               </ListItemButton>
             </ListItem>
           </List>
@@ -184,6 +196,7 @@ export default function ClippedDrawer() {
         )}
         {activeModule === "horario" && <HorarioAdmin />}
         {activeModule === "emailConfig" && <EmailConfig />}
+        {activeModule === "whatsappConfig" && <WhatsAppConfig />}
         {activeModule === "carrusel" && <CarouselManager />}
         {activeModule === "credenciales" && <UserManager />}
         {/* Puedes agregar más módulos así */}

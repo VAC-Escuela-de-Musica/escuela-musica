@@ -18,13 +18,15 @@ class MessagingController {
 
       // Verificar configuración de WhatsApp
       const config = messagingService.checkConfiguration();
-      if (!config.whatsapp.twilio.configured && !config.whatsapp.businessAPI.configured && !config.whatsapp.callmebot.configured && !config.whatsapp.alternative.configured) {
+      if (!config.whatsapp.web.configured && !config.whatsapp.twilio.configured && !config.whatsapp.businessAPI.configured && !config.whatsapp.callmebot.configured && !config.whatsapp.alternative.configured) {
         return respondError(req, res, 500, 'Servicio de WhatsApp no configurado correctamente');
       }
 
-      // Prioridad: Business API > Callmebot > Twilio > Simulación
+      // Prioridad: WhatsApp Web > Business API > Callmebot > Twilio > Simulación
       let result;
-      if (config.whatsapp.businessAPI.configured) {
+      if (config.whatsapp.web.configured) {
+        result = await messagingService.sendWhatsAppWeb(phoneNumber, message);
+      } else if (config.whatsapp.businessAPI.configured) {
         result = await messagingService.sendWhatsAppBusinessAPI(phoneNumber, message);
       } else if (config.whatsapp.callmebot.configured) {
         result = await messagingService.sendWhatsAppCallmebot(phoneNumber, message);
@@ -177,6 +179,78 @@ class MessagingController {
     } catch (error) {
       console.error('Error in sendTestMessage controller:', error);
       return respondError(req, res, 500, 'Error interno del servidor');
+    }
+  }
+
+  /**
+   * Obtiene el estado de WhatsApp Web
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  async getWhatsAppWebStatus(req, res) {
+    try {
+      const status = messagingService.getWhatsAppWebStatus();
+      return res.status(200).json({
+        success: true,
+        data: status
+      });
+    } catch (error) {
+      console.error('Error getting WhatsApp Web status:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error obteniendo estado de WhatsApp Web'
+      });
+    }
+  }
+
+  /**
+   * Inicializa WhatsApp Web
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  async initializeWhatsAppWeb(req, res) {
+    try {
+      const result = await messagingService.initializeWhatsAppWeb();
+      return res.status(200).json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      console.error('Error initializing WhatsApp Web:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error inicializando WhatsApp Web'
+      });
+    }
+  }
+
+  /**
+   * Obtiene el código QR de WhatsApp Web
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  async getWhatsAppWebQR(req, res) {
+    try {
+      console.log('🔍 Controller: Obteniendo QR...');
+      const qrInfo = messagingService.getWhatsAppWebQR();
+      console.log('📱 Controller: QR info obtenida:', {
+        success: qrInfo.success,
+        hasQrCode: !!qrInfo.qrCode,
+        hasQrCodeImage: !!qrInfo.qrCodeImage,
+        message: qrInfo.message
+      });
+      
+      // Devolver respuesta con estructura que espera el frontend
+      return res.status(200).json({
+        success: true,
+        data: qrInfo
+      });
+    } catch (error) {
+      console.error('❌ Controller: Error getting WhatsApp Web QR:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error obteniendo código QR de WhatsApp Web'
+      });
     }
   }
 }

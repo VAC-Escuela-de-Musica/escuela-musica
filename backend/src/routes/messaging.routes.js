@@ -18,6 +18,11 @@ router.post('/send-message', messagingController.sendMessage);
 router.get('/config-status', messagingController.getConfigurationStatus);
 router.post('/test-message', messagingController.sendTestMessage);
 
+// Rutas para WhatsApp Web
+router.get('/whatsapp-web/status', messagingController.getWhatsAppWebStatus);
+router.post('/whatsapp-web/initialize', messagingController.initializeWhatsAppWeb);
+router.get('/whatsapp-web/qr', messagingController.getWhatsAppWebQR);
+
 // Rutas para configuración de email
 router.get('/email-config', emailConfigController.getEmailConfig);
 router.post('/email-config', emailConfigController.saveEmailConfig);

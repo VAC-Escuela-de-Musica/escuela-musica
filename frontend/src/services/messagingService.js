@@ -28,8 +28,15 @@ class MessagingService {
     };
 
     try {
+      console.log('🌐 Frontend Service: Haciendo petición a:', `${this.baseURL}${endpoint}`);
       const response = await fetch(`${this.baseURL}${endpoint}`, config);
       const data = await response.json();
+      
+      console.log('📡 Frontend Service: Respuesta recibida:', {
+        status: response.status,
+        ok: response.ok,
+        data: data
+      });
       
       if (!response.ok) {
         throw new Error(data.message || 'Error en la petición');
@@ -37,7 +44,7 @@ class MessagingService {
       
       return data;
     } catch (error) {
-      console.error('Error en petición:', error);
+      console.error('❌ Frontend Service: Error en petición:', error);
       throw error;
     }
   }
@@ -188,6 +195,36 @@ class MessagingService {
     return this.makeRequest(`/messaging/email-templates/${id}`, {
       method: 'DELETE'
     });
+  }
+
+  /**
+   * Obtiene el estado de WhatsApp Web
+   */
+  async getWhatsAppWebStatus() {
+    return this.makeRequest('/messaging/whatsapp-web/status', {
+      method: 'GET'
+    });
+  }
+
+  /**
+   * Inicializa WhatsApp Web
+   */
+  async initializeWhatsAppWeb() {
+    return this.makeRequest('/messaging/whatsapp-web/initialize', {
+      method: 'POST'
+    });
+  }
+
+  /**
+   * Obtiene el código QR de WhatsApp Web
+   */
+  async getWhatsAppWebQR() {
+    console.log('🔍 Frontend Service: Obteniendo QR...');
+    const response = await this.makeRequest('/messaging/whatsapp-web/qr', {
+      method: 'GET'
+    });
+    console.log('📱 Frontend Service: Respuesta QR recibida:', response);
+    return response;
   }
 }
 
