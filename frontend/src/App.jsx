@@ -1,26 +1,30 @@
+
 import { Routes, Route } from "react-router-dom";
-import HomePage from "./pages/Homepage";
-import LoginPage from "./pages/LoginPage";
-import React from "react";
+import React, { Suspense, lazy } from "react";
+const HomePage = lazy(() => import("./pages/Homepage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const InicioUsuario = lazy(() => import("./pages/paginaUsuario"));
+const AlumnosPage = lazy(() => import("./pages/AlumnosPage"));
 import Navbar from "./components/Navbar";
-import InicioUsuario from "./pages/paginaUsuario";
-import AlumnosPage from "./pages/AlumnosPage";
+import Loader from "./components/Loader";
 
 function App() {
   return (
     <div className="App">
-      <Routes>
-        <Route path="/" element={
-          <>
-            <Navbar />
-            <HomePage />
-          </>
-        } />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/usuario" element={<InicioUsuario />} />
-        <Route path="/alumnos" element={<AlumnosPage />} />
-        {/* agregar más rutas */}
-      </Routes>
+      <Suspense fallback={<Loader />}> 
+        <Routes>
+          <Route path="/" element={
+            <>
+              <Navbar />
+              <HomePage />
+            </>
+          } />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/usuario" element={<InicioUsuario />} />
+          <Route path="/alumnos" element={<AlumnosPage />} />
+          {/* agregar más rutas */}
+        </Routes>
+      </Suspense>
     </div>
   );
 }

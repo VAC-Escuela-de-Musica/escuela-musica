@@ -1,4 +1,46 @@
+
+
 # NOMBRECOMPONENTE - Guía de Refactorización y Diseño
+
+---
+
+
+## Reglas para el uso de la plantilla y documentación
+
+> **ADVERTENCIA:**
+> Las siguientes reglas son de cumplimiento obligatorio. Siempre deben ser consultadas y respetadas antes de tomar cualquier decisión, registrar cambios o modificar archivos relacionados con la refactorización. Este apartado debe ser lo primero que se lea y considere al iniciar cualquier acción de refactorización o documentación.
+
+1. **Registro de cambios:**
+   - Todo cambio estructural, refactorización, migración, ajuste de props o integración debe registrarse en el changelog correspondiente (`NOMBRECOMPONENTE.changelog.md`).
+   - El changelog debe actualizarse inmediatamente después de cada cambio relevante, siguiendo el formato tabla.
+
+2. **Consultas y actualizaciones:**
+   - Antes de modificar cualquier componente, la IA debe consultar y actualizar la guía de refactorización (`NOMBRECOMPONENTE.refactor-notes.md`), el changelog y la lista de archivos relacionados.
+   - Si se agregan/eliminan dependencias, helpers o utilidades compartidas, actualizar la sección de archivos relacionados y dejar constancia en el changelog.
+
+3. **Rellenado de documentos:**
+   - La IA debe rellenar y mantener actualizados todos los documentos de la carpeta `docs-refactor/NOMBRECOMPONENTE/` (changelog, backup, checklist, props/api, etc.) durante todo el proceso de refactorización.
+   - Los backups deben generarse antes de cambios mayores y nunca modificarse tras su creación.
+
+4. **Referencia al template base:**
+   - Todo archivo de refactorización generado debe incluir explícitamente la ruta del template base utilizado, preferentemente al inicio del archivo.
+
+5. **Checklist y validación:**
+   - Cada paso del checklist debe marcarse al completarse y reflejarse en la guía y changelog.
+   - Validar funcionamiento y actualizar la documentación tras cada iteración relevante.
+
+6. **Trazabilidad y auditoría:**
+   - Mantener la trazabilidad de decisiones, dependencias y relaciones en la guía de refactorización.
+   - Facilitar la auditoría futura asegurando que toda la documentación esté centralizada y actualizada.
+
+---
+
+> **TRAZABILIDAD DEL TEMPLATE:**
+> Todo archivo de refactorización generado para un componente (por ejemplo, `AlumnoForm.refactor-notes.md`) debe incluir explícitamente la ruta del template base utilizado para su creación, por ejemplo:
+> 
+> _"Este documento sigue la guía base ubicada en: `docs-refactor/plantilla/refactor-notes.template.md`"_
+> 
+> Se recomienda colocar esta referencia al inicio del archivo o en la sección donde se especifiquen las reglas y buenas prácticas, para asegurar trazabilidad y facilitar futuras auditorías o actualizaciones de la metodología.
 
 > **IMPORTANTE:** Cada vez que se inicie un proceso de refactorización utilizando esta plantilla, todos los documentos generados (changelog, backup, checklist, props/api, etc.) deben almacenarse en la carpeta raíz del proyecto (`escuela-musica/`) dentro de una subcarpeta con el formato `docs-refactor/NOMBRECOMPONENTE/` (por ejemplo: `docs-refactor/AlumnoForm/`). Esto centraliza la documentación de refactorización, facilita su consulta y permite su eliminación masiva cuando ya no sea necesaria. No dejes estos archivos en la carpeta de componentes ni dispersos en el proyecto.
 
