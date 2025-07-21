@@ -46,6 +46,15 @@ function App() {
           <Route path="upload" element={<UploadPage />} />
         </Route>
 
+        {/* Ruta protegida - Panel de administración */}
+        <Route path="/usuario" element={
+          <ProtectedRoute>
+            <Suspense fallback={<Loader />}>
+              <InicioUsuario />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
         {/* Ruta catch-all - redirige a la landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
