@@ -20,7 +20,7 @@ const CarouselClases = () => {
         setImages(data.data || []);
       }
     } catch (error) {
-      console.error("Error al cargar las imágenes del carrusel:", error);
+      // ...existing code...
     } finally {
       setLoading(false);
     }

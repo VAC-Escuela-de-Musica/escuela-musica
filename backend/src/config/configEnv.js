@@ -8,9 +8,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /** Get the absolute path of the .env file. */
-const envFilePath = path.resolve(__dirname, "../config/.env");
+const envFilePath = path.resolve(process.cwd(), ".env");
 // Load environment variables from the .env file
+// ...existing code...
 import dotenv from "dotenv";
+const result = dotenv.config({ path: envFilePath });
+if (result.error) {
+  // eslint-disable-next-line no-console
+  console.error("[dotenv] Error cargando .env:", result.error);
+  // ...existing code...
+} else {
+  // eslint-disable-next-line no-console
+  console.log("[dotenv] Variables de entorno cargadas correctamente");
+  // eslint-disable-next-line no-console
+  console.log("[dotenv] DB_URL:", process.env.DB_URL);
+  // eslint-disable-next-line no-console
+  console.log("[dotenv] MINIO_ENDPOINT:", process.env.MINIO_ENDPOINT);
+  // ...existing code...
+}
 dotenv.config({ path: envFilePath });
 
 /** Server port */

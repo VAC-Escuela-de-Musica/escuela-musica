@@ -8,16 +8,15 @@ const ErrorPage = () => {
    * En un entorno de producción, no se debería mostrar este mensaje o almenos
    * no de esta forma.
    */
-  console.error({
-    status: error.status,
-    statusText: error.statusText,
-    message: error.message ? error.message : "No message",
-  });
+
 
   return (
     <div>
       <h1>Oops!</h1>
-      <p>Sorry, un error inesperado a ocurrido.</p>
+      <p>Sorry, un error inesperado ha ocurrido.</p>
+      <p>Status: {error?.status}</p>
+      <p>Status Text: {error?.statusText}</p>
+      <p>Message: {error?.message ? error.message : "No message"}</p>
     </div>
   );
 };

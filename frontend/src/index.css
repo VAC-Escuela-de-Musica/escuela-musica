@@ -1,4 +1,15 @@
+
 @import url("https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap");
+/* Forzar el ancho 100% en todos los niveles del DatePicker y sus descendientes */
+.MuiPickersTextField-root,
+.MuiPickersTextField-root .MuiFormControl-root,
+.MuiPickersTextField-root .MuiInputBase-root,
+.MuiPickersTextField-root input {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+}
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;

@@ -18,12 +18,20 @@ export const login = async ({ email, password }) => {
       ] = `Bearer ${data.data.accessToken}`;
     }
   } catch (error) {
-    console.log(error);
+    // ...existing code...
   }
 };
 
 export const logout = () => {
   localStorage.removeItem("user");
+  // Limpiar estado de modales y módulo activo
+  localStorage.removeItem("alumnos_editingAlumno");
+  localStorage.removeItem("alumnos_showForm");
+  localStorage.removeItem("users_editingUser");
+  localStorage.removeItem("users_openDialog");
+  localStorage.removeItem("carousel_editingImage");
+  localStorage.removeItem("carousel_openDialog");
+  localStorage.removeItem("activeModule");
   delete axios.defaults.headers.common["Authorization"];
   cookies.remove("jwt");
 };
@@ -33,9 +41,9 @@ export const test = async () => {
     const response = await axios.get("/users");
     const { status, data } = response;
     if (status === 200) {
-      console.log(data.data);
+      // ...existing code...
     }
   } catch (error) {
-    console.log(error);
+    // ...existing code...
   }
 };

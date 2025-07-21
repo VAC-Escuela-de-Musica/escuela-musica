@@ -5,7 +5,9 @@ import {
   createAlumno,
   deleteAlumno,
 } from "../services/alumnos.service";
-import AlumnoForm from "./AlumnoForm";
+import AlumnoForm from "./AlumnoForm/AlumnoForm";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 import {
   Card,
   CardContent,
@@ -28,15 +30,23 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 function AlumnosList() {
   const [alumnos, setAlumnos] = useState([]);
-  const [editingAlumno, setEditingAlumno] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+  const [editingAlumno, setEditingAlumno] = useState(() => {
+    const saved = localStorage.getItem("alumnos_editingAlumno");
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [showForm, setShowForm] = useState(() => {
+    const saved = localStorage.getItem("alumnos_showForm");
+    return saved === "true";
+  });
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState(null);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const fetchAlumnos = () => {
     getAlumnos()
       .then((res) => setAlumnos(res.data.data || res.data))
-      .catch((err) => console.error(err));
+      // ...existing code...
   };
 
   useEffect(() => {
@@ -46,10 +56,14 @@ function AlumnosList() {
   const handleCreate = () => {
     setEditingAlumno(null);
     setShowForm(true);
+    localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
+    localStorage.setItem("alumnos_showForm", "true");
   };
   const handleEdit = (alumno) => {
     setEditingAlumno(alumno);
     setShowForm(true);
+    localStorage.setItem("alumnos_editingAlumno", JSON.stringify(alumno));
+    localStorage.setItem("alumnos_showForm", "true");
   };
   const handleDelete = async (alumno) => {
     if (window.confirm(`¿Eliminar a ${alumno.nombreAlumno}?`)) {
@@ -64,6 +78,8 @@ function AlumnosList() {
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingAlumno(null);
+    localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
+    localStorage.setItem("alumnos_showForm", "false");
   };
   const handleSubmitForm = async (formData) => {
     if (editingAlumno && editingAlumno._id) {
@@ -72,6 +88,10 @@ function AlumnosList() {
         fetchAlumnos();
         setShowForm(false);
         setEditingAlumno(null);
+        localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
+        localStorage.setItem("alumnos_showForm", "false");
+        setSuccessMsg("Alumno actualizado exitosamente");
+        setShowSuccess(true);
       } catch (err) {
         alert("Error al actualizar alumno");
       }
@@ -81,6 +101,10 @@ function AlumnosList() {
         fetchAlumnos();
         setShowForm(false);
         setEditingAlumno(null);
+        localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
+        localStorage.setItem("alumnos_showForm", "false");
+        setSuccessMsg("Alumno creado exitosamente");
+        setShowSuccess(true);
       } catch (err) {
         alert("Error al crear alumno");
       }
@@ -371,6 +395,16 @@ function AlumnosList() {
           onClose={handleCloseForm}
         />
       )}
+      <Snackbar
+        open={showSuccess}
+        autoHideDuration={3000}
+        onClose={() => setShowSuccess(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <MuiAlert onClose={() => setShowSuccess(false)} severity="success" sx={{ width: '100%' }}>
+          {successMsg}
+        </MuiAlert>
+      </Snackbar>
     </Box>
   );
 }

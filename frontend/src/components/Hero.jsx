@@ -22,7 +22,7 @@ const toggleSaludo = async () => {
         setMensaje(data);
         setVisible(true);
       } catch (error) {
-        console.error("Error:", error);
+        // ...existing code...
         setMensaje("Error al conectar con el backend");
         setVisible(true);
       }

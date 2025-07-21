@@ -24,7 +24,9 @@ import UserManager from "./UserManager";
 const drawerWidth = 240;
 
 export default function ClippedDrawer() {
-  const [activeModule, setActiveModule] = React.useState("inicio");
+  const [activeModule, setActiveModule] = React.useState(() => {
+    return localStorage.getItem("activeModule") || "inicio";
+  });
 
   return (
     <Box
@@ -80,7 +82,10 @@ export default function ClippedDrawer() {
                 <ListItem key={text} disablePadding>
                   <ListItemButton
                     onClick={() => {
-                      if (text === "Estudiantes") setActiveModule("alumnos");
+                      if (text === "Estudiantes") {
+                        setActiveModule("alumnos");
+                        localStorage.setItem("activeModule", "alumnos");
+                      }
                     }}
                   >
                     <ListItemIcon sx={{ color: "#FFFFFF" }}>
@@ -102,15 +107,24 @@ export default function ClippedDrawer() {
             ].map((text, index) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton
-                  onClick={() => {
-                    if (text === "Imágenes Carrusel")
-                      setActiveModule("carrusel");
-                    if (text === "Imágenes Galería") setActiveModule("galeria");
-                    if (text === "Presentación Prof.")
-                      setActiveModule("presentacion");
-                    if (text === "Gestionar Reseñas")
-                      setActiveModule("resenas");
-                  }}
+                    onClick={() => {
+                      if (text === "Imágenes Carrusel") {
+                        setActiveModule("carrusel");
+                        localStorage.setItem("activeModule", "carrusel");
+                      }
+                      if (text === "Imágenes Galería") {
+                        setActiveModule("galeria");
+                        localStorage.setItem("activeModule", "galeria");
+                      }
+                      if (text === "Presentación Prof.") {
+                        setActiveModule("presentacion");
+                        localStorage.setItem("activeModule", "presentacion");
+                      }
+                      if (text === "Gestionar Reseñas") {
+                        setActiveModule("resenas");
+                        localStorage.setItem("activeModule", "resenas");
+                      }
+                    }}
                 >
                   <ListItemIcon sx={{ color: "#FFFFFF" }}>
                     {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
@@ -127,8 +141,10 @@ export default function ClippedDrawer() {
                 <ListItem key={text} disablePadding>
                   <ListItemButton
                     onClick={() => {
-                      if (text === "Credenciales")
+                      if (text === "Credenciales") {
                         setActiveModule("credenciales");
+                        localStorage.setItem("activeModule", "credenciales");
+                      }
                     }}
                   >
                     <ListItemIcon sx={{ color: "#FFFFFF" }}>

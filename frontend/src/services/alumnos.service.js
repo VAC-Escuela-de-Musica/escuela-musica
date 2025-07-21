@@ -1,41 +1,37 @@
-import axios from "axios";
+import axios from "./root.service";
 
 export const getAlumnos = async () => {
   const token = localStorage.getItem("token");
-  return axios.get("http://localhost:1230/api/alumnos", {
+  return axios.get("/alumnos", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    withCredentials: true,
   });
 };
 
 export const updateAlumno = async (id, data) => {
   const token = localStorage.getItem("token");
-  return axios.put(`http://localhost:1230/api/alumnos/${id}`, data, {
+  return axios.put(`/alumnos/${id}`, data, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    withCredentials: true,
   });
 };
 
 export const createAlumno = async (data) => {
   const token = localStorage.getItem("token");
-  return axios.post("http://localhost:1230/api/alumnos", data, {
+  return axios.post("/alumnos", data, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    withCredentials: true,
   });
 };
 
 export const deleteAlumno = async (id) => {
   const token = localStorage.getItem("token");
-  return axios.delete(`http://localhost:1230/api/alumnos/${id}`, {
+  return axios.delete(`/alumnos/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    withCredentials: true,
   });
 };

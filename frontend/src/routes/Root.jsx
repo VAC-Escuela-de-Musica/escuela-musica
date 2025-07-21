@@ -22,7 +22,7 @@ function PageRoot() {
   const { user } = useAuth();
 
   const handleGoAlumnos = () => {
-    navigate("/api/alumnos");
+    navigate("/alumnos");
   };
 
   return (
