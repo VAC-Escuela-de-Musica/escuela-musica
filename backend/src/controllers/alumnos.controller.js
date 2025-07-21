@@ -59,7 +59,13 @@ async function getAlumnosById(req, res) {
 async function updateAlumnos(req, res) {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    const allowedFields = ["name", "age", "grade"]; // Whitelist of allowed fields
+    const updateData = Object.keys(req.body)
+      .filter((key) => allowedFields.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = req.body[key];
+        return obj;
+      }, {});
     const [alumno, error] = await AlumnoService.updateAlumnos(id, updateData);
 
     if (error) {
