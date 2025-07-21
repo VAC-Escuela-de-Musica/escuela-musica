@@ -26,7 +26,7 @@ async function login(user) {
 
     const matchPassword = await User.comparePassword(
       password,
-      userFound.password
+      userFound.password,
     );
 
     if (!matchPassword) {
@@ -39,7 +39,7 @@ async function login(user) {
       ACCESS_JWT_SECRET,
       {
         expiresIn: "1d",
-      }
+      },
     );
 
     const refreshToken = jwt.sign(
@@ -47,7 +47,7 @@ async function login(user) {
       REFRESH_JWT_SECRET,
       {
         expiresIn: "7d", // 7 días
-      }
+      },
     );
 
     return [accessToken, refreshToken, null];
@@ -84,11 +84,11 @@ async function refresh(cookies) {
           ACCESS_JWT_SECRET,
           {
             expiresIn: "1d",
-          }
+          },
         );
 
         return [accessToken, null];
-      }
+      },
     );
 
     return accessToken;

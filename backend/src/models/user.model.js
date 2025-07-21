@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema(
   },
   {
     versionKey: false,
-  }
+  },
 );
 
 /** Encrypts the user's password */
