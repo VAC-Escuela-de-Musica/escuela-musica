@@ -335,34 +335,11 @@ function AlumnosList() {
   );
 
   return (
-    <Box
-      sx={{
-        p: { xs: 0.5, sm: 2 },
-        minHeight: '100vh',
-        background: { xs: '#181a20', sm: 'transparent' },
-        position: 'relative',
-      }}
-    >
-      <Typography
-        variant="h4"
-        sx={{
-          color: "#fff",
-          mb: { xs: 1, sm: 2 },
-          fontSize: { xs: 24, sm: 32 },
-          textAlign: { xs: 'center', sm: 'left' },
-        }}
-      >
+    <Box sx={{ padding: 2 }}>
+      <Typography variant="h4" sx={{ color: "#fff", mb: 2 }}>
         Lista de Alumnos
       </Typography>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: { xs: 'stretch', sm: 'center' },
-          gap: 2,
-          mb: 3,
-        }}
-      >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
         <TextField
           label="Buscar alumno por nombre, email o RUT..."
           variant="outlined"
@@ -374,7 +351,6 @@ function AlumnosList() {
             input: { color: "#fff" },
             label: { color: "#aaa" },
             borderRadius: 1,
-            mb: { xs: 2, sm: 0 },
           }}
           InputProps={{
             sx: { color: "#fff" },
@@ -391,7 +367,6 @@ function AlumnosList() {
             px: 3,
             py: 1.5,
             borderRadius: 1,
-            width: { xs: '100%', sm: 'auto' },
           }}
           onClick={handleCreate}
         >
@@ -414,43 +389,11 @@ function AlumnosList() {
         )}
       </Grid>
       {showForm && (
-        <Box
-          sx={{
-            position: { xs: 'fixed', sm: 'fixed' },
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            background: 'rgba(0,0,0,0.25)',
-            zIndex: 1200,
-            display: 'flex',
-            alignItems: { xs: 'flex-start', sm: 'center' },
-            justifyContent: 'center',
-            overflowY: 'hidden', // Evita doble scroll
-            py: { xs: 2, sm: 0 },
-          }}
-        >
-          <Box
-            sx={{
-              width: { xs: '100vw', sm: 'auto' },
-              maxWidth: 700,
-              px: { xs: 2, sm: 0 }, // Padding horizontal externo en móvil
-              pb: { xs: 3, sm: 0 }, // Padding inferior extra en móvil
-              boxSizing: 'border-box',
-              overflowY: 'auto',
-              maxHeight: { xs: 'calc(100vh - 32px)', sm: '90vh' },
-              borderRadius: 3,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <AlumnoForm
-              initialData={editingAlumno}
-              onSubmit={handleSubmitForm}
-              onClose={handleCloseForm}
-            />
-          </Box>
-        </Box>
+        <AlumnoForm
+          initialData={editingAlumno}
+          onSubmit={handleSubmitForm}
+          onClose={handleCloseForm}
+        />
       )}
       <Snackbar
         open={showSuccess}

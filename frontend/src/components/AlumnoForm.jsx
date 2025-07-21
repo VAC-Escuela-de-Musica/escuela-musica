@@ -20,7 +20,6 @@ import {
 } from "@mui/material";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
-
 // --- UTILS ---
 const formatRut = (value) => {
   let clean = value.replace(/[^0-9kK]/g, "").toUpperCase().slice(0, 9);
@@ -82,6 +81,14 @@ const modalidadOpciones = ["Presencial", "Online"];
 const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 
 function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
+  // --- Ocultar scroll externo al abrir el modal ---
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
   const safeInitialData = initialData || {};
 
   // Extrae día y hora desde el campo 'clase' si existen
@@ -231,89 +238,94 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     ? parseDateFromCL(form.fechaIngreso)
     : "";
 
-  return (
-    <Box
-      sx={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        background: "rgba(0, 0, 0, 0.2)",
-        display: "flex",
-        alignItems: "flex-start",
+return (
+  <Dialog
+    open={true}
+    onClose={onClose}
+    fullWidth
+    maxWidth="md"
+    PaperProps={{
+      sx: {
+        background: "rgba(0,0,0,0.10)",
+        boxShadow: "none",
+        alignItems: "center",
         justifyContent: "center",
-        zIndex: 1000,
-        pt: 10,
+        display: "flex",
+        minHeight: '100vh',
+      },
+    }}
+    sx={{ zIndex: 2000 }}
+  >
+    {/* Modal tipo Windows para errores */}
+    <Dialog
+      open={showError && !!error}
+      onClose={() => setShowError(false)}
+      PaperProps={{
+        sx: {
+          minWidth: 340,
+          maxWidth: 400,
+          border: "2px solid #1976d2",
+          borderRadius: 2,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+          background: "#fff",
+          pt: 2,
+        },
       }}
     >
-      {/* Modal tipo Windows para errores */}
-      <Dialog
-        open={showError && !!error}
-        onClose={() => setShowError(false)}
-        PaperProps={{
-          sx: {
-            minWidth: 340,
-            maxWidth: 400,
-            border: "2px solid #1976d2",
-            borderRadius: 2,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-            background: "#fff",
-            pt: 2,
-          },
-        }}
+      <DialogTitle
+        sx={{ display: "flex", alignItems: "center", gap: 1, pb: 0 }}
       >
-        <DialogTitle
-          sx={{ display: "flex", alignItems: "center", gap: 1, pb: 0 }}
+        <ErrorOutlineIcon color="error" sx={{ fontSize: 32 }} />
+        <span
+          style={{ fontWeight: 500, fontSize: "1.1rem", color: "#1976d2" }}
         >
-          <ErrorOutlineIcon color="error" sx={{ fontSize: 32 }} />
+          Error
+        </span>
+        <Box sx={{ flex: 1 }} />
+        <IconButton onClick={() => setShowError(false)} size="small">
           <span
-            style={{ fontWeight: 500, fontSize: "1.1rem", color: "#1976d2" }}
+            style={{ fontWeight: "bold", fontSize: 18, color: "#1976d2" }}
           >
-            Error
+            ×
           </span>
-          <Box sx={{ flex: 1 }} />
-          <IconButton onClick={() => setShowError(false)} size="small">
-            <span
-              style={{ fontWeight: "bold", fontSize: 18, color: "#1976d2" }}
-            >
-              ×
-            </span>
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ textAlign: "center", py: 2 }}>
-          <Typography sx={{ color: "#222", fontSize: "1.05rem" }}>
-            {error}
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
-          <Button
-            onClick={() => setShowError(false)}
-            variant="contained"
-            color="primary"
-            autoFocus
-          >
-            Aceptar
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{
-          background: "#f5f5f5",
-          color: "#222",
-          p: 3,
-          borderRadius: 3,
-          minWidth: 320,
-          maxWidth: 700,
-          width: { xs: "98vw", sm: "90vw", md: "700px" },
-          maxHeight: "90vh",
-          mx: "auto",
-          overflowY: "auto",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
-        }}
-      >
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ textAlign: "center", py: 2 }}>
+        <Typography sx={{ color: "#222", fontSize: "1.05rem" }}>
+          {error}
+        </Typography>
+      </DialogContent>
+      <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
+        <Button
+          onClick={() => setShowError(false)}
+          variant="contained"
+          color="primary"
+          autoFocus
+        >
+          Aceptar
+        </Button>
+      </DialogActions>
+    </Dialog>
+    <Box
+      component="form"
+      onSubmit={handleSubmit}
+      sx={{
+        background: "#f5f5f5",
+        color: "#222",
+        p: { xs: '20px 10px', sm: '32px 40px' },
+        borderRadius: 3,
+        minWidth: 0,
+        maxWidth: { xs: '100%', sm: 700 },
+        width: { xs: '100%', sm: '90vw', md: '700px' },
+        maxHeight: { xs: '100vh', sm: '90vh' },
+        mx: { xs: 0, sm: 'auto' },
+        my: { xs: 2, sm: 4 },
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+        boxSizing: 'border-box',
+      }}
+    >
         <Typography variant="h5" sx={{ mb: 2, color: "#222" }}>
           {safeInitialData && safeInitialData._id
             ? "Editar Alumno"
@@ -933,7 +945,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           </Button>
         </Box>
       </Box>
-    </Box>
+    </Dialog>
   );
 }
 
