@@ -51,7 +51,7 @@ async function createAlumnos(alumno) {
     } = alumno;
 
     // Verificar si ya existe un alumno con el mismo RUT
-    const alumnoFound = await Alumno.findOne({ rutAlumno });
+    const alumnoFound = await Alumno.findOne({ rutAlumno: { $eq: rutAlumno } });
     if (alumnoFound) return [null, "El alumno ya existe"];
 
     const newAlumno = new Alumno({
