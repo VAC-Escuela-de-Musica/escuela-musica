@@ -38,5 +38,10 @@ router.get("/saludo", (req, res) => {
   res.send("¡Hola desde el backend!");
 });
 
+// Ruta para /api
+router.get("/", (req, res) => {
+  res.send("API Escuela de Música funcionando");
+});
+
 // Exporta el enrutador
 export default router;

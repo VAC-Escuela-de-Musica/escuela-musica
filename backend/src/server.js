@@ -39,6 +39,11 @@ async function setupServer() {
     // Agrega el enrutador principal al servidor
     server.use("/api", indexRoutes);
 
+    // Ruta para la raíz /
+    server.get("/", (req, res) => {
+      res.send("Bienvenido a la API de la Escuela de Música");
+    });
+
     // Inicia el servidor en el puerto especificado
     server.listen(PORT, () => {
       console.log(`=> Servidor corriendo en ${HOST}:${PORT}/api`);
