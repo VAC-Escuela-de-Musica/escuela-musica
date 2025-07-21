@@ -22,7 +22,10 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 // --- FUNCIÓN DE FORMATEO DE RUT ---
 function formatRut(value) {
-  let clean = value.replace(/[^0-9kK]/g, "").toUpperCase();
+  let clean = value
+    .replace(/[^0-9kK]/g, "")
+    .toUpperCase()
+    .slice(0, 9); // máximo 8 dígitos + 1 dv
   if (clean.length < 2) return clean;
   const cuerpo = clean.slice(0, -1);
   const dv = clean.slice(-1);
@@ -33,7 +36,9 @@ function formatRut(value) {
     i -= 3;
   }
   cuerpoFormateado = cuerpo.slice(0, i) + cuerpoFormateado;
-  return `${cuerpoFormateado}-${dv}`;
+  let rutFinal = `${cuerpoFormateado}-${dv}`;
+  rutFinal = rutFinal.slice(0, 12); // Limita a 12 caracteres
+  return rutFinal;
 }
 
 // --- FUNCIÓN DE VALIDACIÓN DE RUT SOLO FORMATO ---
@@ -47,7 +52,10 @@ function validateRut(rut) {
 // --- FORMATEO Y PARSEO DE FECHA CHILENA ---
 function formatDateToCL(dateStr) {
   if (!dateStr) return "";
+  // Si ya está en formato DD-MM-AAAA, retorna igual
+  if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) return dateStr;
   const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return "";
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
@@ -68,8 +76,11 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
   const safeInitialData = initialData || {};
 
   // Solo los 8 dígitos del teléfono, sin el prefijo
-  const getTelefonoSinPrefijo = (tel) =>
-    tel && tel.startsWith("+569") ? tel.slice(4) : tel || "";
+  const getTelefonoSinPrefijo = (tel) => {
+    if (!tel) return "";
+    // Elimina espacios y todos los +569 al inicio
+    return tel.trim().replace(/^(\+569)+/, "");
+  };
 
   // Inicializa la fecha en formato chileno si viene en formato ISO
   const initialFechaIngreso =
@@ -123,7 +134,11 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     } else if (name === "rutAlumno" || name === "rutApoderado") {
       setForm({ ...form, [name]: formatRut(value) });
     } else if (name === "fechaIngreso") {
-      setForm({ ...form, fechaIngreso: formatDateToCL(value) });
+      let val = value.replace(/[^0-9]/g, "");
+      if (val.length > 2) val = val.slice(0, 2) + "-" + val.slice(2);
+      if (val.length > 5) val = val.slice(0, 5) + "-" + val.slice(5, 9);
+      val = val.slice(0, 10); // Limita a DD-MM-AAAA
+      setForm({ ...form, fechaIngreso: val });
     } else {
       setForm({ ...form, [name]: value });
     }
@@ -176,9 +191,10 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
 
     // Unir día y hora en clase
     const clase = form.dia && form.hora ? `${form.dia} ${form.hora}` : "";
-    // Teléfonos: agregar el prefijo antes de enviar
+    // Teléfonos: siempre agregar el prefijo +569
     const telefonoAlumno = "+569" + (form.telefonoAlumno || "");
     const telefonoApoderado = "+569" + (form.telefonoApoderado || "");
+
     try {
       await onSubmit({
         ...form,
@@ -405,13 +421,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           label="Fecha de Ingreso"
           name="fechaIngreso"
           value={form.fechaIngreso}
-          onChange={(e) => {
-            let val = e.target.value.replace(/[^0-9]/g, "");
-            if (val.length > 2) val = val.slice(0, 2) + "-" + val.slice(2);
-            if (val.length > 5) val = val.slice(0, 5) + "-" + val.slice(5, 9);
-            val = val.slice(0, 10); // Limita a DD-MM-AAAA
-            setForm({ ...form, fechaIngreso: val });
-          }}
+          onChange={handleChange}
           fullWidth
           margin="normal"
           variant="outlined"
