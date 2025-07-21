@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage";
 import React from "react";
 import Navbar from "./components/Navbar";
 import InicioUsuario from "./pages/paginaUsuario";
+import AlumnosPage from "./pages/AlumnosPage";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         } />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/usuario" element={<InicioUsuario />} />
+        <Route path="/alumnos" element={<AlumnosPage />} />
         {/* agregar más rutas */}
       </Routes>
     </div>

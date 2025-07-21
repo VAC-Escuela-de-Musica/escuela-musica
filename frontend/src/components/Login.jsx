@@ -43,7 +43,7 @@ export default function Login() {
     setLoading(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_BASE_URL}/auth/login`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/auth/login`,
         {
           method: "POST",
           headers: {

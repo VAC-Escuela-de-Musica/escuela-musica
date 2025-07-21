@@ -6,6 +6,8 @@ import {
   deleteAlumno,
 } from "../services/alumnos.service";
 import AlumnoForm from "./AlumnoForm";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 import {
   Card,
   CardContent,
@@ -28,15 +30,23 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 function AlumnosList() {
   const [alumnos, setAlumnos] = useState([]);
-  const [editingAlumno, setEditingAlumno] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+  const [editingAlumno, setEditingAlumno] = useState(() => {
+    const saved = localStorage.getItem("alumnos_editingAlumno");
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [showForm, setShowForm] = useState(() => {
+    const saved = localStorage.getItem("alumnos_showForm");
+    return saved === "true";
+  });
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState(null);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const fetchAlumnos = () => {
     getAlumnos()
       .then((res) => setAlumnos(res.data.data || res.data))
-      .catch((err) => console.error(err));
+      // ...existing code...
   };
 
   useEffect(() => {
@@ -46,10 +56,14 @@ function AlumnosList() {
   const handleCreate = () => {
     setEditingAlumno(null);
     setShowForm(true);
+    localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
+    localStorage.setItem("alumnos_showForm", "true");
   };
   const handleEdit = (alumno) => {
     setEditingAlumno(alumno);
     setShowForm(true);
+    localStorage.setItem("alumnos_editingAlumno", JSON.stringify(alumno));
+    localStorage.setItem("alumnos_showForm", "true");
   };
   const handleDelete = async (alumno) => {
     if (window.confirm(`¿Eliminar a ${alumno.nombreAlumno}?`)) {
@@ -64,6 +78,8 @@ function AlumnosList() {
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingAlumno(null);
+    localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
+    localStorage.setItem("alumnos_showForm", "false");
   };
   const handleSubmitForm = async (formData) => {
     if (editingAlumno && editingAlumno._id) {
@@ -72,6 +88,10 @@ function AlumnosList() {
         fetchAlumnos();
         setShowForm(false);
         setEditingAlumno(null);
+        localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
+        localStorage.setItem("alumnos_showForm", "false");
+        setSuccessMsg("Alumno actualizado exitosamente");
+        setShowSuccess(true);
       } catch (err) {
         alert("Error al actualizar alumno");
       }
@@ -81,6 +101,10 @@ function AlumnosList() {
         fetchAlumnos();
         setShowForm(false);
         setEditingAlumno(null);
+        localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
+        localStorage.setItem("alumnos_showForm", "false");
+        setSuccessMsg("Alumno creado exitosamente");
+        setShowSuccess(true);
       } catch (err) {
         alert("Error al crear alumno");
       }
@@ -311,11 +335,34 @@ function AlumnosList() {
   );
 
   return (
-    <Box sx={{ padding: 2 }}>
-      <Typography variant="h4" sx={{ color: "#fff", mb: 2 }}>
+    <Box
+      sx={{
+        p: { xs: 0.5, sm: 2 },
+        minHeight: '100vh',
+        background: { xs: '#181a20', sm: 'transparent' },
+        position: 'relative',
+      }}
+    >
+      <Typography
+        variant="h4"
+        sx={{
+          color: "#fff",
+          mb: { xs: 1, sm: 2 },
+          fontSize: { xs: 24, sm: 32 },
+          textAlign: { xs: 'center', sm: 'left' },
+        }}
+      >
         Lista de Alumnos
       </Typography>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'stretch', sm: 'center' },
+          gap: 2,
+          mb: 3,
+        }}
+      >
         <TextField
           label="Buscar alumno por nombre, email o RUT..."
           variant="outlined"
@@ -327,6 +374,7 @@ function AlumnosList() {
             input: { color: "#fff" },
             label: { color: "#aaa" },
             borderRadius: 1,
+            mb: { xs: 2, sm: 0 },
           }}
           InputProps={{
             sx: { color: "#fff" },
@@ -343,6 +391,7 @@ function AlumnosList() {
             px: 3,
             py: 1.5,
             borderRadius: 1,
+            width: { xs: '100%', sm: 'auto' },
           }}
           onClick={handleCreate}
         >
@@ -365,12 +414,54 @@ function AlumnosList() {
         )}
       </Grid>
       {showForm && (
-        <AlumnoForm
-          initialData={editingAlumno}
-          onSubmit={handleSubmitForm}
-          onClose={handleCloseForm}
-        />
+        <Box
+          sx={{
+            position: { xs: 'fixed', sm: 'fixed' },
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.25)',
+            zIndex: 1200,
+            display: 'flex',
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            justifyContent: 'center',
+            overflowY: 'hidden', // Evita doble scroll
+            py: { xs: 2, sm: 0 },
+          }}
+        >
+          <Box
+            sx={{
+              width: { xs: '100vw', sm: 'auto' },
+              maxWidth: 700,
+              px: { xs: 2, sm: 0 }, // Padding horizontal externo en móvil
+              pb: { xs: 3, sm: 0 }, // Padding inferior extra en móvil
+              boxSizing: 'border-box',
+              overflowY: 'auto',
+              maxHeight: { xs: 'calc(100vh - 32px)', sm: '90vh' },
+              borderRadius: 3,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <AlumnoForm
+              initialData={editingAlumno}
+              onSubmit={handleSubmitForm}
+              onClose={handleCloseForm}
+            />
+          </Box>
+        </Box>
       )}
+      <Snackbar
+        open={showSuccess}
+        autoHideDuration={3000}
+        onClose={() => setShowSuccess(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <MuiAlert onClose={() => setShowSuccess(false)} severity="success" sx={{ width: '100%' }}>
+          {successMsg}
+        </MuiAlert>
+      </Snackbar>
     </Box>
   );
 }

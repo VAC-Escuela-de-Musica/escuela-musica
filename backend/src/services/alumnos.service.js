@@ -21,7 +21,7 @@ async function getAllAlumnos() {
 
 async function createAlumnos(alumno) {
   try {
-    console.log("Datos recibidos en backend:", alumno);
+    // ...existing code...
     const {
       nombreAlumno,
       rutAlumno,

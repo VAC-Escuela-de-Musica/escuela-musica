@@ -1,5 +1,6 @@
 // Importa el archivo 'configEnv.js' para cargar las variables de entorno
 import { PORT, HOST } from "./config/configEnv.js";
+import path from "node:path";
 // Importa el módulo 'cors' para agregar los cors
 import cors from "cors";
 // Importa el módulo 'express' para crear la aplicacion web
@@ -39,9 +40,18 @@ async function setupServer() {
     // Agrega el enrutador principal al servidor
     server.use("/api", indexRoutes);
 
+    // === Servir archivos estáticos del frontend (dist) ===
+    const distPath = path.resolve(process.cwd(), "../frontend/dist");
+    server.use(express.static(distPath));
+
+    // Para SPA: redirige cualquier ruta que NO empiece con /api al index.html del frontend
+    server.get(/^\/(?!api).*/, (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+
     // Inicia el servidor en el puerto especificado
     server.listen(PORT, () => {
-      console.log(`=> Servidor corriendo en ${HOST}:${PORT}/api`);
+      // ...existing code...
     });
   } catch (err) {
     handleError(err, "/server.js -> setupServer");
@@ -53,15 +63,21 @@ async function setupServer() {
  */
 async function setupAPI() {
   try {
+    console.log("[API] Iniciando setupAPI...");
     // Inicia la conexión a la base de datos
     await setupDB();
+    console.log("[API] setupDB completado");
     // Inicia la configuración de MinIO
     await setupMinIO();
+    console.log("[API] setupMinIO completado");
     // Inicia el servidor web
     await setupServer();
+    console.log("[API] setupServer completado");
     // Inicia la creación del usuario admin y user
     await createUsers();
+    console.log("[API] createUsers completado");
   } catch (err) {
+    console.error("[API] Error en setupAPI:", err);
     handleFatalError(err, "/server.js -> setupAPI");
   }
 }
@@ -70,5 +86,5 @@ app.use(cors());
 
 // Inicia la API
 setupAPI()
-  .then(() => console.log("=> API Iniciada exitosamente"))
+  // ...existing code...
   .catch((err) => handleFatalError(err, "/server.js -> setupAPI"));

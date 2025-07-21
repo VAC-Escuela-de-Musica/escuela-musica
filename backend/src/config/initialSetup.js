@@ -29,9 +29,9 @@ async function createUsers() {
         roles: ["administrador"],
       }).save(),
     ]);
-    console.log("* => Users creados exitosamente");
+    // ...existing code...
   } catch (error) {
-    console.error(error);
+    // ...existing code...
   }
 }
 

@@ -20,12 +20,10 @@ import {
 } from "@mui/material";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
-// --- FUNCIÓN DE FORMATEO DE RUT ---
-function formatRut(value) {
-  let clean = value
-    .replace(/[^0-9kK]/g, "")
-    .toUpperCase()
-    .slice(0, 9); // máximo 8 dígitos + 1 dv
+
+// --- UTILS ---
+const formatRut = (value) => {
+  let clean = value.replace(/[^0-9kK]/g, "").toUpperCase().slice(0, 9);
   if (clean.length < 2) return clean;
   const cuerpo = clean.slice(0, -1);
   const dv = clean.slice(-1);
@@ -37,22 +35,17 @@ function formatRut(value) {
   }
   cuerpoFormateado = cuerpo.slice(0, i) + cuerpoFormateado;
   let rutFinal = `${cuerpoFormateado}-${dv}`;
-  rutFinal = rutFinal.slice(0, 12); // Limita a 12 caracteres
-  return rutFinal;
-}
+  return rutFinal.slice(0, 12);
+};
 
-// --- FUNCIÓN DE VALIDACIÓN DE RUT SOLO FORMATO ---
-function validateRut(rut) {
+const validateRut = (rut) => {
   if (!rut) return false;
-  // Solo valida el formato: XX.XXX.XXX-X o X.XXX.XXX-X o XXXXXXXX-X
   const regex = /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$|^\d{7,8}-[\dkK]$/;
   return regex.test(rut);
-}
+};
 
-// --- FORMATEO Y PARSEO DE FECHA CHILENA ---
-function formatDateToCL(dateStr) {
+const formatDateToCL = (dateStr) => {
   if (!dateStr) return "";
-  // Si ya está en formato DD-MM-AAAA, retorna igual
   if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) return dateStr;
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return "";
@@ -60,13 +53,29 @@ function formatDateToCL(dateStr) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
   return `${day}-${month}-${year}`;
-}
+};
 
-function parseDateFromCL(clDateStr) {
+const parseDateFromCL = (clDateStr) => {
   if (!clDateStr) return "";
   const [day, month, year] = clDateStr.split("-");
   return `${year}-${month}-${day}`;
-}
+};
+
+// --- VALIDACIONES DE CAMPO ---
+const fieldValidators = {
+  nombreAlumno: (v) => !v || v.length < 3 ? "El nombre es obligatorio y debe tener al menos 3 letras." : "",
+  rutAlumno: (v) => !validateRut(v) ? "El RUT no es válido. Debe tener puntos y guion." : "",
+  edadAlumno: (v) => !v || isNaN(v) || v < 1 || v > 99 ? "La edad debe ser un número entre 1 y 99." : "",
+  telefonoAlumno: (v) => !/^[0-9]{8}$/.test(v) ? "Debe tener exactamente 8 dígitos." : "",
+  email: (v) => !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v) ? "Email no válido." : "",
+  fechaIngreso: (v) => !/^\d{2}-\d{2}-\d{4}$/.test(v) ? "Formato DD-MM-AAAA requerido." : "",
+  rutApoderado: (v) => v && !validateRut(v) ? "RUT no válido." : "",
+  telefonoApoderado: (v) => v && !/^[0-9]{8}$/.test(v) ? "Debe tener 8 dígitos." : "",
+  emailApoderado: (v) => v && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v) ? "Email no válido." : "",
+  rrss: (v) => v && !/^[a-zA-Z0-9_@.\-]*$/.test(v) ? "Solo letras, números, guiones, puntos y arroba." : "",
+  instrumentos: (arr) => arr.some(i => i && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(i)) ? "Solo letras y espacios." : "",
+  estilosMusicales: (arr) => arr.some(e => e && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(e)) ? "Solo letras y espacios." : "",
+};
 
 const tipoCursoOpciones = ["Grupal", "Individual"];
 const modalidadOpciones = ["Presencial", "Online"];
@@ -75,11 +84,25 @@ const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
   const safeInitialData = initialData || {};
 
+  // Extrae día y hora desde el campo 'clase' si existen
+  let diaFromClase = "";
+  let horaFromClase = "";
+  if (safeInitialData.clase && (!safeInitialData.dia || !safeInitialData.hora)) {
+    const partes = safeInitialData.clase.split(" ");
+    diaFromClase = partes[0] || "";
+    horaFromClase = partes[1] || "";
+  }
+
+  // Utilidad para inicializar arrays correctamente
+  const initArray = (val) => Array.isArray(val) ? val : (typeof val === 'string' && val.length > 0 ? val.split(',').map(i => i.trim()) : []);
+  // Utilidad para inicializar booleanos correctamente
+  const initBool = (val) => typeof val === 'boolean' ? val : !!val;
+
   // Solo los 8 dígitos del teléfono, sin el prefijo
   const getTelefonoSinPrefijo = (tel) => {
     if (!tel) return "";
-    // Elimina espacios y todos los +569 al inicio
-    return tel.trim().replace(/^(\+569)+/, "");
+    // Elimina solo un prefijo +569 al inicio
+    return tel.trim().replace(/^\+569/, "");
   };
 
   // Inicializa la fecha en formato chileno si viene en formato ISO
@@ -90,57 +113,58 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
 
   const [form, setForm] = useState({
     // Datos del alumno
-    nombreAlumno: "",
-    rutAlumno: "",
-    edadAlumno: "",
-    direccion: "",
+    nombreAlumno: safeInitialData.nombreAlumno || "",
+    rutAlumno: safeInitialData.rutAlumno || "",
+    edadAlumno: safeInitialData.edadAlumno || "",
+    direccion: safeInitialData.direccion || "",
     telefonoAlumno: getTelefonoSinPrefijo(safeInitialData.telefonoAlumno),
-    email: "",
+    email: safeInitialData.email || "",
     fechaIngreso: initialFechaIngreso,
     // Datos del apoderado
-    nombreApoderado: "",
-    rutApoderado: "",
+    nombreApoderado: safeInitialData.nombreApoderado || "",
+    rutApoderado: safeInitialData.rutApoderado || "",
     telefonoApoderado: getTelefonoSinPrefijo(safeInitialData.telefonoApoderado),
+    emailApoderado: safeInitialData.emailApoderado || "",
     // Otros datos
-    rrss: "",
-    conocimientosPrevios: false,
-    instrumentos: [],
-    estilosMusicales: [],
-    otroEstilo: "",
-    referenteMusical: "",
-    condicionAprendizaje: false,
-    detalleCondicionAprendizaje: "",
-    condicionMedica: false,
-    detalleCondicionMedica: "",
-    observaciones: "",
-    curso: "",
-    tipoCurso: "",
-    modalidadClase: "",
-    dia: "",
-    hora: "",
-    ...safeInitialData,
-    fechaIngreso: initialFechaIngreso,
+    rrss: safeInitialData.rrss || "",
+    conocimientosPrevios: initBool(safeInitialData.conocimientosPrevios),
+    instrumentos: initArray(safeInitialData.instrumentos),
+    estilosMusicales: initArray(safeInitialData.estilosMusicales),
+    otroEstilo: safeInitialData.otroEstilo || "",
+    referenteMusical: safeInitialData.referenteMusical || "",
+    condicionAprendizaje: initBool(safeInitialData.condicionAprendizaje),
+    detalleCondicionAprendizaje: safeInitialData.detalleCondicionAprendizaje || "",
+    condicionMedica: initBool(safeInitialData.condicionMedica),
+    detalleCondicionMedica: safeInitialData.detalleCondicionMedica || "",
+    observaciones: safeInitialData.observaciones || "",
+    curso: safeInitialData.curso || "",
+    tipoCurso: safeInitialData.tipoCurso || "",
+    modalidadClase: safeInitialData.modalidadClase || "",
+    dia: safeInitialData.dia || diaFromClase,
+    hora: safeInitialData.hora || horaFromClase,
   });
   const [error, setError] = useState("");
   const [showError, setShowError] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // --- handleChange con formateo de RUT, fecha y teléfonos ---
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let val = value;
     if (name === "telefonoAlumno" || name === "telefonoApoderado") {
-      // Solo permite 8 dígitos numéricos
-      const soloNumeros = value.replace(/[^0-9]/g, "").slice(0, 8);
-      setForm({ ...form, [name]: soloNumeros });
+      val = value.replace(/[^0-9]/g, "").slice(0, 8);
     } else if (name === "rutAlumno" || name === "rutApoderado") {
-      setForm({ ...form, [name]: formatRut(value) });
+      val = formatRut(value);
     } else if (name === "fechaIngreso") {
-      let val = value.replace(/[^0-9]/g, "");
+      val = value.replace(/[^0-9]/g, "");
       if (val.length > 2) val = val.slice(0, 2) + "-" + val.slice(2);
       if (val.length > 5) val = val.slice(0, 5) + "-" + val.slice(5, 9);
-      val = val.slice(0, 10); // Limita a DD-MM-AAAA
-      setForm({ ...form, fechaIngreso: val });
-    } else {
-      setForm({ ...form, [name]: value });
+      val = val.slice(0, 10);
+    }
+    setForm({ ...form, [name]: val });
+    // Validación inmediata
+    if (fieldValidators[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: fieldValidators[name](val) }));
     }
   };
 
@@ -156,6 +180,9 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
   const handleSelectChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
+    if (fieldValidators[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: fieldValidators[name](value) }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -164,44 +191,33 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     setShowError(false);
 
     // Validaciones extra
-    if (!form.nombreAlumno || form.nombreAlumno.length < 3) {
-      setError(
-        "El nombre del alumno es obligatorio y debe tener al menos 3 letras."
-      );
+    // Validaciones modernas y robustas
+    // Validación de todos los campos relevantes
+    let newFieldErrors = {};
+    Object.entries(fieldValidators).forEach(([key, fn]) => {
+      if (key === "instrumentos" || key === "estilosMusicales") {
+        newFieldErrors[key] = fn(form[key]);
+      } else {
+        newFieldErrors[key] = fn(form[key]);
+      }
+    });
+    setFieldErrors(newFieldErrors);
+    const firstError = Object.values(newFieldErrors).find((v) => v);
+    if (firstError) {
+      setError(firstError);
       setShowError(true);
       return;
     }
-    if (!validateRut(form.rutAlumno)) {
-      setError("El RUT del alumno no es válido. Debe tener puntos y guion.");
-      setShowError(true);
-      return;
-    }
-    if (!form.fechaIngreso || form.fechaIngreso.length !== 10) {
-      setError(
-        "La fecha de ingreso es obligatoria y debe tener el formato DD-MM-AAAA."
-      );
-      setShowError(true);
-      return;
-    }
-    if (form.rutApoderado && !validateRut(form.rutApoderado)) {
-      setError("El RUT del apoderado no es válido.");
-      setShowError(true);
-      return;
-    }
-
     // Unir día y hora en clase
     const clase = form.dia && form.hora ? `${form.dia} ${form.hora}` : "";
-    // Teléfonos: siempre agregar el prefijo +569
     const telefonoAlumno = "+569" + (form.telefonoAlumno || "");
     const telefonoApoderado = "+569" + (form.telefonoApoderado || "");
-
     try {
       await onSubmit({
         ...form,
         clase,
         telefonoAlumno,
         telefonoApoderado,
-        // La fecha se envía en formato chileno
         fechaIngreso: form.fechaIngreso,
       });
     } catch (err) {
@@ -289,9 +305,9 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           color: "#222",
           p: 3,
           borderRadius: 3,
-          minWidth: 280,
-          maxWidth: 400,
-          width: "90vw",
+          minWidth: 320,
+          maxWidth: 700,
+          width: { xs: "98vw", sm: "90vw", md: "700px" },
           maxHeight: "90vh",
           mx: "auto",
           overflowY: "auto",
@@ -303,130 +319,396 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
             ? "Editar Alumno"
             : "Agregar Alumno"}
         </Typography>
-        <Typography variant="h6" sx={{ mt: 2, color: "#444" }}>
-          Datos del Apoderado
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        <TextField
-          label="Nombre Apoderado"
-          name="nombreApoderado"
-          value={form.nombreApoderado}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="outlined"
-        />
-        <TextField
-          label="RUT Apoderado"
-          name="rutApoderado"
-          value={form.rutApoderado}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="outlined"
-        />
-        <TextField
-          label="Teléfono Apoderado"
-          name="telefonoApoderado"
-          value={form.telefonoApoderado}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="outlined"
-          inputProps={{ maxLength: 8 }}
-          helperText="Ejemplo: +569XXXXXXXX"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">+569</InputAdornment>
-            ),
-          }}
-        />
-        <TextField
-          label="Dirección"
-          name="direccion"
-          value={form.direccion}
-          onChange={handleChange}
-          fullWidth
-          required
-          margin="normal"
-          variant="outlined"
-        />
+        {/* DATOS DE ALUMNO */}
         <Typography variant="h6" sx={{ mt: 2, color: "#444" }}>
           Datos del Alumno
         </Typography>
         <Divider sx={{ mb: 2 }} />
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+          <TextField
+            label="Nombre Alumno"
+            name="nombreAlumno"
+            value={form.nombreAlumno}
+            onChange={handleChange}
+            required
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            error={!!fieldErrors.nombreAlumno}
+            helperText={fieldErrors.nombreAlumno}
+            sx={{ flex: 1 }}
+          />
+          <TextField
+            label="RUT Alumno"
+            name="rutAlumno"
+            value={form.rutAlumno}
+            onChange={handleChange}
+            required
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            error={!!fieldErrors.rutAlumno}
+            helperText={fieldErrors.rutAlumno}
+            sx={{ flex: 1 }}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+          <TextField
+            label="Edad Alumno"
+            name="edadAlumno"
+            value={form.edadAlumno}
+            onChange={handleChange}
+            type="number"
+            required
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            inputProps={{ min: 1, max: 99 }}
+            error={!!fieldErrors.edadAlumno}
+            helperText={fieldErrors.edadAlumno || "Edad entre 1 y 99 años"}
+            sx={{ flex: 1 }}
+          />
+          <TextField
+            label="Teléfono Alumno"
+            name="telefonoAlumno"
+            value={form.telefonoAlumno}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            inputProps={{ maxLength: 8 }}
+            error={!!fieldErrors.telefonoAlumno}
+            helperText={fieldErrors.telefonoAlumno || "Ejemplo: +569XXXXXXXX"}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">+569</InputAdornment>
+              ),
+            }}
+            sx={{ flex: 1 }}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+          <TextField
+            label="Email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            error={!!fieldErrors.email}
+            helperText={fieldErrors.email}
+            sx={{ flex: 1 }}
+          />
+          <TextField
+            label="Fecha de Ingreso"
+            name="fechaIngreso"
+            value={form.fechaIngreso}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            error={!!fieldErrors.fechaIngreso}
+            helperText={fieldErrors.fechaIngreso || "Formato: DD-MM-AAAA"}
+            placeholder="Ej: 19-07-2025"
+            sx={{ flex: 1 }}
+          />
+        </Box>
+        {/* DATOS DE APODERADO */}
+        <Typography variant="h6" sx={{ mt: 2, color: "#444" }}>
+          Datos del Apoderado
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+          <TextField
+            label="Nombre Apoderado"
+            name="nombreApoderado"
+            value={form.nombreApoderado}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            error={!!fieldErrors.nombreApoderado}
+            helperText={fieldErrors.nombreApoderado}
+            sx={{ flex: 1 }}
+          />
+          <TextField
+            label="RUT Apoderado"
+            name="rutApoderado"
+            value={form.rutApoderado}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            error={!!fieldErrors.rutApoderado}
+            helperText={fieldErrors.rutApoderado}
+            sx={{ flex: 1 }}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+          <TextField
+            label="Teléfono Apoderado"
+            name="telefonoApoderado"
+            value={form.telefonoApoderado}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            inputProps={{ maxLength: 8 }}
+            error={!!fieldErrors.telefonoApoderado}
+            helperText={fieldErrors.telefonoApoderado || "Ejemplo: +569XXXXXXXX"}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">+569</InputAdornment>
+              ),
+            }}
+            sx={{ flex: 1 }}
+          />
+          <TextField
+            label="Dirección"
+            name="direccion"
+            value={form.direccion}
+            onChange={handleChange}
+            fullWidth
+            required
+            margin="normal"
+            variant="outlined"
+            sx={{ flex: 1 }}
+          />
+        </Box>
+        {/* OTROS DATOS */}
+        <Typography variant="h6" sx={{ mt: 2, color: "#444" }}>
+          Otros Datos
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
         <TextField
-          label="Nombre Alumno"
-          name="nombreAlumno"
-          value={form.nombreAlumno}
+          label="RRSS"
+          name="rrss"
+          value={form.rrss}
           onChange={handleChange}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          error={!!fieldErrors.rrss}
+          helperText={fieldErrors.rrss}
+        />
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+          <TextField
+            label="Instrumentos (Separados por comas)"
+            name="instrumentos"
+            value={form.instrumentos.join(", ")}
+            onChange={(e) => {
+              const val = e.target.value.split(",").map((i) => i.trim());
+              setForm({ ...form, instrumentos: val });
+              setFieldErrors((prev) => ({ ...prev, instrumentos: fieldValidators.instrumentos(val) }));
+            }}
+            placeholder="Ej: Guitarra, Piano"
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            error={!!fieldErrors.instrumentos}
+            helperText={fieldErrors.instrumentos}
+            sx={{ flex: 1 }}
+          />
+          <TextField
+            label="Estilos Musicales (Separados por comas)"
+            name="estilosMusicales"
+            value={form.estilosMusicales.join(", ")}
+            onChange={(e) => {
+              const val = e.target.value.split(",").map((i) => i.trim());
+              setForm({ ...form, estilosMusicales: val });
+              setFieldErrors((prev) => ({ ...prev, estilosMusicales: fieldValidators.estilosMusicales(val) }));
+            }}
+            placeholder="Ej: Rock, Jazz"
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            error={!!fieldErrors.estilosMusicales}
+            helperText={fieldErrors.estilosMusicales}
+            sx={{ flex: 1 }}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+          <TextField
+            label="Otro Estilo"
+            name="otroEstilo"
+            value={form.otroEstilo}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            sx={{ flex: 1 }}
+          />
+          <TextField
+            label="Referente Musical"
+            name="referenteMusical"
+            value={form.referenteMusical}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            sx={{ flex: 1 }}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={form.conocimientosPrevios}
+                onChange={(e) =>
+                  setForm({ ...form, conocimientosPrevios: e.target.checked })
+                }
+                name="conocimientosPrevios"
+              />
+            }
+            label="Conocimientos Previos"
+            sx={{ flex: 1 }}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={form.condicionAprendizaje}
+                onChange={(e) =>
+                  setForm({ ...form, condicionAprendizaje: e.target.checked })
+                }
+                name="condicionAprendizaje"
+              />
+            }
+            label="Condición de Aprendizaje"
+            sx={{ flex: 1 }}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={form.condicionMedica}
+                onChange={(e) =>
+                  setForm({ ...form, condicionMedica: e.target.checked })
+                }
+                name="condicionMedica"
+              />
+            }
+            label="Condición Médica"
+            sx={{ flex: 1 }}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+          {form.condicionAprendizaje && (
+            <TextField
+              label="Detalle Condición de Aprendizaje"
+              name="detalleCondicionAprendizaje"
+              value={form.detalleCondicionAprendizaje}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              variant="outlined"
+              sx={{ flex: 1 }}
+            />
+          )}
+          {form.condicionMedica && (
+            <TextField
+              label="Detalle Condición Médica"
+              name="detalleCondicionMedica"
+              value={form.detalleCondicionMedica}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              variant="outlined"
+              sx={{ flex: 1 }}
+            />
+          )}
+        </Box>
+        <TextField
+          label="Observaciones"
+          name="observaciones"
+          value={form.observaciones}
+          onChange={handleChange}
+          multiline
+          rows={4}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+        />
+        {/* DATOS DE CLASE */}
+        <Typography variant="h6" sx={{ mt: 2, color: "#444" }}>
+          Datos de Clase
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+          <TextField
+            label="Curso"
+            name="curso"
+            value={form.curso}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            required
+            sx={{ flex: 1 }}
+          />
+          <FormControl fullWidth margin="normal" variant="outlined" sx={{ flex: 1 }}>
+            <InputLabel id="tipoCurso-label">Tipo de Curso</InputLabel>
+            <Select
+              labelId="tipoCurso-label"
+              name="tipoCurso"
+              value={form.tipoCurso}
+              onChange={handleSelectChange}
+              required
+              label="Tipo de Curso"
+            >
+              {tipoCursoOpciones.map((op) => (
+                <MenuItem key={op} value={op}>
+                  {op}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+          <FormControl fullWidth margin="normal" variant="outlined" sx={{ flex: 1 }}>
+            <InputLabel id="modalidadClase-label">Modalidad de Clase</InputLabel>
+            <Select
+              labelId="modalidadClase-label"
+              name="modalidadClase"
+              value={form.modalidadClase}
+              onChange={handleSelectChange}
+              required
+              label="Modalidad de Clase"
+            >
+              {modalidadOpciones.map((op) => (
+                <MenuItem key={op} value={op}>
+                  {op}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal" variant="outlined" sx={{ flex: 1 }}>
+            <InputLabel id="dia-label">Día</InputLabel>
+            <Select
+              labelId="dia-label"
+              name="dia"
+              value={form.dia}
+              onChange={handleSelectChange}
+              required
+              label="Día"
+            >
+              {diasSemana.map((dia) => (
+                <MenuItem key={dia} value={dia}>
+                  {dia}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        <TextField
+          label="Hora (HH:mm)"
+          name="hora"
+          value={form.hora}
+          onChange={handleChange}
+          placeholder="Ej: 16:00"
+          fullWidth
+          margin="normal"
+          variant="outlined"
           required
-          fullWidth
-          margin="normal"
-          variant="outlined"
-        />
-        <TextField
-          label="RUT Alumno"
-          name="rutAlumno"
-          value={form.rutAlumno}
-          onChange={handleChange}
-          required
-          fullWidth
-          margin="normal"
-          variant="outlined"
-        />
-        <TextField
-          label="Edad Alumno"
-          name="edadAlumno"
-          value={form.edadAlumno}
-          onChange={(e) => {
-            // Solo permite números positivos y máximo 2 dígitos
-            let val = e.target.value.replace(/[^0-9]/g, "").slice(0, 2);
-            setForm({ ...form, edadAlumno: val });
-          }}
-          type="number"
-          required
-          fullWidth
-          margin="normal"
-          variant="outlined"
-          inputProps={{ min: 1, max: 99 }}
-          helperText="Edad entre 1 y 99 años"
-        />
-        <TextField
-          label="Teléfono Alumno"
-          name="telefonoAlumno"
-          value={form.telefonoAlumno}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="outlined"
-          inputProps={{ maxLength: 8 }}
-          helperText="Ejemplo: +569XXXXXXXX"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">+569</InputAdornment>
-            ),
-          }}
-        />
-        <TextField
-          label="Email"
-          name="email"
-          value={form.email}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="outlined"
-        />
-        <TextField
-          label="Fecha de Ingreso"
-          name="fechaIngreso"
-          value={form.fechaIngreso}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="outlined"
-          helperText="Formato: DD-MM-AAAA"
-          placeholder="Ej: 19-07-2025"
         />
         <Typography variant="h6" sx={{ mt: 2, color: "#444" }}>
           Otros Datos
@@ -440,6 +722,8 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           fullWidth
           margin="normal"
           variant="outlined"
+          error={!!fieldErrors.rrss}
+          helperText={fieldErrors.rrss}
         />
         <FormControlLabel
           control={
@@ -457,31 +741,33 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           label="Instrumentos (Separados por comas)"
           name="instrumentos"
           value={form.instrumentos.join(", ")}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              instrumentos: e.target.value.split(",").map((i) => i.trim()),
-            })
-          }
+          onChange={(e) => {
+            const val = e.target.value.split(",").map((i) => i.trim());
+            setForm({ ...form, instrumentos: val });
+            setFieldErrors((prev) => ({ ...prev, instrumentos: fieldValidators.instrumentos(val) }));
+          }}
           placeholder="Ej: Guitarra, Piano"
           fullWidth
           margin="normal"
           variant="outlined"
+          error={!!fieldErrors.instrumentos}
+          helperText={fieldErrors.instrumentos}
         />
         <TextField
           label="Estilos Musicales (Separados por comas)"
           name="estilosMusicales"
           value={form.estilosMusicales.join(", ")}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              estilosMusicales: e.target.value.split(",").map((i) => i.trim()),
-            })
-          }
+          onChange={(e) => {
+            const val = e.target.value.split(",").map((i) => i.trim());
+            setForm({ ...form, estilosMusicales: val });
+            setFieldErrors((prev) => ({ ...prev, estilosMusicales: fieldValidators.estilosMusicales(val) }));
+          }}
           placeholder="Ej: Rock, Jazz"
           fullWidth
           margin="normal"
           variant="outlined"
+          error={!!fieldErrors.estilosMusicales}
+          helperText={fieldErrors.estilosMusicales}
         />
         <TextField
           label="Otro Estilo"

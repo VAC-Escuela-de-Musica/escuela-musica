@@ -10,13 +10,19 @@ import Alumno from "../models/alumnos.model.js";
 
 // Controlador para obtener todos los alumnos
 async function getAllAlumnos(req, res) {
+  console.log("[GET] /api/alumnos - Obtener todos los alumnos");
   try {
     const [alumnos, errorAlumnos] = await AlumnoService.getAllAlumnos();
+    console.log(`[GET] /api/alumnos - Resultado consulta:`, alumnos);
+    if (alumnos) {
+      console.log(`[GET] /api/alumnos - Cantidad de alumnos recuperados: ${alumnos.length}`);
+    }
     if (errorAlumnos) return respondError(req, res, 404, errorAlumnos);
     alumnos.length === 0
       ? respondSuccess(req, res, 204)
       : respondSuccess(req, res, 200, alumnos);
   } catch (error) {
+    console.error("[GET] /api/alumnos - Error:", error);
     handleError(error, "alumnos.controller -> getAllAlumnos");
     respondError(req, res, 400, error.message);
   }
@@ -24,6 +30,7 @@ async function getAllAlumnos(req, res) {
 
 // Controlador para crear un nuevo alumno
 async function createAlumnos(req, res) {
+  console.log("[POST] /api/alumnos - Crear alumno", req.body);
   try {
     const { body } = req;
     const [alumno, errorAlumno] = await AlumnoService.createAlumnos(body);
@@ -43,6 +50,7 @@ async function createAlumnos(req, res) {
 
 // Controlador para obtener un alumno por su ID
 async function getAlumnosById(req, res) {
+  console.log(`[GET] /api/alumnos/${req.params.id} - Obtener alumno por ID`);
   try {
     const { params } = req;
     const [alumno, errorAlumno] = await AlumnoService.getAlumnosById(params.id);
@@ -57,9 +65,38 @@ async function getAlumnosById(req, res) {
 
 // Controlador para actualizar un alumno por su ID
 async function updateAlumnos(req, res) {
+  console.log(`[PUT] /api/alumnos/${req.params.id} - Actualizar alumno`, req.body);
   try {
     const { id } = req.params;
-    const allowedFields = ["name", "age", "grade"]; // Whitelist of allowed fields
+    // Lista de campos permitidos según el esquema real (completa)
+    const allowedFields = [
+      "nombreAlumno",
+      "rutAlumno",
+      "edadAlumno",
+      "direccion",
+      "telefonoAlumno",
+      "email",
+      "fechaIngreso",
+      "nombreApoderado",
+      "rutApoderado",
+      "telefonoApoderado",
+      "emailApoderado",
+      "rrss",
+      "conocimientosPrevios",
+      "instrumentos",
+      "estilosMusicales",
+      "otroEstilo",
+      "referenteMusical",
+      "condicionAprendizaje",
+      "detalleCondicionAprendizaje",
+      "condicionMedica",
+      "detalleCondicionMedica",
+      "observaciones",
+      "curso",
+      "tipoCurso",
+      "modalidadClase",
+      "clase"
+    ];
     const updateData = Object.keys(req.body)
       .filter((key) => allowedFields.includes(key))
       .reduce((obj, key) => {
@@ -80,6 +117,7 @@ async function updateAlumnos(req, res) {
 
 // Controlador para eliminar un alumno por su ID
 async function deleteAlumnos(req, res) {
+  console.log(`[DELETE] /api/alumnos/${req.params.id} - Eliminar alumno`);
   try {
     const { id } = req.params; // id del alumno a eliminar
     const alumno = await AlumnoService.deleteAlumnos(id);
