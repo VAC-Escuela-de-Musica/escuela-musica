@@ -58,19 +58,7 @@ export {
   fileStreamMiddleware,
   fileSecurityMiddleware,
   fileCacheMiddleware,
-  fileAccessLogger,
-  
-  // Subida de archivos
-  uploadImage,
-  uploadMaterial,
-  uploadDocument,
-  uploadSingleImage,
-  uploadMultipleImages,
-  uploadSingleMaterial,
-  uploadMultipleMaterials,
-  uploadSingleDocument,
-  uploadMultipleDocuments,
-  uploadMixed
+  fileAccessLogger
 } from './file/index.js';
 
 // === MIDDLEWARES COMUNES ===

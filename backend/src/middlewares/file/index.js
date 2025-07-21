@@ -7,16 +7,4 @@ export {
   fileAccessLogger 
 } from './access.middleware.js';
 
-// Exportar middlewares de subida de archivos
-export { 
-  uploadImage, 
-  uploadMaterial, 
-  uploadDocument,
-  uploadSingleImage,
-  uploadMultipleImages,
-  uploadSingleMaterial,
-  uploadMultipleMaterials,
-  uploadSingleDocument,
-  uploadMultipleDocuments,
-  uploadMixed
-} from './upload.middleware.js';
+// No hay middlewares de subida de archivos activos, ya que se eliminó la lógica de multer.
