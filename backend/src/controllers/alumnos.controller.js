@@ -65,7 +65,7 @@ async function getAlumnosById(req, res) {
 
 // Controlador para actualizar un alumno por su ID
 async function updateAlumnos(req, res) {
-  console.log(`[PUT] /api/alumnos/${req.params.id} - Actualizar alumno`, req.body);
+  console.log("[PUT] /api/alumnos/%s - Actualizar alumno", req.params.id, req.body);
   try {
     const { id } = req.params;
     // Lista de campos permitidos según el esquema real (completa)
