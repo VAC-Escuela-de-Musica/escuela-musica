@@ -1,4 +1,5 @@
 import React from "react";
+import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import CarouselClases from "../components/Carrusel";
 import CardsProfesores from "../components/CardsProfesores";
@@ -9,6 +10,7 @@ import Footer from "../components/Footer";
 const HomePage = () => {
   return (
     <div>
+      <Navbar />
       <Hero />
       <CarouselClases />
       <CardsProfesores />

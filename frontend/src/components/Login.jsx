@@ -44,29 +44,57 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-        credentials: "include", // Para la cookie de refresh
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+          credentials: "include",
+        }
+      );
+      
       const data = await response.json();
+      
       if (!response.ok) {
         setError(data.message || "Error al iniciar sesión");
-        setLoading(false);
         return;
       }
-      // Guarda el accessToken en localStorage
+      
       localStorage.setItem("token", data.data.accessToken);
-      // Redirige al usuario
-      navigate("/usuario");
-    } catch {
+      
+      try {
+        const verifyRes = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/api/auth/verify`,
+          {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${data.data.accessToken}`,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+        
+        const verifyData = await verifyRes.json();
+        
+        if (verifyData.success && verifyData.data?.user) {
+          localStorage.setItem("user", JSON.stringify(verifyData.data.user));
+          setUser(verifyData.data.user);
+          navigate("/usuario", { replace: true });
+        } else {
+          setError("No se pudo obtener el usuario");
+        }
+      } catch (err) {
+        setError("Error verificando usuario tras login");
+      }
+    } catch (error) {
       setError("Error de red o del servidor");
     } finally {
       setLoading(false);
