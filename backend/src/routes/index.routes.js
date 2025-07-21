@@ -2,6 +2,9 @@
 // Importa el modulo 'express' para crear las rutas
 import { Router } from "express";
 
+/** Enrutador de alumnos */
+import alumnosRoutes from "./alumnos.routes.js";
+
 /** Enrutador de usuarios  */
 import userRoutes from "./user.routes.js";
 
@@ -28,6 +31,7 @@ router.use("/auth", authRoutes);
 router.use("/carousel", carouselRoutes);
 // Define las rutas para los roles /api/roles
 router.use("/roles", roleRoutes);
+router.use("/alumnos", authenticationMiddleware, alumnosRoutes);
 
 router.get("/saludo", (req, res) => {
   res.send("¡Hola desde el backend!");

@@ -21,18 +21,65 @@ async function getAllAlumnos() {
 
 async function createAlumnos(alumno) {
   try {
-    const { name, rut, address, phone, email, birthdate } = alumno;
+    console.log("Datos recibidos en backend:", alumno);
+    const {
+      nombreAlumno,
+      rutAlumno,
+      edadAlumno,
+      direccion,
+      telefonoAlumno,
+      email,
+      fechaIngreso,
+      nombreApoderado,
+      rutApoderado,
+      telefonoApoderado,
+      rrss,
+      conocimientosPrevios,
+      instrumentos,
+      estilosMusicales,
+      otroEstilo,
+      referenteMusical,
+      condicionAprendizaje,
+      detalleCondicionAprendizaje,
+      condicionMedica,
+      detalleCondicionMedica,
+      observaciones,
+      curso,
+      tipoCurso,
+      modalidadClase,
+      clase,
+    } = alumno;
+
     // Verificar si ya existe un alumno con el mismo RUT
-    const alumnoFound = await Alumno.findOne({ rut });
+    const alumnoFound = await Alumno.findOne({ rutAlumno });
     if (alumnoFound) return [null, "El alumno ya existe"];
 
     const newAlumno = new Alumno({
-      name,
-      rut,
-      address,
-      phone,
+      nombreAlumno,
+      rutAlumno,
+      edadAlumno,
+      direccion,
+      telefonoAlumno,
       email,
-      birthdate,
+      fechaIngreso,
+      nombreApoderado,
+      rutApoderado,
+      telefonoApoderado,
+      rrss,
+      conocimientosPrevios,
+      instrumentos,
+      estilosMusicales,
+      otroEstilo,
+      referenteMusical,
+      condicionAprendizaje,
+      detalleCondicionAprendizaje,
+      condicionMedica,
+      detalleCondicionMedica,
+      observaciones,
+      curso,
+      tipoCurso,
+      modalidadClase,
+      clase,
     });
     const savedAlumno = await newAlumno.save();
     return [savedAlumno, null];
