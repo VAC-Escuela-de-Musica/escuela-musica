@@ -55,7 +55,7 @@ export default function Login() {
           },
           body: JSON.stringify({
             email: formData.email,
-            password: formData.password,
+            password: formData.password
           }),
           credentials: "include",
         }
