@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { Suspense } from "react";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import AppBar from "@mui/material/AppBar";
@@ -11,21 +11,41 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import CircularProgress from "@mui/material/CircularProgress";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
-
-import UserManager from "./UserManager";
-import CardsProfesoresManager from "./CardsProfesoresManager";
-import TestimoniosManager from "./TestimoniosManager";
-import GaleriaManager from "./GaleriaManager";
-import RepositorioProfesor from "./RepositorioProfesor";
-import AlumnosList from "./AlumnosList";
-
+const UserManager = React.lazy(() => import("./UserManager"));
+const CardsProfesoresManager = React.lazy(() => import("./CardsProfesoresManager"));
+const TestimoniosManager = React.lazy(() => import("./TestimoniosManager"));
+const GaleriaManager = React.lazy(() => import("./GaleriaManager"));
+const RepositorioProfesor = React.lazy(() => import("./RepositorioProfesor"));
+const MensajeriaManager = React.lazy(() => import("./MensajeriaManager"));
+const AlumnosList = React.lazy(() => import("./AlumnosList"));
 const drawerWidth = 240;
+
+// Professional loading component
+const LoadingFallback = ({ message }) => (
+  <Box 
+    sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      minHeight: '300px',
+      color: '#ffffff',
+      backgroundColor: '#222222'
+    }}
+  >
+    <CircularProgress sx={{ color: '#2196F3', mb: 2 }} size={40} />
+    <Typography variant="h6" sx={{ color: '#ffffff' }}>
+      {message}
+    </Typography>
+  </Box>
+);
 
 export default function ClippedDrawer() {
   const [activeModule, setActiveModule] = React.useState("inicio");
@@ -50,7 +70,7 @@ export default function ClippedDrawer() {
           <Typography variant="h6" noWrap component="div">
             Menú de Navegación
           </Typography>
-          <img
+          <img 
             src={coverImage}
             alt="Cover"
             style={{ width: "40%", height: "auto", marginLeft: "auto" }}
@@ -91,7 +111,7 @@ export default function ClippedDrawer() {
                 <ListItem key={text} disablePadding>
                   <ListItemButton
                     onClick={() => {
-                      if (text === "Estudiantes") setActiveModule("estudiantes");
+                      if (text === "Estudiantes") setActiveModule("alumnos");
                     }}
                   >
                     <ListItemIcon sx={{ color: "#FFFFFF" }}>
@@ -130,12 +150,13 @@ export default function ClippedDrawer() {
           </List>
           <Divider sx={{ borderColor: "#3F4147" }} />
           <List>
-            {["Repositorio Prof.", "Credenciales", "modulo2"].map((text, index) => (
+            {["Repositorio Prof.", "Credenciales", "Mensajería"].map((text, index) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton
                   onClick={() => {
                     if (text === "Repositorio Prof.") setActiveModule("repositorio");
                     if (text === "Credenciales") setActiveModule("credenciales");
+                    if (text === "Mensajería") setActiveModule("mensajeria");
                   }}
                 >
                   <ListItemIcon sx={{ color: "#FFFFFF" }}>
@@ -204,12 +225,41 @@ export default function ClippedDrawer() {
             </Typography>
           </>
         )}
-        {activeModule === "estudiantes" && <AlumnosList />}
-        {activeModule === "galeria" && <GaleriaManager />}
-        {activeModule === "credenciales" && <UserManager />}
-        {activeModule === "presentacion" && <CardsProfesoresManager />}
-        {activeModule === "resenas" && <TestimoniosManager />}
-        {activeModule === "repositorio" && <RepositorioProfesor />}
+        {activeModule === "galeria" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Galería..." />}>
+            <GaleriaManager />
+          </Suspense>
+        )}
+        {activeModule === "credenciales" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Credenciales..." />}>
+            <UserManager />
+          </Suspense>
+        )}
+        {activeModule === "presentacion" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Presentación..." />}>
+            <CardsProfesoresManager />
+          </Suspense>
+        )}
+        {activeModule === "resenas" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Reseñas..." />}>
+            <TestimoniosManager />
+          </Suspense>
+        )}
+        {activeModule === "repositorio" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Repositorio..." />}>
+            <RepositorioProfesor />
+          </Suspense>
+        )}
+        {activeModule === "mensajeria" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Mensajería..." />}>
+            <MensajeriaManager />
+          </Suspense>
+        )}
+        {activeModule === "alumnos" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Estudiantes..." />}>
+            <AlumnosList />
+          </Suspense>
+        )}
         {/* Puedes agregar más módulos así */}
       </Box>
     </Box>

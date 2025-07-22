@@ -1,5 +1,5 @@
 import messagingService from '../services/messaging.service.js';
-import { respondSuccess, respondError } from '../utils/resHandler.js';
+import { respondSuccess, respondError } from '../utils/responseHandler.util.js';
 
 class MessagingController {
   /**

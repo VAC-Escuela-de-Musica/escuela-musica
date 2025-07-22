@@ -1,7 +1,112 @@
-import { respondError, respondSuccess } from "../utils/responseHandler.util.js";
+import { galeriaService } from "../services/galeria.service.js";
+import { respondSuccess, respondError } from "../utils/responseHandler.util.js";
 import { minioService } from '../services/index.js';
 import { AuthorizationService } from '../services/index.js';
 import { asyncHandler } from "../middlewares/index.js";
+
+/**
+ * Obtener galería activa (pública)
+ */
+export const getActiveGallery = asyncHandler(async (req, res) => {
+  const result = await galeriaService.getActiveGallery();
+  respondSuccess(req, res, 200, result.data, result.message);
+});
+
+/**
+ * Obtener galería por categoría (pública)
+ */
+export const getGalleryByCategory = asyncHandler(async (req, res) => {
+  const { categoria } = req.params;
+  const result = await galeriaService.getGalleryByCategory(categoria);
+  respondSuccess(req, res, 200, result.data, result.message);
+});
+
+/**
+ * Obtener todas las imágenes (administración)
+ */
+export const getAllGallery = asyncHandler(async (req, res) => {
+  const result = await galeriaService.getAllGallery();
+  respondSuccess(req, res, 200, result.data, result.message);
+});
+
+/**
+ * Obtener imagen por ID
+ */
+export const getImageById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const result = await galeriaService.getImageById(id);
+  respondSuccess(req, res, 200, result.data, result.message);
+});
+
+/**
+ * Crear nueva imagen
+ */
+export const createImage = asyncHandler(async (req, res) => {
+  const imageData = {
+    ...req.body,
+    usuario: req.email || req.user?.email
+  };
+  
+  const result = await galeriaService.createImage(imageData);
+  respondSuccess(req, res, 201, result.data, result.message);
+});
+
+/**
+ * Actualizar imagen
+ */
+export const updateImage = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const result = await galeriaService.updateImage(id, req.body);
+  respondSuccess(req, res, 200, result.data, result.message);
+});
+
+/**
+ * Eliminar imagen
+ */
+export const deleteImage = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const result = await galeriaService.deleteImage(id);
+  respondSuccess(req, res, 200, null, result.message);
+});
+
+/**
+ * Cambiar estado activo/inactivo
+ */
+export const toggleImageStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const result = await galeriaService.toggleImageStatus(id);
+  respondSuccess(req, res, 200, result.data, result.message);
+});
+
+/**
+ * Actualizar orden de imágenes
+ */
+export const updateImageOrder = asyncHandler(async (req, res) => {
+  const { ordenData } = req.body;
+  
+  if (!Array.isArray(ordenData)) {
+    return respondError(req, res, 400, "ordenData debe ser un array");
+  }
+  
+  const result = await galeriaService.updateImageOrder(ordenData);
+  respondSuccess(req, res, 200, null, result.message);
+});
+
+/**
+ * Obtener URL de imagen con autenticación
+ */
+export const getImageUrl = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { action = "view", duration = 300 } = req.query;
+  
+  const imageResult = await galeriaService.getImageById(id);
+  const urlResult = await galeriaService.getImageUrl(imageResult.data, {
+    action,
+    duration: parseInt(duration)
+  });
+  
+  respondSuccess(req, res, 200, urlResult.data, urlResult.message);
+});
 
 /**
  * Genera URL prefirmada para subida de imágenes de galería

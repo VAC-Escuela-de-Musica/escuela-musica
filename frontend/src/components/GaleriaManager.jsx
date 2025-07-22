@@ -328,14 +328,16 @@ const GaleriaManager = () => {
       const token = localStorage.getItem('token');
       
       // Obtener URL pre-firmada para subida
-      const uploadResponse = await fetch(`${API_URL}/presigned/upload`, {
+      const uploadResponse = await fetch(`${API_URL}/galeria/upload-url`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          contentType: file.type
+          filename: `galeria_${Date.now()}_${file.name}`,
+          contentType: file.type,
+          bucketType: 'galery'
         })
       });
 

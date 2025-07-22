@@ -9,6 +9,8 @@ import materialRoutes from "./material.routes.js";
 import fileRoutes from "./file.routes.js";
 import adminRoutes from "./admin.routes.js";
 import alumnosRoutes from "./alumnos.routes.js";
+import galeriaRoutes from "./galeria.routes.js";
+import messagingRoutes from "./messaging.routes.js";
 
 // Middlewares centralizados
 import { 
@@ -58,6 +60,12 @@ router.use("/admin", adminRoutes);
 
 // Rutas para alumnos - autenticación manejada en alumnos.routes.js
 router.use("/alumnos", alumnosRoutes);
+
+// Rutas para galería - autenticación manejada en galeria.routes.js
+router.use("/galeria", galeriaRoutes);
+
+// Rutas para mensajería - autenticación manejada en messaging.routes.js
+router.use("/messaging", messagingRoutes);
 
 // ============= COMPATIBILIDAD CON RUTAS OBSOLETAS =============
 router.use("/materiales", (req, res) => {

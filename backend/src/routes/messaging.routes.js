@@ -1,8 +1,12 @@
 import express from 'express';
 import messagingController from '../controllers/messaging.controller.js';
 import emailConfigController from '../controllers/emailConfig.controller.js';
-import verifyJWT from '../middlewares/authentication.middleware.js';
-import { isAdmin } from '../middlewares/authorization.middleware.js';
+import { 
+  authenticateJWT,
+  loadUserData,
+  requireAdmin,
+  asyncHandler 
+} from '../middlewares/index.js';
 
 const router = express.Router();
 
@@ -13,7 +17,8 @@ router.use((req, res, next) => {
 });
 
 // Todas las rutas requieren autenticación
-router.use(verifyJWT);
+router.use(authenticateJWT);
+router.use(loadUserData);
 
 // Rutas para envío de mensajes
 router.post('/send-whatsapp', messagingController.sendWhatsAppMessage);
