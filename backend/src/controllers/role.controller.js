@@ -1,7 +1,7 @@
 "use strict";
 
-import { respondSuccess, respondError } from "../utils/resHandler.js";
-import { handleError } from "../utils/errorHandler.js";
+import { respondSuccess, respondError } from "../utils/responseHandler.util.js";
+import { handleError } from "../utils/errorHandler.util.js";
 // import Role from "../models/role.model.js";
 import ROLES from "../constants/roles.constants.js";
 

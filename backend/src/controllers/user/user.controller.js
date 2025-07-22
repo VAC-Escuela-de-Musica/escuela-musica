@@ -14,30 +14,18 @@ class UserController {
    */
   async listUsers(req, res) {
     try {
-      // Respuesta básica sin servicios para probar
-      const mockUsers = [
-        {
-          id: '1',
-          username: 'administrador',
-          email: 'administrador@email.com',
-          roles: ['administrador']
-        },
-        {
-          id: '2',
-          username: 'profesor',
-          email: 'profesor@email.com',
-          roles: ['profesor']
-        }
-      ];
-      
+      // Importar el modelo aquí para evitar problemas de importación circular
+      const User = (await import("../../models/user.model.js")).default;
+      // Buscar todos los usuarios y popular los roles
+      const users = await User.find({}).populate("roles");
       return respondSuccess(req, res, 200, {
-        users: mockUsers,
-        totalCount: mockUsers.length,
+        users,
+        totalCount: users.length,
         pagination: {
           currentPage: 1,
           totalPages: 1,
-          pageSize: 10,
-          totalCount: mockUsers.length
+          pageSize: users.length,
+          totalCount: users.length
         }
       });
     } catch (error) {
