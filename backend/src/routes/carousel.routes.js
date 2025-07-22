@@ -10,10 +10,16 @@ import {
   updateOrder,
   toggleStatus,
 } from "../controllers/carousel.controller.js";
-import verifyJWT from "../middlewares/authentication.middleware.js";
-import { isAdmin } from "../middlewares/authorization.middleware.js";
+import { verifyJWT } from "../middlewares/auth/jwt.middleware.js";
+import { requireRole } from "../middlewares/auth/role.middleware.js";
 
 const router = Router();
+
+// Middleware de debug para todas las rutas de este router
+router.use((req, res, next) => {
+  console.log(`[CAROUSEL] ${req.method} ${req.originalUrl} | user: ${req.user?.username || 'anonimo'}`);
+  next();
+});
 
 // Configurar rate limiter para rutas protegidas
 const protectedRoutesLimiter = rateLimit({
@@ -45,11 +51,11 @@ router.get("/", getImages); // Obtener imágenes activas del carrusel
 router.use(protectedRoutesLimiter, verifyJWT);
 
 // Rutas de administrador
-router.get("/admin", isAdmin, getAllImages); // Obtener todas las imágenes (admin)
-router.post("/upload", isAdmin, upload.single("image"), uploadImage); // Subir imagen
-router.put("/:id", isAdmin, updateImage); // Actualizar imagen
-router.delete("/:id", isAdmin, deleteImage); // Eliminar imagen
-router.put("/order/update", isAdmin, updateOrder); // Actualizar orden
-router.patch("/:id/toggle", isAdmin, toggleStatus); // Cambiar estado activo/inactivo
+router.get("/admin", requireRole(["administrador"]), getAllImages); // Obtener todas las imágenes (admin)
+router.post("/upload", requireRole(["administrador"]), upload.single("image"), uploadImage); // Subir imagen
+router.put("/:id", requireRole(["administrador"]), updateImage); // Actualizar imagen
+router.delete("/:id", requireRole(["administrador"]), deleteImage); // Eliminar imagen
+router.put("/order/update", requireRole(["administrador"]), updateOrder); // Actualizar orden
+router.patch("/:id/toggle", requireRole(["administrador"]), toggleStatus); // Cambiar estado activo/inactivo
 
 export default router;

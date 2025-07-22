@@ -63,13 +63,29 @@ const UserManager = () => {
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Error al cargar los usuarios");
+      console.log("Respuesta completa fetchUsers:", response);
+      let data;
+      try {
+        data = await response.json();
+        console.log("JSON recibido:", data);
+      } catch (jsonErr) {
+        console.error("Error al parsear JSON:", jsonErr);
+        setError("Error al parsear la respuesta del servidor");
+        return;
       }
 
-      const data = await response.json();
-      setUsers(Array.isArray(data.data) ? data.data : []);
+      if (!response.ok) {
+        console.error("Respuesta no OK:", data);
+        throw new Error(data.message || "Error al cargar los usuarios");
+      }
+
+      // Mostrar estructura recibida
+      if (!Array.isArray(data.data?.users)) {
+        console.warn("La propiedad 'data.data.users' no es un array:", data.data?.users);
+      }
+      setUsers(Array.isArray(data.data?.users) ? data.data.users : []);
     } catch (err) {
+      console.error("Error en fetchUsers:", err);
       setError("Error al cargar los usuarios: " + err.message);
     } finally {
       setLoading(false);
@@ -177,9 +193,18 @@ const UserManager = () => {
     localStorage.setItem("users_openDialog", "false");
   };
 
-  const getRoleName = (roleId) => {
-    const role = roles.find(r => r._id === roleId);
-    return role ? role.name : "Rol desconocido";
+  // Devuelve el nombre del rol, soportando tanto objetos como strings
+  const getRoleName = (role) => {
+    // Si el rol es un objeto con name
+    if (role && typeof role === "object" && role.name) {
+      // Solo mostrar si está en la lista de roles
+      return roles.includes(role.name) ? role.name : "Rol desconocido";
+    }
+    // Si el rol es un string y está en la lista de roles
+    if (typeof role === "string") {
+      return roles.includes(role) ? role : "Rol desconocido";
+    }
+    return "Rol desconocido";
   };
 
   // Filtrar usuarios
@@ -269,7 +294,7 @@ const UserManager = () => {
                           {user.roles && user.roles.map((role, index) => (
                             <Chip
                               key={index}
-                              label={getRoleName(role._id || role)}
+                              label={getRoleName(role)}
                               size="small"
                               sx={{ 
                                 backgroundColor: "#4CAF50", 

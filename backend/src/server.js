@@ -16,8 +16,10 @@ import { setupDB } from "./config/configDB.js";
 // Importa la configuración de MinIO
 import { setupMinIO } from "./config/minio.config.js";
 // Importa el handler de errores
-import { handleFatalError, handleError } from "./utils/errorHandler.js";
-import { createUsers } from "./config/initialSetup.js";
+import { handleFatalError, handleError } from "./utils/errorHandler.util.js";
+import { createRoles, createUsers } from "./config/initialSetup.js";
+// Importa la función para inicializar servicios
+import { initializeServices } from "./services/index.js";
 
 /**
  * Inicia el servidor web
@@ -25,36 +27,39 @@ import { createUsers } from "./config/initialSetup.js";
 async function setupServer() {
   try {
     /** Instancia de la aplicacion */
-    const server = express();
-    server.disable("x-powered-by");
+    const app = express();
+    app.disable("x-powered-by");
     // Agregamos los cors
-    server.use(cors({ credentials: true, origin: true }));
+    app.use(cors({ credentials: true, origin: true }));
     // Agrega el middleware para el manejo de datos en formato URL
-    server.use(urlencoded({ extended: true }));
+    app.use(urlencoded({ extended: true }));
     // Agrega el middleware para el manejo de datos en formato JSON
-    server.use(json());
+    app.use(json());
     // Agregamos el middleware para el manejo de cookies
-    server.use(cookieParser());
+    app.use(cookieParser());
     // Agregamos morgan para ver las peticiones que se hacen al servidor
-    server.use(morgan("dev"));
+    app.use(morgan("dev"));
     // Agrega el enrutador principal al servidor
-    server.use("/api", indexRoutes);
+    app.use("/api", indexRoutes);
 
     // === Servir archivos estáticos del frontend (dist) ===
     const distPath = path.resolve(process.cwd(), "../frontend/dist");
-    server.use(express.static(distPath));
+    app.use(express.static(distPath));
 
     // Para SPA: redirige cualquier ruta que NO empiece con /api al index.html del frontend
-    server.get(/^\/(?!api).*/, (req, res) => {
+    app.get(/^\/(?!api).*/, (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
 
     // Inicia el servidor en el puerto especificado
-    server.listen(PORT, () => {
-      console.log(`=> Servidor corriendo en ${HOST}:${PORT}/api`);
+    const server = app.listen(PORT, () => {
+      console.log(`=> Servidor corriendo en ${HOST}:${PORT}`);
     });
+
+    return server;
   } catch (err) {
     handleError(err, "/server.js -> setupServer");
+    throw err;
   }
 }
 
@@ -63,19 +68,32 @@ async function setupServer() {
  */
 async function setupAPI() {
   try {
-    console.log("[API] Iniciando setupAPI...");
+    console.log("🚀 Iniciando API de Escuela de Música...");
+    
     // Inicia la conexión a la base de datos
+    console.log("📊 Conectando a la base de datos...");
     await setupDB();
-    console.log("[API] setupDB completado");
-    // Inicia la configuración de MinIO
-    await setupMinIO();
-    console.log("[API] setupMinIO completado");
+    
+    // Inicializa todos los servicios (MinIO, buckets, etc.)
+    console.log("⚙️ Inicializando servicios...");
+    const servicesInitialized = await initializeServices();
+    if (!servicesInitialized) {
+      console.warn("⚠️ Algunos servicios no se inicializaron correctamente, pero continuando...");
+    }
+    
     // Inicia el servidor web
+    console.log("🌐 Iniciando servidor web...");
     await setupServer();
-    console.log("[API] setupServer completado");
+    
+    // Inicia la creación de los roles
+    console.log("👤 Configurando roles...");
+    await createRoles();
+    
     // Inicia la creación del usuario admin y user
+    console.log("👥 Configurando usuarios iniciales...");
     await createUsers();
-    console.log("[API] createUsers completado");
+    
+    console.log("✅ API iniciada exitosamente");
   } catch (err) {
     console.error("[API] Error en setupAPI:", err);
     handleFatalError(err, "/server.js -> setupAPI");
@@ -86,5 +104,5 @@ app.use(cors());
 
 // Inicia la API
 setupAPI()
-  .then(() => console.log("=> API Iniciada exitosamente"))
+  .then(() => console.log("🎉 => API de Escuela de Música lista para usar"))
   .catch((err) => handleFatalError(err, "/server.js -> setupAPI"));

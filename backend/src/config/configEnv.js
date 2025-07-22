@@ -28,24 +28,42 @@ if (result.error) {
 }
 dotenv.config({ path: envFilePath });
 
+/**
+ * Validates that all required environment variables are present
+ * @throws {Error} If any required environment variable is missing
+ */
+function validateEnvironment() {
+  const requiredVars = [
+    'PORT',
+    'HOST',
+    'DB_URL',
+    'ACCESS_JWT_SECRET',
+    'REFRESH_JWT_SECRET',
+    'MINIO_ENDPOINT',
+    'MINIO_PORT',
+    'MINIO_ACCESS_KEY',
+    'MINIO_SECRET_KEY',
+    'MINIO_BUCKET_PRIVATE',
+    'MINIO_BUCKET_PUBLIC',
+    'MINIO_BUCKET_GALERY'
+  ];
+  
+  const missingVars = requiredVars.filter(varName => !process.env[varName]);
+  
+  if (missingVars.length > 0) {
+    throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+  }
+  
+  console.log('✅ Environment variables validated successfully');
+}
 
-// Logs de depuración para todas las variables de entorno importantes
-console.log("[DEBUG] DB_URL:", process.env.DB_URL);
-console.log("[DEBUG] PORT:", process.env.PORT);
-console.log("[DEBUG] HOST:", process.env.HOST);
-console.log("[DEBUG] ACCESS_JWT_SECRET:", process.env.ACCESS_JWT_SECRET);
-console.log("[DEBUG] REFRESH_JWT_SECRET:", process.env.REFRESH_JWT_SECRET);
-console.log("[DEBUG] MINIO_ENDPOINT:", process.env.MINIO_ENDPOINT);
-console.log("[DEBUG] MINIO_PORT:", process.env.MINIO_PORT);
-console.log("[DEBUG] MINIO_ACCESS_KEY:", process.env.MINIO_ACCESS_KEY);
-console.log("[DEBUG] MINIO_SECRET_KEY:", process.env.MINIO_SECRET_KEY);
-console.log("[DEBUG] MINIO_BUCKET:", process.env.MINIO_BUCKET);
-console.log("[DEBUG] MINIO_PUBLIC_BUCKET:", process.env.MINIO_PUBLIC_BUCKET);
+// Validate environment on module load
+validateEnvironment();
 
 /** Server port */
-export const PORT = process.env.PORT;
+export const PORT = process.env.PORT || 3000;
 /** Server host */
-export const HOST = process.env.HOST;
+export const HOST = process.env.HOST || 'localhost';
 /** Database URL */
 export const DB_URL = process.env.DB_URL;
 /** Access token secret */
@@ -59,4 +77,6 @@ export const MINIO_PORT = parseInt(process.env.MINIO_PORT) || 9000;
 export const MINIO_USE_SSL = process.env.MINIO_USE_SSL === "true";
 export const MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY;
 export const MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY;
-export const MINIO_BUCKET_NAME = process.env.MINIO_BUCKET || "carousel-images";
+export const MINIO_BUCKET_PRIVATE = process.env.MINIO_BUCKET_PRIVATE;
+export const MINIO_BUCKET_PUBLIC = process.env.MINIO_BUCKET_PUBLIC;
+export const MINIO_BUCKET_GALERY = process.env.MINIO_BUCKET_GALERY;

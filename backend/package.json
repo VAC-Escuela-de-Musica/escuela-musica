@@ -23,7 +23,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "express-rate-limit": "^7.5.1",
+    "express-rate-limit": "^8.0.1",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "minio": "^8.0.5",
@@ -32,10 +34,12 @@
     "multer": "^2.0.1",
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.8",
+    "pm2": "^6.0.8",
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
     "uuid": "^11.1.0",
-    "whatsapp-web.js": "^1.31.0"
+    "whatsapp-web.js": "^1.31.0",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "concurrently": "^9.2.0",

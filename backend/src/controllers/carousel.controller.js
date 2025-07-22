@@ -7,8 +7,7 @@ import {
   updateCarouselOrder,
   toggleImageStatus,
 } from "../services/carousel.service.js";
-import { handleError } from "../utils/errorHandler.js";
-import { respondSuccess, respondError } from "../utils/resHandler.js";
+import { respondSuccess, respondError } from "../utils/responseHandler.util.js";
 
 /**
  * Sube una nueva imagen al carrusel

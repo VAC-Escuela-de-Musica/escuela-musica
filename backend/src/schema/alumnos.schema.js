@@ -63,8 +63,8 @@ const alumnoSchema = new Schema(
       type: String,
       required: [true, "La fecha de ingreso es obligatoria"],
       match: [
-        /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/,
-        "La fecha debe tener el formato DD-MM-AAAA, por ejemplo 19-07-2025",
+        /^(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])|((0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}))$/,
+        "La fecha debe tener el formato YYYY-MM-DD (ISO) o DD-MM-YYYY",
       ],
     },
 

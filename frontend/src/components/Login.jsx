@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Paper,
@@ -12,7 +14,6 @@ import {
   Checkbox,
   FormControlLabel,
   Button,
-  Link,
   Alert,
 } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -28,6 +29,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { setUser } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -41,6 +44,7 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/api/auth/login`,
@@ -51,22 +55,46 @@ export default function Login() {
           },
           body: JSON.stringify({
             email: formData.email,
-            password: formData.password,
+            password: formData.password
           }),
-          credentials: "include", // Para la cookie de refresh
+          credentials: "include",
         }
       );
+      
       const data = await response.json();
+      
       if (!response.ok) {
         setError(data.message || "Error al iniciar sesión");
-        setLoading(false);
         return;
       }
-      // Guarda el accessToken en localStorage
+      
       localStorage.setItem("token", data.data.accessToken);
-      // Redirige al usuario
-      window.location.href = "/usuario";
-    } catch {
+      
+      try {
+        const verifyRes = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/api/auth/verify`,
+          {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${data.data.accessToken}`,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+        
+        const verifyData = await verifyRes.json();
+        
+        if (verifyData.success && verifyData.data?.user) {
+          localStorage.setItem("user", JSON.stringify(verifyData.data.user));
+          setUser(verifyData.data.user);
+          navigate("/usuario", { replace: true });
+        } else {
+          setError("No se pudo obtener el usuario");
+        }
+      } catch (err) {
+        setError("Error verificando usuario tras login");
+      }
+    } catch (error) {
       setError("Error de red o del servidor");
     } finally {
       setLoading(false);
@@ -74,7 +102,7 @@ export default function Login() {
   };
 
   const handleGoHome = () => {
-    window.location.href = "/";
+    navigate("/");
   };
 
   return (
@@ -97,6 +125,7 @@ export default function Login() {
           style={{ height: 112, objectFit: "contain" }}
         />
       </Box>
+      
       <Box
         sx={{
           background: "#222222",
@@ -192,6 +221,7 @@ export default function Login() {
             >
               {loading ? "Cargando..." : "Iniciar Sesión"}
             </Button>
+            
             <Button
               type="button"
               variant="contained"

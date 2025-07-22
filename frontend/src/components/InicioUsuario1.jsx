@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { Suspense } from "react";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import AppBar from "@mui/material/AppBar";
@@ -11,26 +11,51 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import CircularProgress from "@mui/material/CircularProgress";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
-import AlumnosList from "./AlumnosList";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
-
-import CarouselManager from "./CarouselManager";
-import UserManager from "./UserManager";
-import HorarioAdmin from "./HorarioAdmin";
-import EmailConfig from "./EmailConfig";
-import WhatsAppConfig from "./WhatsAppConfig";
-
+const UserManager = React.lazy(() => import("./UserManager"));
+const CardsProfesoresManager = React.lazy(() => import("./CardsProfesoresManager"));
+const TestimoniosManager = React.lazy(() => import("./TestimoniosManager"));
+const GaleriaManager = React.lazy(() => import("./GaleriaManager"));
+const RepositorioProfesor = React.lazy(() => import("./RepositorioProfesor"));
+const MensajeriaManager = React.lazy(() => import("./MensajeriaManager"));
+const AlumnosList = React.lazy(() => import("./AlumnosList"));
 const drawerWidth = 240;
 
+// Professional loading component
+const LoadingFallback = ({ message }) => (
+  <Box 
+    sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      minHeight: '300px',
+      color: '#ffffff',
+      backgroundColor: '#222222'
+    }}
+  >
+    <CircularProgress sx={{ color: '#2196F3', mb: 2 }} size={40} />
+    <Typography variant="h6" sx={{ color: '#ffffff' }}>
+      {message}
+    </Typography>
+  </Box>
+);
+
 export default function ClippedDrawer() {
-  const [activeModule, setActiveModule] = React.useState(() => {
-    return localStorage.getItem("activeModule") || "inicio";
-  });
+  const [activeModule, setActiveModule] = React.useState("inicio");
+
+  const handleLogout = () => {
+    // Limpiar el token del localStorage
+    localStorage.removeItem("token");
+    // Redirigir al login
+    window.location.href = "/login";
+  };
 
   return (
     <Box
@@ -45,7 +70,7 @@ export default function ClippedDrawer() {
           <Typography variant="h6" noWrap component="div">
             Menú de Navegación
           </Typography>
-          <img
+          <img 
             src={coverImage}
             alt="Cover"
             style={{ width: "40%", height: "auto", marginLeft: "auto" }}
@@ -86,7 +111,7 @@ export default function ClippedDrawer() {
                 <ListItem key={text} disablePadding>
                   <ListItemButton
                     onClick={() => {
-                      if (text === "Horario") setActiveModule("horario");
+                      if (text === "Estudiantes") setActiveModule("alumnos");
                     }}
                   >
                     <ListItemIcon sx={{ color: "#FFFFFF" }}>
@@ -97,55 +122,23 @@ export default function ClippedDrawer() {
                 </ListItem>
               )
             )}
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => setActiveModule("emailConfig")}
-              >
-                <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                  <MailIcon />
-                </ListItemIcon>
-                <ListItemText primary="Configuración Email" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => setActiveModule("whatsappConfig")}
-              >
-                <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                  <WhatsAppIcon />
-                </ListItemIcon>
-                <ListItemText primary="Configuración WhatsApp" />
-              </ListItemButton>
-            </ListItem>
           </List>
           <Divider sx={{ borderColor: "#3F4147" }} />
           <List>
             {[
               "Imágenes Galería",
-              "Imágenes Carrusel",
               "Presentación Prof.",
               "Gestionar Reseñas",
             ].map((text, index) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton
-                    onClick={() => {
-                      if (text === "Imágenes Carrusel") {
-                        setActiveModule("carrusel");
-                        localStorage.setItem("activeModule", "carrusel");
-                      }
-                      if (text === "Imágenes Galería") {
-                        setActiveModule("galeria");
-                        localStorage.setItem("activeModule", "galeria");
-                      }
-                      if (text === "Presentación Prof.") {
-                        setActiveModule("presentacion");
-                        localStorage.setItem("activeModule", "presentacion");
-                      }
-                      if (text === "Gestionar Reseñas") {
-                        setActiveModule("resenas");
-                        localStorage.setItem("activeModule", "resenas");
-                      }
-                    }}
+                  onClick={() => {
+                    if (text === "Imágenes Galería") setActiveModule("galeria");
+                    if (text === "Presentación Prof.")
+                      setActiveModule("presentacion");
+                    if (text === "Gestionar Reseñas")
+                      setActiveModule("resenas");
+                  }}
                 >
                   <ListItemIcon sx={{ color: "#FFFFFF" }}>
                     {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
@@ -157,25 +150,22 @@ export default function ClippedDrawer() {
           </List>
           <Divider sx={{ borderColor: "#3F4147" }} />
           <List>
-            {["Repositorio Prof.", "Credenciales", "modulo2"].map(
-              (text, index) => (
-                <ListItem key={text} disablePadding>
-                  <ListItemButton
-                    onClick={() => {
-                      if (text === "Credenciales") {
-                        setActiveModule("credenciales");
-                        localStorage.setItem("activeModule", "credenciales");
-                      }
-                    }}
-                  >
-                    <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                      {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                    </ListItemIcon>
-                    <ListItemText primary={text} />
-                  </ListItemButton>
-                </ListItem>
-              )
-            )}
+            {["Repositorio Prof.", "Credenciales", "Mensajería"].map((text, index) => (
+              <ListItem key={text} disablePadding>
+                <ListItemButton
+                  onClick={() => {
+                    if (text === "Repositorio Prof.") setActiveModule("repositorio");
+                    if (text === "Credenciales") setActiveModule("credenciales");
+                    if (text === "Mensajería") setActiveModule("mensajeria");
+                  }}
+                >
+                  <ListItemIcon sx={{ color: "#FFFFFF" }}>
+                    {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                  </ListItemIcon>
+                  <ListItemText primary={text} />
+                </ListItemButton>
+              </ListItem>
+            ))}
           </List>
         </Box>
         <Link
@@ -193,10 +183,34 @@ export default function ClippedDrawer() {
             fontWeight: "bold",
             textAlign: "center",
             textDecoration: "none",
+            marginBottom: "10px",
           }}
         >
           Volver al inicio
         </Link>
+        <button
+          onClick={handleLogout}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            padding: "10px",
+            backgroundColor: "#d32f2f",
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontSize: "16px",
+            fontWeight: "bold",
+            textAlign: "center",
+            textDecoration: "none",
+            gap: "8px",
+          }}
+        >
+          <LogoutIcon style={{ fontSize: "20px" }} />
+          Cerrar Sesión
+        </button>
       </Drawer>
       <Box
         component="main"
@@ -211,12 +225,41 @@ export default function ClippedDrawer() {
             </Typography>
           </>
         )}
-        {activeModule === "horario" && <HorarioAdmin />}
-        {activeModule === "emailConfig" && <EmailConfig />}
-        {activeModule === "whatsappConfig" && <WhatsAppConfig />}
-        {activeModule === "carrusel" && <CarouselManager />}
-        {activeModule === "credenciales" && <UserManager />}
-        {activeModule === "alumnos" && <AlumnosList />}
+        {activeModule === "galeria" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Galería..." />}>
+            <GaleriaManager />
+          </Suspense>
+        )}
+        {activeModule === "credenciales" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Credenciales..." />}>
+            <UserManager />
+          </Suspense>
+        )}
+        {activeModule === "presentacion" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Presentación..." />}>
+            <CardsProfesoresManager />
+          </Suspense>
+        )}
+        {activeModule === "resenas" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Reseñas..." />}>
+            <TestimoniosManager />
+          </Suspense>
+        )}
+        {activeModule === "repositorio" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Repositorio..." />}>
+            <RepositorioProfesor />
+          </Suspense>
+        )}
+        {activeModule === "mensajeria" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Mensajería..." />}>
+            <MensajeriaManager />
+          </Suspense>
+        )}
+        {activeModule === "alumnos" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Estudiantes..." />}>
+            <AlumnosList />
+          </Suspense>
+        )}
         {/* Puedes agregar más módulos así */}
       </Box>
     </Box>

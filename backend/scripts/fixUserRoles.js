@@ -10,12 +10,14 @@ async function fixUserRoles() {
   for (const user of users) {
     // Si el rol es un array de strings con IDs, reemplazar por "administrador" si es admin
     if (Array.isArray(user.roles) && user.roles.length > 0) {
-      // Aquí puedes personalizar la lógica según tus necesidades
-      // Por ejemplo, si el usuario es admin por su email o username
-      if (user.email === "admin@email.com" || user.username === "admin") {
+      // Solo permitir roles 'administrador' y 'profesor'
+      if (user.roles.includes("admin") || user.email === "admin@email.com" || user.username === "admin") {
         user.roles = ["administrador"];
+      } else if (user.roles.includes("profesor") || user.username?.toLowerCase().includes("profesor")) {
+        user.roles = ["profesor"];
       } else {
-        user.roles = ["estudiante"];
+        // Si no coincide, asignar 'profesor' por defecto o dejar vacío
+        user.roles = ["profesor"];
       }
       await user.save();
       updated++;

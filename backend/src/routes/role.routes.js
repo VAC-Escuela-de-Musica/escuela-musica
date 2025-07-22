@@ -4,6 +4,12 @@ import roleController from "../controllers/role.controller.js";
 
 const router = Router();
 
+// Middleware de debug para todas las rutas de este router
+router.use((req, res, next) => {
+  console.log(`[ROLE] ${req.method} ${req.originalUrl} | user: ${req.user?.username || 'anonimo'}`);
+  next();
+});
+
 // Todas las rutas requieren autenticación
 // router.use(authenticationMiddleware);
 

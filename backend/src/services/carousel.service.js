@@ -1,7 +1,7 @@
 import CarouselImage from "../models/carousel.entity.js";
-import minioClient, { MINIO_BUCKET_NAME } from "../config/minio.config.js";
+import { minioClient, BUCKET_PUBLIC } from "../config/minio.config.js";
 import { MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_ENDPOINT, MINIO_PORT } from "../config/configEnv.js";
-import { handleError } from "../utils/errorHandler.js";
+import { respondError } from "../utils/responseHandler.util.js";
 import { v4 as uuidv4 } from "uuid";
 
 /**
@@ -21,7 +21,7 @@ export async function uploadCarouselImage(file, titulo, descripcion, userId) {
     // Subir archivo a MinIO
     try {
       await minioClient.putObject(
-        MINIO_BUCKET_NAME,
+        BUCKET_PUBLIC,
         fileName,
         file.buffer,
         file.size,
@@ -37,7 +37,7 @@ export async function uploadCarouselImage(file, titulo, descripcion, userId) {
     // Generar URL pública
     const url = `http://${MINIO_ENDPOINT || "localhost"}:${
       process.env.MINIO_PORT || 9000
-    }/${MINIO_BUCKET_NAME}/${fileName}`;
+    }/${BUCKET_PUBLIC}/${fileName}`;
     
     // Obtener el siguiente orden disponible
     const maxOrden = await CarouselImage.findOne({}, {}, { sort: { orden: -1 } });
@@ -143,7 +143,7 @@ export async function deleteCarouselImage(imageId) {
 
     // Eliminar archivo de MinIO
     try {
-      await minioClient.removeObject(MINIO_BUCKET_NAME, image.nombreArchivo);
+      await minioClient.removeObject(BUCKET_PUBLIC, image.nombreArchivo);
     } catch (minioErr) {
       // eslint-disable-next-line no-console
       console.warn("Error al eliminar archivo de MinIO:", minioErr.message);
