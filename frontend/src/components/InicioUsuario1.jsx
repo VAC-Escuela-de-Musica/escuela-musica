@@ -23,6 +23,7 @@ import CardsProfesoresManager from "./CardsProfesoresManager";
 import TestimoniosManager from "./TestimoniosManager";
 import GaleriaManager from "./GaleriaManager";
 import RepositorioProfesor from "./RepositorioProfesor";
+import AlumnosList from "./AlumnosList";
 
 const drawerWidth = 240;
 
@@ -88,7 +89,11 @@ export default function ClippedDrawer() {
             {["Horario", "Estudiantes", "Profesores", "Clases"].map(
               (text, index) => (
                 <ListItem key={text} disablePadding>
-                  <ListItemButton>
+                  <ListItemButton
+                    onClick={() => {
+                      if (text === "Estudiantes") setActiveModule("estudiantes");
+                    }}
+                  >
                     <ListItemIcon sx={{ color: "#FFFFFF" }}>
                       {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
                     </ListItemIcon>
@@ -199,6 +204,7 @@ export default function ClippedDrawer() {
             </Typography>
           </>
         )}
+        {activeModule === "estudiantes" && <AlumnosList />}
         {activeModule === "galeria" && <GaleriaManager />}
         {activeModule === "credenciales" && <UserManager />}
         {activeModule === "presentacion" && <CardsProfesoresManager />}

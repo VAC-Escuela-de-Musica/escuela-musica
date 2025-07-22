@@ -1,7 +1,7 @@
 "use strict";
 
 import Alumno from "../models/alumnos.model.js";
-import { handleError } from "../utils/errorHandler.js";
+import { handleError } from "../utils/errorHandler.util.js";
 
 // Función para obtener todos los alumnos
 
@@ -21,7 +21,8 @@ async function getAllAlumnos() {
 
 async function createAlumnos(alumno) {
   try {
-    // ...existing code...
+    console.log("[SERVICE] createAlumnos - Datos recibidos:", alumno);
+    
     const {
       nombreAlumno,
       rutAlumno,
@@ -51,8 +52,10 @@ async function createAlumnos(alumno) {
     } = alumno;
 
     // Verificar si ya existe un alumno con el mismo RUT
-    const alumnoFound = await Alumno.findOne({ rutAlumno: { $eq: rutAlumno } });
-    if (alumnoFound) return [null, "El alumno ya existe"];
+    if (rutAlumno) {
+      const alumnoFound = await Alumno.findOne({ rutAlumno: { $eq: rutAlumno } });
+      if (alumnoFound) return [null, "El alumno ya existe"];
+    }
 
     const newAlumno = new Alumno({
       nombreAlumno,
@@ -81,10 +84,15 @@ async function createAlumnos(alumno) {
       modalidadClase,
       clase,
     });
+    
+    console.log("[SERVICE] createAlumnos - Nuevo alumno a guardar:", newAlumno);
     const savedAlumno = await newAlumno.save();
+    console.log("[SERVICE] createAlumnos - Alumno guardado exitosamente:", savedAlumno);
     return [savedAlumno, null];
   } catch (error) {
+    console.error("[SERVICE] createAlumnos - Error:", error);
     handleError(error, "alumnos.service -> createAlumnos");
+    return [null, error.message || "Error al crear alumno"];
   }
 }
 

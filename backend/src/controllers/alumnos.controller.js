@@ -3,9 +3,9 @@ import {
   respondSuccess,
   respondError,
   respondInternalError,
-} from "../utils/resHandler.js";
+} from "../utils/responseHandler.util.js";
 import AlumnoService from "../services/alumnos.service.js";
-import { handleError } from "../utils/errorHandler.js";
+import { handleError } from "../utils/errorHandler.util.js";
 import Alumno from "../models/alumnos.model.js";
 
 // Controlador para obtener todos los alumnos

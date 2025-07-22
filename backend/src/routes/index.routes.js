@@ -8,6 +8,7 @@ import authRoutes from "./auth.routes.js";
 import materialRoutes from "./material.routes.js";
 import fileRoutes from "./file.routes.js";
 import adminRoutes from "./admin.routes.js";
+import alumnosRoutes from "./alumnos.routes.js";
 
 // Middlewares centralizados
 import { 
@@ -54,6 +55,9 @@ router.use("/files", fileRoutes);
 
 // Rutas de administración - solo para desarrollo
 router.use("/admin", adminRoutes);
+
+// Rutas para alumnos - autenticación manejada en alumnos.routes.js
+router.use("/alumnos", alumnosRoutes);
 
 // ============= COMPATIBILIDAD CON RUTAS OBSOLETAS =============
 router.use("/materiales", (req, res) => {
