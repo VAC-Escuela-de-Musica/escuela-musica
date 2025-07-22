@@ -13,6 +13,7 @@ import galeriaRoutes from "./galeria.routes.js";
 import messagingRoutes from "./messaging.routes.js";
 import roleRoutes from "./role.routes.js";
 import cardsProfesoresRoutes from "./cardsProfesores.routes.js";
+import carouselRoutes from "./carousel.routes.js";
 
 // Middlewares centralizados
 import { 
@@ -74,6 +75,9 @@ router.use("/roles", roleRoutes);
 
 // Rutas para tarjetas de profesores
 router.use("/cards-profesores", cardsProfesoresRoutes);
+
+// Rutas para carousel - autenticación manejada en carousel.routes.js
+router.use("/carousel", carouselRoutes);
 
 // ============= COMPATIBILIDAD CON RUTAS OBSOLETAS =============
 router.use("/materiales", (req, res) => {

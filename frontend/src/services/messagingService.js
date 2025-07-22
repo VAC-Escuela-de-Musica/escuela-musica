@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:1230/api';
+const API_BASE_URL = 'http://146.83.198.35:1230/api';
 
 class MessagingService {
   constructor() {

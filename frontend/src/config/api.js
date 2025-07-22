@@ -1,5 +1,5 @@
 // Configuración centralizada de la API
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:1230';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://146.83.198.35:1230';
 
 // Endpoints de la API organizados por funcionalidad
 export const API_ENDPOINTS = {
