@@ -26,7 +26,7 @@ const mockUsers = [
     id: 1,
     username: 'admin',
     email: 'admin@example.com',
-    role: 'admin',
+    role: 'administrador',
     active: true,
     createdAt: '2024-01-01T00:00:00Z',
     lastLogin: '2024-01-15T10:30:00Z'
@@ -61,7 +61,7 @@ const mockUsers = [
 ];
 
 const mockUseAuth = {
-  user: { id: 1, role: 'admin', username: 'admin' },
+  user: { id: 1, role: 'administrador', username: 'admin' },
   isAuthenticated: true,
   isAdmin: true,
   isTeacher: false,
@@ -94,7 +94,7 @@ const mockUseUsers = {
     activeUsers: 3,
     inactiveUsers: 1,
     byRole: {
-      admin: 1,
+      administrador: 1,
       teacher: 1,
       student: 2
     },
@@ -334,7 +334,7 @@ describe('GestionUsuarios Component', () => {
     expect(screen.getByText('ID: 1')).toBeInTheDocument();
     expect(screen.getByText('Username: admin')).toBeInTheDocument();
     expect(screen.getByText('Email: admin@example.com')).toBeInTheDocument();
-    expect(screen.getByText('Rol: admin')).toBeInTheDocument();
+    expect(screen.getByText('Rol: administrador')).toBeInTheDocument();
   });
 
   it('should handle bulk actions', async () => {

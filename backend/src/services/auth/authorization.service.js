@@ -14,7 +14,7 @@ class AuthorizationService {
    * @returns {boolean} - True si es admin
    */
   static isUserAdmin(req) {
-    return req.roles?.some(role => role.name === 'admin' || role === 'admin');
+    return req.roles?.some(role => role.name === 'administrador' || role === 'administrador');
   }
 
   /**
@@ -100,6 +100,7 @@ class AuthorizationService {
         return this.isUserAdmin(req) || this.isUserProfesor(req);
       
       case 'admin':
+      case 'administrador':
         return this.isUserAdmin(req);
       
       default:

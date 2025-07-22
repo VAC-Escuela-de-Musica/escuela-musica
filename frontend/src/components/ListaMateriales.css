@@ -1,3 +1,55 @@
+/* Variables y modo oscuro */
+:root {
+  --background-dark: #222222;
+  --surface-dark: #2A2A2A;
+  --text-dark: #FFFFFF;
+  --text-secondary-dark: #B0B0B0;
+  --divider-dark: #3F4147;
+  --accent-dark: #1976d2;
+  --heading-color: #FFFFFF;
+}
+
+.dark-theme {
+  background: var(--background-dark) !important;
+  color: var(--text-dark) !important;
+}
+
+.dark-theme .MuiPaper-root,
+.dark-theme .materials-table-container,
+.dark-theme .material-card {
+  background: var(--surface-dark) !important;
+  color: var(--text-dark) !important;
+  border-color: var(--divider-dark) !important;
+}
+
+.dark-theme .MuiTable-root,
+.dark-theme .materials-table {
+  background: var(--surface-dark) !important;
+  color: var(--text-dark) !important;
+}
+
+.dark-theme .MuiTableCell-root,
+.dark-theme .materials-table th,
+.dark-theme .materials-table td {
+  color: var(--text-dark) !important;
+  background: var(--surface-dark) !important;
+  border-color: var(--divider-dark) !important;
+}
+
+.dark-theme .MuiTypography-root,
+.dark-theme .material-title,
+.dark-theme .material-header h1 {
+  color: var(--heading-color) !important;
+}
+
+.dark-theme .MuiDivider-root {
+  border-color: var(--divider-dark) !important;
+}
+
+.dark-theme .MuiButton-root,
+.dark-theme .MuiIconButton-root {
+  color: var(--text-dark) !important;
+}
 /* Overlay para modales: cubre toda la pantalla y centra el modal */
 .modal-overlay {
   position: fixed;
@@ -40,14 +92,17 @@
     font-size: 1.2rem;
     margin-bottom: 0.25rem;
   }
+  
   .view-toggle-btn {
-.metadata-item {
-  gap: 6px;
-  padding: 0 0 2px 0;
-}
     width: 100%;
     margin-top: 0.25rem;
     font-size: 1rem;
+  }
+  
+  .metadata-item {
+    gap: 6px;
+    padding: 0 0 2px 0;
+  }
     padding: 0.4rem 0.6rem;
   }
   .materials-table-container {

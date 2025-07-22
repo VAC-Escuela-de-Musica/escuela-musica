@@ -74,7 +74,12 @@ const verifyJWT = (req, res, next) => {
         id: decoded.id || decoded._id
       };
       
+      // Compatibilidad con sistema legacy
+      req.email = decoded.email;
+      req.roles = decoded.roles || [];
+      
       console.log("✅ [JWT-VERIFY] req.user configurado:", req.user);
+      console.log("✅ [JWT-VERIFY] req.roles configurado:", req.roles);
       next();
     });
   } catch (error) {

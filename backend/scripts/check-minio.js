@@ -1,5 +1,4 @@
-import { setupMinIO } from "../src/config/minio.config.js";
-import minioClient, { MINIO_BUCKET_NAME } from "../src/config/minio.config.js";
+import { setupMinIO, minioClient, BUCKET_PRIVATE, BUCKET_PUBLIC, BUCKET_GALERY } from "../src/config/minio.config.js";
 
 async function checkMinIO() {
   try {
@@ -11,7 +10,9 @@ async function checkMinIO() {
       'MINIO_PORT', 
       'MINIO_ACCESS_KEY',
       'MINIO_SECRET_KEY',
-      'MINIO_BUCKET_NAME'
+      'MINIO_BUCKET_PRIVATE',
+      'MINIO_BUCKET_PUBLIC',
+      'MINIO_BUCKET_GALERY'
     ];
     
     const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
@@ -25,7 +26,9 @@ MINIO_PORT=9000
 MINIO_USE_SSL=false
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
-MINIO_BUCKET_NAME=carousel-images
+MINIO_BUCKET_PRIVATE=materiales-privados
+MINIO_BUCKET_PUBLIC=materiales-publicos
+MINIO_BUCKET_GALERY=galeria-imagenes
       `);
       return;
     }
@@ -36,12 +39,20 @@ MINIO_BUCKET_NAME=carousel-images
     console.log("🔗 Verificando conectividad con MinIO...");
     await setupMinIO();
     
-    // Verificar si el bucket existe
-    const bucketExists = await minioClient.bucketExists(MINIO_BUCKET_NAME);
-    if (bucketExists) {
-      console.log(`✅ Bucket "${MINIO_BUCKET_NAME}" existe y es accesible`);
-    } else {
-      console.log(`❌ Bucket "${MINIO_BUCKET_NAME}" no existe`);
+    // Verificar si los buckets existen
+    const buckets = [
+      { name: BUCKET_PRIVATE, label: "Materiales Privados" },
+      { name: BUCKET_PUBLIC, label: "Materiales Públicos" },
+      { name: BUCKET_GALERY, label: "Galería de Imágenes" }
+    ];
+    
+    for (const bucket of buckets) {
+      const bucketExists = await minioClient.bucketExists(bucket.name);
+      if (bucketExists) {
+        console.log(`✅ Bucket "${bucket.name}" (${bucket.label}) existe y es accesible`);
+      } else {
+        console.log(`❌ Bucket "${bucket.name}" (${bucket.label}) no existe`);
+      }
     }
     
     console.log("🎉 MinIO está configurado correctamente!");

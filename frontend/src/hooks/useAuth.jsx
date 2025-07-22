@@ -235,7 +235,7 @@ const useAuthState = () => {
    * Verifica si el usuario es admin
    */
   const isAdmin = useCallback(() => {
-    return hasRole('admin');
+    return hasRole('administrador');
   }, [hasRole]);
 
   /**

@@ -223,7 +223,7 @@ class MaterialService {
       if (!materialOwnerStr || materialOwnerStr !== userId) {
         // Permitir eliminación si el usuario es administrador o profesor
         // (esto debería verificarse mejor, pero para debug permitimos más flexibilidad)
-        if (userId && (userId.includes('admin') || userId.includes('profesor'))) {
+        if (userId && (userId.includes('administrador') || userId.includes('profesor'))) {
           // Usuario con permisos administrativos
         } else {
           return Result.forbidden('No tienes permisos para eliminar este material');

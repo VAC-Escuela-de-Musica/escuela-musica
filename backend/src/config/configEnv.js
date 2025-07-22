@@ -43,8 +43,9 @@ function validateEnvironment() {
     'MINIO_PORT',
     'MINIO_ACCESS_KEY',
     'MINIO_SECRET_KEY',
-    'MINIO_BUCKET',
-    'MINIO_PUBLIC_BUCKET'
+    'MINIO_BUCKET_PRIVATE',
+    'MINIO_BUCKET_PUBLIC',
+    'MINIO_BUCKET_GALERY'
   ];
   
   const missingVars = requiredVars.filter(varName => !process.env[varName]);
@@ -76,4 +77,6 @@ export const MINIO_PORT = parseInt(process.env.MINIO_PORT) || 9000;
 export const MINIO_USE_SSL = process.env.MINIO_USE_SSL === "true";
 export const MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY;
 export const MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY;
-export const MINIO_BUCKET_NAME = process.env.MINIO_BUCKET || "carousel-images";
+export const MINIO_BUCKET_PRIVATE = process.env.MINIO_BUCKET_PRIVATE;
+export const MINIO_BUCKET_PUBLIC = process.env.MINIO_BUCKET_PUBLIC;
+export const MINIO_BUCKET_GALERY = process.env.MINIO_BUCKET_GALERY;

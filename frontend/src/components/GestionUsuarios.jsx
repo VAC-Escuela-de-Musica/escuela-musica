@@ -152,7 +152,7 @@ const GestionUsuarios = () => {
 
   const getRoleColor = (role) => {
     switch (role) {
-      case 'admin': return '#f44336';
+      case 'administrador': return '#f44336';
       case 'teacher': return '#ff9800';
       case 'student': return '#4caf50';
       default: return '#9e9e9e';
@@ -161,7 +161,7 @@ const GestionUsuarios = () => {
 
   const getRoleText = (role) => {
     switch (role) {
-      case 'admin': return 'Administrador';
+      case 'administrador': return 'Administrador';
       case 'teacher': return 'Profesor';
       case 'student': return 'Estudiante';
       default: return role || 'No especificado';

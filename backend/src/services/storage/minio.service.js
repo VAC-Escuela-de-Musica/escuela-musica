@@ -32,8 +32,9 @@ class MinioService {
     });
     
     this.buckets = {
-      private: process.env.MINIO_BUCKET || 'materiales',
-      public: process.env.MINIO_PUBLIC_BUCKET || 'imagenes-publicas'
+      private: process.env.MINIO_BUCKET_PRIVATE || 'materiales-privados',
+      public: process.env.MINIO_BUCKET_PUBLIC || 'materiales-publicos',
+      galery: process.env.MINIO_BUCKET_GALERY || 'galeria-imagenes'
     };
   }
   

@@ -78,7 +78,7 @@ export function AuthProvider({ children }) {
 
   // Verificar si el usuario es admin
   const isAdmin = () => {
-    return hasRole('admin');
+    return hasRole('administrador');
   };
 
   // Verificar si el usuario es profesor/teacher

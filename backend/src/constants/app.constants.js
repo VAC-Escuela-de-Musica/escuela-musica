@@ -70,7 +70,8 @@ export const FILE_TYPES = {
 
 // Constantes de buckets MinIO
 export const MINIO_BUCKETS = {
-  PRIVATE: 'materiales',
-  PUBLIC: 'imagenes-publicas',
+  PRIVATE: 'materiales-privados',
+  PUBLIC: 'materiales-publicos',
+  GALERY: 'galeria-imagenes',
   TEMP: 'temp-uploads'
 };

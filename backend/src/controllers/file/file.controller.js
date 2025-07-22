@@ -294,9 +294,9 @@ function canUserAccessMaterial(req, material) {
 function isUserAdmin(user) {
   if (!user.roles) return false;
   return user.roles.some(role => 
-    role === 'admin' || 
-    role.name === 'admin' || 
-    (typeof role === 'string' && role === 'admin')
+    role === 'administrador' || 
+    role.name === 'administrador' || 
+    (typeof role === 'string' && role === 'administrador')
   );
 }
 

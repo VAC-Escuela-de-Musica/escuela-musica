@@ -50,7 +50,7 @@ async function login(user) {
       { 
         id: userFound._id,
         email: userFound.email, 
-        roles: userFound.roles 
+        roles: userFound.roles.map(role => ({ _id: role._id, name: role.name }))
       },
       ACCESS_JWT_SECRET,
       { expiresIn: "1d" }
@@ -76,7 +76,7 @@ async function login(user) {
           id: userFound._id,
           email: userFound.email,
           username: userFound.username,
-          roles: userFound.roles
+          roles: userFound.roles.map(role => ({ _id: role._id, name: role.name }))
         }
       },
       error: null
@@ -137,7 +137,7 @@ async function refresh(cookies) {
           { 
             id: userFound._id,
             email: userFound.email, 
-            roles: userFound.roles 
+            roles: userFound.roles.map(role => ({ _id: role._id, name: role.name }))
           },
           ACCESS_JWT_SECRET,
           { expiresIn: "1d" }
@@ -207,7 +207,7 @@ async function verifyToken(token) {
           id: userFound._id,
           email: userFound.email,
           username: userFound.username,
-          roles: userFound.roles
+          roles: userFound.roles.map(role => ({ _id: role._id, name: role.name }))
         }
       },
       error: null

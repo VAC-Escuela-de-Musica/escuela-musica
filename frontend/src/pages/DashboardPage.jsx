@@ -1,4 +1,4 @@
-import ListaMateriales from '../components/ListaMateriales';
+import RepositorioProfesor from '../components/RepositorioProfesor';
 
 /**
  * Página del Dashboard principal - Lista de materiales
@@ -6,7 +6,7 @@ import ListaMateriales from '../components/ListaMateriales';
 const DashboardPage = () => {
   return (
     <div>
-      <ListaMateriales />
+      <RepositorioProfesor />
     </div>
   );
 };

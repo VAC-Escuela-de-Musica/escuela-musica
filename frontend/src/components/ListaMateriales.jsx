@@ -1,4 +1,3 @@
-
 // ...existing code...
 
 
@@ -8,6 +7,56 @@ import { useMaterials } from '../hooks/useMaterials';
 import { useAuth } from '../context/AuthContext.jsx';
 import { formatDate, formatFileSize, getFileTypeFromExtension, getFileTypeIcon } from '../utils/helpers';
 import ImageViewer from './ImageViewer';
+import SubirMultiplesMateriales from './SubirMultiplesMateriales';
+import { 
+  Button, 
+  Dialog, 
+  DialogContent, 
+  DialogTitle, 
+  DialogActions,
+  IconButton, 
+  Box, 
+  Typography, 
+  Toolbar, 
+  Paper,
+  ToggleButton,
+  ToggleButtonGroup,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Card,
+  CardContent,
+  CardActions,
+  CardMedia,
+  Chip,
+  Avatar,
+  Link,
+  Pagination,
+  Stack,
+  Divider,
+  Grid
+} from '@mui/material';
+import { 
+  Upload as UploadIcon, 
+  Close as CloseIcon, 
+  ViewList as ViewListIcon, 
+  ViewModule as ViewModuleIcon,
+  Download as DownloadIcon,
+  Delete as DeleteIcon,
+  PictureAsPdf as PdfIcon,
+  Image as ImageIcon,
+  AudioFile as AudioIcon,
+  VideoFile as VideoIcon,
+  AttachFile as FileIcon,
+  Public as PublicIcon,
+  Lock as PrivateIcon
+} from '@mui/icons-material';
+import Tooltip from '@mui/material/Tooltip';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import './ListaMateriales.css';
 
 const ListaMateriales = () => {
@@ -17,9 +66,29 @@ const ListaMateriales = () => {
   // Estados para modales
   const [selectedImage, setSelectedImage] = useState(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   // Estado para vista de lista vs grid
   const [viewMode, setViewMode] = useState('list'); // 'list' o 'grid'
   const [expandedRows, setExpandedRows] = useState(new Set());
+    // Callback para subida exitosa
+  const handleUploadSuccess = () => {
+    setShowUploadModal(false);
+    fetchMaterials();
+    setSnackbarMsg('Materiales subidos correctamente');
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
+  };
+
+  // Callback para error de subida
+  const handleUploadError = (msg = 'Error al subir materiales') => {
+    setSnackbarMsg(msg);
+    setSnackbarSeverity('error');
+    setSnackbarOpen(true);
+  };
+  // Feedback visual para subida
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   // Función para determinar si el usuario puede eliminar un material
   const canDeleteMaterial = (material) => {
@@ -101,317 +170,387 @@ const ListaMateriales = () => {
     }
   };
 
-  // Obtener icono de tipo de archivo
-  const getFileIcon = (mimeType) => {
-    const icons = {
-      'image/': '🖼️',
-      'application/pdf': '📄',
-      'application/msword': '📝',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '📝',
-      'text/': '📄',
-      'audio/': '🎵',
-      'video/': '🎬',
-    };
+  // Obtener icono de tipo de archivo con Material UI
+  const getFileIconComponent = (mimeType, title) => {
+    const type = getFileTypeFromExtension(title);
+    const iconProps = { sx: { mr: 1 } };
     
-    for (const [type, icon] of Object.entries(icons)) {
-      if (mimeType?.startsWith(type)) return icon;
+    switch (type) {
+      case 'PDF':
+        return <PdfIcon color="error" {...iconProps} />;
+      case 'Imagen':
+        return <ImageIcon color="primary" {...iconProps} />;
+      case 'Audio':
+        return <AudioIcon color="secondary" {...iconProps} />;
+      case 'Video':
+        return <VideoIcon color="info" {...iconProps} />;
+      default:
+        return <FileIcon color="action" {...iconProps} />;
     }
-    return '📎';
   };
 
-  // Estados de carga y error
+  // Estados de carga y error con Material UI
   if (!user) {
     return (
-      <div className="lista-materiales">
-        <div className="no-auth-message">
-          <h2>Acceso Restringido</h2>
-          <p>Debes iniciar sesión para ver los materiales.</p>
-        </div>
-      </div>
+      <Box sx={{ p: 3 }}>
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h5" color="error" gutterBottom>
+            Acceso Restringido
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Debes iniciar sesión para ver los materiales.
+          </Typography>
+        </Paper>
+      </Box>
     );
   }
 
   if (loading) {
     return (
-      <div className="lista-materiales">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Cargando materiales...</p>
-        </div>
-      </div>
+      <Box sx={{ p: 3 }}>
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" gutterBottom>
+            Cargando materiales...
+          </Typography>
+          <Box sx={{ mt: 2 }}>
+            {/* Aquí puedes agregar un CircularProgress de MUI si quieres */}
+          </Box>
+        </Paper>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="lista-materiales">
-        <div className="error-container">
-          <h2>Error al cargar materiales</h2>
-          <p>{error}</p>
-          <button className="retry-button" onClick={fetchMaterials}>
+      <Box sx={{ p: 3 }}>
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="error" gutterBottom>
+            Error al cargar materiales
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+          <Button variant="contained" onClick={fetchMaterials}>
             Reintentar
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Paper>
+      </Box>
     );
   }
 
 
   return (
-    <div className="lista-materiales">
-      {/* Header */}
-      <div className="header">
-        <div className="header-left">
-          <h1>Materiales</h1>
-          <button 
-            onClick={toggleViewMode} 
-            className="view-toggle-btn"
-            title={viewMode === 'grid' ? 'Cambiar a vista de lista' : 'Cambiar a vista de tarjetas'}
-          >
-            {viewMode === 'grid' ? '☰' : '⊞'} {viewMode === 'grid' ? 'Lista' : 'Tarjetas'}
-          </button>
-        </div>
-        <div className="summary">
-          <span className="welcome">Hola, {user?.nombre || user?.username || user?.email}</span>
-          <span>{pagination?.totalCount || materials?.length || 0} materiales disponibles</span>
-        </div>
-      </div>
+    <Box className="dark-theme" sx={{ p: 3, backgroundColor: '#222222', minHeight: '100vh', color: '#fff' }}>
+      {/* Header con Material UI */}
+      <Paper elevation={1} sx={{ mb: 2, backgroundColor: 'var(--surface-dark)', color: 'var(--text-dark)', borderRadius: 3, px: { xs: 2, md: 6 }, py: 3 }}>
+        <Toolbar sx={{ flexWrap: 'wrap', gap: 2, backgroundColor: 'transparent', minHeight: 80, justifyContent: 'center' }}>
+          <Box sx={{ width: '100%', textAlign: 'center', mb: 2 }}>
+            <Typography
+              variant="h3"
+              component="h1"
+              fontWeight="bold"
+              sx={{
+                color: 'var(--heading-color)',
+                letterSpacing: '0.03em',
+                mb: 1,
+                mt: 1,
+                fontSize: { xs: '2rem', md: '2.5rem' },
+                lineHeight: 1.1,
+                textShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                textAlign: 'center',
+              }}
+            >
+              Repositorio de Materiales
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'var(--text-secondary-dark)', mb: 1, fontWeight: 400, textAlign: 'center' }}>
+              {pagination?.totalCount || materials?.length || 0} materiales disponibles
+            </Typography>
+          </Box>
+          {(isAdmin() || isTeacher()) && (
+            <Tooltip title="Subir nuevos materiales" arrow>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<UploadIcon />}
+                onClick={() => setShowUploadModal(true)}
+                sx={{
+                  boxShadow: 2,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  fontSize: '1rem',
+                  transition: 'background 0.2s',
+                  backgroundColor: 'var(--accent-dark)',
+                  color: 'var(--text-dark)',
+                  '&:hover': {
+                    backgroundColor: '#1565c0',
+                  },
+                }}
+              >
+                Subir Material
+              </Button>
+            </Tooltip>
+          )}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 180 }}>
+            <Typography variant="body2" sx={{ color: 'var(--text-secondary-dark)' }}>
+              Hola, {user?.nombre || user?.username || user?.email}
+            </Typography>
+          </Box>
+        </Toolbar>
+      </Paper>
 
-      {/* Lista de materiales */}
+      {/* Barra de filtros y vista */}
+      <Paper elevation={0} sx={{ p: 2, mb: 2, backgroundColor: 'grey.50' }}>
+        <Grid container alignItems="center" spacing={2}>
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                Filtros:
+              </Typography>
+              {/* Aquí se pueden agregar más filtros en el futuro */}
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={6} sx={{ textAlign: { xs: 'left', md: 'right' } }}>
+            <ToggleButtonGroup
+              value={viewMode}
+              exclusive
+              onChange={(event, newView) => {
+                if (newView !== null) {
+                  setViewMode(newView);
+                }
+              }}
+              aria-label="vista de materiales"
+              size="small"
+            >
+              <ToggleButton value="list" aria-label="vista de lista">
+                <ViewListIcon /> Lista
+              </ToggleButton>
+              <ToggleButton value="grid" aria-label="vista de tarjetas">
+                <ViewModuleIcon /> Tarjetas
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* Lista de materiales con Material UI */}
       {materials?.length === 0 ? (
-        <div className="no-materials">
-          <h2>No hay materiales disponibles</h2>
-          <p>Los materiales aparecerán aquí cuando estén disponibles.</p>
-        </div>
+        <Paper sx={{ p: 6, textAlign: 'center', mt: 3 }}>
+          <Typography variant="h5" color="text.secondary" gutterBottom>
+            No hay materiales disponibles
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Los materiales aparecerán aquí cuando estén disponibles.
+          </Typography>
+        </Paper>
       ) : (
         <>
-          {/* Vista de Lista Compacta */}
+          {/* Vista de Lista con Material UI Table */}
           {viewMode === 'list' && (
-            <div className="materials-table-container">
-              <div className="materials-table-wrapper">
-                <table className="materials-table">
-                  <thead>
-                    <tr>
-                      <th>Archivo</th>
-                      <th>Tamaño</th>
-                      <th>Fecha de subida</th>
-                      {/* Admin: acceso y acciones, Profesor: solo acciones */}
-                      {isAdmin() && <th>Acceso</th>}
-                      {(isAdmin() || isTeacher()) && <th>Acciones</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {materials?.map((material) => (
-                      <tr key={material._id}>
-                        <td>
-                          <a href={material.downloadUrl} target="_blank" rel="noopener noreferrer" className="file-link">
-                            {/* Icono según el tipo de archivo */}
-                            {getFileTypeFromExtension(material.title) === 'PDF' && (
-                              <span className="file-icon pdf">📄</span>
-                            )}
-                            {getFileTypeFromExtension(material.title) === 'Imagen' && (
-                              <span className="file-icon image">🖼️</span>
-                            )}
-                            {getFileTypeFromExtension(material.title) === 'Audio' && (
-                              <span className="file-icon audio">🎵</span>
-                            )}
-                            {getFileTypeFromExtension(material.title) === 'Video' && (
-                              <span className="file-icon video">🎬</span>
-                            )}
-                            {getFileTypeFromExtension(material.title) === 'Archivo' && (
-                              <span className="file-icon file">📎</span>
-                            )}
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Archivo</TableCell>
+                    <TableCell>Tamaño</TableCell>
+                    <TableCell>Fecha de subida</TableCell>
+                    {isAdmin() && <TableCell>Acceso</TableCell>}
+                    {(isAdmin() || isTeacher()) && <TableCell align="center">Acciones</TableCell>}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {materials?.map((material) => (
+                    <TableRow key={material._id} hover>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          {getFileIconComponent(material.mimeType || material.tipoContenido, material.title)}
+                          <Link 
+                            href={material.downloadUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            color="primary"
+                            underline="hover"
+                            sx={{ fontWeight: 500 }}
+                          >
                             {material.title}
-                          </a>
-                        </td>
-                        <td>{material.fileSize ? formatFileSize(material.fileSize) : '-'}</td>
-                        <td>{formatDate(material.createdAt)}</td>
-                        {/* Admin: acceso */}
-                        {isAdmin() && (
-                          <td>
-                            <span className={`privacy-badge ${material.isPublic ? 'public' : 'private'}`}>
-                              {material.isPublic ? 'Público' : 'Privado'}
-                            </span>
-                          </td>
-                        )}
-                        {/* Acciones: admin puede eliminar todo, profesor solo los suyos */}
-                        {(isAdmin() || isTeacher()) && (
-                          <td>
-                            {canDeleteMaterial(material) && (
-                              <button
+                          </Link>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {material.fileSize ? formatFileSize(material.fileSize) : '-'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {formatDate(material.createdAt)}
+                        </Typography>
+                      </TableCell>
+                      {isAdmin() && (
+                        <TableCell>
+                          <Chip
+                            icon={material.isPublic ? <PublicIcon /> : <PrivateIcon />}
+                            label={material.isPublic ? 'Público' : 'Privado'}
+                            color={material.isPublic ? 'success' : 'default'}
+                            size="small"
+                          />
+                        </TableCell>
+                      )}
+                      {(isAdmin() || isTeacher()) && (
+                        <TableCell align="center">
+                          {canDeleteMaterial(material) && (
+                            <Tooltip title="Eliminar material" arrow>
+                              <IconButton
                                 onClick={() => handleDeleteClick(material)}
-                                className="action-btn delete-btn"
-                                style={{marginLeft: 4}}
+                                color="error"
+                                size="small"
                               >
-                                Eliminar
-                              </button>
-                            )}
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
 
-          {/* Vista de Tarjetas Original */}
+          {/* Vista de Tarjetas mejorada */}
           {viewMode === 'grid' && (
-            <div className="materials-grid-container">
-              <div className="materials-grid">
-                {materials?.map((material) => (
-                  <div key={material._id} className="material-card">
-                    <div className="material-card-content">
-                    {/* Header con miniatura e info básica */}
-                    <div className="material-header">
-                      <div 
-                        className="material-thumbnail"
-                        onClick={() => handleImagePreview(material)}
-                        title={material.viewUrl ? "Click para ver imagen completa" : "Vista previa no disponible"}
-                      >
-                        {(material.viewUrl && 
-                         (material.mimeType || material.tipoContenido) &&
-                         ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(material.mimeType || material.tipoContenido)) ? (
-                          <img 
-                            src={material.viewUrl} 
-                            alt={material.title}
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'block';
-                            }}
-                          />
-                        ) : (
-                          <span className="material-thumbnail-icon">
-                            {getFileIcon(material.mimeType || material.tipoContenido)}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="material-info">
-                        <h3 className="material-title">{material.title}</h3>
-                        {material.description && (
-                          <p className="material-description">{material.description}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Metadatos del archivo, condicionales por rol */}
-                    <div className="material-metadata">
-                      <div className="metadata-item">
-                        <span className="metadata-label">Tipo:</span>
-                        <span className="file-type-badge">
-                          {getFileTypeFromExtension(material.title) || 'Archivo'}
-                        </span>
-                      </div>
-                      <div className="metadata-item">
-                        <span className="metadata-label">Subido:</span>
-                        <span>{formatDate(material.createdAt)}</span>
-                      </div>
-                      {isAdmin() && (
-                        <div className="metadata-item">
-                          <span className="metadata-label">Acceso:</span>
-                          <span className={`privacy-badge ${material.isPublic ? 'public' : 'private'}`}>
-                            {material.isPublic ? 'Público' : 'Privado'}
-                          </span>
-                        </div>
+            <Grid container spacing={3} sx={{ mt: 2 }}>
+              {materials?.map((material) => (
+                <Grid item xs={12} sm={6} md={4} key={material._id}>
+                  <Card sx={{
+                    height: 400,
+                    minHeight: 260,
+                    maxHeight: 260,
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    backgroundColor: 'var(--surface-dark)',
+                    color: 'var(--text-dark)',
+                    borderRadius: 3,
+                    boxShadow: 3,
+                  }}>
+                    <CardContent sx={{ flex: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        {getFileIconComponent(material.mimeType || material.tipoContenido, material.title)}
+                        <Typography variant="h6" fontWeight="bold" sx={{ ml: 1, color: 'var(--heading-color)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                          {material.title}
+                        </Typography>
+                      </Box>
+                      {/* Vista previa de imagen usando la API de MinIO */}
+                      {material.mimeType?.startsWith('image/') && material.viewUrl && (
+                        <Box sx={{ width: '100%', height: 120, mb: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 2, background: '#111' }}>
+                          <img src={material.viewUrl} alt={material.title} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                        </Box>
                       )}
-                      <div className="metadata-item">
-                        <span className="metadata-label">Tamaño:</span>
-                        <span>{material.fileSize ? formatFileSize(material.fileSize) : 'N/A'}</span>
-                      </div>
-                      {isAdmin() && (
-                        <div className="metadata-item">
-                          <span className="metadata-label">Propietario:</span>
-                          <span>{material.usuario || '-'}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Acciones */}
-                    <div className="material-actions">
+                      <Typography variant="body2" sx={{ color: 'var(--text-secondary-dark)', mb: 1 }}>
+                        {material.description || 'Sin descripción'}
+                      </Typography>
+                      <Divider sx={{ my: 1, borderColor: 'var(--divider-dark)' }} />
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        <Typography variant="caption" sx={{ color: 'var(--text-secondary-dark)' }}>
+                          <strong>Tipo:</strong> {getFileTypeFromExtension(material.title) || 'Archivo'}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'var(--text-secondary-dark)' }}>
+                          <strong>Subido:</strong> {formatDate(material.createdAt)}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'var(--text-secondary-dark)' }}>
+                          <strong>Tamaño:</strong> {material.fileSize ? formatFileSize(material.fileSize) : 'N/A'}
+                        </Typography>
+                        {isAdmin() && (
+                          <Typography variant="caption" sx={{ color: 'var(--text-secondary-dark)' }}>
+                            <strong>Acceso:</strong> {material.isPublic ? 'Público' : 'Privado'}
+                          </Typography>
+                        )}
+                        {isAdmin() && (
+                          <Typography variant="caption" sx={{ color: 'var(--text-secondary-dark)' }}>
+                            <strong>Propietario:</strong> {material.usuario || '-'}
+                          </Typography>
+                        )}
+                      </Box>
+                    </CardContent>
+                    <CardActions sx={{ justifyContent: 'center', px: 2, pb: 2 }}>
                       {material.downloadUrl && (
-                        <a 
-                          href={material.downloadUrl} 
-                          target="_blank" 
+                        <Button
+                          href={material.downloadUrl}
+                          target="_blank"
                           rel="noopener noreferrer"
-                          className="action-btn download-btn"
+                          variant="contained"
+                          color="primary"
+                          size="medium"
+                          startIcon={<DownloadIcon />}
+                          sx={{ backgroundColor: 'var(--accent-dark)', color: 'var(--text-dark)', fontWeight: 'bold', borderRadius: 2, px: 2, py: 1, fontSize: '1rem', boxShadow: 2, '&:hover': { backgroundColor: '#1565c0' } }}
                         >
-                          Descargar
-                        </a>
+                          DESCARGAR
+                        </Button>
                       )}
                       {(isAdmin() || isTeacher()) && canDeleteMaterial(material) && (
-                        <button
-                          onClick={() => handleDeleteClick(material)}
-                          className="action-btn delete-btn"
-                        >
-                          Eliminar
-                        </button>
+                        <Tooltip title="Eliminar material" arrow>
+                          <IconButton
+                            onClick={() => handleDeleteClick(material)}
+                            color="error"
+                            size="small"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
                       )}
-                    </div>
-                  </div>
-                </div>
-                ))}
-              </div>
-            </div>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
           )}
 
           {/* Paginación */}
           {pagination && pagination.totalPages > 1 && (
-            <div className="pagination">
-              <button
-                className="pagination-btn"
+            <Stack direction="row" spacing={2} alignItems="center" justifyContent="center" sx={{ mt: 3 }}>
+              <Button
+                variant="outlined"
                 disabled={!pagination.hasPrevPage}
                 onClick={prevPage}
               >
                 ← Anterior
-              </button>
-              
-              <div className="pagination-info">
-                <span>Página {pagination.page} de {pagination.totalPages}</span>
-                <span>{pagination.totalCount} materiales en total</span>
-              </div>
-              
-              <button
-                className="pagination-btn"
+              </Button>
+              <Typography variant="body2" color="text.secondary">
+                Página {pagination.page} de {pagination.totalPages} | {pagination.totalCount} materiales en total
+              </Typography>
+              <Button
+                variant="outlined"
                 disabled={!pagination.hasNextPage}
                 onClick={nextPage}
               >
                 Siguiente →
-              </button>
-            </div>
+              </Button>
+            </Stack>
           )}
         </>
       )}
 
       {/* Modal de confirmación de eliminación */}
       {deleteConfirmation && (
-        <div className="modal-overlay">
-          <div className="confirmation-modal">
-            <div className="modal-header">
-              <h3>Confirmar eliminación</h3>
-            </div>
-            <div className="modal-content">
-              <p>¿Estás seguro de que deseas eliminar este material?</p>
-              <p><strong>{deleteConfirmation.title}</strong></p>
-              <p className="warning-text">Esta acción no se puede deshacer.</p>
-            </div>
-            <div className="modal-actions">
-              <button 
-                onClick={() => setDeleteConfirmation(null)}
-                className="action-btn secondary-btn"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={confirmDelete}
-                className="action-btn danger-btn"
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
+        <Dialog open={!!deleteConfirmation} onClose={() => setDeleteConfirmation(null)}>
+          <DialogTitle>Confirmar eliminación</DialogTitle>
+          <DialogContent>
+            <Typography>¿Estás seguro de que deseas eliminar este material?</Typography>
+            <Typography fontWeight="bold" color="error" sx={{ mt: 1 }}>{deleteConfirmation.title}</Typography>
+            <Typography variant="caption" color="warning.main" sx={{ mt: 2 }}>Esta acción no se puede deshacer.</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteConfirmation(null)} color="primary" variant="outlined">
+              Cancelar
+            </Button>
+            <Button onClick={confirmDelete} color="error" variant="contained">
+              Eliminar
+            </Button>
+          </DialogActions>
+        </Dialog>
       )}
 
       {/* Modal de vista de imagen */}
@@ -422,7 +561,38 @@ const ListaMateriales = () => {
           image={selectedImage}
         />
       )}
-    </div>
+
+      {/* Modal de subir materiales con Material UI */}
+      <Dialog 
+        open={showUploadModal} 
+        onClose={() => setShowUploadModal(false)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{ sx: { minHeight: '60vh' } }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', pb: 1 }}>
+          <IconButton onClick={() => setShowUploadModal(false)} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2, width: '100%', overflowY: 'auto', maxHeight: '70vh' }}>
+          <SubirMultiplesMateriales 
+            onSuccess={handleUploadSuccess}
+            onError={handleUploadError}
+          />
+        </DialogContent>
+      </Dialog>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity={snackbarSeverity} onClose={() => setSnackbarOpen(false)} sx={{ width: '100%' }}>
+          {snackbarMsg}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 

@@ -1,4 +1,4 @@
-import SubirMultiplesMateriales from '../components/SubirMultiplesMateriales';
+import SubirArchivos from '../components/SubirArchivos';
 
 /**
  * Página para subir materiales
@@ -6,7 +6,7 @@ import SubirMultiplesMateriales from '../components/SubirMultiplesMateriales';
 const UploadPage = () => {
   return (
     <div>
-      <SubirMultiplesMateriales />
+      <SubirArchivos />
     </div>
   );
 };

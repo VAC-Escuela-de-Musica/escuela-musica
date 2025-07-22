@@ -106,7 +106,7 @@ const requireOwnershipOrAdmin = (getResourceOwnerId) => {
       const userRoles = req.user.roleNames;
 
       // Si es admin, permitir acceso
-      if (userRoles.includes('admin')) {
+      if (userRoles.includes('administrador')) {
         return next();
       }
 

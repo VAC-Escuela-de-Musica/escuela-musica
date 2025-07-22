@@ -22,6 +22,7 @@ import UserManager from "./UserManager";
 import CardsProfesoresManager from "./CardsProfesoresManager";
 import TestimoniosManager from "./TestimoniosManager";
 import GaleriaManager from "./GaleriaManager";
+import RepositorioProfesor from "./RepositorioProfesor";
 
 const drawerWidth = 240;
 
@@ -87,11 +88,7 @@ export default function ClippedDrawer() {
             {["Horario", "Estudiantes", "Profesores", "Clases"].map(
               (text, index) => (
                 <ListItem key={text} disablePadding>
-                  <ListItemButton
-                    onClick={() => {
-                      if (text === "Horario") setActiveModule("horario");
-                    }}
-                  >
+                  <ListItemButton>
                     <ListItemIcon sx={{ color: "#FFFFFF" }}>
                       {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
                     </ListItemIcon>
@@ -100,26 +97,6 @@ export default function ClippedDrawer() {
                 </ListItem>
               )
             )}
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => setActiveModule("emailConfig")}
-              >
-                <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                  <MailIcon />
-                </ListItemIcon>
-                <ListItemText primary="Configuración Email" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => setActiveModule("whatsappConfig")}
-              >
-                <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                  <WhatsAppIcon />
-                </ListItemIcon>
-                <ListItemText primary="Configuración WhatsApp" />
-              </ListItemButton>
-            </ListItem>
           </List>
           <Divider sx={{ borderColor: "#3F4147" }} />
           <List>
@@ -152,6 +129,7 @@ export default function ClippedDrawer() {
               <ListItem key={text} disablePadding>
                 <ListItemButton
                   onClick={() => {
+                    if (text === "Repositorio Prof.") setActiveModule("repositorio");
                     if (text === "Credenciales") setActiveModule("credenciales");
                   }}
                 >
@@ -225,6 +203,7 @@ export default function ClippedDrawer() {
         {activeModule === "credenciales" && <UserManager />}
         {activeModule === "presentacion" && <CardsProfesoresManager />}
         {activeModule === "resenas" && <TestimoniosManager />}
+        {activeModule === "repositorio" && <RepositorioProfesor />}
         {/* Puedes agregar más módulos así */}
       </Box>
     </Box>

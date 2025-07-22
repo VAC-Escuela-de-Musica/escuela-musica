@@ -19,13 +19,38 @@ const minioClient = new Client({
   secretKey: process.env.MINIO_SECRET_KEY
 });
 
-const BUCKET = process.env.MINIO_BUCKET;
+const BUCKET_PRIVATE = process.env.MINIO_BUCKET_PRIVATE;
+const BUCKET_PUBLIC = process.env.MINIO_BUCKET_PUBLIC;
+const BUCKET_GALERY = process.env.MINIO_BUCKET_GALERY;
 
 
-// Puedes implementar la función setupMinIO aquí si necesitas lógica de inicialización
-function setupMinIO() {
-  // Ejemplo: verificar si el bucket existe, crear si no existe, etc.
-  // Por ahora es un placeholder
+// Función para inicializar MinIO y crear buckets
+async function setupMinIO() {
+  try {
+    console.log("🔧 Inicializando MinIO...");
+    
+    const buckets = [
+      { name: BUCKET_PRIVATE, label: "Materiales Privados" },
+      { name: BUCKET_PUBLIC, label: "Materiales Públicos" },
+      { name: BUCKET_GALERY, label: "Galería de Imágenes" }
+    ];
+    
+    for (const bucket of buckets) {
+      const bucketExists = await minioClient.bucketExists(bucket.name);
+      if (!bucketExists) {
+        await minioClient.makeBucket(bucket.name, 'us-east-1');
+        console.log(`✅ Bucket "${bucket.name}" (${bucket.label}) creado exitosamente`);
+      } else {
+        console.log(`✅ Bucket "${bucket.name}" (${bucket.label}) ya existe`);
+      }
+    }
+    
+    console.log("🎉 MinIO inicializado correctamente");
+    return true;
+  } catch (error) {
+    console.error("❌ Error inicializando MinIO:", error.message);
+    return false;
+  }
 }
 
-export { minioClient, BUCKET, setupMinIO };
+export { minioClient, BUCKET_PRIVATE, BUCKET_PUBLIC, BUCKET_GALERY, setupMinIO };

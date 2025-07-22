@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(npm run check-minio:*)",
+      "WebFetch(domain:mui.com)"
     ],
     "deny": []
   }

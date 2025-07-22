@@ -38,8 +38,9 @@ export const config = {
     accessKey: process.env.MINIO_ACCESS_KEY,
     secretKey: process.env.MINIO_SECRET_KEY,
     buckets: {
-      private: process.env.MINIO_BUCKET || MINIO_BUCKETS.PRIVATE,
-      public: process.env.MINIO_PUBLIC_BUCKET || MINIO_BUCKETS.PUBLIC,
+      private: process.env.MINIO_BUCKET_PRIVATE || MINIO_BUCKETS.PRIVATE,
+      public: process.env.MINIO_BUCKET_PUBLIC || MINIO_BUCKETS.PUBLIC,
+      galery: process.env.MINIO_BUCKET_GALERY || MINIO_BUCKETS.GALERY,
       temp: process.env.MINIO_TEMP_BUCKET || MINIO_BUCKETS.TEMP
     }
   },
