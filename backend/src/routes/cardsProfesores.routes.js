@@ -1,7 +1,7 @@
 "use strict";
 import express from "express";
 import cardsProfesoresController from "../controllers/cardsProfesores.controller.js";
-import { authenticateJWT } from "../middlewares/auth/jwt.middleware.js";
+import { authenticateJWT, verifyJWT } from "../middlewares/auth/jwt.middleware.js";
 import { requireRole } from "../middlewares/auth/role.middleware.js";
 const ADMIN_ROLE = "administrador";
 const ASISTENTE_ROLE = "asistente";
@@ -26,21 +26,21 @@ router.put("/order",
   cardsProfesoresController.updateOrder,
 );
 
-router.put("/:id", 
+router.put(":id", 
   verifyJWT, 
-  authorizeRoles([ADMIN_ROLE, ASISTENTE_ROLE]), 
+  requireRole([ADMIN_ROLE, ASISTENTE_ROLE]), 
   cardsProfesoresController.updateCard,
 );
 
-router.delete("/:id", 
+router.delete(":id", 
   verifyJWT, 
-  authorizeRoles([ADMIN_ROLE, ASISTENTE_ROLE]), 
+  requireRole([ADMIN_ROLE, ASISTENTE_ROLE]), 
   cardsProfesoresController.deleteCard,
 );
 
-router.patch("/:id/restore", 
+router.patch(":id/restore", 
   verifyJWT, 
-  authorizeRoles([ADMIN_ROLE, ASISTENTE_ROLE]), 
+  requireRole([ADMIN_ROLE, ASISTENTE_ROLE]), 
   cardsProfesoresController.restoreCard,
 );
 

@@ -1,6 +1,6 @@
 "use strict";
 import cardsProfesoresService from "../services/cardsProfesores.service.js";
-import { respondSuccess, respondError } from "../utils/resHandler.js";
+import { respondSuccess, respondError } from "../utils/responseHandler.util.js";
 
 class CardsProfesoresController {
   // Obtener todas las tarjetas
