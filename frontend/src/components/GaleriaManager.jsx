@@ -18,6 +18,7 @@ import {
   Alert,
   Snackbar,
   CircularProgress,
+  Fab,
   Tooltip,
   Select,
   MenuItem,
@@ -27,6 +28,7 @@ import {
   ImageListItem,
   ImageListItemBar
 } from '@mui/material';
+import { useCarouselConfig } from '../hooks/useCarouselConfig.js';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -45,6 +47,7 @@ const GaleriaManager = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingImage, setEditingImage] = useState(null);
   const [reorderMode, setReorderMode] = useState(false);
+  const [carouselReorderMode, setCarouselReorderMode] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // Form state
@@ -60,6 +63,15 @@ const GaleriaManager = () => {
   });
 
   const API_URL = import.meta.env.VITE_API_URL;
+
+  // Hook para la configuración del carrusel
+  const { 
+    selectedImages, 
+    addImage, 
+    removeImage, 
+    reorderImages, 
+    isImageSelected 
+  } = useCarouselConfig();
 
   // Verificar autenticación al cargar
   useEffect(() => {
@@ -93,8 +105,8 @@ const GaleriaManager = () => {
         console.log('Datos de la galería:', data.data);
         setGaleria(data.data || []);
       } else if (response.status === 403) {
-        console.warn('Acceso denegado a la galería - solo administradores');
-        showSnackbar('Solo administradores pueden acceder a este módulo.', 'warning');
+        console.warn('Acceso denegado a la galería - solo administradores y asistentes');
+        showSnackbar('Solo administradores y asistentes pueden acceder a este módulo (acceso completo).', 'warning');
         setAuthError(true);
         setGaleria([]);
       } else if (response.status === 401) {
@@ -114,6 +126,9 @@ const GaleriaManager = () => {
       setLoading(false);
     }
   };
+
+
+
 
   const handleSubmit = async () => {
     try {
@@ -291,6 +306,89 @@ const GaleriaManager = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        showSnackbar('Solo se permiten archivos de imagen', 'error');
+        return;
+      }
+
+      // Validar tamaño (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showSnackbar('El archivo es demasiado grande. Máximo 5MB', 'error');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      
+      // Obtener URL pre-firmada para subida
+      const uploadResponse = await fetch(`${API_URL}/presigned/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          contentType: file.type
+        })
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Error al obtener URL de subida');
+      }
+
+      const uploadData = await uploadResponse.json();
+      
+      // Subir archivo directamente a MinIO usando la URL pre-firmada
+      const uploadToMinIO = await fetch(uploadData.data.uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type
+        }
+      });
+
+      if (!uploadToMinIO.ok) {
+        throw new Error('Error al subir imagen a MinIO');
+      }
+
+      // Actualizar formulario con la URL pública
+      setFormData({ ...formData, imagen: uploadData.data.publicUrl });
+      showSnackbar('Imagen subida exitosamente', 'success');
+
+    } catch (error) {
+      console.error('Error al subir imagen:', error);
+      showSnackbar('Error al subir imagen', 'error');
+    }
+  };
+
+  // Funciones para manejar el carrusel
+  const handleAddToCarousel = (imagen) => {
+    if (isImageSelected(imagen._id)) {
+      showSnackbar('Esta imagen ya está en el carrusel', 'warning');
+    } else {
+      console.log('Agregando imagen al carrusel:', imagen);
+      addImage(imagen);
+      showSnackbar('Imagen agregada al carrusel exitosamente', 'success');
+    }
+  };
+
+  const handleRemoveFromCarousel = (imageId) => {
+    removeImage(imageId);
+    showSnackbar('Imagen removida del carrusel exitosamente', 'success');
+  };
+
+  const handleReorderCarousel = (fromIndex, toIndex) => {
+    reorderImages(fromIndex, toIndex);
+    showSnackbar('Orden del carrusel actualizado exitosamente', 'success');
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -307,7 +405,7 @@ const GaleriaManager = () => {
             Error de Autenticación
           </Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Solo los administradores pueden acceder a este módulo.
+            Solo los administradores y asistentes pueden acceder a este módulo (acceso completo).
           </Typography>
           <Button 
             variant="contained" 
@@ -324,9 +422,162 @@ const GaleriaManager = () => {
   return (
     <Box sx={{ p: 3, bgcolor: '#1a1a1a', minHeight: '100vh' }}>
       <Typography variant="h3" sx={{ color: 'white', fontWeight: 'bold', mb: 4, textAlign: 'center' }}>
-        Gestión de Galería
+        Gestión de Imágenes
       </Typography>
 
+      {/* Sección 1: Imágenes del Carrusel */}
+      <Card sx={{ mb: 4, bgcolor: '#2a2a2a', color: 'white' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold' }}>
+              🎠 Imágenes del Carrusel
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: '#ccc' }}>
+                Imágenes seleccionadas de la galería para mostrar en el carrusel ({selectedImages.length} seleccionadas)
+              </Typography>
+              <Tooltip title="Modo reordenar carrusel">
+                <IconButton
+                  onClick={() => setCarouselReorderMode(!carouselReorderMode)}
+                  sx={{ 
+                    bgcolor: carouselReorderMode ? 'primary.main' : 'transparent',
+                    color: carouselReorderMode ? 'white' : 'white',
+                    '&:hover': { bgcolor: carouselReorderMode ? 'primary.dark' : 'rgba(255,255,255,0.1)' }
+                  }}
+                >
+                  <ReorderIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
+          
+          <ImageList
+            sx={{ 
+              width: '100%', 
+              height: 'auto',
+              bgcolor: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: 2,
+              p: 2
+            }}
+            variant="quilted"
+            cols={4}
+            rowHeight={120}
+          >
+            {selectedImages.map((imagen, index) => (
+              <ImageListItem 
+                key={imagen._id} 
+                sx={{ position: 'relative' }}
+              >
+                {/* Botones de acción para carrusel */}
+                <Box sx={{ 
+                  position: 'absolute', 
+                  top: 8, 
+                  right: 8, 
+                  zIndex: 10,
+                  display: 'flex',
+                  gap: 0.5
+                }}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleRemoveFromCarousel(imagen._id)}
+                    sx={{ 
+                      backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                      color: '#f44336',
+                      width: 28,
+                      height: 28,
+                      '&:hover': {
+                        backgroundColor: 'rgba(211, 47, 47, 0.2)',
+                      }
+                    }}
+                    title="Remover del carrusel"
+                  >
+                    <DeleteIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Box>
+
+                {/* Controles de reordenamiento para carrusel */}
+                {carouselReorderMode && (
+                  <Box sx={{ 
+                    position: 'absolute', 
+                    left: 8, 
+                    top: 8, 
+                    zIndex: 10,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 0.5
+                  }}>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleReorderCarousel(index, index - 1)}
+                      disabled={index === 0}
+                      sx={{ 
+                        color: 'white', 
+                        p: 0.5,
+                        bgcolor: 'rgba(0,0,0,0.5)',
+                        '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                      }}
+                    >
+                      <ArrowUpIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleReorderCarousel(index, index + 1)}
+                      disabled={index === selectedImages.length - 1}
+                      sx={{ 
+                        color: 'white', 
+                        p: 0.5,
+                        bgcolor: 'rgba(0,0,0,0.5)',
+                        '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                      }}
+                    >
+                      <ArrowDownIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                )}
+                <img
+                  src={imagen.imagen}
+                  alt={imagen.titulo}
+                  loading="lazy"
+                  style={{ 
+                    borderRadius: 8,
+                    objectFit: 'cover'
+                  }}
+                />
+                
+                <ImageListItemBar
+                  title={imagen.titulo}
+                  subtitle={`Orden: ${index + 1}`}
+                  sx={{
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%)',
+                    borderBottomLeftRadius: 8,
+                    borderBottomRightRadius: 8
+                  }}
+                />
+              </ImageListItem>
+            ))}
+          </ImageList>
+          
+          {selectedImages.length === 0 && (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="body1" sx={{ color: '#888' }}>
+                No hay imágenes seleccionadas para el carrusel. Selecciona imágenes de la galería para agregarlas.
+              </Typography>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Divider */}
+      <Box sx={{ 
+        height: 2, 
+        bgcolor: '#444', 
+        mb: 4, 
+        borderRadius: 1,
+        mx: 'auto',
+        width: '80%'
+      }} />
+
+      {/* Sección 2: Gestión de Galería */}
       <Card sx={{ bgcolor: '#2a2a2a', color: 'white' }}>
         <CardContent sx={{ p: 3 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -438,6 +689,36 @@ const GaleriaManager = () => {
                   >
                     <DeleteIcon sx={{ fontSize: 16 }} />
                   </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleAddToCarousel(imagen)}
+                    sx={{ 
+                      backgroundColor: isImageSelected(imagen._id) 
+                        ? 'rgba(255, 193, 7, 0.1)' 
+                        : 'rgba(76, 175, 80, 0.1)',
+                      color: isImageSelected(imagen._id) 
+                        ? '#ffc107' 
+                        : '#4caf50',
+                      width: 28,
+                      height: 28,
+                      '&:hover': {
+                        backgroundColor: isImageSelected(imagen._id) 
+                          ? 'rgba(255, 193, 7, 0.2)' 
+                          : 'rgba(76, 175, 80, 0.2)',
+                      }
+                    }}
+                    title={isImageSelected(imagen._id) 
+                      ? "Ya está en el carrusel" 
+                      : "Agregar al carrusel"
+                    }
+                  >
+                    {isImageSelected(imagen._id) ? (
+                      <VisibilityIcon sx={{ fontSize: 16 }} />
+                    ) : (
+                      <AddIcon sx={{ fontSize: 16 }} />
+                    )}
+                  </IconButton>
+
                 </Box>
 
                 <img
@@ -547,14 +828,34 @@ const GaleriaManager = () => {
               />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="URL de la imagen"
-                value={formData.imagen}
-                onChange={(e) => setFormData({ ...formData, imagen: e.target.value })}
-                sx={{ mb: 2 }}
-                helperText="Ingresa la URL de la imagen"
-              />
+              <Box sx={{ mb: 2 }}>
+                <input
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  id="image-upload"
+                  type="file"
+                  onChange={handleImageUpload}
+                />
+                <label htmlFor="image-upload">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<AddIcon />}
+                    sx={{ mb: 2 }}
+                  >
+                    Seleccionar Imagen
+                  </Button>
+                </label>
+                {formData.imagen && (
+                  <Box sx={{ mt: 2 }}>
+                    <img 
+                      src={formData.imagen} 
+                      alt="Preview" 
+                      style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'cover' }}
+                    />
+                  </Box>
+                )}
+              </Box>
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth sx={{ mb: 2 }}>
@@ -583,6 +884,28 @@ const GaleriaManager = () => {
                   tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag)
                 })}
                 sx={{ mb: 2 }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Columnas"
+                value={formData.cols}
+                onChange={(e) => setFormData({ ...formData, cols: parseInt(e.target.value) || 1 })}
+                sx={{ mb: 2 }}
+                inputProps={{ min: 1, max: 4 }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Filas"
+                value={formData.rows}
+                onChange={(e) => setFormData({ ...formData, rows: parseInt(e.target.value) || 1 })}
+                sx={{ mb: 2 }}
+                inputProps={{ min: 1, max: 4 }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -628,4 +951,4 @@ const GaleriaManager = () => {
   );
 };
 
-export default GaleriaManager;
+export default GaleriaManager; 
