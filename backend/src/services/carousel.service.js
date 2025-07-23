@@ -1,6 +1,6 @@
-import CarouselImage from "../models/carousel.entity.js";
-import { minioClient, BUCKET_PUBLIC } from "../config/minio.config.js";
-import { MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_ENDPOINT, MINIO_PORT } from "../config/configEnv.js";
+import CarouselImage from "../core/models/carousel.entity.js";
+import { minioClient, BUCKET_PUBLIC } from "../core/config/minio.config.js";
+import { MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_ENDPOINT, MINIO_PORT } from "../core/config/configEnv.js";
 import { respondError } from "../utils/responseHandler.util.js";
 import { v4 as uuidv4 } from "uuid";
 

@@ -12,8 +12,8 @@ import {
   idParamSchema, 
   userFiltersSchema,
   commonSchemas 
-} from "../schema/common.schema.js";
-import { authLoginBodySchema } from "../schema/auth.schema.js";
+} from "../core/schemas/common.schema.js";
+import { authLoginBodySchema } from "../core/schemas/auth.schema.js";
 import { 
   extractJWT, 
   verifyJWT, 
@@ -25,9 +25,9 @@ import {
   logout, 
   refresh 
 } from "../controllers/auth/auth.controller.js";
-import { HTTP_STATUS } from "../constants/index.js";
+import { HTTP_STATUS } from "../core/constants/index.js";
 import rateLimit from "express-rate-limit";
-import { config } from "../config/index.js";
+import { config } from "../core/config/index.js";
 
 const router = Router();
 

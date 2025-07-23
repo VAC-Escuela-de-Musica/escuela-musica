@@ -1,7 +1,7 @@
 "use strict";
 
-import User from "../../models/user.model.js";
-import Role from "../../models/role.model.js";
+import User from "../../core/models/user.model.js";
+import Role from "../../core/models/role.model.js";
 import { handleError } from "../../utils/errorHandler.util.js";
 
 /**

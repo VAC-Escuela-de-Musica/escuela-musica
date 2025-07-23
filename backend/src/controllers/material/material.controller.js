@@ -1,5 +1,5 @@
 // Controlador de materiales educativos - CRUD básico
-import Material from "../../models/material.model.js";
+import Material from "../../core/models/material.model.js";
 import { respondError, respondSuccess } from "../../utils/responseHandler.util.js";
 import { auditService } from '../../services/index.js';
 import { AuthorizationService } from '../../services/index.js';

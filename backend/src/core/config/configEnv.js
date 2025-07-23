@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /** Get the absolute path of the .env file. */
-const envFilePath = path.resolve(__dirname, "../../.env");
+const envFilePath = path.resolve(__dirname, "../../../.env");
 // Load environment variables from the .env file
 // ...existing code...
 import dotenv from "dotenv";

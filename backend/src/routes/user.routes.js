@@ -16,7 +16,7 @@ import {
 } from "../middlewares/index.js";
 
 import { validateSchema } from "../middlewares/validation/schema.middleware.js";
-import { userBodySchema, userIdSchema } from "../schema/user.schema.js";
+import { userBodySchema, userIdSchema } from "../core/schemas/user.schema.js";
 
 /** Instancia del enrutador */
 const router = Router();

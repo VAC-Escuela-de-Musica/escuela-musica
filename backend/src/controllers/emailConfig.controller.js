@@ -1,5 +1,5 @@
 import { respondSuccess, respondError } from '../utils/responseHandler.util.js';
-import EmailTemplate from '../models/emailTemplate.model.js';
+import EmailTemplate from '../core/models/emailTemplate.model.js';
 import fs from 'fs';
 import path from 'path';
 

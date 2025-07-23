@@ -3,7 +3,7 @@
 import { respondSuccess, respondError } from "../utils/responseHandler.util.js";
 import { handleError } from "../utils/errorHandler.util.js";
 // import Role from "../models/role.model.js";
-import ROLES from "../constants/roles.constants.js";
+import ROLES from "../core/constants/roles.constants.js";
 
 /**
  * Devuelve los roles predefinidos

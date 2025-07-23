@@ -1,6 +1,6 @@
 "use strict";
 
-import Alumno from "../models/alumnos.model.js";
+import Alumno from "../core/models/alumnos.model.js";
 import { handleError } from "../utils/errorHandler.util.js";
 
 // Función para obtener todos los alumnos

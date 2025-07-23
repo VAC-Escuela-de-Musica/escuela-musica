@@ -5,7 +5,7 @@ import { handleError } from "../../utils/errorHandler.util.js";
 
 /** Servicios de autenticación */
 import { AuthenticationService } from '../../services/index.js';
-import { authLoginBodySchema } from "../../schema/auth.schema.js";
+import { authLoginBodySchema } from "../../core/schemas/auth.schema.js";
 
 /**
  * Inicia sesión con un usuario.

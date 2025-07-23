@@ -1,7 +1,7 @@
 "use strict";
 
 import { respondError } from "../../utils/responseHandler.util.js";
-import { HTTP_STATUS, VALIDATION } from "../../constants/index.js";
+import { HTTP_STATUS, VALIDATION } from "../../core/constants/index.js";
 
 /**
  * Middleware para validar parámetros de ruta

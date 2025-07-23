@@ -15,7 +15,7 @@ class UserController {
   async listUsers(req, res) {
     try {
       // Importar el modelo aquí para evitar problemas de importación circular
-      const User = (await import("../../models/user.model.js")).default;
+      const User = (await import("../../core/models/user.model.js")).default;
       // Buscar todos los usuarios y popular los roles
       const users = await User.find({}).populate("roles");
       return respondSuccess(req, res, 200, {

@@ -1,11 +1,11 @@
 "use strict";
 
 /** Modelo de datos 'User' */
-import User from "../../models/user.model.js";
+import User from "../../core/models/user.model.js";
 /** Modulo 'jsonwebtoken' para crear tokens */
 import jwt from "jsonwebtoken";
 
-import { ACCESS_JWT_SECRET, REFRESH_JWT_SECRET } from "../../config/configEnv.js";
+import { ACCESS_JWT_SECRET, REFRESH_JWT_SECRET } from "../../core/config/configEnv.js";
 import { handleError } from "../../utils/errorHandler.util.js";
 import logger from "../../utils/logger.util.js";
 

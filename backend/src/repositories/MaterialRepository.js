@@ -1,6 +1,6 @@
 import { BaseRepository } from './BaseRepository.js';
 import { Result } from '../patterns/Result.js';
-import Material from '../models/material.model.js';
+import Material from '../core/models/material.model.js';
 
 /**
  * Repository específico para materiales

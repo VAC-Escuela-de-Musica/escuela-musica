@@ -1,4 +1,4 @@
-import Galeria from "../models/galeria.model.js";
+import Galeria from "../core/models/galeria.model.js";
 import { handleError } from "../utils/errorHandler.util.js";
 
 /**

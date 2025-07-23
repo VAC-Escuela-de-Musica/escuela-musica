@@ -1,6 +1,6 @@
 import { BaseRepository } from './BaseRepository.js';
 import { Result } from '../patterns/Result.js';
-import User from '../models/user.model.js';
+import User from '../core/models/user.model.js';
 import bcrypt from 'bcryptjs';
 
 /**

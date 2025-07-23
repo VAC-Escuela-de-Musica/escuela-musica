@@ -4,7 +4,7 @@ import { connect } from "mongoose";
 
 // Agregamos la configuracion de las variables de entorno
 import { DB_URL } from "./configEnv.js";
-import { handleError } from "../utils/errorHandler.util.js";
+import { handleError } from "../../utils/errorHandler.util.js";
 
 /**
  * Establece la conexión con la base de datos.

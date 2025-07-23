@@ -1,5 +1,5 @@
 // Controlador de subida de materiales
-import Material from "../../models/material.model.js";
+import Material from "../../core/models/material.model.js";
 import { respondError, respondSuccess } from "../../utils/responseHandler.util.js";
 import { fileService } from '../../services/index.js';
 import { auditService } from '../../services/index.js';

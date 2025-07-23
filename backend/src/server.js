@@ -1,5 +1,5 @@
 // Importa el archivo 'configEnv.js' para cargar las variables de entorno
-import { PORT, HOST } from "./config/configEnv.js";
+import { PORT, HOST } from "./core/config/configEnv.js";
 import path from "node:path";
 // Importa el módulo 'cors' para agregar los cors
 import cors from "cors";
@@ -12,12 +12,12 @@ import cookieParser from "cookie-parser";
 /** El enrutador principal */
 import indexRoutes from "./routes/index.routes.js";
 // Importa el archivo 'configDB.js' para crear la conexión a la base de datos
-import { setupDB } from "./config/configDB.js";
+import { setupDB } from "./core/config/configDB.js";
 // Importa la configuración de MinIO
-import { setupMinIO } from "./config/minio.config.js";
+import { setupMinIO } from "./core/config/minio.config.js";
 // Importa el handler de errores
 import { handleFatalError, handleError } from "./utils/errorHandler.util.js";
-import { createRoles, createUsers } from "./config/initialSetup.js";
+import { createRoles, createUsers } from "./core/config/initialSetup.js";
 // Importa la función para inicializar servicios
 import { initializeServices } from "./services/index.js";
 

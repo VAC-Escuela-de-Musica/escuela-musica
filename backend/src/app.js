@@ -20,9 +20,9 @@ import indexRoutes from "./routes/index.routes.js";
 // Importa el handler de errores
 import { handleError } from "./utils/errorHandler.util.js";
 // Importa la configuración centralizada
-import { config } from "./config/index.js";
+import { config } from "./core/config/index.js";
 // Importa las constantes
-import { HTTP_STATUS } from "./constants/index.js";
+import { HTTP_STATUS } from "./core/constants/index.js";
 
 /**
  * Crea y configura la aplicación Express

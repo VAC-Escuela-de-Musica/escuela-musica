@@ -1,5 +1,5 @@
 "use strict";
-import CardsProfesores from "../models/cardsProfesores.model.js";
+import CardsProfesores from "../core/models/cardsProfesores.model.js";
 
 class CardsProfesoresService {
   // Obtener todas las tarjetas (para administración)
