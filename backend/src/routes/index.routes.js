@@ -3,15 +3,15 @@
 import { Router } from "express";
 
 // Importación de rutas
-import userRoutes from "./user.routes.js";
+import userRoutes from "../features/user-management/routes/user.routes.js";
 import authRoutes from "./auth.routes.js";
-import materialRoutes from "./material.routes.js";
-import fileRoutes from "./file.routes.js";
+import materialRoutes from "../features/content-management/routes/material.routes.js";
+import fileRoutes from "../features/file-system/routes/file.routes.js";
 import adminRoutes from "./admin.routes.js";
-import alumnosRoutes from "./alumnos.routes.js";
-import galeriaRoutes from "./galeria.routes.js";
+import alumnosRoutes from "../features/student-management/routes/alumnos.routes.js";
+import galeriaRoutes from "../features/content-management/routes/galeria.routes.js";
 import messagingRoutes from "./messaging.routes.js";
-import roleRoutes from "./role.routes.js";
+import roleRoutes from "../features/user-management/routes/role.routes.js";
 import cardsProfesoresRoutes from "./cardsProfesores.routes.js";
 import carouselRoutes from "./carousel.routes.js";
 

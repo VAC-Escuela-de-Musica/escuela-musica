@@ -1,6 +1,6 @@
 "use strict";
 
-import minioService from "../../services/storage/minio.service.js";
+import minioService from "../../features/file-system/services/minio.service.js";
 
 /**
  * Realiza un health check completo del sistema

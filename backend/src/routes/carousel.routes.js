@@ -10,8 +10,8 @@ import {
   updateOrder,
   toggleStatus,
 } from "../controllers/carousel.controller.js";
-import { verifyJWT } from "../middlewares/auth/jwt.middleware.js";
-import { requireRole } from "../middlewares/auth/role.middleware.js";
+import { verifyJWT } from "../features/authentication/middlewares/jwt.middleware.js";
+import { requireRole } from "../features/authentication/middlewares/role.middleware.js";
 
 const router = Router();
 

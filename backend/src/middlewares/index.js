@@ -23,7 +23,7 @@ export {
   requireAdminOrProfesor,
   requireAuthenticated,
   requireOwnershipOrAdmin
-} from './auth/index.js';
+} from '../features/authentication/middlewares/index.js';
 
 // === VALIDACIÓN ===
 export {
@@ -59,7 +59,7 @@ export {
   fileSecurityMiddleware,
   fileCacheMiddleware,
   fileAccessLogger
-} from './file/index.js';
+} from '../features/file-system/middlewares/index.js';
 
 // === MIDDLEWARES COMUNES ===
 export {

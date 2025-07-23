@@ -3,7 +3,7 @@
 import { Router } from "express";
 
 /** Controlador de autenticación */
-import authController from "../controllers/auth/auth.controller.js";
+import authController from "../features/authentication/controllers/auth.controller.js";
 
 /** Instancia del enrutador */
 const router = Router();

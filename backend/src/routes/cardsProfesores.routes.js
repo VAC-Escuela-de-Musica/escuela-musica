@@ -1,8 +1,8 @@
 "use strict";
 import express from "express";
 import cardsProfesoresController from "../controllers/cardsProfesores.controller.js";
-import { authenticateJWT, verifyJWT } from "../middlewares/auth/jwt.middleware.js";
-import { requireRole } from "../middlewares/auth/role.middleware.js";
+import { authenticateJWT, verifyJWT } from "../features/authentication/middlewares/jwt.middleware.js";
+import { requireRole } from "../features/authentication/middlewares/role.middleware.js";
 const ADMIN_ROLE = "administrador";
 const ASISTENTE_ROLE = "asistente";
 
