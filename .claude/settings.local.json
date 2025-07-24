@@ -4,7 +4,12 @@
       "Bash(mkdir:*)",
       "Bash(cp:*)",
       "Bash(timeout 10 npm run dev)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(npm run dev:*)",
+      "Bash(node fix-remaining-imports.js)",
+      "Bash(node:*)",
+      "Bash(timeout 15 npm run dev)"
     ],
     "deny": []
   }

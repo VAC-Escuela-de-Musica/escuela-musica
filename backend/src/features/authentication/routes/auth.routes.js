@@ -1,33 +1,24 @@
-"use strict";
+'use strict'
 
-import { Router } from "express";
-import { 
-  validateParams, 
-  validateQuery, 
-  validateBody, 
-  sanitizeInput,
-  validatePagination 
-} from "../../../middlewares/validation/index.js";
-import { 
-  idParamSchema, 
-  userFiltersSchema,
-  commonSchemas 
-} from "../../../core/schemas/common.schema.js";
-import { authLoginBodySchema } from "../../../core/schemas/auth.schema.js";
-import { 
-  extractJWT, 
-  verifyJWT, 
-  requireAuth, 
-  requireRoles 
-} from "../middlewares/index.js";
-import authController from "../controllers/auth.controller.js";
-import { HTTP_STATUS } from "../../../core/constants/index.js";
-import rateLimit from "express-rate-limit";
-import { config } from "../../../core/config/index.js";
+import { Router } from 'express'
+import {
+  validateParams,
+  validateQuery,
+  validateBody,
+  enhancedSanitizeInput,
+  validatePagination
+} from '../../../middlewares/validation/index.js'
+import { idParamSchema, userFiltersSchema, commonSchemas } from '../../../core/schemas/common.schema.js'
+import { authLoginBodySchema } from '../../../core/schemas/auth.schema.js'
+import { extractJWT, verifyJWT, requireAuthenticated, requireRole } from '../middlewares/index.js'
+import authController from '../controllers/auth.controller.js'
+import { HTTP_STATUS } from '../../../core/constants/index.js'
+import rateLimit from 'express-rate-limit'
+import { config } from '../../../core/config/index.js'
 
-const { login, logout, refresh } = authController;
+const { login, logout, refresh } = authController
 
-const router = Router();
+const router = Router()
 
 // Rate limiting específico para autenticación
 const authLimiter = rateLimit({
@@ -35,12 +26,12 @@ const authLimiter = rateLimit({
   max: config.rateLimit.auth.max,
   message: {
     success: false,
-    error: "Demasiados intentos de autenticación, intenta más tarde",
+    error: 'Demasiados intentos de autenticación, intenta más tarde',
     statusCode: HTTP_STATUS.TOO_MANY_REQUESTS
   },
   standardHeaders: true,
-  legacyHeaders: false,
-});
+  legacyHeaders: false
+})
 
 /**
  * @swagger
@@ -69,12 +60,12 @@ const authLimiter = rateLimit({
  *       429:
  *         description: Demasiados intentos
  */
-router.post("/login", 
+router.post('/login',
   authLimiter,
-  sanitizeInput(['email', 'password']),
+  enhancedSanitizeInput(['email', 'password']),
   validateBody(authLoginBodySchema),
   login
-);
+)
 
 /**
  * @swagger
@@ -90,11 +81,11 @@ router.post("/login",
  *       401:
  *         description: No autorizado
  */
-router.post("/logout", 
+router.post('/logout',
   extractJWT,
   verifyJWT,
   logout
-);
+)
 
 /**
  * @swagger
@@ -108,9 +99,9 @@ router.post("/logout",
  *       401:
  *         description: Token de refresh inválido
  */
-router.post("/refresh", 
+router.post('/refresh',
   authLimiter,
   refresh
-);
+)
 
-export default router;
+export default router

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const emailTemplateSchema = new mongoose.Schema({
   name: {
@@ -36,32 +36,32 @@ const emailTemplateSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-});
+})
 
 // Middleware para actualizar updatedAt
-emailTemplateSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
-});
+emailTemplateSchema.pre('save', function (next) {
+  this.updatedAt = Date.now()
+  next()
+})
 
 // Método para procesar variables en la plantilla
-emailTemplateSchema.methods.processTemplate = function(variables = {}) {
-  let processedContent = this.content;
-  let processedSubject = this.subject;
+emailTemplateSchema.methods.processTemplate = function (variables = {}) {
+  let processedContent = this.content
+  let processedSubject = this.subject
 
   // Reemplazar variables en el contenido
   Object.keys(variables).forEach(key => {
-    const regex = new RegExp(`{{${key}}}`, 'g');
-    processedContent = processedContent.replace(regex, variables[key]);
-    processedSubject = processedSubject.replace(regex, variables[key]);
-  });
+    const regex = new RegExp(`{{${key}}}`, 'g')
+    processedContent = processedContent.replace(regex, variables[key])
+    processedSubject = processedSubject.replace(regex, variables[key])
+  })
 
   return {
     subject: processedSubject,
     content: processedContent
-  };
-};
+  }
+}
 
-const EmailTemplate = mongoose.model('EmailTemplate', emailTemplateSchema);
+const EmailTemplate = mongoose.model('EmailTemplate', emailTemplateSchema)
 
-export default EmailTemplate; 
+export default EmailTemplate

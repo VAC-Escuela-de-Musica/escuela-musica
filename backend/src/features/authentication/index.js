@@ -1,18 +1,18 @@
-"use strict";
+'use strict'
 
 // Exportar controladores
-export { default as authController } from './controllers/auth.controller.js';
+export { default as authController } from './controllers/auth.controller.js'
 
 // Exportar servicios
-export { 
+export {
   login,
   refresh,
   verifyToken
-} from './services/authentication.service.js';
+} from './services/authentication.service.js'
 
 export {
   AuthorizationService
-} from './services/authorization.service.js';
+} from './services/authorization.service.js'
 
 // Exportar middlewares
 export {
@@ -26,7 +26,7 @@ export {
   requireAdminOrProfesor,
   requireAuthenticated,
   requireOwnershipOrAdmin
-} from './middlewares/index.js';
+} from './middlewares/index.js'
 
 // Exportar rutas
-export { default as authRoutes } from './routes/auth.routes.js';
+export { default as authRoutes } from './routes/auth.routes.js'

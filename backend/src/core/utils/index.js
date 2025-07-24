@@ -1,4 +1,4 @@
-"use strict";
+'use strict'
 
 // Exportar todas las utilidades de autenticación
 export {
@@ -6,14 +6,14 @@ export {
   isUserAdmin,
   isUserProfesor,
   canAccessResource
-} from './auth.util.js';
+} from './auth.util.js'
 
 // Exportar todas las utilidades de health check
 export {
   getSystemHealth,
   healthCheckController,
   getMinioHealth
-} from './health.util.js';
+} from './health.util.js'
 
 // Exportar todas las utilidades de validación
 export {
@@ -26,4 +26,4 @@ export {
   mongoIdValidation,
   createCommonSchemas,
   validateData
-} from './validation.util.js';
+} from './validation.util.js'

@@ -1,7 +1,7 @@
-"use strict";
+'use strict'
 
-import Joi from "joi";
-import { VALIDATION } from "../../constants/index.js";
+import Joi from 'joi'
+import { VALIDATION } from '../constants/index.js'
 
 /**
  * Schema para validar parámetros de ID
@@ -14,7 +14,7 @@ export const idParamSchema = Joi.object({
       'string.pattern.base': 'El ID debe ser un ObjectId válido de MongoDB',
       'any.required': 'El ID es requerido'
     })
-});
+})
 
 /**
  * Schema para validar parámetros de paginación
@@ -55,7 +55,7 @@ export const paginationSchema = Joi.object({
       'string.min': 'El término de búsqueda debe tener al menos 1 caracter',
       'string.max': 'El término de búsqueda no puede tener más de 100 caracteres'
     })
-});
+})
 
 /**
  * Schema para validar filtros de materiales
@@ -78,7 +78,7 @@ export const materialFiltersSchema = Joi.object({
     .iso()
     .min(Joi.ref('dateFrom'))
     .optional()
-}).concat(paginationSchema);
+}).concat(paginationSchema)
 
 /**
  * Schema para validar filtros de usuarios
@@ -92,7 +92,7 @@ export const userFiltersSchema = Joi.object({
   email: Joi.string()
     .email()
     .optional()
-}).concat(paginationSchema);
+}).concat(paginationSchema)
 
 /**
  * Schema base para validar strings comunes
@@ -109,7 +109,7 @@ export const commonSchemas = {
       'string.max': `El email no puede tener más de ${VALIDATION.EMAIL_MAX_LENGTH} caracteres`,
       'any.required': 'El email es requerido'
     }),
-  
+
   password: Joi.string()
     .min(VALIDATION.PASSWORD_MIN_LENGTH)
     .max(128)
@@ -121,7 +121,7 @@ export const commonSchemas = {
       'string.pattern.base': 'La contraseña debe tener al menos una mayúscula, una minúscula y un número',
       'any.required': 'La contraseña es requerida'
     }),
-  
+
   username: Joi.string()
     .alphanum()
     .min(VALIDATION.USERNAME_MIN_LENGTH)
@@ -134,7 +134,7 @@ export const commonSchemas = {
       'string.max': `El nombre de usuario no puede tener más de ${VALIDATION.USERNAME_MAX_LENGTH} caracteres`,
       'any.required': 'El nombre de usuario es requerido'
     }),
-  
+
   rut: Joi.string()
     .pattern(VALIDATION.RUT_REGEX)
     .required()
@@ -142,4 +142,4 @@ export const commonSchemas = {
       'string.pattern.base': 'El RUT debe tener el formato XXXXXXXX-X',
       'any.required': 'El RUT es requerido'
     })
-};
+}

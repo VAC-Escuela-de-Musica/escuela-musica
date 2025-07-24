@@ -1,7 +1,7 @@
-"use strict";
+'use strict'
 
-import jwt from "jsonwebtoken";
-import { ACCESS_JWT_SECRET } from "../config/configEnv.js";
+import jwt from 'jsonwebtoken'
+import { ACCESS_JWT_SECRET } from '../config/configEnv.js'
 
 /**
  * Verifica un token JWT desde la URL y actualiza el objeto request
@@ -9,37 +9,37 @@ import { ACCESS_JWT_SECRET } from "../config/configEnv.js";
  * @param {string} token - Token JWT a verificar
  * @returns {boolean} - true si la verificación es exitosa, false en caso contrario
  */
-export function verifyTokenFromUrl(req, token) {
+export function verifyTokenFromUrl (req, token) {
   // Si ya hay datos de usuario del middleware, usar esos
   if (req.user?.email) {
-    return true;
+    return true
   }
-  
+
   // Si hay token en la URL, verificarlo
   if (token) {
     try {
-      const decoded = jwt.verify(token, ACCESS_JWT_SECRET);
-      
+      const decoded = jwt.verify(token, ACCESS_JWT_SECRET)
+
       // Asignar datos del token tanto al formato legacy como al nuevo
-      req.email = decoded.email;
-      req.roles = decoded.roles || [];
-      
+      req.email = decoded.email
+      req.roles = decoded.roles || []
+
       // También crear el objeto user para compatibilidad
       req.user = {
         email: decoded.email,
         roles: decoded.roles || [],
         id: decoded.id || decoded._id
-      };
-      
-      return true;
+      }
+
+      return true
     } catch (tokenError) {
-      console.error(`❌ Error validando token URL: ${tokenError.message}`);
-      return false;
+      console.error(`❌ Error validando token URL: ${tokenError.message}`)
+      return false
     }
   }
-  
+
   // Si no hay token ni datos de usuario
-  return false;
+  return false
 }
 
 /**
@@ -47,9 +47,9 @@ export function verifyTokenFromUrl(req, token) {
  * @param {Object} user - Objeto usuario con roles
  * @returns {boolean} - true si es administrador
  */
-export function isUserAdmin(user) {
-  if (!user || !user.roles) return false;
-  return user.roles.includes('admin') || user.roles.includes('administrador');
+export function isUserAdmin (user) {
+  if (!user || !user.roles) return false
+  return user.roles.includes('admin') || user.roles.includes('administrador')
 }
 
 /**
@@ -57,9 +57,9 @@ export function isUserAdmin(user) {
  * @param {Object} user - Objeto usuario con roles
  * @returns {boolean} - true si es profesor
  */
-export function isUserProfesor(user) {
-  if (!user || !user.roles) return false;
-  return user.roles.includes('profesor') || user.roles.includes('teacher');
+export function isUserProfesor (user) {
+  if (!user || !user.roles) return false
+  return user.roles.includes('profesor') || user.roles.includes('teacher')
 }
 
 /**
@@ -68,14 +68,14 @@ export function isUserProfesor(user) {
  * @param {string} resourceOwner - Email del propietario del recurso
  * @returns {boolean} - true si tiene acceso
  */
-export function canAccessResource(req, resourceOwner) {
-  const userEmail = req.email || req.user?.email;
-  const userRoles = req.roles || req.user?.roles || [];
-  
+export function canAccessResource (req, resourceOwner) {
+  const userEmail = req.email || req.user?.email
+  const userRoles = req.roles || req.user?.roles || []
+
   // Si es el propietario del recurso
-  if (userEmail === resourceOwner) return true;
-  
+  if (userEmail === resourceOwner) return true
+
   // Si es admin o profesor, puede acceder
-  const user = { email: userEmail, roles: userRoles };
-  return isUserAdmin(user) || isUserProfesor(user);
+  const user = { email: userEmail, roles: userRoles }
+  return isUserAdmin(user) || isUserProfesor(user)
 }

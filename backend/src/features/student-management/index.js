@@ -11,10 +11,10 @@ export {
   getAlumnosById,
   updateAlumnos,
   deleteAlumnos
-} from './controllers/alumnos.controller.js';
+} from './controllers/alumnos.controller.js'
 
 // Controlador completo como objeto
-export { default as AlumnosController } from './controllers/alumnos.controller.js';
+export { default as AlumnosController } from './controllers/alumnos.controller.js'
 
 // === SERVICIO ===
 // Funciones individuales del servicio (con prefijo para evitar conflictos)
@@ -24,11 +24,11 @@ export {
   getAlumnosById as getAlumnosByIdService,
   updateAlumnos as updateAlumnosService,
   deleteAlumnos as deleteAlumnosService
-} from './services/alumnos.service.js';
+} from './services/alumnos.service.js'
 
 // Servicio completo como objeto
-export { default as AlumnosService } from './services/alumnos.service.js';
+export { default as AlumnosService } from './services/alumnos.service.js'
 
 // === RUTAS ===
 // Rutas/Router
-export { default as AlumnosRoutes } from './routes/alumnos.routes.js';
+export { default as AlumnosRoutes } from './routes/alumnos.routes.js'

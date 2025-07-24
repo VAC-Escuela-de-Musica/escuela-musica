@@ -4,19 +4,19 @@
  */
 
 // Middlewares de JWT
-export { extractJWT, verifyJWT, authenticateJWT } from './jwt.middleware.js';
+export { extractJWT, verifyJWT, authenticateJWT } from './jwt.middleware.js'
 
 // Middleware de autenticación opcional
-export { optionalAuth } from './optional.middleware.js';
+export { optionalAuth } from './optional.middleware.js'
 
 // Middlewares de usuario
-export { loadUserData, checkUserStatus } from './user.middleware.js';
+export { loadUserData, checkUserStatus } from './user.middleware.js'
 
 // Middlewares de roles y autorización
-export { 
-  requireRole, 
-  requireAdmin, 
-  requireAdminOrProfesor, 
+export {
+  requireRole,
+  requireAdmin,
+  requireAdminOrProfesor,
   requireAuthenticated,
-  requireOwnershipOrAdmin 
-} from './role.middleware.js';
+  requireOwnershipOrAdmin
+} from './role.middleware.js'

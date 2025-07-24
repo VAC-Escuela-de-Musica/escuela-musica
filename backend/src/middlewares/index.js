@@ -9,21 +9,21 @@ export {
   extractJWT,
   verifyJWT,
   authenticateJWT,
-  
+
   // Autenticación opcional
   optionalAuth,
-  
+
   // Usuario
   loadUserData,
   checkUserStatus,
-  
+
   // Roles y Autorización
   requireRole,
   requireAdmin,
   requireAdminOrProfesor,
   requireAuthenticated,
   requireOwnershipOrAdmin
-} from '../features/authentication/middlewares/index.js';
+} from '../features/authentication/middlewares/index.js'
 
 // === VALIDACIÓN ===
 export {
@@ -32,7 +32,7 @@ export {
   validateMongoId,
   validateRequiredFields,
   sanitizeInput,
-  
+
   // Validación de archivos
   validateFileType,
   validateImageFile,
@@ -41,7 +41,7 @@ export {
   validateFileSize,
   requireFile,
   validateFileName
-} from './validation/index.js';
+} from './validation/index.js'
 
 // === MANEJO DE ERRORES ===
 export {
@@ -49,7 +49,7 @@ export {
   notFoundHandler,
   asyncHandler,
   accessErrorLogger
-} from './error/index.js';
+} from './error/index.js'
 
 // === MANEJO DE ARCHIVOS ===
 export {
@@ -59,7 +59,7 @@ export {
   fileSecurityMiddleware,
   fileCacheMiddleware,
   fileAccessLogger
-} from '../features/file-system/middlewares/index.js';
+} from '../features/file-system/middlewares/index.js'
 
 // === MIDDLEWARES COMUNES ===
 export {
@@ -68,4 +68,4 @@ export {
   performanceMonitor,
   securityHeaders,
   requestInfo
-} from './common.middleware.js';
+} from './common.middleware.js'

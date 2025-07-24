@@ -1,5 +1,5 @@
-"use strict";
+'use strict'
 
 // Exportar todas las constantes
-export * from './app.constants.js';
-export * from './roles.constants.js';
+export * from './app.constants.js'
+export * from './roles.constants.js'

@@ -1,8 +1,8 @@
-"use strict";
+'use strict'
 
-import jwt from "jsonwebtoken";
-import { ACCESS_JWT_SECRET } from "../../../core/config/configEnv.js";
-import { handleError } from "../../../utils/errorHandler.util.js";
+import jwt from 'jsonwebtoken'
+import { ACCESS_JWT_SECRET } from '../../../core/config/configEnv.js'
+import { handleError } from '../../../core/utils/errorHandler.util.js'
 
 /**
  * Middleware de autenticación opcional para rutas públicas de archivos
@@ -14,47 +14,47 @@ import { handleError } from "../../../utils/errorHandler.util.js";
 const optionalAuth = (req, res, next) => {
   try {
     // Intentar obtener token del header Authorization
-    const authHeader = req.headers.authorization || req.headers.Authorization;
-    let token = null;
+    const authHeader = req.headers.authorization || req.headers.Authorization
+    let token = null
 
-    if (authHeader?.startsWith("Bearer ")) {
-      token = authHeader.split(" ")[1];
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1]
     }
 
     // Si no hay token en header, buscar en query params
     if (!token && req.query.token) {
-      token = req.query.token;
+      token = req.query.token
     }
 
     // Si hay token, intentar validarlo
     if (token) {
       try {
-        const decoded = jwt.verify(token, ACCESS_JWT_SECRET);
-        
+        const decoded = jwt.verify(token, ACCESS_JWT_SECRET)
+
         // Establecer datos del usuario para compatibilidad con ambos sistemas
-        req.email = decoded.email;
-        req.roles = decoded.roles || [];
-        
+        req.email = decoded.email
+        req.roles = decoded.roles || []
+
         req.user = {
           email: decoded.email,
           roles: decoded.roles || [],
           id: decoded.id || decoded._id
-        };
-        
-        console.log(`✅ Usuario autenticado para archivo: ${decoded.email}`);
+        }
+
+        console.log(`✅ Usuario autenticado para archivo: ${decoded.email}`)
       } catch (error) {
-        console.warn(`⚠️ Token inválido en request de archivo: ${error.message}`);
+        console.warn(`⚠️ Token inválido en request de archivo: ${error.message}`)
         // No detener el request, permitir acceso a materiales públicos
       }
     }
 
     // Continuar siempre, incluso sin token válido (para materiales públicos)
-    next();
+    next()
   } catch (error) {
-    handleError(error, "optional.auth -> optionalAuth");
+    handleError(error, 'optional.auth -> optionalAuth')
     // En caso de error, continuar sin autenticación
-    next();
+    next()
   }
-};
+}
 
-export { optionalAuth };
+export { optionalAuth }

@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model } from 'mongoose'
 
 const materialSchema = new Schema({
   nombre: { type: String, required: true },
@@ -18,8 +18,8 @@ const materialSchema = new Schema({
     fecha: { type: Date, default: Date.now },
     ip: String
   }]
-});
+})
 
-const Material = model("Material", materialSchema);
+const Material = model('Material', materialSchema)
 
-export default Material;
+export default Material

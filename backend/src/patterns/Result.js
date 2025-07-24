@@ -3,11 +3,11 @@
  * Elimina inconsistencias entre [data, error] y {success, data, error}
  */
 export class Result {
-  constructor(success, data = null, error = null, statusCode = 200) {
-    this.success = success;
-    this.data = data;
-    this.error = error;
-    this.statusCode = statusCode;
+  constructor (success, data = null, error = null, statusCode = 200) {
+    this.success = success
+    this.data = data
+    this.error = error
+    this.statusCode = statusCode
   }
 
   /**
@@ -16,8 +16,8 @@ export class Result {
    * @param {number} statusCode - Código de estado HTTP
    * @returns {Result}
    */
-  static success(data, statusCode = 200) {
-    return new Result(true, data, null, statusCode);
+  static success (data, statusCode = 200) {
+    return new Result(true, data, null, statusCode)
   }
 
   /**
@@ -26,8 +26,8 @@ export class Result {
    * @param {number} statusCode - Código de estado HTTP
    * @returns {Result}
    */
-  static error(error, statusCode = 400) {
-    return new Result(false, null, error, statusCode);
+  static error (error, statusCode = 400) {
+    return new Result(false, null, error, statusCode)
   }
 
   /**
@@ -35,8 +35,8 @@ export class Result {
    * @param {string} error - Mensaje de error
    * @returns {Result}
    */
-  static internalError(error) {
-    return new Result(false, null, error, 500);
+  static internalError (error) {
+    return new Result(false, null, error, 500)
   }
 
   /**
@@ -44,8 +44,8 @@ export class Result {
    * @param {string} message - Mensaje personalizado
    * @returns {Result}
    */
-  static notFound(message = "Recurso no encontrado") {
-    return new Result(false, null, message, 404);
+  static notFound (message = 'Recurso no encontrado') {
+    return new Result(false, null, message, 404)
   }
 
   /**
@@ -53,8 +53,8 @@ export class Result {
    * @param {string} message - Mensaje personalizado
    * @returns {Result}
    */
-  static unauthorized(message = "No autorizado") {
-    return new Result(false, null, message, 401);
+  static unauthorized (message = 'No autorizado') {
+    return new Result(false, null, message, 401)
   }
 
   /**
@@ -62,24 +62,24 @@ export class Result {
    * @param {string} message - Mensaje personalizado
    * @returns {Result}
    */
-  static forbidden(message = "Acceso denegado") {
-    return new Result(false, null, message, 403);
+  static forbidden (message = 'Acceso denegado') {
+    return new Result(false, null, message, 403)
   }
 
   /**
    * Verificar si el resultado es exitoso
    * @returns {boolean}
    */
-  isSuccess() {
-    return this.success;
+  isSuccess () {
+    return this.success
   }
 
   /**
    * Verificar si el resultado es de error
    * @returns {boolean}
    */
-  isError() {
-    return !this.success;
+  isError () {
+    return !this.success
   }
 
   /**
@@ -87,11 +87,11 @@ export class Result {
    * @returns {*}
    * @throws {Error}
    */
-  getValue() {
+  getValue () {
     if (this.isError()) {
-      throw new Error(this.error);
+      throw new Error(this.error)
     }
-    return this.data;
+    return this.data
   }
 
   /**
@@ -99,8 +99,8 @@ export class Result {
    * @param {*} defaultValue - Valor por defecto
    * @returns {*}
    */
-  getValueOrDefault(defaultValue) {
-    return this.isSuccess() ? this.data : defaultValue;
+  getValueOrDefault (defaultValue) {
+    return this.isSuccess() ? this.data : defaultValue
   }
 
   /**
@@ -108,16 +108,16 @@ export class Result {
    * @param {Function} transformer - Función de transformación
    * @returns {Result}
    */
-  map(transformer) {
+  map (transformer) {
     if (this.isError()) {
-      return this;
+      return this
     }
-    
+
     try {
-      const transformedData = transformer(this.data);
-      return Result.success(transformedData, this.statusCode);
+      const transformedData = transformer(this.data)
+      return Result.success(transformedData, this.statusCode)
     } catch (error) {
-      return Result.error(error.message, 500);
+      return Result.error(error.message, 500)
     }
   }
 
@@ -126,15 +126,15 @@ export class Result {
    * @param {Function} operation - Operación que retorna Result
    * @returns {Result}
    */
-  flatMap(operation) {
+  flatMap (operation) {
     if (this.isError()) {
-      return this;
+      return this
     }
-    
+
     try {
-      return operation(this.data);
+      return operation(this.data)
     } catch (error) {
-      return Result.error(error.message, 500);
+      return Result.error(error.message, 500)
     }
   }
 
@@ -142,14 +142,14 @@ export class Result {
    * Convertir a JSON para respuestas HTTP
    * @returns {Object}
    */
-  toJSON() {
+  toJSON () {
     return {
       success: this.success,
       data: this.data,
       error: this.error,
       statusCode: this.statusCode
-    };
+    }
   }
 }
 
-export default Result;
+export default Result

@@ -1,31 +1,30 @@
-"use strict";
+'use strict'
 
-import minioService from "../../features/file-system/services/minio.service.js";
+import minioService from '../../features/file-system/services/minio.service.js'
 
 /**
  * Realiza un health check completo del sistema
  * @returns {Object} - Objeto con información de salud del sistema
  */
-export async function getSystemHealth() {
+export async function getSystemHealth () {
   try {
-    const minioHealth = await minioService.healthCheck();
-    
+    const minioHealth = await minioService.healthCheck()
+
     const health = {
       minio: minioHealth,
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version || '1.0.0',
       uptime: process.uptime(),
       memory: process.memoryUsage()
-    };
-    
+    }
+
     return {
       success: minioHealth.status === 'healthy',
       data: health,
       statusCode: minioHealth.status === 'healthy' ? 200 : 503
-    };
-    
+    }
   } catch (error) {
-    console.error('Error en health check del sistema:', error);
+    console.error('Error en health check del sistema:', error)
     return {
       success: false,
       data: {
@@ -34,7 +33,7 @@ export async function getSystemHealth() {
         version: process.env.npm_package_version || '1.0.0'
       },
       statusCode: 500
-    };
+    }
   }
 }
 
@@ -43,22 +42,21 @@ export async function getSystemHealth() {
  * @param {Object} req - Request object
  * @param {Object} res - Response object
  */
-export async function healthCheckController(req, res) {
+export async function healthCheckController (req, res) {
   try {
-    const healthResult = await getSystemHealth();
-    
+    const healthResult = await getSystemHealth()
+
     res.status(healthResult.statusCode).json({
       success: healthResult.success,
       data: healthResult.data
-    });
-    
+    })
   } catch (error) {
-    console.error('Error en health check controller:', error);
+    console.error('Error en health check controller:', error)
     res.status(500).json({
       success: false,
-      error: "Error verificando salud del sistema",
+      error: 'Error verificando salud del sistema',
       timestamp: new Date().toISOString()
-    });
+    })
   }
 }
 
@@ -66,15 +64,15 @@ export async function healthCheckController(req, res) {
  * Health check básico de MinIO solamente
  * @returns {Object} - Estado de MinIO
  */
-export async function getMinioHealth() {
+export async function getMinioHealth () {
   try {
-    return await minioService.healthCheck();
+    return await minioService.healthCheck()
   } catch (error) {
-    console.error('Error verificando salud de MinIO:', error);
+    console.error('Error verificando salud de MinIO:', error)
     return {
       status: 'unhealthy',
       error: error.message,
       timestamp: new Date().toISOString()
-    };
+    }
   }
 }
