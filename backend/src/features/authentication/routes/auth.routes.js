@@ -10,13 +10,13 @@ import {
 } from '../../../middlewares/validation/index.js'
 import { idParamSchema, userFiltersSchema, commonSchemas } from '../../../core/schemas/common.schema.js'
 import { authLoginBodySchema } from '../../../core/schemas/auth.schema.js'
-import { extractJWT, verifyJWT, requireAuthenticated, requireRole } from '../middlewares/index.js'
+import { extractJWT, verifyJWT, requireAuthenticated, requireRole, loadUserData } from '../middlewares/index.js'
 import authController from '../controllers/auth.controller.js'
 import { HTTP_STATUS } from '../../../core/constants/index.js'
 import rateLimit from 'express-rate-limit'
 import { config } from '../../../core/config/index.js'
 
-const { login, logout, refresh } = authController
+const { login, logout, refresh, verify } = authController
 
 const router = Router()
 
@@ -102,6 +102,27 @@ router.post('/logout',
 router.post('/refresh',
   authLimiter,
   refresh
+)
+
+/**
+ * @swagger
+ * /auth/verify:
+ *   get:
+ *     summary: Verificar token de acceso
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Token válido
+ *       401:
+ *         description: Token inválido
+ */
+router.get('/verify',
+  extractJWT,
+  verifyJWT,
+  loadUserData,
+  verify
 )
 
 export default router

@@ -58,7 +58,7 @@ export const validateQuery = (schema) => {
     }
 
     // Asignar valores validados y sanitizados
-    req.query = value
+    Object.assign(req.query, value)
     next()
   }
 }
@@ -133,7 +133,7 @@ export const sanitizeInput = (fields = []) => {
 
     // Sanitizar query
     if (req.query) {
-      req.query = sanitizeObject(req.query)
+      Object.assign(req.query, sanitizeObject(req.query))
     }
 
     next()
@@ -171,8 +171,7 @@ export const validatePagination = () => {
     }
 
     // Asignar valores validados
-    req.query.page = pageNum
-    req.query.limit = limitNum
+    Object.assign(req.query, { page: pageNum, limit: limitNum })
 
     next()
   }
