@@ -11,6 +11,14 @@ class ApiService {
     this.defaultHeaders = {
       'Content-Type': 'application/json'
     };
+    
+    // Bind methods to preserve 'this' context
+    this.get = this.get.bind(this);
+    this.post = this.post.bind(this);
+    this.put = this.put.bind(this);
+    this.patch = this.patch.bind(this);
+    this.delete = this.delete.bind(this);
+    this.request = this.request.bind(this);
   }
 
   /**

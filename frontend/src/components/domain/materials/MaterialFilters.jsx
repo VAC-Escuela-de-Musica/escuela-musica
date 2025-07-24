@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useMaterials } from '../../../hooks/useMaterials.js';
 import { useAuth } from '../../../context/AuthContext.jsx';
 import { logger } from '../../../utils/logger.js';
-import './darkmode.css';
 import './MaterialFilters.styles.css';
 import '../layout/darkmode.css';
 

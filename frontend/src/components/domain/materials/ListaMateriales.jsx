@@ -3,7 +3,7 @@ import { useMaterials } from '../../../hooks/useMaterials.js';
 import { useAuth } from '../../../context/AuthContext.jsx';
 import { formatDate, formatFileSize, getFileTypeFromExtension, getFileTypeIcon } from '../../../utils/helpers.js';
 import ImageViewer from './ImageViewer.jsx';
-import SubirMultiplesMateriales from './SubirMultiplesMateriales.jsx';
+import SubirMaterial from './SubirMaterial.jsx';
 import { 
   Button, 
   Dialog, 
@@ -572,7 +572,7 @@ const ListaMateriales = () => {
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ pt: 2, width: '100%', overflowY: 'auto', maxHeight: '70vh' }}>
-          <SubirMultiplesMateriales 
+          <SubirMaterial 
             onSuccess={handleUploadSuccess}
             onError={handleUploadError}
           />

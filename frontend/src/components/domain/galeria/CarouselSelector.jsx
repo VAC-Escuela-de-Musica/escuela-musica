@@ -21,6 +21,7 @@ import {
   Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useReordering } from '../../../hooks/configurable/useReordering.js';
+import { API_ENDPOINTS, API_HEADERS } from '../../../config/api.js';
 
 /**
  * Selector especializado para configurar el carrusel
@@ -48,9 +49,8 @@ const CarouselSelector = () => {
 
   const fetchGaleriaImages = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/galeria`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const response = await fetch(API_ENDPOINTS.galeria.list, {
+        headers: API_HEADERS.withAuth()
       });
       
       if (!response.ok) throw new Error('Error al cargar galería');

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useDebounce } from '../base/useDebounce.js';
 
 /**
@@ -63,24 +63,19 @@ export const useSearchFilter = (items = [], searchFields = [], options = {}) => 
     setShowSearch(false);
   }, []);
 
-  // Componente de búsqueda básico
-  const SearchComponent = useCallback(() => {
-    return (
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => handleSearchChange(e.target.value)}
-        placeholder={`Buscar por ${searchFields.join(', ')}...`}
-        style={{
-          width: '100%',
-          padding: '8px 12px',
-          border: '1px solid #ccc',
-          borderRadius: '4px',
-          fontSize: '14px'
-        }}
-      />
-    );
-  }, [query, searchFields, handleSearchChange]);
+  const searchProps = useMemo(() => ({
+    type: "text",
+    value: query,
+    onChange: (e) => handleSearchChange(e.target.value),
+    placeholder: `Buscar por ${searchFields.join(', ')}...`,
+    style: {
+      width: '100%',
+      padding: '8px 12px',
+      border: '1px solid #ccc',
+      borderRadius: '4px',
+      fontSize: '14px'
+    }
+  }), [query, searchFields, handleSearchChange]);
 
   // Estadísticas de búsqueda
   const searchStats = useMemo(() => ({
@@ -103,8 +98,8 @@ export const useSearchFilter = (items = [], searchFields = [], options = {}) => 
     toggleSearch,
     clearSearch,
     
-    // Componentes
-    SearchComponent,
+    // Props for search input (instead of JSX component)
+    searchProps,
     
     // Configuración
     options: {

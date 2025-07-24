@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import heroImg from '../../../assets/hero.jpg';
 import ActionAreaCard from './Card.jsx'; // Asegúrate de que la ruta sea correcta

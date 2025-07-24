@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../../../services/auth.service.js';
+import authService from '../../../services/auth.service.js';
 
 function LoginForm() {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ function LoginForm() {
   } = useForm();
 
   const onSubmit = (data) => {
-    login(data).then(() => {
+    authService.login(data.email, data.password).then(() => {
       navigate("/");
     });
   };

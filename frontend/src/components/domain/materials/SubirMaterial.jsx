@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { useMaterials } from '../../../hooks/useMaterials.js';
 import { useAuth } from '../../../context/AuthContext.jsx';
 import { logger } from '../../../utils/logger.js';
-import './darkmode.css';
+import '../layout/darkmode.css';
 import './SubirMaterial.styles.css';
 
 const SubirMaterial = () => {

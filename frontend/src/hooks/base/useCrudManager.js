@@ -65,8 +65,8 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
         const response = await service.getAll(filters);
         data = response.data || response;
       } else {
-        // Usar API service genérico
-        const response = await api.execute(apiService.get, endpoint);
+        // Usar API service genérico - FIX: Bind the method properly
+        const response = await api.execute(() => apiService.get(endpoint), endpoint);
         data = response.data || response;
       }
       
@@ -96,8 +96,8 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
         // Usar service especializado
         result = await service.create(data);
       } else {
-        // Usar API service genérico
-        result = await api.execute(apiService.post, endpoint, data);
+        // Usar API service genérico - FIX: Bind the method properly
+        result = await api.execute(() => apiService.post(endpoint, data));
       }
 
       // Update optimista
@@ -138,8 +138,8 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
         // Usar service especializado
         result = await service.update(id, data);
       } else {
-        // Usar API service genérico
-        result = await api.execute(apiService.put, `${endpoint}/${id}`, data);
+        // Usar API service genérico - FIX: Bind the method properly
+        result = await api.execute(() => apiService.put(`${endpoint}/${id}`, data));
       }
 
       // Update optimista
@@ -175,8 +175,8 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
         // Usar service especializado
         result = await service.delete(id);
       } else {
-        // Usar API service genérico
-        result = await api.execute(apiService.delete, `${endpoint}/${id}`);
+        // Usar API service genérico - FIX: Bind the method properly
+        result = await api.execute(() => apiService.delete(`${endpoint}/${id}`));
       }
 
       // Update optimista
@@ -198,7 +198,7 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
       errorHandler.captureError(error, { operation: 'deleteItem', id });
       throw error;
     }
-  }, [endpoint, itemName, service, api, optimisticUpdates, onSuccess, errorHandler, fetchItems]);
+  }, [endpoint, itemName, service, validator, api, optimisticUpdates, onSuccess, errorHandler, fetchItems]);
 
   /**
    * Reordenar items (si está habilitado)

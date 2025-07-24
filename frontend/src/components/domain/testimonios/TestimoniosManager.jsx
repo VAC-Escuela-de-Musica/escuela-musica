@@ -4,13 +4,15 @@ import {
   Typography,
   Button,
   Fab,
-  Tooltip
+  Tooltip,
+  Chip // Add this missing import
 } from '@mui/material';
 import {
   Add as AddIcon,
   SwapVert as ReorderIcon
+
 } from '@mui/icons-material';
-import { DomainManager } from '../../base/DomainManager.jsx';
+import DomainManager from '../../base/DomainManager.jsx'; // Changed from named import to default import
 import TestimonioForm from './TestimonioForm.jsx';
 import TestimonioList from './TestimonioList.jsx';
 import { TestimoniosService } from '../../../services/api/testimonios.service.js';

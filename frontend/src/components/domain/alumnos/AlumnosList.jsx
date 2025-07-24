@@ -4,7 +4,7 @@ import {
   updateAlumno,
   createAlumno,
   deleteAlumno,
-} from "../services/alumnos.service";
+} from "../../../services/alumnos.service";
 import AlumnoForm from "./AlumnoForm/AlumnoForm";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";

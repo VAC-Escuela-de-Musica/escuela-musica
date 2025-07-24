@@ -38,7 +38,16 @@ export const API_ENDPOINTS = {
     delete: (id) => `${API_BASE_URL}/api/users/${id}`,
     update: (id) => `${API_BASE_URL}/api/users/${id}`,
     getById: (id) => `${API_BASE_URL}/api/users/${id}`
-  }
+  },
+  
+  // Galería
+  galeria: {
+    list: `${API_BASE_URL}/api/galeria`,
+    active: `${API_BASE_URL}/api/galeria/active`,
+    activeWithUrls: `${API_BASE_URL}/api/galeria/active-with-urls`,
+    getById: (id) => `${API_BASE_URL}/api/galeria/${id}`,
+    imageUrl: (id) => `${API_BASE_URL}/api/galeria/${id}/url`
+  },
 };
 
 // Función para obtener el token CSRF del contexto de autenticación

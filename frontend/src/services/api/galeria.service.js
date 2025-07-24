@@ -20,7 +20,7 @@ export class GaleriaService {
     if (filters.search) params.append('search', filters.search);
     
     const queryString = params.toString();
-    const endpoint = queryString ? `/galeria?${queryString}` : '/galeria';
+    const endpoint = queryString ? `/api/galeria?${queryString}` : '/api/galeria';
     
     return await apiService.get(endpoint);
   }
@@ -31,7 +31,7 @@ export class GaleriaService {
    * @returns {Promise<Object>}
    */
   static async getImageById(id) {
-    return await apiService.get(`/galeria/${id}`);
+    return await apiService.get(`/api/galeria/${id}`);
   }
 
   /**
@@ -61,12 +61,12 @@ export class GaleriaService {
         formData.append('tags', JSON.stringify(imageData.tags));
       }
 
-      return await apiService.post('/galeria', formData, {
+      return await apiService.post('/api/galeria', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
     }
 
-    return await apiService.post('/galeria', imageData);
+    return await apiService.post('/api/galeria', imageData);
   }
 
   /**

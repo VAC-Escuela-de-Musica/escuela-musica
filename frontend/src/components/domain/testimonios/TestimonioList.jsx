@@ -23,8 +23,8 @@ import {
   ArrowDownward as DownIcon,
   DragIndicator as DragIcon
 } from '@mui/icons-material';
-import { ReorderableList } from '../../configurable/ReorderableList.jsx';
-import { StatusToggle } from '../../configurable/StatusToggle.jsx';
+import ReorderableList from '../../configurable/ReorderableList.jsx'; // Changed from named import to default import
+import StatusToggle from '../../configurable/StatusToggle.jsx'; // Already fixed
 
 /**
  * Lista especializada para testimonios - Capa 3
