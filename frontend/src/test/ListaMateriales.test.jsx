@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
-import ListaMateriales from '../components/ListaMateriales';
+import ListaMateriales from '../components/domain/materials/ListaMateriales';
 
 // Mock de los hooks
 const mockUseMaterials = vi.fn();
@@ -37,7 +37,7 @@ vi.mock('../components/ImageViewer', () => ({
   )
 }));
 
-vi.mock('../components/MaterialFilters', () => ({
+vi.mock('../components/domain/materials/MaterialFilters', () => ({
   default: ({ onFilterChange, loading }) => (
     <div data-testid="material-filters">
       <button onClick={() => onFilterChange({ searchTerm: 'test' })}>

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
-import SubirMaterial from '../components/SubirMaterial';
+import SubirMaterial from '../components/domain/materials/SubirMaterial';
 import useAuth from '../hooks/useAuth';
 import useMaterials from '../hooks/useMaterials';
 

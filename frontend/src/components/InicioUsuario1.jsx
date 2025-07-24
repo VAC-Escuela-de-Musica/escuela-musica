@@ -1,30 +1,32 @@
 import React, { Suspense } from "react";
-import Box from "@mui/material/Box";
-import Drawer from "@mui/material/Drawer";
-import AppBar from "@mui/material/AppBar";
-import CssBaseline from "@mui/material/CssBaseline";
-import Toolbar from "@mui/material/Toolbar";
-import List from "@mui/material/List";
-import Typography from "@mui/material/Typography";
-import Divider from "@mui/material/Divider";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import CircularProgress from "@mui/material/CircularProgress";
+import {
+  Box,
+  Drawer,
+  AppBar,
+  CssBaseline,
+  Toolbar,
+  List,
+  Typography,
+  Divider,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  CircularProgress,
+} from "@mui/material";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
 import LogoutIcon from "@mui/icons-material/Logout";
-
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
-const UserManager = React.lazy(() => import("./UserManager"));
-const CardsProfesoresManager = React.lazy(() => import("./CardsProfesoresManager"));
-const TestimoniosManager = React.lazy(() => import("./TestimoniosManager"));
-const GaleriaManager = React.lazy(() => import("./GaleriaManager"));
-const RepositorioProfesor = React.lazy(() => import("./RepositorioProfesor"));
-const MensajeriaManager = React.lazy(() => import("./MensajeriaManager"));
-const AlumnosList = React.lazy(() => import("./AlumnosList"));
+const UserManager = React.lazy(() => import("./domain/users/UserManager"));
+// Imports que necesitan actualización:
+const CardsProfesoresManager = React.lazy(() => import("./domain/profesores/CardsProfesoresManager"));
+const RepositorioProfesor = React.lazy(() => import("./domain/materials/RepositorioProfesor"));
+const MensajeriaManager = React.lazy(() => import("./domain/messaging/MensajeriaManager"));
+const AlumnosList = React.lazy(() => import("./domain/alumnos/AlumnosList"));
+const TestimoniosManager = React.lazy(() => import("./domain/testimonios/TestimoniosManager"));
+const GaleriaManager = React.lazy(() => import("./domain/galeria/GaleriaManager"));
 const drawerWidth = 240;
 
 // Professional loading component
@@ -265,3 +267,4 @@ export default function ClippedDrawer() {
     </Box>
   );
 }
+

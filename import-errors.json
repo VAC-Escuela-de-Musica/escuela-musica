@@ -1,0 +1,44 @@
+{
+  "errors": [
+    {
+      "file": "components\\domain\\materials\\ImageViewer.jsx",
+      "importPath": "./darkmode.css",
+      "suggestion": null
+    },
+    {
+      "file": "components\\domain\\materials\\ImageViewer.jsx",
+      "importPath": "./darkmode.css",
+      "suggestion": null
+    },
+    {
+      "file": "components\\domain\\materials\\ListaMateriales.jsx",
+      "importPath": "./SubirMultiplesMateriales.jsx",
+      "suggestion": null
+    },
+    {
+      "file": "components\\domain\\materials\\MaterialFilters.jsx",
+      "importPath": "./darkmode.css",
+      "suggestion": null
+    },
+    {
+      "file": "components\\domain\\materials\\MaterialFilters.jsx",
+      "importPath": "./darkmode.css",
+      "suggestion": null
+    },
+    {
+      "file": "components\\domain\\materials\\SubirMaterial.jsx",
+      "importPath": "./darkmode.css",
+      "suggestion": null
+    },
+    {
+      "file": "components\\domain\\materials\\SubirMaterial.jsx",
+      "importPath": "./darkmode.css",
+      "suggestion": null
+    },
+    {
+      "file": "routes\\Root.jsx",
+      "importPath": "../services/auth.service",
+      "suggestion": null
+    }
+  ]
+}

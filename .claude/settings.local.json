@@ -11,7 +11,8 @@
       "Bash(node:*)",
       "Bash(timeout 15 npm run dev)",
       "Bash(npm test)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(del TestimoniosManager.jsx TestimoniosManagerNew.jsx TestimoniosManagerRefactored.jsx UserManagerRefactored.jsx)"
     ],
     "deny": []
   }

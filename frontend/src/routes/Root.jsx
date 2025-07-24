@@ -1,6 +1,6 @@
-import { Outlet } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import { logout } from "../services/auth.service";
+import React from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
+import { logout } from '../services/auth.service';
 import { AuthProvider, useAuth } from "../context/AuthContext";
 
 function Root() {

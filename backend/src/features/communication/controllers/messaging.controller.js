@@ -253,6 +253,29 @@ class MessagingController {
       })
     }
   }
+
+  /**
+   * Limpia/resetea la sesión de WhatsApp Web
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  async resetWhatsAppWeb (req, res) {
+    try {
+      console.log('🔄 Controller: Reseteando WhatsApp Web...')
+      const result = await messagingService.resetWhatsAppWeb()
+      
+      return res.status(200).json({
+        success: true,
+        data: result
+      })
+    } catch (error) {
+      console.error('❌ Controller: Error resetting WhatsApp Web:', error)
+      return res.status(500).json({
+        success: false,
+        message: 'Error reseteando WhatsApp Web'
+      })
+    }
+  }
 }
 
 export default new MessagingController()

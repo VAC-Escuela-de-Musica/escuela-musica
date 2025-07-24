@@ -7,7 +7,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { useCrudManager } from '../../hooks/useCrudManager.js';
+import { useCrudManager } from '../../hooks/base/useCrudManager.js';
 import DataTable from './DataTable.jsx';
 import FormDialog from './FormDialog.jsx';
 

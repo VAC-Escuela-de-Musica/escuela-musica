@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
-import ImageViewer from '../components/ImageViewer';
+import ImageViewer from '../components/domain/materials/ImageViewer.jsx'components/ImageViewer
 import useAuth from '../hooks/useAuth';
 
 // Mock del hook useAuth

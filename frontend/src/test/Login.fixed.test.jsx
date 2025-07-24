@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
-import Login from '../components/Login';
+import Login from '../components/domain/auth/Login';
 import { useAuth } from '../hooks/useAuth';
 
 // Mock del hook useAuth

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://146.83.198.35:1230/api';
+const API_BASE_URL = 'http://localhost:1230/api';
 
 class MessagingService {
   constructor() {
@@ -26,6 +26,7 @@ class MessagingService {
       },
       ...options
     };
+
 
     try {
       console.log('🌐 Frontend Service: Haciendo petición a:', `${this.baseURL}${endpoint}`);
@@ -220,12 +221,27 @@ class MessagingService {
    */
   async getWhatsAppWebQR() {
     console.log('🔍 Frontend Service: Obteniendo QR...');
-    const response = await this.makeRequest('/messaging/whatsapp-web/qr', {
+    // Agregar timestamp para evitar caché del navegador
+    const timestamp = new Date().getTime();
+    const response = await this.makeRequest(`/messaging/whatsapp-web/qr?t=${timestamp}`, {
       method: 'GET'
+      // Sin headers personalizados - usa solo los headers por defecto con autenticación
     });
     console.log('📱 Frontend Service: Respuesta QR recibida:', response);
     return response;
   }
+
+  /**
+   * Resetea/limpia la sesión de WhatsApp Web
+   */
+  async resetWhatsAppWeb() {
+    console.log('🔄 Frontend Service: Reseteando WhatsApp Web...');
+    const response = await this.makeRequest('/messaging/whatsapp-web/reset', {
+      method: 'POST'
+    });
+    console.log('✅ Frontend Service: WhatsApp Web reseteado:', response);
+    return response;
+  }
 }
 
-export default new MessagingService(); 
+export default new MessagingService();

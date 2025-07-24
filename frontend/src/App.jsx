@@ -1,5 +1,5 @@
-import DashboardLayout from "./components/DashboardLayout";
-import ProtectedRoute from "./components/ProtectedRoute";
+import DashboardLayout from "./components/domain/layout/DashboardLayout";
+import ProtectedRoute from "./components/domain/auth/ProtectedRoute";
 import DashboardPage from "./pages/DashboardPage";
 import UploadPage from "./pages/UploadPage";
 
@@ -11,8 +11,8 @@ const LoginPage = lazy(() => import("./pages/LoginPage"));
 const InicioUsuario = lazy(() => import("./pages/paginaUsuario"));
 const AlumnosPage = lazy(() => import("./pages/AlumnosPage"));
 
-import Navbar from "./components/Navbar";
-import Loader from "./components/Loader";
+import Navbar from "./components/domain/layout/Navbar";
+import Loader from "./components/domain/layout/Loader";
 import { AuthProvider } from "./context/AuthContext";
 
 function App() {

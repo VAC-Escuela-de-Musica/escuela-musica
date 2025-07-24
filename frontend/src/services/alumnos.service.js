@@ -1,4 +1,4 @@
-import axios from "./root.service";
+import axios from './root.service.js';
 
 // Función para obtener el valor de una cookie por nombre
 function getCookie(name) {

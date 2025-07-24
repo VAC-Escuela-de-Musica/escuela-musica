@@ -1,0 +1,63 @@
+{
+  "startTime": "2025-07-24T13:38:15.009Z",
+  "endTime": "2025-07-24T13:38:18.355Z",
+  "totalTests": 3,
+  "passed": 3,
+  "failed": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "name": "Test Completo de WhatsApp",
+      "file": "./test-whatsapp-complete.js",
+      "category": "integration",
+      "status": "passed",
+      "exitCode": 0,
+      "duration": 248,
+      "output": "",
+      "errorOutput": "",
+      "startTime": "2025-07-24T13:38:15.016Z",
+      "endTime": "2025-07-24T13:38:15.264Z"
+    },
+    {
+      "name": "Test de WhatsApp Web",
+      "file": "./backend/test-whatsapp-web.js",
+      "category": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "duration": 834,
+      "output": "",
+      "errorOutput": "",
+      "startTime": "2025-07-24T13:38:16.273Z",
+      "endTime": "2025-07-24T13:38:17.107Z"
+    },
+    {
+      "name": "Test del Frontend",
+      "file": "./frontend/test-whatsapp-frontend.js",
+      "category": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "duration": 239,
+      "output": "",
+      "errorOutput": "",
+      "startTime": "2025-07-24T13:38:18.116Z",
+      "endTime": "2025-07-24T13:38:18.355Z"
+    }
+  ],
+  "summary": {
+    "integration": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "frontend": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    }
+  }
+}
