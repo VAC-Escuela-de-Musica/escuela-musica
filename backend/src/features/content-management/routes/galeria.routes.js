@@ -10,12 +10,14 @@ import {
   toggleImageStatus,
   updateImageOrder,
   getImageUrl,
+  getActiveGalleryWithUrls,
   getUploadUrl
 } from '../controllers/galeria.controller.js'
 import {
   authenticateJWT,
   loadUserData,
   requireAdmin,
+  requireAdminOrAsistente,
   validateMongoId,
   asyncHandler,
   sanitizeInput
@@ -25,6 +27,7 @@ const router = express.Router()
 
 // Rutas públicas (sin autenticación)
 router.get('/active', getActiveGallery)
+router.get('/active-with-urls', getActiveGalleryWithUrls)
 router.get('/category/:categoria', getGalleryByCategory)
 router.get('/image/:id/url', getImageUrl)
 
@@ -49,6 +52,6 @@ router.put('/:id/toggle', validateMongoId('id'), requireAdmin, toggleImageStatus
 router.put('/order/update', requireAdmin, updateImageOrder)
 
 // Endpoint para URLs prefirmadas
-router.post('/upload-url', requireAdmin, getUploadUrl)
+router.post('/upload-url', requireAdminOrAsistente, getUploadUrl)
 
 export default router

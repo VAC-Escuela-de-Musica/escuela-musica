@@ -14,10 +14,15 @@ const CarouselClases = () => {
 
   const fetchCarouselImages = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/carousel`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/carousel/active-with-urls`);
       if (response.ok) {
         const data = await response.json();
-        setImages(data.data || []);
+        // Mapear las imágenes para usar presignedUrl si está disponible
+        const mappedImages = (data.data || []).map(image => ({
+          ...image,
+          url: image.presignedUrl || image.url // Usar presignedUrl si está disponible, sino la URL original
+        }));
+        setImages(mappedImages);
       }
     } catch (error) {
       // ...existing code...

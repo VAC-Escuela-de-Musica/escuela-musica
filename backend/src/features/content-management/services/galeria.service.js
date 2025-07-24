@@ -113,30 +113,39 @@ async function createImage (imageData) {
  */
 async function updateImage (id, imageData) {
   try {
+    // Validar y sanitizar imageData
+    const allowedFields = ['titulo', 'descripcion', 'categoria', 'activo', 'imagen', 'orden']; // Ajusta según tu modelo
+    const sanitizedData = {};
+    for (const key in imageData) {
+      if (allowedFields.includes(key)) {
+        sanitizedData[key] = imageData[key];
+      }
+    }
+
     const imagenActualizada = await Galeria.findByIdAndUpdate(
       id,
-      imageData,
+      { $set: sanitizedData }, // Usar $set para evitar inyección
       {
         new: true,
         runValidators: true
       }
-    ).exec()
+    ).exec();
 
     if (!imagenActualizada) {
-      throw new Error('Imagen no encontrada')
+      throw new Error('Imagen no encontrada');
     }
 
     return {
       success: true,
       data: imagenActualizada,
       message: 'Imagen actualizada exitosamente'
-    }
+    };
   } catch (error) {
     if (error.message === 'Imagen no encontrada') {
-      throw error
+      throw error;
     }
-    handleError(error, 'galeria.service -> updateImage')
-    throw new Error('Error al actualizar la imagen')
+    handleError(error, 'galeria.service -> updateImage');
+    throw new Error('Error al actualizar la imagen');
   }
 }
 
@@ -216,20 +225,61 @@ async function updateImageOrder (ordenData) {
 }
 
 /**
- * Generar URL de imagen (placeholder para URLs prefirmadas si es necesario)
+ * Generar URL presignada de imagen para evitar problemas de CORS
  */
 async function getImageUrl (imagen, options = {}) {
   try {
-    // En este caso, las imágenes ya tienen URL pública directa
-    // Pero se puede extender para URLs prefirmadas si es necesario
+    const { minioService } = await import('../../../services/index.js')
+    let finalUrl = imagen.imagen
+    
+    // Extraer el nombre del archivo y determinar el bucket
+    let filename = ''
+    let bucketType = 'galery'
+    
+    if (finalUrl && finalUrl.includes('imagenes-publicas')) {
+      // Imagen del bucket legacy
+      console.log('🔄 Generando URL presignada para imagen legacy:', finalUrl)
+      filename = finalUrl.split('/imagenes-publicas/')[1]
+      bucketType = 'public'
+    } else if (finalUrl && finalUrl.includes('galeria-imagenes')) {
+      // Imagen del bucket correcto
+      console.log('✅ Generando URL presignada para imagen de galería:', finalUrl)
+      filename = finalUrl.split('/galeria-imagenes/')[1]
+      bucketType = 'galery'
+    }
+    
+    // Si tenemos un filename válido, generar URL presignada
+    if (filename) {
+      try {
+        const presignedData = await minioService.generateDownloadUrl(
+          bucketType, 
+          filename, 
+          options.duration || 3600
+        )
+        
+        return {
+          success: true,
+          data: {
+            url: presignedData.url,
+            action: options.action || 'view',
+            expiresIn: options.duration || 3600
+          },
+          message: 'URL presignada generada exitosamente'
+        }
+      } catch (presignedError) {
+        console.log('⚠️ Error generando URL presignada, usando URL original:', presignedError.message)
+      }
+    }
+    
+    // Fallback: devolver la URL original
     return {
       success: true,
       data: {
-        url: imagen.imagen,
+        url: finalUrl,
         action: options.action || 'view',
         expiresIn: options.duration || 3600
       },
-      message: 'URL de imagen generada exitosamente'
+      message: 'URL de imagen obtenida (fallback)'
     }
   } catch (error) {
     handleError(error, 'galeria.service -> getImageUrl')

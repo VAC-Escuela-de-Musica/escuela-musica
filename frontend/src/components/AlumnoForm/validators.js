@@ -17,10 +17,21 @@ export const fieldValidators = {
     if (!/^\d{2}-\d{2}-\d{4}$/.test(v) && !/^\d{4}-\d{2}-\d{2}$/.test(v)) return "Formato de fecha inválido (DD-MM-AAAA o YYYY-MM-DD).";
     return "";
   },
+  nombreApoderado: (v) => !v || v.length < 3 ? "El nombre del apoderado es obligatorio y debe tener al menos 3 caracteres." : "",
   rutApoderado: (v) => v && !validateRut(v) ? "RUT no válido." : "",
-  telefonoApoderado: (v) => v && !/^[0-9]{9}$/.test(v) ? "Debe tener 9 dígitos." : "",
+  telefonoApoderado: (v) => !v ? "El teléfono del apoderado es obligatorio." : !/^[0-9]{9}$/.test(v) ? "Debe tener exactamente 9 dígitos." : "",
   emailApoderado: (v) => v && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v) ? "Email no válido." : "",
   rrss: (v) => v && !/^[a-zA-Z0-9_@.\-]*$/.test(v) ? "Solo letras, números, guiones, puntos y arroba." : "",
   instrumentos: (arr) => arr.some(i => i && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(i)) ? "Solo letras y espacios." : "",
   estilosMusicales: (arr) => arr.some(e => e && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(e)) ? "Solo letras y espacios." : "",
+  // Validadores para campos de clase
+  curso: (v) => !v || v.trim().length === 0 ? "El curso es obligatorio." : "",
+  tipoCurso: (v) => !v || v.trim().length === 0 ? "El tipo de curso es obligatorio." : "",
+  modalidadClase: (v) => !v || v.trim().length === 0 ? "La modalidad de clase es obligatoria." : "",
+  dia: (v) => !v || v.trim().length === 0 ? "El día es obligatorio." : "",
+  hora: (v) => {
+    if (!v || v.trim().length === 0) return "La hora es obligatoria.";
+    if (!/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v)) return "Formato de hora inválido (HH:MM).";
+    return "";
+  },
 };

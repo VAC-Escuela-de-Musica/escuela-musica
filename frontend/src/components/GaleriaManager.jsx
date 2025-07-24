@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { API_HEADERS } from '../config/api';
+import { useAuth } from '../context/AuthContext';
 import {
   Box,
   Typography,
@@ -41,6 +43,7 @@ import {
 } from '@mui/icons-material';
 
 const GaleriaManager = () => {
+  const { isInitialized } = useAuth();
   const [galeria, setGaleria] = useState([]);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(false);
@@ -75,6 +78,11 @@ const GaleriaManager = () => {
 
   // Verificar autenticación al cargar
   useEffect(() => {
+    // Esperar a que AuthContext esté inicializado (CSRF token cargado)
+    if (!isInitialized) {
+      return;
+    }
+    
     const token = localStorage.getItem('token');
     if (!token) {
       showSnackbar('No hay sesión activa. Por favor inicia sesión.', 'error');
@@ -82,7 +90,7 @@ const GaleriaManager = () => {
     }
     
     fetchGaleria();
-  }, []);
+  }, [isInitialized]);
 
   const fetchGaleria = async () => {
     try {
@@ -94,16 +102,22 @@ const GaleriaManager = () => {
         return;
       }
 
-      const response = await fetch(`${API_URL}/galeria`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // Usar el nuevo endpoint que genera URLs presignadas
+      const response = await fetch(`${API_URL}/api/galeria/active-with-urls`, {
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Datos de la galería:', data.data);
-        setGaleria(data.data || []);
+        console.log('Datos de la galería con URLs presignadas:', data.data);
+        // Mapear las imágenes para usar las URLs presignadas
+        const imagenesConUrls = data.data.map(imagen => ({
+          ...imagen,
+          // Usar la URL presignada si está disponible, sino usar la URL original
+          imagen: imagen.presignedUrl || imagen.imagen
+        }));
+        setGaleria(imagenesConUrls || []);
       } else if (response.status === 403) {
         console.warn('Acceso denegado a la galería - solo administradores y asistentes');
         showSnackbar('Solo administradores y asistentes pueden acceder a este módulo (acceso completo).', 'warning');
@@ -132,20 +146,30 @@ const GaleriaManager = () => {
 
   const handleSubmit = async () => {
     try {
+      let finalFormData = { ...formData };
+      
+      // Si hay un archivo seleccionado pero no una URL de imagen, subirlo primero
+      if (formData.selectedFile && !formData.imagen) {
+        showSnackbar('Subiendo imagen...', 'info');
+        const imageUrl = await uploadImageToServer(formData.selectedFile);
+        finalFormData.imagen = imageUrl;
+      }
+      
+      // Remover el archivo del formData antes de enviar
+      delete finalFormData.selectedFile;
+      
       const token = localStorage.getItem('token');
       const url = editingImage 
-        ? `${API_URL}/galeria/${editingImage._id}`
-        : `${API_URL}/galeria`;
+        ? `${API_URL}/api/galeria/${editingImage._id}`
+        : `${API_URL}/api/galeria`;
       
       const method = editingImage ? 'PUT' : 'POST';
       
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include',
+        body: JSON.stringify(finalFormData)
       });
 
       if (response.ok) {
@@ -169,11 +193,10 @@ const GaleriaManager = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/galeria/${id}`, {
+      const response = await fetch(`${API_URL}/api/galeria/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -192,11 +215,10 @@ const GaleriaManager = () => {
   const handleToggleStatus = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/galeria/${id}/toggle`, {
+      const response = await fetch(`${API_URL}/api/galeria/${id}/toggle`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -233,12 +255,10 @@ const GaleriaManager = () => {
         orden: index
       }));
 
-      const response = await fetch(`${API_URL}/galeria/order/update`, {
+      const response = await fetch(`${API_URL}/api/galeria/order/update`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include',
         body: JSON.stringify({ ordenData })
       });
 
@@ -273,6 +293,7 @@ const GaleriaManager = () => {
         titulo: '',
         descripcion: '',
         imagen: '',
+        selectedFile: null,
         categoria: 'otros',
         tags: [],
         activo: true,
@@ -290,6 +311,7 @@ const GaleriaManager = () => {
       titulo: '',
       descripcion: '',
       imagen: '',
+      selectedFile: null,
       categoria: 'otros',
       tags: [],
       activo: true,
@@ -312,28 +334,32 @@ const GaleriaManager = () => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      showSnackbar('Solo se permiten archivos de imagen', 'error');
+      return;
+    }
+
+    // Validar tamaño (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showSnackbar('El archivo es demasiado grande. Máximo 5MB', 'error');
+      return;
+    }
+
+    // Solo guardar el archivo seleccionado, no subirlo automáticamente
+    setFormData({ ...formData, selectedFile: file, imagen: '' });
+    showSnackbar('Archivo seleccionado. Complete los campos y presione Crear para subir.', 'info');
+  };
+
+  const uploadImageToServer = async (file) => {
     try {
-      // Validar tipo de archivo
-      if (!file.type.startsWith('image/')) {
-        showSnackbar('Solo se permiten archivos de imagen', 'error');
-        return;
-      }
-
-      // Validar tamaño (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        showSnackbar('El archivo es demasiado grande. Máximo 5MB', 'error');
-        return;
-      }
-
       const token = localStorage.getItem('token');
       
       // Obtener URL pre-firmada para subida
-      const uploadResponse = await fetch(`${API_URL}/galeria/upload-url`, {
+      const uploadResponse = await fetch(`${API_URL}/api/galeria/upload-url`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include',
         body: JSON.stringify({
           filename: `galeria_${Date.now()}_${file.name}`,
           contentType: file.type,
@@ -347,8 +373,14 @@ const GaleriaManager = () => {
 
       const uploadData = await uploadResponse.json();
       
+      // Verificar que tenemos los datos necesarios
+      if (!uploadData.data || !uploadData.data.data || !uploadData.data.data.uploadUrl) {
+        console.error('Estructura de respuesta inesperada:', uploadData);
+        throw new Error('Error en la respuesta del servidor');
+      }
+      
       // Subir archivo directamente a MinIO usando la URL pre-firmada
-      const uploadToMinIO = await fetch(uploadData.data.uploadUrl, {
+      const uploadToMinIO = await fetch(uploadData.data.data.uploadUrl, {
         method: 'PUT',
         body: file,
         headers: {
@@ -360,13 +392,11 @@ const GaleriaManager = () => {
         throw new Error('Error al subir imagen a MinIO');
       }
 
-      // Actualizar formulario con la URL pública
-      setFormData({ ...formData, imagen: uploadData.data.publicUrl });
-      showSnackbar('Imagen subida exitosamente', 'success');
+      return uploadData.data.data.publicUrl;
 
     } catch (error) {
       console.error('Error al subir imagen:', error);
-      showSnackbar('Error al subir imagen', 'error');
+      throw error;
     }
   };
 
@@ -606,7 +636,7 @@ const GaleriaManager = () => {
                 onClick={() => handleOpenDialog()}
                 sx={{ bgcolor: '#1976d2', '&:hover': { bgcolor: '#1565c0' } }}
               >
-                Agregar Imagen
+                Nueva Imagen
               </Button>
             </Box>
           </Box>
@@ -845,16 +875,21 @@ const GaleriaManager = () => {
                     startIcon={<AddIcon />}
                     sx={{ mb: 2 }}
                   >
-                    Seleccionar Imagen
+                    {formData.imagen ? 'Cambiar Imagen' : 'Seleccionar Imagen'}
                   </Button>
                 </label>
-                {formData.imagen && (
+                {(formData.imagen || formData.selectedFile) && (
                   <Box sx={{ mt: 2 }}>
                     <img 
-                      src={formData.imagen} 
+                      src={formData.imagen || (formData.selectedFile ? URL.createObjectURL(formData.selectedFile) : '')} 
                       alt="Preview" 
                       style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'cover' }}
                     />
+                    {formData.selectedFile && !formData.imagen && (
+                      <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'orange' }}>
+                        Archivo seleccionado: {formData.selectedFile.name}
+                      </Typography>
+                    )}
                   </Box>
                 )}
               </Box>
@@ -932,7 +967,7 @@ const GaleriaManager = () => {
           <Button 
             onClick={handleSubmit} 
             variant="contained"
-            disabled={!formData.titulo || !formData.imagen}
+            disabled={!formData.titulo || (!formData.imagen && !formData.selectedFile)}
           >
             {editingImage ? 'Actualizar' : 'Crear'}
           </Button>
@@ -953,4 +988,4 @@ const GaleriaManager = () => {
   );
 };
 
-export default GaleriaManager; 
+export default GaleriaManager;

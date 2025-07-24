@@ -17,9 +17,10 @@ const toggleSaludo = async () => {
     } else {
       // Si no está visible, pedimos el mensaje al backend
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/saludo`);
-        const data = await res.text();
-        setMensaje(data);
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/health`);
+        const data = await res.json();
+        const message = data.message || 'Backend funcionando correctamente';
+        setMensaje(message);
         setVisible(true);
       } catch (error) {
         // ...existing code...

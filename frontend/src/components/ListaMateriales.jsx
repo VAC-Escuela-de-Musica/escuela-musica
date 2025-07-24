@@ -121,7 +121,7 @@ const ListaMateriales = () => {
     if (user) {
       fetchMaterials();
     }
-  }, [user, fetchMaterials]);
+  }, [user]); // Removemos fetchMaterials de las dependencias para evitar loops
 
   // Manejar vista previa de imagen
   const handleImagePreview = (material) => {

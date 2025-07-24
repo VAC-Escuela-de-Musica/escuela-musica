@@ -34,6 +34,7 @@ async function createAlumnos (alumno) {
       nombreApoderado,
       rutApoderado,
       telefonoApoderado,
+      emailApoderado,
       rrss,
       conocimientosPrevios,
       instrumentos,
@@ -57,7 +58,7 @@ async function createAlumnos (alumno) {
       if (alumnoFound) return [null, 'El alumno ya existe']
     }
 
-    const newAlumno = new Alumno({
+    const nuevoAlumno = new Alumno({
       nombreAlumno,
       rutAlumno,
       edadAlumno,
@@ -68,6 +69,7 @@ async function createAlumnos (alumno) {
       nombreApoderado,
       rutApoderado,
       telefonoApoderado,
+      emailApoderado,
       rrss,
       conocimientosPrevios,
       instrumentos,
@@ -85,8 +87,8 @@ async function createAlumnos (alumno) {
       clase
     })
 
-    console.log('[SERVICE] createAlumnos - Nuevo alumno a guardar:', newAlumno)
-    const savedAlumno = await newAlumno.save()
+    console.log('[SERVICE] createAlumnos - Nuevo alumno a guardar:', nuevoAlumno)
+    const savedAlumno = await nuevoAlumno.save()
     console.log('[SERVICE] createAlumnos - Alumno guardado exitosamente:', savedAlumno)
     return [savedAlumno, null]
   } catch (error) {

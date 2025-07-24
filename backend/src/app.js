@@ -15,6 +15,7 @@ import { fileURLToPath } from 'url'
 // Importa middlewares de seguridad
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
+import lusca from 'lusca'
 /** El enrutador principal */
 import indexRoutes from './routes/index.routes.js'
 // Importa el handler de errores
@@ -73,6 +74,8 @@ export function createApp () {
     app.use(json())
     // Agregamos el middleware para el manejo de cookies
     app.use(cookieParser())
+    // Agregamos el middleware para la protección contra CSRF
+    app.use(lusca.csrf())
     // Agregamos morgan para ver las peticiones que se hacen al servidor
     app.use(morgan('dev'))
 

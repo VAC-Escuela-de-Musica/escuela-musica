@@ -118,6 +118,8 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
       fullWidth
       maxWidth="md"
       scroll="paper"
+      disableEnforceFocus
+      disableAutoFocus
     >
       <DialogTitle>
         {safeInitialData && safeInitialData._id ? "Editar Alumno" : "Agregar Alumno"}

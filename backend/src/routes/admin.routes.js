@@ -1,6 +1,7 @@
 import express from 'express'
 import Role from '../core/models/role.model.js'
 import User from '../core/models/user.model.js'
+import { initializeBucket, testMinioConnection, getStorageStats } from '../features/content-management/controllers/admin.controller.js'
 
 const router = express.Router()
 
@@ -81,5 +82,10 @@ router.get('/users', async (req, res) => {
     })
   }
 })
+
+// Rutas para administración de MinIO
+router.post('/initialize-bucket', initializeBucket)
+router.get('/minio-connection', testMinioConnection)
+router.get('/storage-stats', getStorageStats)
 
 export default router

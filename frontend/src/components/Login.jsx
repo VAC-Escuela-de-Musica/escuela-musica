@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { API_ENDPOINTS, API_HEADERS } from '../config/api';
 import {
   Box,
   Paper,
@@ -46,20 +47,15 @@ export default function Login() {
     setLoading(true);
     
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password
-          }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(API_ENDPOINTS.auth.login, {
+        method: "POST",
+        headers: API_HEADERS.basic,
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        }),
+        credentials: "include",
+      });
       
       const data = await response.json();
       
@@ -71,16 +67,11 @@ export default function Login() {
       localStorage.setItem("token", data.data.accessToken);
       
       try {
-        const verifyRes = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/api/auth/verify`,
-          {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${data.data.accessToken}`,
-              "Content-Type": "application/json"
-            }
-          }
-        );
+        const verifyRes = await fetch(API_ENDPOINTS.auth.verify, {
+          method: "GET",
+          headers: API_HEADERS.withAuth(),
+          credentials: "include"
+        });
         
         const verifyData = await verifyRes.json();
         

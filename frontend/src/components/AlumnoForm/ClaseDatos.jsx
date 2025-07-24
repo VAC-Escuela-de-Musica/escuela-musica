@@ -17,9 +17,11 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           margin="normal"
           variant="outlined"
           required
+          error={!!errors.curso}
+          helperText={errors.curso}
           sx={{ flex: 1 }}
         />
-        <FormControl fullWidth margin="normal" variant="outlined" sx={{ flex: 1 }}>
+        <FormControl fullWidth margin="normal" variant="outlined" sx={{ flex: 1 }} error={!!errors.tipoCurso}>
           <InputLabel id="tipoCurso-label">Tipo de Curso</InputLabel>
           <Select
             labelId="tipoCurso-label"
@@ -28,15 +30,17 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
             onChange={onSelectChange}
             required
             label="Tipo de Curso"
+            error={!!errors.tipoCurso}
           >
             {tipoCursoOpciones.map((op) => (
               <MenuItem key={op} value={op}>{op}</MenuItem>
             ))}
           </Select>
+          {errors.tipoCurso && <div style={{color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px'}}>{errors.tipoCurso}</div>}
         </FormControl>
       </Box>
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-        <FormControl fullWidth margin="normal" variant="outlined" sx={{ flex: 1 }}>
+        <FormControl fullWidth margin="normal" variant="outlined" sx={{ flex: 1 }} error={!!errors.modalidadClase}>
           <InputLabel id="modalidadClase-label">Modalidad de Clase</InputLabel>
           <Select
             labelId="modalidadClase-label"
@@ -45,13 +49,15 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
             onChange={onSelectChange}
             required
             label="Modalidad de Clase"
+            error={!!errors.modalidadClase}
           >
             {modalidadOpciones.map((op) => (
               <MenuItem key={op} value={op}>{op}</MenuItem>
             ))}
           </Select>
+          {errors.modalidadClase && <div style={{color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px'}}>{errors.modalidadClase}</div>}
         </FormControl>
-        <FormControl fullWidth margin="normal" variant="outlined" sx={{ flex: 1 }}>
+        <FormControl fullWidth margin="normal" variant="outlined" sx={{ flex: 1 }} error={!!errors.dia}>
           <InputLabel id="dia-label">Día</InputLabel>
           <Select
             labelId="dia-label"
@@ -60,11 +66,13 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
             onChange={onSelectChange}
             required
             label="Día"
+            error={!!errors.dia}
           >
             {diasSemana.map((dia) => (
               <MenuItem key={dia} value={dia}>{dia}</MenuItem>
             ))}
           </Select>
+          {errors.dia && <div style={{color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px'}}>{errors.dia}</div>}
         </FormControl>
         <TextField
           label="Hora (HH:MM)"

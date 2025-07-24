@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import { API_HEADERS } from '../config/api';
 
 const RoleManager = () => {
   const [roles, setRoles] = useState([]);
@@ -20,7 +21,7 @@ const RoleManager = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const API_URL = `${import.meta.env.VITE_API_URL}/roles`;
+  const API_URL = `${import.meta.env.VITE_API_URL}/api/roles`;
 
   useEffect(() => {
     fetchRoles();
@@ -29,9 +30,8 @@ const RoleManager = () => {
   const fetchRoles = async () => {
     try {
       const response = await fetch(API_URL, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
       if (!response.ok) throw new Error("Error al cargar los roles");
       const data = await response.json();
@@ -47,9 +47,10 @@ const RoleManager = () => {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          ...API_HEADERS.withAuth(),
+          "Content-Type": "application/json"
         },
+        credentials: 'include',
         body: JSON.stringify({ name: newRole.trim() }),
       });
       if (!response.ok) {
@@ -71,9 +72,8 @@ const RoleManager = () => {
     try {
       const response = await fetch(`${API_URL}/${roleId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
       if (!response.ok) throw new Error("Error al eliminar rol");
       fetchRoles();
@@ -118,4 +118,4 @@ const RoleManager = () => {
   );
 };
 
-export default RoleManager; 
+export default RoleManager;

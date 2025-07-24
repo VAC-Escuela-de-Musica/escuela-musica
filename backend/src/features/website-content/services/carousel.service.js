@@ -3,6 +3,7 @@ import { minioClient, BUCKET_PUBLIC } from '../../../core/config/minio.config.js
 import { MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_ENDPOINT, MINIO_PORT } from '../../../core/config/configEnv.js'
 import { respondError } from '../../../core/utils/responseHandler.util.js'
 import { v4 as uuidv4 } from 'uuid'
+import { minioService } from '../../../services/index.js'
 
 /**
  * Sube una imagen al carrusel
@@ -74,6 +75,45 @@ export async function getCarouselImages () {
     return images
   } catch (err) {
     handleError(err, '/services/carousel.service.js -> getCarouselImages')
+    throw err
+  }
+}
+
+/**
+ * Obtiene todas las imágenes del carrusel activas con URLs presignadas
+ */
+export async function getCarouselImagesWithUrls () {
+  try {
+    const images = await CarouselImage.find({ activo: true })
+      .sort({ orden: 1 })
+      .populate('subidoPor', 'username email')
+
+    // Generar URLs presignadas para cada imagen
+    const imagesWithUrls = await Promise.all(
+      images.map(async (image) => {
+        try {
+          // Generar URL presignada usando el servicio MinIO
+          const presignedUrl = await minioService.generateDownloadUrl(BUCKET_PUBLIC, image.nombreArchivo, 3600)
+          
+          return {
+            ...image.toObject(),
+            presignedUrl,
+            originalUrl: image.url // Mantener la URL original como respaldo
+          }
+        } catch (error) {
+          console.warn(`Error generando URL presignada para imagen ${image._id}:`, error.message)
+          return {
+            ...image.toObject(),
+            presignedUrl: image.url, // Usar URL original como fallback
+            originalUrl: image.url
+          }
+        }
+      })
+    )
+
+    return imagesWithUrls
+  } catch (err) {
+    handleError(err, '/services/carousel.service.js -> getCarouselImagesWithUrls')
     throw err
   }
 }

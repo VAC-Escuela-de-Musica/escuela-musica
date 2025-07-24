@@ -18,6 +18,7 @@ import {
   Alert,
   CircularProgress,
 } from "@mui/material";
+import { API_HEADERS } from '../config/api';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -56,9 +57,8 @@ const CarouselManager = () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_URL}/admin`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -103,9 +103,10 @@ const CarouselManager = () => {
       const response = await fetch(url, {
         method,
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          ...API_HEADERS.withAuth(),
           ...(editingImage && { "Content-Type": "application/json" }),
         },
+        credentials: 'include',
         body: editingImage ? JSON.stringify(formData) : formDataToSend,
       });
 
@@ -130,9 +131,8 @@ const CarouselManager = () => {
     try {
       const response = await fetch(`${API_URL}/${imageId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -149,9 +149,8 @@ const CarouselManager = () => {
     try {
       const response = await fetch(`${API_URL}/${imageId}/toggle`, {
         method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -320,4 +319,4 @@ const CarouselManager = () => {
   );
 };
 
-export default CarouselManager; 
+export default CarouselManager;

@@ -277,7 +277,7 @@ const EmailConfig = () => {
 
       <Grid container spacing={3}>
         {/* Configuración Principal */}
-        <Grid item xs={12} md={8}>
+        <Grid>
           <Paper sx={{ p: 3, backgroundColor: '#333333', color: '#ffffff' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
               <SettingsIcon sx={{ color: '#2196F3' }} />
@@ -345,7 +345,7 @@ const EmailConfig = () => {
 
                 {/* Campos de configuración */}
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
+                  <Grid>
                     <TextField
                       fullWidth
                       label="Email del remitente"
@@ -363,7 +363,7 @@ const EmailConfig = () => {
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid>
                     <TextField
                       fullWidth
                       label="Contraseña de aplicación"
@@ -382,7 +382,7 @@ const EmailConfig = () => {
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid>
                     <TextField
                       fullWidth
                       label="Nombre del remitente"
@@ -400,7 +400,7 @@ const EmailConfig = () => {
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid>
                     <TextField
                       fullWidth
                       label="Email de respuesta"
@@ -438,7 +438,7 @@ const EmailConfig = () => {
                       Solo modifica estos valores si tu proveedor lo requiere específicamente.
                     </Typography>
                     <Grid container spacing={2}>
-                      <Grid item xs={12} sm={4}>
+                  <Grid>
                         <TextField
                           fullWidth
                           label="Servidor SMTP"
@@ -453,7 +453,7 @@ const EmailConfig = () => {
                           }}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={4}>
+                  <Grid>
                         <TextField
                           fullWidth
                           label="Puerto"
@@ -468,7 +468,7 @@ const EmailConfig = () => {
                           }}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={4}>
+                  <Grid>
                         <FormControlLabel
                           control={
                             <Switch
@@ -504,7 +504,7 @@ const EmailConfig = () => {
         </Grid>
 
         {/* Panel de Prueba */}
-        <Grid item xs={12} md={4}>
+        <Grid>
           <Paper sx={{ p: 3, backgroundColor: '#333333', color: '#ffffff' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
               <SendIcon sx={{ color: '#4CAF50' }} />
@@ -628,7 +628,7 @@ const EmailConfig = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid>
               <TextField
                 fullWidth
                 label="Nombre de la plantilla"
@@ -645,7 +645,7 @@ const EmailConfig = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid>
               <TextField
                 fullWidth
                 label="Asunto del email"
@@ -662,7 +662,7 @@ const EmailConfig = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid>
               <TextField
                 fullWidth
                 multiline

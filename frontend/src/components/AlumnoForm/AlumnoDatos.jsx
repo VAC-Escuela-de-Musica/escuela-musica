@@ -152,6 +152,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
       <div style={{ width: '100%', marginTop: 16 }}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DatePicker
+            enableAccessibleFieldDOMStructure={false}
             label="Fecha de Ingreso"
             value={dateValue}
             onChange={newValue => {
@@ -166,17 +167,17 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
                 }
               });
             }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                name="fechaIngreso"
-                fullWidth
-                margin="normal"
-                variant="outlined"
-                error={!!errors.fechaIngreso}
-                helperText={errors.fechaIngreso}
-              />
-            )}
+            slots={{ textField: TextField }}
+            slotProps={{
+              textField: {
+                name: "fechaIngreso",
+                fullWidth: true,
+                margin: "normal",
+                variant: "outlined",
+                error: !!errors.fechaIngreso,
+                helperText: errors.fechaIngreso
+              }
+            }}
           />
         </LocalizationProvider>
       </div>

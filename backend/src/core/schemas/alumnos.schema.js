@@ -98,6 +98,14 @@ const alumnoSchema = new Schema(
         'El teléfono debe contener solo números y puede iniciar con +'
       ]
     },
+    emailApoderado: {
+      type: String,
+      trim: true,
+      match: [
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+        'El email no es válido'
+      ]
+    },
     // Otros datos
     rrss: {
       type: String,

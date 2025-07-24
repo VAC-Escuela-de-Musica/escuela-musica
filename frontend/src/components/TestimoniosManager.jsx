@@ -23,6 +23,7 @@ import {
   Fab,
   Tooltip
 } from '@mui/material';
+import { API_HEADERS } from '../config/api';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -61,11 +62,9 @@ const TestimoniosManager = () => {
 
   const fetchTestimonios = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/testimonios`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
       
       if (response.ok) {
@@ -84,7 +83,6 @@ const TestimoniosManager = () => {
 
   const handleSubmit = async () => {
     try {
-      const token = localStorage.getItem('token');
       const url = editingTestimonio 
         ? `${API_URL}/testimonios/${editingTestimonio._id}`
         : `${API_URL}/testimonios`;
@@ -94,9 +92,10 @@ const TestimoniosManager = () => {
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...API_HEADERS.withAuth(),
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify(formData)
       });
 
@@ -120,12 +119,10 @@ const TestimoniosManager = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/testimonios/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -143,12 +140,10 @@ const TestimoniosManager = () => {
 
   const handleToggleStatus = async (id) => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/testimonios/${id}/toggle`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -179,7 +174,6 @@ const TestimoniosManager = () => {
 
     // Actualizar orden en la base de datos
     try {
-      const token = localStorage.getItem('token');
       const ordenData = newTestimonios.map((testimonio, index) => ({
         id: testimonio._id,
         orden: index
@@ -188,9 +182,10 @@ const TestimoniosManager = () => {
       const response = await fetch(`${API_URL}/testimonios/order/update`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...API_HEADERS.withAuth(),
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ ordenData })
       });
 

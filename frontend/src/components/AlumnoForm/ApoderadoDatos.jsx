@@ -12,6 +12,7 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
         value={values.nombreApoderado}
         onChange={onChange}
         fullWidth
+        required
         margin="normal"
         variant="outlined"
         error={!!errors.nombreApoderado}
@@ -64,6 +65,7 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
           value={values.telefonoApoderado}
           onChange={onChange}
           fullWidth
+          required
           margin="normal"
           variant="outlined"
           inputProps={{ maxLength: 9 }}

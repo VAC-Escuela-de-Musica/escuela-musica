@@ -298,7 +298,7 @@ const RepositorioProfesor = () => {
     if (user) {
       fetchMaterials();
     }
-  }, [user, fetchMaterials]);
+  }, [user]); // Removemos fetchMaterials de las dependencias para evitar loops
 
   // Estados de carga y error
   if (!user) {
@@ -337,7 +337,7 @@ const RepositorioProfesor = () => {
         {/* Skeleton del contenido */}
         <Grid container spacing={3}>
           {[...Array(6)].map((_, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
+            <Grid span={12} key={index}>
               <Card>
                 <CardHeader
                   avatar={<Skeleton variant="circular" width={40} height={40} />}
@@ -425,7 +425,7 @@ const RepositorioProfesor = () => {
         {/* Barra de búsqueda y filtros */}
         <Box sx={{ p: 2, bgcolor: darkTheme.surface, borderTop: 1, borderColor: darkTheme.divider }}>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={4}>
+            <Grid span={12} key="search-bar">
               <TextField
                 fullWidth
                 placeholder="Buscar materiales..."
@@ -456,7 +456,7 @@ const RepositorioProfesor = () => {
               />
             </Grid>
             
-            <Grid item xs={12} md={8}>
+            <Grid span={12} key="filters-bar">
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
                 <Autocomplete
                   size="small"
@@ -613,9 +613,9 @@ const RepositorioProfesor = () => {
           <>
             {/* Vista en Grid mejorada */}
             {viewMode === 'grid' && (
-              <Grid container spacing={3}>
+              <Grid container columns={12} spacing={3}>
                 {filteredMaterials.map((material) => (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={material._id}>
+                  <Grid span={12} key={material._id}>
                     <Card
                       elevation={2}
                       sx={{

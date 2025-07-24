@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_HEADERS } from '../config/api';
 import {
   Box,
   Button,
@@ -46,7 +47,7 @@ const UserManager = () => {
   const [roles, setRoles] = useState([]);
   const [search, setSearch] = useState("");
 
-  const API_URL = `${import.meta.env.VITE_API_URL}/users`;
+  const API_URL = `${import.meta.env.VITE_API_URL}/api/users`;
 
   // cargar usuarios al montar el componente
   useEffect(() => {
@@ -57,20 +58,38 @@ const UserManager = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      
+      // Check if user is authenticated
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError("No estás autenticado. Por favor inicia sesión.");
+        setUsers([]);
+        return;
+      }
+      
       const response = await fetch(`${API_URL}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
 
       console.log("Respuesta completa fetchUsers:", response);
+      
+      // Handle authentication errors
+      if (response.status === 401) {
+        setError("Sesión expirada. Por favor inicia sesión nuevamente.");
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUsers([]);
+        return;
+      }
+      
       let data;
       try {
         data = await response.json();
         console.log("JSON recibido:", data);
       } catch (jsonErr) {
         console.error("Error al parsear JSON:", jsonErr);
-        setError("Error al parsear la respuesta del servidor");
+        setError("Error al parsear la respuesta del servidor. Posible problema de autenticación.");
         return;
       }
 
@@ -94,11 +113,28 @@ const UserManager = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/roles`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+      // Check if user is authenticated
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn("No token available for fetching roles");
+        setRoles([]);
+        return;
+      }
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/roles`, {
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
+      
+      // Handle authentication errors
+      if (response.status === 401) {
+        console.warn("Authentication failed when fetching roles");
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setRoles([]);
+        return;
+      }
+      
       if (response.ok) {
         const data = await response.json();
         let rolesArray = [];
@@ -110,10 +146,13 @@ const UserManager = () => {
           rolesArray = data.data.data;
         }
         setRoles(rolesArray);
-        // ...existing code...
+      } else {
+        console.error("Failed to fetch roles:", response.status);
+        setRoles([]);
       }
     } catch (err) {
-      // ...existing code...
+      console.error("Error fetching roles:", err);
+      setRoles([]);
     }
   };
 
@@ -130,10 +169,8 @@ const UserManager = () => {
 
       const response = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
@@ -160,9 +197,8 @@ const UserManager = () => {
     try {
       const response = await fetch(`${API_URL}/${userId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -233,6 +269,28 @@ const UserManager = () => {
     );
   }
 
+  // Check if user is authenticated
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return (
+      <Box sx={{ p: 3, backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
+        <Typography variant="h4" component="h1" mb={3}>
+          Gestión de Usuarios
+        </Typography>
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Debes iniciar sesión para acceder a esta sección.
+        </Alert>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={() => window.location.href = '/login'}
+        >
+          Ir a Iniciar Sesión
+        </Button>
+      </Box>
+    );
+  }
+
   console.log("Estado roles en render:", roles);
 
   return (
@@ -265,9 +323,9 @@ const UserManager = () => {
       )}
       <Box display="flex" alignItems="flex-start">
         <Box flex={1}>
-          <Grid container spacing={3}>
+          <Grid container columns={12} spacing={3}>
             {Array.isArray(filteredUsers) && filteredUsers.map((user) => (
-              <Grid item xs={12} sm={6} md={4} key={user._id}>
+              <Grid span={4} key={user._id}>
                 <Card sx={{ backgroundColor: "#333333", color: "white" }}>
                   <CardContent>
                     <Box display="flex" alignItems="center" mb={2}>
@@ -429,4 +487,4 @@ const UserManager = () => {
   );
 };
 
-export default UserManager; 
+export default UserManager;

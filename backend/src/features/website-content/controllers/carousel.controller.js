@@ -1,6 +1,7 @@
 import {
   uploadCarouselImage,
   getCarouselImages,
+  getCarouselImagesWithUrls,
   getAllCarouselImages,
   updateCarouselImage,
   deleteCarouselImage,
@@ -52,6 +53,19 @@ export async function getImages (req, res) {
   } catch (err) {
     handleError(err, '/controllers/carousel.controller.js -> getImages')
     respondError(req, res, 500, 'Error al obtener las imágenes')
+  }
+}
+
+/**
+ * Obtiene todas las imágenes del carrusel activas con URLs presignadas
+ */
+export async function getImagesWithUrls (req, res) {
+  try {
+    const images = await getCarouselImagesWithUrls()
+    respondSuccess(req, res, 200, { message: 'Imágenes obtenidas exitosamente', data: images })
+  } catch (err) {
+    handleError(err, '/controllers/carousel.controller.js -> getImagesWithUrls')
+    respondError(req, res, 500, 'Error al obtener las imágenes con URLs presignadas')
   }
 }
 

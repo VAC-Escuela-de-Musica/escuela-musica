@@ -1,5 +1,5 @@
 // Configuración centralizada de la API
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://146.83.198.35:1230';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230';
 
 // Endpoints de la API organizados por funcionalidad
 export const API_ENDPOINTS = {
@@ -41,6 +41,35 @@ export const API_ENDPOINTS = {
   }
 };
 
+// Función para obtener el token CSRF del contexto de autenticación
+export function getCsrfToken() {
+  // Intentar obtener el token CSRF del contexto global si está disponible
+  if (typeof window !== 'undefined' && window.__CSRF_TOKEN__) {
+    return window.__CSRF_TOKEN__;
+  }
+  return null;
+}
+
+// Función para establecer el token CSRF (llamada desde AuthContext)
+export function setCsrfToken(token) {
+  if (typeof window !== 'undefined') {
+    window.__CSRF_TOKEN__ = token;
+  }
+}
+
+// Función para obtener el token CSRF del backend (legacy - mantener para compatibilidad)
+export async function fetchCsrfToken() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/csrf-token`, { credentials: 'include' });
+    const data = await res.json();
+    setCsrfToken(data.csrfToken);
+    return data.csrfToken;
+  } catch (err) {
+    console.error('Error obteniendo CSRF token:', err);
+    return null;
+  }
+}
+
 // Headers de API centralizados
 export const API_HEADERS = {
   // Headers básicos
@@ -49,22 +78,26 @@ export const API_HEADERS = {
     'Accept': 'application/json'
   },
 
-  // Headers con autenticación
+  // Headers con autenticación y CSRF
   withAuth: () => {
     const token = localStorage.getItem('token');
+    const csrf = getCsrfToken();
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...(csrf && { '_csrf': csrf })
     };
   },
 
   // Headers para upload de archivos (sin Content-Type para FormData)
   forFileUpload: () => {
     const token = localStorage.getItem('token');
+    const csrf = getCsrfToken();
     return {
       'Accept': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...(csrf && { '_csrf': csrf })
     };
   },
 

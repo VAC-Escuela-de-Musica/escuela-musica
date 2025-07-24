@@ -149,7 +149,52 @@ grep -r "import\.meta\.env\.VITE_API" frontend/src/
 
 ---
 
-### Tarea 1.3: Centralizar uso de api.service.js
+### Tarea 1.3: Eliminar CSRF Token Duplicado (NUEVO)
+
+#### Objetivo
+Centralizar la obtención del CSRF token en AuthContext únicamente, eliminando duplicación
+
+#### Pasos de Implementación
+```markdown
+1. **Eliminar llamada CSRF de App.jsx**:
+   - Remover import: `import { fetchCsrfToken } from "./config/api"`
+   - Remover useEffect que llama fetchCsrfToken()
+
+2. **Mejorar manejo CSRF en AuthContext.jsx**:
+   - Reemplazar fetch manual por apiService
+   - Mantener lógica de setCsrfToken()
+   - Agregar mejor manejo de errores
+
+3. **Validar que funciona correctamente**:
+   - Solo una llamada al endpoint /csrf-token
+   - Token disponible en todo el contexto
+```
+
+#### Código Antes/Después
+```javascript
+// ANTES - App.jsx (ELIMINAR)
+import { fetchCsrfToken } from "./config/api";
+useEffect(() => {
+  fetchCsrfToken();
+}, []);
+
+// ANTES - AuthContext.jsx (fetch manual)
+fetch(`${import.meta.env.VITE_API_BASE_URL}/api/csrf-token`, {
+  credentials: "include"
+})
+
+// DESPUÉS - Solo AuthContext.jsx (usando apiService)
+const data = await apiService.get('/csrf-token');
+setCsrfToken(data.csrfToken);
+```
+
+#### Criterios de Éxito
+- [ ] Cero llamadas CSRF desde App.jsx
+- [ ] Una sola llamada CSRF desde AuthContext
+- [ ] Token CSRF disponible en toda la aplicación
+- [ ] No hay errores de autenticación
+
+### Tarea 1.4: Centralizar uso de api.service.js
 
 #### Objetivo
 Reemplazar todas las llamadas `fetch` manuales por el uso de `api.service.js`

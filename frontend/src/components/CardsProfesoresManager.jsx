@@ -18,6 +18,7 @@ import {
   Fab,
   Chip,
 } from "@mui/material";
+import { API_HEADERS } from '../config/api';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -121,22 +122,15 @@ const CardsProfesoresManager = () => {
         return;
       }
 
-      // Verificar que hay un token
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("No hay token de autenticación. Por favor, inicia sesión nuevamente.");
-        return;
-      }
-
       console.log("Enviando datos:", formData); // Debug
-      console.log("Token:", token.substring(0, 20) + "..."); // Debug (solo primeros 20 caracteres)
 
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          ...API_HEADERS.withAuth(),
+          "Content-Type": "application/json"
         },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
@@ -171,9 +165,10 @@ const CardsProfesoresManager = () => {
       const response = await fetch(`${API_URL}/${editingCard._id}`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          ...API_HEADERS.withAuth(),
+          "Content-Type": "application/json"
         },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
@@ -203,9 +198,8 @@ const CardsProfesoresManager = () => {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -226,18 +220,15 @@ const CardsProfesoresManager = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("No hay token de autenticación. Por favor, inicia sesión nuevamente.");
-        return;
-      }
+
 
       const response = await fetch(`${API_URL}/${card._id}`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          ...API_HEADERS.withAuth(),
+          "Content-Type": "application/json"
         },
+        credentials: 'include',
         body: JSON.stringify({
           ...card,
           activo: !card.activo,
@@ -294,16 +285,9 @@ const CardsProfesoresManager = () => {
   // Guardar el nuevo orden
   const handleSaveOrder = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("No hay token de autenticación. Por favor, inicia sesión nuevamente.");
-        return;
-      }
-
       // Crear array con el orden actual de las tarjetas
       const cardsOrder = cards.map(card => card._id);
       
-      console.log("Token encontrado:", token.substring(0, 20) + "..."); // Debug
       console.log("Enviando orden:", cardsOrder); // Debug
 
       const requestBody = { cardsOrder };
@@ -312,9 +296,10 @@ const CardsProfesoresManager = () => {
       const response = await fetch(`${API_URL}/order`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          ...API_HEADERS.withAuth(),
+          "Content-Type": "application/json"
         },
+        credentials: 'include',
         body: JSON.stringify(requestBody),
       });
 
@@ -425,7 +410,7 @@ const CardsProfesoresManager = () => {
       ) : (
         <Grid container spacing={3} maxWidth="lg" sx={{ mx: 'auto' }}>
           {cards.map((card, index) => (
-            <Grid item xs={12} key={card._id}>
+            <Grid key={card._id}>
               <Card 
                 sx={{ 
                   display: 'flex',

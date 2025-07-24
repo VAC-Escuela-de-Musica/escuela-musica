@@ -129,20 +129,69 @@ const handleSubmit = async (e) => {
 // async login(email, password) { ... }
 ```
 
-### 5. **AuthContext.jsx** - Lógica Dispersa
+### 5. **AuthContext.jsx** - Lógica Dispersa (ACTUALIZADO)
 ```javascript
 // PROBLEMA: Variables de entorno diferentes al resto
 const API_URL = import.meta.env.VITE_API_BASE_URL; // Diferente a otros archivos
 
 // PROBLEMA: Lógica de logout duplicada con Login.jsx
-// PROBLEMA: Estados de carga simulados con setTimeout
+// ✅ MEJORADO: Ya no usa setTimeout artificial, pero aún tiene problemas:
 const [loading, setLoading] = useState(true);
+const [csrfToken, setCsrfToken] = useState(null);
 
 useEffect(() => {
-  // Simulación innecesaria de carga
-  setTimeout(() => setLoading(false), 500);
+  setLoading(true);
+  // Fetch manual para CSRF - debería usar api.service
+  fetch(`${import.meta.env.VITE_API_BASE_URL}/api/csrf-token`, {
+    credentials: "include"
+  })
+    .then(res => res.json())
+    .then(data => {
+      setCsrfToken(data.csrfToken);
+      setIsInitialized(true);
+      setLoading(false);
+    })
+    .catch(() => {
+      setIsInitialized(true);
+      setLoading(false);
+    });
 }, []);
+
+// NUEVO PROBLEMA: CSRF token duplicado
+// App.jsx también llama a fetchCsrfToken() - lógica duplicada
 ```
+
+---
+
+## 🔄 Cambios Recientes Identificados (Durante Análisis)
+
+### ✅ Mejoras Realizadas
+1. **AuthContext.jsx**: Eliminado `setTimeout(500ms)` artificial - ahora usa carga real de CSRF
+2. **App.jsx**: Hook `useTheme()` eliminado (ya no se usa sin propósito)
+
+### 🚨 Nuevos Problemas Identificados
+1. **CSRF Token Duplicado**:
+   ```javascript
+   // App.jsx
+   useEffect(() => {
+     fetchCsrfToken(); // Llamada 1
+   }, []);
+   
+   // AuthContext.jsx  
+   useEffect(() => {
+     fetch(`${import.meta.env.VITE_API_BASE_URL}/api/csrf-token`, { // Llamada 2
+       credentials: "include"
+     })
+   }, []);
+   ```
+   **Problema**: Dos llamadas separadas al mismo endpoint CSRF
+
+2. **Variable de Entorno Inconsistente**: AuthContext sigue usando `VITE_API_BASE_URL`
+
+### 📊 Métricas Actualizadas
+- **Problemas críticos**: 6 (era 8, mejorado 2, agregado 1)
+- **Fetch manuales**: 16+ (era 15+, agregado CSRF duplicado)
+- **Duplicación CSRF**: Nuevo patrón duplicado identificado
 
 ---
 
@@ -200,7 +249,35 @@ const handleCloseDialog = () => {
 };
 ```
 
-### Patrón 3: Form Submit (85% duplicado)
+### Patrón 3: CSRF Token Fetch (NUEVO - 100% duplicado)
+```javascript
+// App.jsx - Método 1
+import { fetchCsrfToken } from "./config/api";
+
+useEffect(() => {
+  fetchCsrfToken(); // Función importada
+}, []);
+
+// AuthContext.jsx - Método 2  
+useEffect(() => {
+  fetch(`${import.meta.env.VITE_API_BASE_URL}/api/csrf-token`, {
+    credentials: "include"
+  })
+    .then(res => res.json())
+    .then(data => {
+      setCsrfToken(data.csrfToken);
+      // ... lógica de manejo
+    })
+    .catch(() => {
+      // ... manejo de errores
+    });
+}, []);
+
+// PROBLEMA: Dos formas diferentes de hacer lo mismo
+// SOLUCIÓN: Centralizar en AuthContext únicamente
+```
+
+### Patrón 4: Form Submit (85% duplicado)
 ```javascript
 // Lógica idéntica con diferentes endpoints
 const handleSubmit = async (e) => {
@@ -253,10 +330,32 @@ const handleSubmit = async (e) => {
   const users = await apiService.getUsers();
   ```
 
-#### 1.2 Validación Fase 1
+#### 1.2 Eliminar CSRF Token Duplicado
+- [ ] **Centralizar CSRF en AuthContext**:
+  ```javascript
+  // Eliminar de App.jsx:
+  import { fetchCsrfToken } from "./config/api"; // ❌ ELIMINAR
+  useEffect(() => { fetchCsrfToken(); }, []); // ❌ ELIMINAR
+  
+  // Mantener solo en AuthContext.jsx (pero mejorado):
+  useEffect(() => {
+    const initCSRF = async () => {
+      try {
+        const data = await apiService.get('/csrf-token');
+        setCsrfToken(data.csrfToken);
+      } catch (error) {
+        console.error('Error loading CSRF token:', error);
+      }
+    };
+    initCSRF();
+  }, []);
+  ```
+
+#### 1.3 Validación Fase 1
 - [ ] Verificar que no hay componentes duplicados
 - [ ] Confirmar que todas las API calls usan api.service
 - [ ] Validar que variables de entorno son consistentes
+- [ ] **NUEVO**: Confirmar que CSRF token se obtiene una sola vez
 
 ### **FASE 2: Abstracción de Patrones** ⏱️ 3-4 días
 **Objetivo:** Crear abstracciones reutilizables

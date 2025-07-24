@@ -9,7 +9,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 
 // URL del backend usando la configuración de Vite
-const API_URL = `${import.meta.env.VITE_API_URL}/cards-profesores/active`;
+const API_URL = `${import.meta.env.VITE_API_URL}/api/cards-profesores/active`;
 
 const CardsProfesores = () => {
   const [profesores, setProfesores] = useState([]);
@@ -80,7 +80,7 @@ const CardsProfesores = () => {
       ) : (
                 <Grid container spacing={4} maxWidth="lg" sx={{ mx: 'auto' }}>
           {profesores.map((profesor, index) => (
-            <Grid item xs={12} key={index}>
+            <Grid key={index}>
               <Card 
                 sx={{ 
                   display: 'flex',

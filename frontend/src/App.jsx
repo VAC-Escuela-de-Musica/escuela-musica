@@ -5,7 +5,7 @@ import UploadPage from "./pages/UploadPage";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useTheme } from '@mui/material/styles';
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 const HomePage = lazy(() => import("./pages/Homepage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const InicioUsuario = lazy(() => import("./pages/paginaUsuario"));
@@ -18,6 +18,7 @@ import { AuthProvider } from "./context/AuthContext";
 function App() {
   // Inicializar el tema
   useTheme();
+
 
   return (
     <AuthProvider>

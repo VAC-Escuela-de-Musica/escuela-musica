@@ -87,6 +87,11 @@ const requireAdmin = requireRole(['administrador'])
 const requireAdminOrProfesor = requireRole(['administrador', 'profesor'])
 
 /**
+ * Verifica si el usuario es administrador o asistente
+ */
+const requireAdminOrAsistente = requireRole(['administrador', 'asistente'])
+
+/**
  * Verifica si el usuario es administrador, profesor o alumno
  */
 const requireAuthenticated = requireRole(['administrador', 'profesor'])
@@ -132,6 +137,7 @@ export {
   requireRole,
   requireAdmin,
   requireAdminOrProfesor,
+  requireAdminOrAsistente,
   requireAuthenticated,
   requireOwnershipOrAdmin
 }

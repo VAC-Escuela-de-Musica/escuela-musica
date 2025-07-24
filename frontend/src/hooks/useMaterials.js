@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { API_ENDPOINTS } from '../config/api.js';
+import { API_ENDPOINTS, API_HEADERS, getCsrfToken } from '../config/api.js';
 
 /**
  * Hook para gestión de materiales
@@ -41,7 +41,6 @@ const useMaterials = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams();
       
       // Agregar parámetros de paginación
@@ -63,10 +62,8 @@ const useMaterials = () => {
 
       const url = `${API_ENDPOINTS.materials.list}?${params.toString()}`;
       const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
       
       const data = await response.json();
@@ -117,7 +114,6 @@ const useMaterials = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams();
       
       if (term) {
@@ -137,10 +133,8 @@ const useMaterials = () => {
 
       const url = `${API_ENDPOINTS.materials.list}?${params.toString()}`;
       const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
       
       const data = await response.json();
@@ -179,13 +173,10 @@ const useMaterials = () => {
   // Función para alternar favoritos
   const toggleFavorite = useCallback(async (materialId) => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${API_ENDPOINTS.materials.list}/${materialId}/favorite`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
       
       const data = await response.json();
@@ -247,13 +238,11 @@ const useMaterials = () => {
         });
       }
 
-      const token = localStorage.getItem('token');
       const response = await fetch(API_ENDPOINTS.materials.create, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
+        headers: API_HEADERS.forFileUpload(),
+        body: formData,
+        credentials: 'include'
       });
 
       const data = await response.json();
@@ -280,13 +269,10 @@ const useMaterials = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(API_ENDPOINTS.materials.delete(materialId), {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
       });
 
       const data = await response.json();
@@ -312,7 +298,7 @@ const useMaterials = () => {
     if (isAuthenticated) {
       fetchMaterials();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated]); // Removemos fetchMaterials de las dependencias para evitar loops
 
   return {
     materials,

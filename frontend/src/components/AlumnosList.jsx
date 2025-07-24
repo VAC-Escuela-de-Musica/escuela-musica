@@ -375,14 +375,14 @@ function AlumnosList() {
       </Box>
       <Grid container spacing={3}>
         {filteredAlumnos.length === 0 ? (
-          <Grid item xs={12}>
+          <Grid>
             <Typography color="textSecondary">
               No hay alumnos registrados.
             </Typography>
           </Grid>
         ) : (
           filteredAlumnos.map((alumno) => (
-            <Grid item xs={12} sm={6} md={4} key={alumno._id}>
+            <Grid key={alumno._id}>
               {renderResumenCard(alumno)}
             </Grid>
           ))

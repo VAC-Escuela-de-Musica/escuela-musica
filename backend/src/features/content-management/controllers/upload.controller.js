@@ -1,5 +1,6 @@
 // Controlador de subida de materiales
 import Material from '../../../core/models/material.model.js'
+import mongoose from 'mongoose'
 import { respondError, respondSuccess } from '../../../core/utils/responseHandler.util.js'
 import { fileService, auditService, AuthorizationService } from '../../../services/index.js'
 
@@ -81,6 +82,11 @@ export const getUploadUrl = asyncHandler(async (req, res) => {
  */
 export const confirmUpload = asyncHandler(async (req, res) => {
   const { materialId, nombre, descripcion } = req.body
+
+  // Validar materialId
+  if (!materialId || !mongoose.Types.ObjectId.isValid(materialId)) {
+    return respondError(req, res, 400, 'ID de material inválido')
+  }
 
   const material = await Material.findById(materialId)
   if (!material || material.usuario !== req.email) {

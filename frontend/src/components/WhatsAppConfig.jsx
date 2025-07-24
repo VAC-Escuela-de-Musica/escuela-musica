@@ -189,9 +189,9 @@ const WhatsAppConfig = () => {
         </Alert>
       )}
 
-      <Grid container spacing={3}>
+      <Grid container columns={12} spacing={3}>
         {/* Estado Actual */}
-        <Grid item xs={12} md={4}>
+        <Grid span={4}>
           <Paper sx={{ p: 3, backgroundColor: '#333333', color: '#ffffff', height: 'fit-content' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <SettingsIcon sx={{ color: '#25D366' }} />
@@ -203,8 +203,8 @@ const WhatsAppConfig = () => {
               
               {status && (
                 <Box sx={{ mt: 2 }}>
-                  <Grid container spacing={1}>
-                    <Grid item xs={6}>
+                  <Grid container columns={12} spacing={1}>
+                    <Grid span={6}>
                       <Typography variant="body2" sx={{ color: '#cccccc', mb: 1 }}>
                         Inicializado:
                       </Typography>
@@ -214,7 +214,7 @@ const WhatsAppConfig = () => {
                         size="small" 
                       />
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid span={6}>
                       <Typography variant="body2" sx={{ color: '#cccccc', mb: 1 }}>
                         Conectado:
                       </Typography>
@@ -249,7 +249,7 @@ const WhatsAppConfig = () => {
         </Grid>
 
         {/* Configuración Principal */}
-        <Grid item xs={12} md={8}>
+        <Grid span={8}>
           <Paper sx={{ p: 3, backgroundColor: '#333333', color: '#ffffff' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
               <WhatsAppIcon sx={{ color: '#25D366' }} />
@@ -339,8 +339,8 @@ const WhatsAppConfig = () => {
                 <Typography variant="body2" sx={{ color: '#cccccc', mb: 3 }}>
                   Prueba la funcionalidad enviando un mensaje de WhatsApp.
                 </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
+                <Grid container columns={12} spacing={2}>
+                  <Grid span={6}>
                     <TextField
                       fullWidth
                       label="Número de Teléfono"
@@ -361,7 +361,7 @@ const WhatsAppConfig = () => {
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid span={6}>
                     <TextField
                       fullWidth
                       label="Mensaje de Prueba"
@@ -402,13 +402,13 @@ const WhatsAppConfig = () => {
         </Grid>
 
         {/* Información */}
-        <Grid item xs={12}>
+        <Grid span={12}>
           <Paper sx={{ p: 3, backgroundColor: '#333333', color: '#ffffff' }}>
             <Typography variant="h6" sx={{ mb: 2, color: '#25D366' }}>
               ℹ️ Información Importante
             </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+            <Grid container columns={12} spacing={3}>
+              <Grid span={6}>
                 <Box sx={{ p: 2, backgroundColor: '#444444', borderRadius: 1 }}>
                   <Typography variant="subtitle1" sx={{ color: '#4CAF50', mb: 1 }}>
                     ✅ Ventajas
@@ -421,7 +421,7 @@ const WhatsAppConfig = () => {
                   </ul>
                 </Box>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid span={6}>
                 <Box sx={{ p: 2, backgroundColor: '#444444', borderRadius: 1 }}>
                   <Typography variant="subtitle1" sx={{ color: '#FF9800', mb: 1 }}>
                     ⚠️ Consideraciones

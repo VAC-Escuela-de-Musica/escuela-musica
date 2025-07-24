@@ -6,7 +6,7 @@ import { logger } from '../utils/logger.js';
  */
 class ApiService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:1230';
     this.token = null;
     this.defaultHeaders = {
       'Content-Type': 'application/json'
@@ -103,6 +103,7 @@ class ApiService {
     const config = {
       method,
       headers: this.getHeaders(headers),
+      credentials: 'include', // Incluir cookies de sesión
       signal: AbortSignal.timeout(timeout)
     };
 
