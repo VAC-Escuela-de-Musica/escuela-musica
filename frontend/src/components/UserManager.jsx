@@ -94,7 +94,11 @@ const UserManager = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/roles`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/roles`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         let rolesArray = [];
