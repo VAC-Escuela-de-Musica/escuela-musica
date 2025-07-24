@@ -24,7 +24,7 @@ const minioClient = new Minio.Client({
  */
 export async function setupMinIO() {
   try {
-    // Verificar si el bucket existe
+    // Configurar bucket principal (materiales)
     const bucketExists = await minioClient.bucketExists(MINIO_BUCKET_NAME);
     
     if (!bucketExists) {
@@ -32,6 +32,19 @@ export async function setupMinIO() {
       await minioClient.makeBucket(MINIO_BUCKET_NAME, "us-east-1");
       // eslint-disable-next-line no-console
       console.log(`=> Bucket "${MINIO_BUCKET_NAME}" creado exitosamente`);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log(`=> Bucket '${MINIO_BUCKET_NAME}' ya existe`);
+    }
+
+    // Configurar bucket público (imagenes-publicas)
+    const publicBucketExists = await minioClient.bucketExists(MINIO_PUBLIC_BUCKET);
+    
+    if (!publicBucketExists) {
+      // Crear el bucket público si no existe
+      await minioClient.makeBucket(MINIO_PUBLIC_BUCKET, "us-east-1");
+      // eslint-disable-next-line no-console
+      console.log(`=> Bucket público "${MINIO_PUBLIC_BUCKET}" creado exitosamente`);
       
       // Configurar política pública para el bucket (solo lectura)
       const policy = {
@@ -41,17 +54,41 @@ export async function setupMinIO() {
             Effect: "Allow",
             Principal: { AWS: ["*"] },
             Action: ["s3:GetObject"],
-            Resource: [`arn:aws:s3:::${MINIO_BUCKET_NAME}/*`],
+            Resource: [`arn:aws:s3:::${MINIO_PUBLIC_BUCKET}/*`],
           },
         ],
       };
       
-      await minioClient.setBucketPolicy(MINIO_BUCKET_NAME, JSON.stringify(policy));
+      await minioClient.setBucketPolicy(MINIO_PUBLIC_BUCKET, JSON.stringify(policy));
       // eslint-disable-next-line no-console
-      console.log(`=> Política pública configurada para el bucket '${MINIO_BUCKET_NAME}'`);
+      console.log(`=> Política pública configurada para el bucket '${MINIO_PUBLIC_BUCKET}'`);
     } else {
       // eslint-disable-next-line no-console
-      console.log(`=> Bucket '${MINIO_BUCKET_NAME}' ya existe`);
+      console.log(`=> Bucket público '${MINIO_PUBLIC_BUCKET}' ya existe`);
+      
+      // Verificar si ya tiene política pública
+      try {
+        await minioClient.getBucketPolicy(MINIO_PUBLIC_BUCKET);
+        // eslint-disable-next-line no-console
+        console.log(`=> Política pública ya configurada para '${MINIO_PUBLIC_BUCKET}'`);
+      } catch (policyError) {
+        // Si no tiene política, configurarla
+        const policy = {
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Principal: { AWS: ["*"] },
+              Action: ["s3:GetObject"],
+              Resource: [`arn:aws:s3:::${MINIO_PUBLIC_BUCKET}/*`],
+            },
+          ],
+        };
+        
+        await minioClient.setBucketPolicy(MINIO_PUBLIC_BUCKET, JSON.stringify(policy));
+        // eslint-disable-next-line no-console
+        console.log(`=> Política pública configurada para el bucket '${MINIO_PUBLIC_BUCKET}'`);
+      }
     }
   } catch (err) {
     handleError(err, "/config/minio.config.js -> setupMinIO");

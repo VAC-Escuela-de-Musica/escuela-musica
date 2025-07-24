@@ -93,6 +93,8 @@ const UserManager = () => {
         } else if (data.data && Array.isArray(data.data.data)) {
           rolesArray = data.data.data;
         }
+        // Asegurar que todos los roles estén en minúscula
+        rolesArray = rolesArray.map(role => role.toLowerCase());
         setRoles(rolesArray);
         console.log("Roles cargados:", rolesArray);
       }
@@ -105,7 +107,13 @@ const UserManager = () => {
     event.preventDefault();
     
     try {
-      console.log("Datos enviados:", formData);
+      // Asegurar que los roles se envíen en minúscula
+      const formDataToSend = {
+        ...formData,
+        roles: formData.roles.map(role => role.toLowerCase())
+      };
+      
+      console.log("Datos enviados:", formDataToSend);
       const url = editingUser 
         ? `${API_URL}/${editingUser._id}`
         : `${API_URL}`;
@@ -118,7 +126,7 @@ const UserManager = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formDataToSend),
       });
 
       if (!response.ok) {

@@ -5,11 +5,11 @@
 // import { handleError } from "../utils/errorHandler.js";
 // import ROLES from "../constants/roles.constants.js";
 
-// Mapeo de ObjectIds a roles (basado en el orden de creación en la base de datos)
+// Mapeo de ObjectIds a roles (basado en los IDs reales de la base de datos)
 const ROLE_MAPPING = {
-  "6858fce230c92ff1dd970fe9": "estudiante",
-  "6858fce230c92ff1dd970fea": "administrador", 
-  "6858fce230c92ff1dd970feb": "profesor",
+  "687dbca578c6f5e67d2dca07": "administrador",
+  "687dbca578c6f5e67d2dca0a": "asistente", 
+  "687dbca578c6f5e67d2dca0d": "profesor",
 };
 
 /**

@@ -7,9 +7,25 @@ class GaleriaService {
   async getActiveGallery() {
     try {
       const galeria = await Galeria.getActiveGallery();
+      
+      // Procesar URLs de imágenes para hacerlas públicas
+      const { MINIO_ENDPOINT, MINIO_PORT } = process.env;
+      const { MINIO_PUBLIC_BUCKET } = await import('../config/minio.config.js');
+      
+      const galeriaConUrls = galeria.map((imagen) => {
+        const imagenObj = imagen.toObject();
+        
+        // Si la imagen no es una URL completa, generar URL pública
+        if (!imagenObj.imagen.startsWith('http://') && !imagenObj.imagen.startsWith('https://')) {
+          imagenObj.imagen = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${MINIO_PUBLIC_BUCKET}/${imagenObj.imagen}`;
+        }
+        
+        return imagenObj;
+      });
+      
       return {
         success: true,
-        data: galeria,
+        data: galeriaConUrls,
         message: 'Galería obtenida exitosamente'
       };
     } catch (error) {
@@ -24,9 +40,25 @@ class GaleriaService {
   async getGalleryByCategory(categoria) {
     try {
       const galeria = await Galeria.getGalleryByCategory(categoria);
+      
+      // Procesar URLs de imágenes para hacerlas públicas
+      const { MINIO_ENDPOINT, MINIO_PORT } = process.env;
+      const { MINIO_PUBLIC_BUCKET } = await import('../config/minio.config.js');
+      
+      const galeriaConUrls = galeria.map((imagen) => {
+        const imagenObj = imagen.toObject();
+        
+        // Si la imagen no es una URL completa, generar URL pública
+        if (!imagenObj.imagen.startsWith('http://') && !imagenObj.imagen.startsWith('https://')) {
+          imagenObj.imagen = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${MINIO_PUBLIC_BUCKET}/${imagenObj.imagen}`;
+        }
+        
+        return imagenObj;
+      });
+      
       return {
         success: true,
-        data: galeria,
+        data: galeriaConUrls,
         message: `Galería de categoría ${categoria} obtenida exitosamente`
       };
     } catch (error) {
@@ -43,9 +75,24 @@ class GaleriaService {
       const galeria = await Galeria.find()
         .sort({ orden: 1, fechaCreacion: -1 });
       
+      // Procesar URLs de imágenes para hacerlas públicas
+      const { MINIO_ENDPOINT, MINIO_PORT } = process.env;
+      const { MINIO_PUBLIC_BUCKET } = await import('../config/minio.config.js');
+      
+      const galeriaConUrls = galeria.map((imagen) => {
+        const imagenObj = imagen.toObject();
+        
+        // Si la imagen no es una URL completa, generar URL pública
+        if (!imagenObj.imagen.startsWith('http://') && !imagenObj.imagen.startsWith('https://')) {
+          imagenObj.imagen = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${MINIO_PUBLIC_BUCKET}/${imagenObj.imagen}`;
+        }
+        
+        return imagenObj;
+      });
+      
       return {
         success: true,
-        data: galeria,
+        data: galeriaConUrls,
         message: 'Galería completa obtenida exitosamente'
       };
     } catch (error) {
@@ -234,21 +281,28 @@ class GaleriaService {
     try {
       const { action = 'view', duration = 300 } = options;
       
-      // Crear objeto similar a Material para compatibilidad con fileService (comentado)
-      // const materialObject = {
-      //   bucket: imagen.bucket,
-      //   filename: imagen.imagen,
-      //   bucketTipo: imagen.bucketTipo
-      // };
+      // Si la imagen ya es una URL completa y pública, devolverla tal como está
+      if (imagen.imagen.startsWith('http://') || imagen.imagen.startsWith('https://')) {
+        const downloadData = {
+          downloadUrl: imagen.imagen,
+          expiresIn: duration
+        };
+        
+        return {
+          success: true,
+          data: downloadData,
+          message: 'URL de imagen generada exitosamente'
+        };
+      }
       
-      // const downloadData = await fileService.prepareDownload(materialObject, {
-      //   action,
-      //   duration: parseInt(duration)
-      // });
+      // Si es un nombre de archivo, generar URL pública
+      const { MINIO_ENDPOINT, MINIO_PORT } = await import('../config/configEnv.js');
+      const { MINIO_PUBLIC_BUCKET } = await import('../config/minio.config.js');
       
-      // Por ahora, devolver la URL directa
+      const publicUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${MINIO_PUBLIC_BUCKET}/${imagen.imagen}`;
+      
       const downloadData = {
-        downloadUrl: imagen.imagen,
+        downloadUrl: publicUrl,
         expiresIn: duration
       };
       
@@ -262,6 +316,8 @@ class GaleriaService {
       throw new Error('Error al generar URL de imagen');
     }
   }
+
+
 }
 
 export const galeriaService = new GaleriaService();

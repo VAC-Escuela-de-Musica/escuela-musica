@@ -173,4 +173,6 @@ export const getImageUrl = async (req, res) => {
       respondError(req, res, 500, "Error al generar URL de imagen");
     }
   }
-}; 
+};
+
+ 
