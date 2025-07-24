@@ -1,12 +1,12 @@
 // Exportar todos los middlewares de validación
-export { 
-  validateRequest, 
-  validateMongoId, 
-  validateRequiredFields, 
-  sanitizeInput 
-} from './request.middleware.js';
+export {
+  validateRequest,
+  validateMongoId,
+  validateRequiredFields,
+  sanitizeInput
+} from '../../core/middlewares/request.middleware.js'
 
-export { 
+export {
   validateFileType,
   validateImageFile,
   validateMaterialFile,
@@ -14,7 +14,7 @@ export {
   validateFileSize,
   requireFile,
   validateFileName
-} from './file.middleware.js';
+} from '../../features/file-system/middlewares/file.middleware.js'
 
 export {
   validateParams,
@@ -22,4 +22,4 @@ export {
   validateBody,
   sanitizeInput as enhancedSanitizeInput,
   validatePagination
-} from './enhanced.middleware.js';
+} from './enhanced.middleware.js'
