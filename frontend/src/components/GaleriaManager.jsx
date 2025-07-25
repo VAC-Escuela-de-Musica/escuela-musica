@@ -26,7 +26,8 @@ import {
   InputLabel,
   ImageList,
   ImageListItem,
-  ImageListItemBar
+  ImageListItemBar,
+  InputAdornment
 } from '@mui/material';
 import { useCarouselConfig } from '../hooks/useCarouselConfig.js';
 import {
@@ -37,7 +38,8 @@ import {
   VisibilityOff as VisibilityOffIcon,
   KeyboardArrowUp as ArrowUpIcon,
   KeyboardArrowDown as ArrowDownIcon,
-  SwapVert as ReorderIcon
+  SwapVert as ReorderIcon,
+  Search as SearchIcon
 } from '@mui/icons-material';
 
 const GaleriaManager = () => {
@@ -49,17 +51,17 @@ const GaleriaManager = () => {
   const [reorderMode, setReorderMode] = useState(false);
   const [carouselReorderMode, setCarouselReorderMode] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [fileDescriptions, setFileDescriptions] = useState({});
+  const [fileTitles, setFileTitles] = useState({});
+  const [editingFile, setEditingFile] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Form state
   const [formData, setFormData] = useState({
     titulo: '',
-    descripcion: '',
-    imagen: '',
-    categoria: 'otros',
-    tags: [],
-    activo: true,
-    cols: 1,
-    rows: 1
+    descripcion: ''
   });
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -258,26 +260,14 @@ const GaleriaManager = () => {
     if (imagen) {
       setEditingImage(imagen);
       setFormData({
-        titulo: imagen.titulo,
-        descripcion: imagen.descripcion,
-        imagen: imagen.imagen,
-        categoria: imagen.categoria,
-        tags: imagen.tags || [],
-        activo: imagen.activo,
-        cols: imagen.cols || 1,
-        rows: imagen.rows || 1
+        titulo: imagen.titulo || '',
+        descripcion: imagen.descripcion || ''
       });
     } else {
       setEditingImage(null);
       setFormData({
         titulo: '',
-        descripcion: '',
-        imagen: '',
-        categoria: 'otros',
-        tags: [],
-        activo: true,
-        cols: 1,
-        rows: 1
+        descripcion: ''
       });
     }
     setOpenDialog(true);
@@ -288,13 +278,7 @@ const GaleriaManager = () => {
     setEditingImage(null);
     setFormData({
       titulo: '',
-      descripcion: '',
-      imagen: '',
-      categoria: 'otros',
-      tags: [],
-      activo: true,
-      cols: 1,
-      rows: 1
+      descripcion: ''
     });
   };
 
@@ -308,63 +292,117 @@ const GaleriaManager = () => {
 
 
 
-  const handleImageUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+
+
+  const handleMultipleFileUpload = async (files) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
 
     try {
-      // Validar tipo de archivo
-      if (!file.type.startsWith('image/')) {
-        showSnackbar('Solo se permiten archivos de imagen', 'error');
-        return;
-      }
-
-      // Validar tamaño (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        showSnackbar('El archivo es demasiado grande. Máximo 5MB', 'error');
-        return;
-      }
-
-      const token = localStorage.getItem('token');
-      
-      // Obtener URL pre-firmada para subida
-      const uploadResponse = await fetch(`${API_URL}/presigned/upload`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          contentType: file.type
-        })
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Error al obtener URL de subida');
-      }
-
-      const uploadData = await uploadResponse.json();
-      
-      // Subir archivo directamente a MinIO usando la URL pre-firmada
-      const uploadToMinIO = await fetch(uploadData.data.uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type
+      const validFiles = files.filter(file => {
+        // Validar tipo de archivo
+        if (!file.type.startsWith('image/')) {
+          showSnackbar(`El archivo ${file.name} no es una imagen válida.`, 'error');
+          return false;
         }
+
+        // Validar tamaño (máximo 256MB como en la imagen)
+        const maxSize = 256 * 1024 * 1024; // 256MB
+        if (file.size > maxSize) {
+          showSnackbar(`El archivo ${file.name} es demasiado grande. Máximo 256MB.`, 'error');
+          return false;
+        }
+
+        return true;
       });
 
-      if (!uploadToMinIO.ok) {
-        throw new Error('Error al subir imagen a MinIO');
+      if (validFiles.length === 0) {
+        setUploading(false);
+        return;
       }
 
-      // Actualizar formulario con la URL pública
-      setFormData({ ...formData, imagen: uploadData.data.publicUrl });
-      showSnackbar('Imagen subida exitosamente', 'success');
+      setLoading(true);
+      let uploadedCount = 0;
 
+      for (let index = 0; index < validFiles.length; index++) {
+        const file = validFiles[index];
+        try {
+          const token = localStorage.getItem('token');
+          
+          // Obtener URL pre-firmada para subida
+          const uploadResponse = await fetch(`${API_URL}/presigned/upload`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              contentType: file.type
+            })
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error('Error al obtener URL de subida');
+          }
+
+          const uploadData = await uploadResponse.json();
+          
+          // Subir archivo directamente a MinIO usando la URL pre-firmada
+          const uploadToMinIO = await fetch(uploadData.data.uploadUrl, {
+            method: 'PUT',
+            body: file,
+            headers: {
+              'Content-Type': file.type
+            }
+          });
+
+          if (!uploadToMinIO.ok) {
+            throw new Error('Error al subir imagen a MinIO');
+          }
+
+          // Crear entrada en la galería automáticamente
+          const galeriaResponse = await fetch(`${API_URL}/galeria`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+                          body: JSON.stringify({
+                titulo: fileTitles[index] || '', // Usar título personalizado o vacío
+                descripcion: fileDescriptions[index] || '', // Usar descripción personalizada o vacía
+                imagen: uploadData.data.publicUrl,
+                categoria: 'otros',
+                tags: [],
+                activo: true,
+                usuario: 'admin', // Obtener del usuario actual
+                cols: 1,
+                rows: 1
+              })
+          });
+
+          if (galeriaResponse.ok) {
+            uploadedCount++;
+          } else {
+            console.error(`Error creando entrada para ${file.name}`);
+          }
+
+        } catch (error) {
+          console.error(`Error subiendo ${file.name}:`, error);
+          showSnackbar(`Error al subir ${file.name}: ${error.message}`, 'error');
+        }
+      }
+
+      if (uploadedCount > 0) {
+        showSnackbar(`${uploadedCount} imagen(es) subida(s) exitosamente`, 'success');
+        // Recargar la galería
+        fetchGaleria();
+      }
+      
     } catch (error) {
-      console.error('Error al subir imagen:', error);
-      showSnackbar('Error al subir imagen', 'error');
+      console.error('Error en subida múltiple:', error);
+      showSnackbar('Error en la subida múltiple: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -419,165 +457,249 @@ const GaleriaManager = () => {
     );
   }
 
-  return (
+    return (
     <Box sx={{ p: 3, bgcolor: '#1a1a1a', minHeight: '100vh' }}>
       <Typography variant="h3" sx={{ color: 'white', fontWeight: 'bold', mb: 4, textAlign: 'center' }}>
         Gestión de Imágenes
       </Typography>
 
-      {/* Sección 1: Imágenes del Carrusel */}
+      {/* Sección 1: Subida de Imágenes */}
       <Card sx={{ mb: 4, bgcolor: '#2a2a2a', color: 'white' }}>
         <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold' }}>
-              🎠 Imágenes del Carrusel
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Typography variant="body2" sx={{ color: '#ccc' }}>
-                Imágenes seleccionadas de la galería para mostrar en el carrusel ({selectedImages.length} seleccionadas)
-              </Typography>
-              <Tooltip title="Modo reordenar carrusel">
-                <IconButton
-                  onClick={() => setCarouselReorderMode(!carouselReorderMode)}
-                  sx={{ 
-                    bgcolor: carouselReorderMode ? 'primary.main' : 'transparent',
-                    color: carouselReorderMode ? 'white' : 'white',
-                    '&:hover': { bgcolor: carouselReorderMode ? 'primary.dark' : 'rgba(255,255,255,0.1)' }
-                  }}
-                >
-                  <ReorderIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Box>
+          <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold', mb: 3 }}>
+            📤 Subir Nuevas Imágenes
+          </Typography>
           
-          <ImageList
-            sx={{ 
-              width: '100%', 
-              height: 'auto',
-              bgcolor: 'rgba(255, 255, 255, 0.05)',
+          {/* Área de subida de archivos */}
+          <Box
+            sx={{
+              border: '2px dashed #666',
               borderRadius: 2,
-              p: 2
+              p: 4,
+              textAlign: 'center',
+              bgcolor: 'rgba(255, 255, 255, 0.05)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                borderColor: '#1976d2',
+                bgcolor: 'rgba(25, 118, 210, 0.1)',
+              },
+              mb: 3
             }}
-            variant="quilted"
-            cols={4}
-            rowHeight={120}
+            onClick={() => document.getElementById('file-upload').click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.currentTarget.style.borderColor = '#1976d2';
+              e.currentTarget.style.bgcolor = 'rgba(25, 118, 210, 0.1)';
+            }}
+            onDragLeave={(e) => {
+              e.currentTarget.style.borderColor = '#666';
+              e.currentTarget.style.bgcolor = 'rgba(255, 255, 255, 0.05)';
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.currentTarget.style.borderColor = '#666';
+              e.currentTarget.style.bgcolor = 'rgba(255, 255, 255, 0.05)';
+              const files = Array.from(e.dataTransfer.files);
+              setSelectedFiles(prev => [...prev, ...files]);
+            }}
           >
-            {selectedImages.map((imagen, index) => (
-              <ImageListItem 
-                key={imagen._id} 
-                sx={{ position: 'relative' }}
-              >
-                {/* Botones de acción para carrusel */}
-                <Box sx={{ 
-                  position: 'absolute', 
-                  top: 8, 
-                  right: 8, 
-                  zIndex: 10,
-                  display: 'flex',
-                  gap: 0.5
-                }}>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleRemoveFromCarousel(imagen._id)}
-                    sx={{ 
-                      backgroundColor: 'rgba(211, 47, 47, 0.1)',
-                      color: '#f44336',
-                      width: 28,
-                      height: 28,
-                      '&:hover': {
-                        backgroundColor: 'rgba(211, 47, 47, 0.2)',
-                      }
-                    }}
-                    title="Remover del carrusel"
-                  >
-                    <DeleteIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Box>
+            <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+              Arrastra archivos a cualquier lugar para subirlos
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#ccc', mb: 3 }}>
+              o
+            </Typography>
+            <Button
+              variant="outlined"
+              component="span"
+              sx={{
+                borderColor: '#1976d2',
+                color: '#1976d2',
+                '&:hover': {
+                  borderColor: '#1565c0',
+                  bgcolor: 'rgba(25, 118, 210, 0.1)',
+                }
+              }}
+            >
+              Seleccionar archivos
+            </Button>
+            <Typography variant="body2" sx={{ color: '#888', mt: 2 }}>
+              Tamaño máximo de archivo: 256 MB.
+            </Typography>
+            <input
+              id="file-upload"
+              type="file"
+              multiple
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const files = Array.from(e.target.files);
+                setSelectedFiles(prev => [...prev, ...files]);
+              }}
+            />
+          </Box>
 
-                {/* Controles de reordenamiento para carrusel */}
-                {carouselReorderMode && (
-                  <Box sx={{ 
-                    position: 'absolute', 
-                    left: 8, 
-                    top: 8, 
-                    zIndex: 10,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 0.5
-                  }}>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleReorderCarousel(index, index - 1)}
-                      disabled={index === 0}
-                      sx={{ 
-                        color: 'white', 
-                        p: 0.5,
-                        bgcolor: 'rgba(0,0,0,0.5)',
-                        '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
-                      }}
-                    >
-                      <ArrowUpIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleReorderCarousel(index, index + 1)}
-                      disabled={index === selectedImages.length - 1}
-                      sx={{ 
-                        color: 'white', 
-                        p: 0.5,
-                        bgcolor: 'rgba(0,0,0,0.5)',
-                        '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
-                      }}
-                    >
-                      <ArrowDownIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                )}
-                <img
-                  src={imagen.imagen}
-                  alt={imagen.titulo}
-                  loading="lazy"
-                  style={{ 
-                    borderRadius: 8,
-                    objectFit: 'cover'
-                  }}
-                />
-                
-                <ImageListItemBar
-                  title={imagen.titulo}
-                  subtitle={`Orden: ${index + 1}`}
-                  sx={{
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%)',
-                    borderBottomLeftRadius: 8,
-                    borderBottomRightRadius: 8
-                  }}
-                />
-              </ImageListItem>
-            ))}
-          </ImageList>
-          
-          {selectedImages.length === 0 && (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="body1" sx={{ color: '#888' }}>
-                No hay imágenes seleccionadas para el carrusel. Selecciona imágenes de la galería para agregarlas.
+          {/* Vista previa de archivos seleccionados */}
+          {selectedFiles.length > 0 && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+                Archivos Seleccionados ({selectedFiles.length})
               </Typography>
+              
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                {selectedFiles.map((file, index) => (
+                  <Grid item xs={12} sm={6} md={3} key={index}>
+                    <Card sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)' }}>
+                      <Box sx={{ position: 'relative', paddingTop: '100%' }}>
+                        <Box
+                          component="img"
+                          src={URL.createObjectURL(file)}
+                          alt={file.name}
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setSelectedFiles(files => files.filter((_, i) => i !== index));
+                          }}
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            bgcolor: 'rgba(0, 0, 0, 0.5)',
+                            color: 'white',
+                            '&:hover': {
+                              bgcolor: 'rgba(211, 47, 47, 0.8)',
+                            }
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                      <CardContent sx={{ py: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                          <Typography noWrap variant="caption" sx={{ color: 'white', flex: 1 }}>
+                            {file.name}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => setEditingFile(editingFile === index ? null : index)}
+                            sx={{ 
+                              ml: 1,
+                              backgroundColor: editingFile === index ? 'rgba(25, 118, 210, 0.2)' : 'rgba(25, 118, 210, 0.1)',
+                              color: '#2196f3',
+                              width: 24,
+                              height: 24,
+                              '&:hover': {
+                                backgroundColor: 'rgba(25, 118, 210, 0.3)',
+                              }
+                            }}
+                          >
+                            <EditIcon sx={{ fontSize: 14 }} />
+                          </IconButton>
+                        </Box>
+                        {editingFile === index && (
+                          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              placeholder="Título (opcional)"
+                              value={fileTitles[index] || ''}
+                              onChange={(e) => setFileTitles(prev => ({
+                                ...prev,
+                                [index]: e.target.value
+                              }))}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  color: 'white',
+                                  fontSize: '0.75rem',
+                                  '& fieldset': {
+                                    borderColor: 'rgba(255, 255, 255, 0.23)',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#2196f3',
+                                  },
+                                },
+                              }}
+                            />
+                            <TextField
+                              fullWidth
+                              size="small"
+                              multiline
+                              maxRows={3}
+                              placeholder="Descripción (opcional)"
+                              value={fileDescriptions[index] || ''}
+                              onChange={(e) => setFileDescriptions(prev => ({
+                                ...prev,
+                                [index]: e.target.value
+                              }))}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  color: 'white',
+                                  fontSize: '0.75rem',
+                                  '& fieldset': {
+                                    borderColor: 'rgba(255, 255, 255, 0.23)',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#2196f3',
+                                  },
+                                },
+                              }}
+                            />
+                          </Box>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => setSelectedFiles([])}
+                  disabled={uploading}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => {
+                    setUploading(true);
+                    handleMultipleFileUpload(selectedFiles)
+                      .finally(() => {
+                        setUploading(false);
+                        setSelectedFiles([]);
+                      });
+                  }}
+                  disabled={uploading}
+                  startIcon={uploading ? <CircularProgress size={20} /> : null}
+                >
+                  {uploading ? 'Subiendo...' : 'Subir Imágenes'}
+                </Button>
+              </Box>
             </Box>
           )}
         </CardContent>
       </Card>
 
-      {/* Divider */}
-      <Box sx={{ 
-        height: 2, 
-        bgcolor: '#444', 
-        mb: 4, 
-        borderRadius: 1,
-        mx: 'auto',
-        width: '80%'
-      }} />
-
-      {/* Sección 2: Gestión de Galería */}
+      {/* gestión galería */}
       <Card sx={{ bgcolor: '#2a2a2a', color: 'white' }}>
         <CardContent sx={{ p: 3 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -585,27 +707,51 @@ const GaleriaManager = () => {
               🖼️ Galería de Imágenes
             </Typography>
             <Box>
-              <Tooltip title="Modo reordenar">
-                <IconButton
-                  onClick={() => setReorderMode(!reorderMode)}
-                  sx={{ 
-                    mr: 2, 
-                    bgcolor: reorderMode ? 'primary.main' : 'transparent',
-                    color: reorderMode ? 'white' : 'white',
-                    '&:hover': { bgcolor: reorderMode ? 'primary.dark' : 'rgba(255,255,255,0.1)' }
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <TextField
+                  size="small"
+                  placeholder="Buscar imágenes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                      </InputAdornment>
+                    ),
                   }}
-                >
-                  <ReorderIcon />
-                </IconButton>
-              </Tooltip>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => handleOpenDialog()}
-                sx={{ bgcolor: '#1976d2', '&:hover': { bgcolor: '#1565c0' } }}
-              >
-                Agregar Imagen
-              </Button>
+                  sx={{
+                    minWidth: 200,
+                    '& .MuiOutlinedInput-root': {
+                      color: 'white',
+                      '& fieldset': {
+                        borderColor: 'rgba(255, 255, 255, 0.23)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#1976d2',
+                      },
+                    },
+                    '& .MuiInputBase-input::placeholder': {
+                      color: 'rgba(255, 255, 255, 0.5)',
+                    },
+                  }}
+                />
+                <Tooltip title="Modo reordenar">
+                  <IconButton
+                    onClick={() => setReorderMode(!reorderMode)}
+                    sx={{ 
+                      bgcolor: reorderMode ? 'primary.main' : 'transparent',
+                      color: reorderMode ? 'white' : 'white',
+                      '&:hover': { bgcolor: reorderMode ? 'primary.dark' : 'rgba(255,255,255,0.1)' }
+                    }}
+                  >
+                    <ReorderIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
             </Box>
           </Box>
 
@@ -621,12 +767,32 @@ const GaleriaManager = () => {
             cols={4}
             rowHeight={160}
           >
-            {Array.isArray(galeria) && galeria.map((imagen, index) => (
+            {Array.isArray(galeria) && galeria
+              .filter(imagen => {
+                if (!searchQuery) return true;
+                const searchLower = searchQuery.toLowerCase();
+                return (
+                  (imagen.titulo && imagen.titulo.toLowerCase().includes(searchLower)) ||
+                  (imagen.descripcion && imagen.descripcion.toLowerCase().includes(searchLower)) ||
+                  (imagen.categoria && imagen.categoria.toLowerCase().includes(searchLower))
+                );
+              })
+              .map((imagen, index) => (
               <ImageListItem 
                 key={imagen._id} 
                 cols={imagen.cols || 1} 
                 rows={imagen.rows || 1}
-                sx={{ position: 'relative' }}
+                sx={{ 
+                  position: 'relative',
+                  cursor: 'pointer',
+                  '& img': {
+                    transition: 'transform 0.2s',
+                  },
+                  '&:hover img': {
+                    transform: 'scale(1.02)'
+                  }
+                }}
+                onClick={() => handleOpenDialog(imagen)}
               >
                 {/* Botones de acción */}
                 <Box sx={{ 
@@ -639,7 +805,10 @@ const GaleriaManager = () => {
                 }}>
                   <IconButton
                     size="small"
-                    onClick={() => handleToggleStatus(imagen._id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleStatus(imagen._id);
+                    }}
                     sx={{ 
                       backgroundColor: imagen.activo 
                         ? 'rgba(76, 175, 80, 0.1)' 
@@ -659,7 +828,10 @@ const GaleriaManager = () => {
                   </IconButton>
                   <IconButton
                     size="small"
-                    onClick={() => handleOpenDialog(imagen)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenDialog(imagen);
+                    }}
                     sx={{ 
                       backgroundColor: 'rgba(25, 118, 210, 0.1)',
                       color: '#2196f3',
@@ -675,7 +847,10 @@ const GaleriaManager = () => {
                   </IconButton>
                   <IconButton
                     size="small"
-                    onClick={() => handleDelete(imagen._id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(imagen._id);
+                    }}
                     sx={{ 
                       backgroundColor: 'rgba(211, 47, 47, 0.1)',
                       color: '#f44336',
@@ -691,7 +866,10 @@ const GaleriaManager = () => {
                   </IconButton>
                   <IconButton
                     size="small"
-                    onClick={() => handleAddToCarousel(imagen)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToCarousel(imagen);
+                    }}
                     sx={{ 
                       backgroundColor: isImageSelected(imagen._id) 
                         ? 'rgba(255, 193, 7, 0.1)' 
@@ -718,7 +896,6 @@ const GaleriaManager = () => {
                       <AddIcon sx={{ fontSize: 16 }} />
                     )}
                   </IconButton>
-
                 </Box>
 
                 <img
@@ -727,7 +904,9 @@ const GaleriaManager = () => {
                   loading="lazy"
                   style={{ 
                     borderRadius: 8,
-                    objectFit: 'cover'
+                    objectFit: 'cover',
+                    width: '100%',
+                    height: '100%'
                   }}
                 />
                 
@@ -741,9 +920,7 @@ const GaleriaManager = () => {
                         color={imagen.activo ? 'success' : 'default'}
                         sx={{ fontSize: '0.7rem', mb: 0.5 }}
                       />
-                      <Typography variant="caption" sx={{ color: '#ccc', display: 'block' }}>
-                        Orden: {imagen.orden}
-                      </Typography>
+                      
                     </Box>
                   }
                   sx={{
@@ -799,142 +976,143 @@ const GaleriaManager = () => {
       </Card>
 
       {/* Dialog para crear/editar */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ bgcolor: '#2a2a2a', color: 'white' }}>
-          {editingImage ? 'Editar Imagen' : 'Agregar Nueva Imagen'}
-        </DialogTitle>
-        <DialogContent sx={{ bgcolor: '#2a2a2a', pt: 2 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Título"
-                value={formData.titulo}
-                onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                sx={{ mb: 2 }}
-                inputProps={{ maxLength: 100 }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Descripción (opcional)"
-                multiline
-                rows={3}
-                value={formData.descripcion}
-                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                sx={{ mb: 2 }}
-                inputProps={{ maxLength: 500 }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Box sx={{ mb: 2 }}>
-                <input
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  id="image-upload"
-                  type="file"
-                  onChange={handleImageUpload}
-                />
-                <label htmlFor="image-upload">
-                  <Button
-                    variant="outlined"
-                    component="span"
-                    startIcon={<AddIcon />}
-                    sx={{ mb: 2 }}
-                  >
-                    Seleccionar Imagen
-                  </Button>
-                </label>
-                {formData.imagen && (
-                  <Box sx={{ mt: 2 }}>
-                    <img 
-                      src={formData.imagen} 
-                      alt="Preview" 
-                      style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'cover' }}
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog} 
+        maxWidth={(!editingImage || editingImage.titulo || editingImage.descripcion) ? "sm" : "md"} 
+        fullWidth
+      >
+        {(!editingImage || editingImage.titulo || editingImage.descripcion) ? (
+          <>
+            <DialogTitle sx={{ bgcolor: '#2a2a2a', color: 'white', pb: 1 }}>
+              {editingImage ? 'Editar Imagen' : 'Agregar Nueva Imagen'}
+            </DialogTitle>
+            <DialogContent sx={{ bgcolor: '#2a2a2a', pt: 3 }}>
+              <Box sx={{ display: 'flex', gap: 3 }}>
+                {/* Campos de texto */}
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <Box sx={{ position: 'relative', pt: 2 }}>
+                    <TextField
+                      fullWidth
+                      label="Título (opcional)"
+                      value={formData.titulo}
+                      onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                      inputProps={{ maxLength: 100 }}
+                      variant="outlined"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          color: 'white',
+                          '& fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.23)',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#1976d2',
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          backgroundColor: '#2a2a2a',
+                          padding: '0 8px',
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: '#1976d2',
+                        },
+                      }}
+                    />
+                  </Box>
+                  <TextField
+                    fullWidth
+                    label="Descripción (opcional)"
+                    multiline
+                    rows={3}
+                    value={formData.descripcion}
+                    onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                    inputProps={{ maxLength: 500 }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        color: 'white',
+                        '& fieldset': {
+                          borderColor: 'rgba(255, 255, 255, 0.23)',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'rgba(255, 255, 255, 0.5)',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#1976d2',
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        backgroundColor: '#2a2a2a',
+                        padding: '0 8px',
+                      },
+                      '& .MuiInputLabel-root.Mui-focused': {
+                        color: '#1976d2',
+                      },
+                    }}
+                  />
+                </Box>
+
+                {/* Vista previa de la imagen */}
+                {editingImage && (
+                  <Box sx={{ 
+                    width: 200,
+                    height: 200,
+                    position: 'relative',
+                    borderRadius: 1,
+                    overflow: 'hidden',
+                    bgcolor: 'rgba(0, 0, 0, 0.2)',
+                    flexShrink: 0,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                  }}>
+                    <img
+                      src={editingImage.imagen}
+                      alt={editingImage.titulo || ''}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
                     />
                   </Box>
                 )}
               </Box>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel sx={{ color: 'white' }}>Categoría</InputLabel>
-                <Select
-                  value={formData.categoria}
-                  onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-                  sx={{ color: 'white' }}
-                >
-                  <MenuItem value="eventos">Eventos</MenuItem>
-                  <MenuItem value="instalaciones">Instalaciones</MenuItem>
-                  <MenuItem value="actividades">Actividades</MenuItem>
-                  <MenuItem value="profesores">Profesores</MenuItem>
-                  <MenuItem value="estudiantes">Estudiantes</MenuItem>
-                  <MenuItem value="otros">Otros</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Tags (separados por comas)"
-                value={formData.tags.join(', ')}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag)
-                })}
-                sx={{ mb: 2 }}
+            </DialogContent>
+            <DialogActions sx={{ bgcolor: '#2a2a2a' }}>
+              <Button onClick={handleCloseDialog} sx={{ color: 'white' }}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSubmit} 
+                variant="contained"
+              >
+                {editingImage ? 'Actualizar' : 'Crear'}
+              </Button>
+            </DialogActions>
+          </>
+        ) : (
+          <>
+            <DialogContent sx={{ bgcolor: '#2a2a2a', p: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+              <img
+                src={editingImage.imagen}
+                alt=""
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '80vh',
+                  objectFit: 'contain'
+                }}
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Columnas"
-                value={formData.cols}
-                onChange={(e) => setFormData({ ...formData, cols: parseInt(e.target.value) || 1 })}
-                sx={{ mb: 2 }}
-                inputProps={{ min: 1, max: 4 }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Filas"
-                value={formData.rows}
-                onChange={(e) => setFormData({ ...formData, rows: parseInt(e.target.value) || 1 })}
-                sx={{ mb: 2 }}
-                inputProps={{ min: 1, max: 4 }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.activo}
-                    onChange={(e) => setFormData({ ...formData, activo: e.target.checked })}
-                    color="primary"
-                  />
-                }
-                label="Activo"
-                sx={{ color: 'white' }}
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ bgcolor: '#2a2a2a' }}>
-          <Button onClick={handleCloseDialog} sx={{ color: 'white' }}>
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained"
-            disabled={!formData.titulo || !formData.imagen}
-          >
-            {editingImage ? 'Actualizar' : 'Crear'}
-          </Button>
-        </DialogActions>
+            </DialogContent>
+            <DialogActions sx={{ bgcolor: '#2a2a2a', justifyContent: 'center' }}>
+              <Button onClick={handleCloseDialog} sx={{ color: 'white' }}>
+                Cerrar
+              </Button>
+            </DialogActions>
+          </>
+        )}
       </Dialog>
 
       <Snackbar
@@ -947,6 +1125,178 @@ const GaleriaManager = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Divider */}
+      <Box sx={{ 
+        height: 2,  
+        mb: 4, 
+        borderRadius: 1,
+        mx: 'auto',
+        width: '80%'
+      }} />
+
+      {/* gestión carrusel */}
+      <Card sx={{ mb: 4, bgcolor: '#2a2a2a', color: 'white' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold' }}>
+              🎠 Imágenes del Carrusel
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: '#ccc' }}>
+                Imágenes seleccionadas de la galería para mostrar en el carrusel ({selectedImages.length} seleccionadas)
+              </Typography>
+              <Tooltip title="Modo reordenar carrusel">
+                <IconButton
+                  onClick={() => setCarouselReorderMode(!carouselReorderMode)}
+                  sx={{ 
+                    bgcolor: carouselReorderMode ? 'primary.main' : 'transparent',
+                    color: carouselReorderMode ? 'white' : 'white',
+                    '&:hover': { bgcolor: carouselReorderMode ? 'primary.dark' : 'rgba(255,255,255,0.1)' }
+                  }}
+                >
+                  <ReorderIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
+          
+          <ImageList
+            sx={{ 
+              width: '100%', 
+              height: 'auto',
+              bgcolor: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: 2,
+              p: 2
+            }}
+            variant="quilted"
+            cols={4}
+            rowHeight={120}
+          >
+            {selectedImages.map((imagen, index) => (
+              <ImageListItem 
+                key={imagen._id} 
+                sx={{ 
+                  position: 'relative',
+                  cursor: 'pointer',
+                  '& img': {
+                    transition: 'transform 0.2s',
+                  },
+                  '&:hover img': {
+                    transform: 'scale(1.02)'
+                  }
+                }}
+                onClick={() => handleOpenDialog(imagen)}
+              >
+                {/* Botones de acción para carrusel */}
+                <Box sx={{ 
+                  position: 'absolute', 
+                  top: 8, 
+                  right: 8, 
+                  zIndex: 10,
+                  display: 'flex',
+                  gap: 0.5
+                }}>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveFromCarousel(imagen._id);
+                    }}
+                    sx={{ 
+                      backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                      color: '#f44336',
+                      width: 28,
+                      height: 28,
+                      '&:hover': {
+                        backgroundColor: 'rgba(211, 47, 47, 0.2)',
+                      }
+                    }}
+                    title="Remover del carrusel"
+                  >
+                    <DeleteIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Box>
+
+                {/* Controles de reordenamiento para carrusel */}
+                {carouselReorderMode && (
+                  <Box sx={{ 
+                    position: 'absolute', 
+                    left: 8, 
+                    top: 8, 
+                    zIndex: 10,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 0.5
+                  }}>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReorderCarousel(index, index - 1);
+                      }}
+                      disabled={index === 0}
+                      sx={{ 
+                        color: 'white', 
+                        p: 0.5,
+                        bgcolor: 'rgba(0,0,0,0.5)',
+                        '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                      }}
+                    >
+                      <ArrowUpIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReorderCarousel(index, index + 1);
+                      }}
+                      disabled={index === selectedImages.length - 1}
+                      sx={{ 
+                        color: 'white', 
+                        p: 0.5,
+                        bgcolor: 'rgba(0,0,0,0.5)',
+                        '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                      }}
+                    >
+                      <ArrowDownIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                )}
+                <img
+                  src={imagen.imagen}
+                  alt={imagen.titulo}
+                  loading="lazy"
+                  style={{ 
+                    borderRadius: 8,
+                    objectFit: 'cover',
+                    width: '100%',
+                    height: '100%'
+                  }}
+                />
+                
+                <ImageListItemBar
+                  title={imagen.titulo}
+                  
+                  sx={{
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%)',
+                    borderBottomLeftRadius: 8,
+                    borderBottomRightRadius: 8
+                  }}
+                />
+              </ImageListItem>
+            ))}
+          </ImageList>
+          
+          {selectedImages.length === 0 && (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="body1" sx={{ color: '#888' }}>
+                No hay imágenes seleccionadas para el carrusel. Selecciona imágenes de la galería para agregarlas.
+              </Typography>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
     </Box>
   );
 };

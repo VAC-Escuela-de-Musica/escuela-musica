@@ -3,9 +3,10 @@ import mongoose from 'mongoose';
 const galeriaSchema = new mongoose.Schema({
   titulo: {
     type: String,
-    required: [true, 'El título es requerido'],
+    required: false,
     trim: true,
-    maxlength: [100, 'El título no puede tener más de 100 caracteres']
+    maxlength: [100, 'El título no puede tener más de 100 caracteres'],
+    default: ''
   },
   descripcion: {
     type: String,

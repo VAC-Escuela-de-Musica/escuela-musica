@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
-import Modal from '@mui/material/Modal';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
-import Card from '@mui/material/Card';
-import CardMedia from '@mui/material/CardMedia';
-import CardContent from '@mui/material/CardContent';
+import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
 
 function srcset(image, size, rows = 1, cols = 1) {
   return {
@@ -24,7 +24,7 @@ function srcset(image, size, rows = 1, cols = 1) {
 
 const Galeria = () => {
   const [selectedImage, setSelectedImage] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
   const [galeria, setGaleria] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -56,14 +56,12 @@ const Galeria = () => {
   }, [API_URL]);
 
   const handleImageClick = (item) => {
-    if (item.descripcion) {
-      setSelectedImage(item);
-      setOpenModal(true);
-    }
+    setSelectedImage(item);
+    setOpenDialog(true);
   };
 
-  const handleCloseModal = () => {
-    setOpenModal(false);
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
     setSelectedImage(null);
   };
 
@@ -111,11 +109,10 @@ const Galeria = () => {
           mb: 6, 
           fontWeight: 'bold',
           color: '#FFFFFF',
-          fontSize: { xs: '2.5rem', md: '3.5rem' },
-          
+          fontSize: { xs: '2.5rem', md: '3.5rem' }
         }}
       >
-        Galería de Imágenes
+        Galería
       </Typography>
       
       <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', maxWidth: '100vw' }}>
@@ -137,28 +134,34 @@ const Galeria = () => {
               cols={item.cols || 1} 
               rows={item.rows || 1}
               sx={{ 
-                cursor: item.descripcion ? 'pointer' : 'default',
-                '&:hover': item.descripcion ? {
-                  opacity: 0.8,
-                  transition: 'opacity 0.3s ease-in-out'
-                } : {}
+                position: 'relative',
+                cursor: 'pointer',
+                '& img': {
+                  transition: 'transform 0.2s',
+                },
+                '&:hover img': {
+                  transform: 'scale(1.02)'
+                }
               }}
               onClick={() => handleImageClick(item)}
             >
               <img
                 {...srcset(item.imagen, 160, item.rows, item.cols)}
-                alt={item.titulo}
+                alt={item.titulo || ''}
                 loading="lazy"
                 style={{ 
                   borderRadius: 8,
-                  objectFit: 'cover'
+                  objectFit: 'cover',
+                  width: '100%',
+                  height: '100%'
                 }}
               />
-              {item.descripcion && (
+              {(item.titulo || item.descripcion) && (
                 <ImageListItemBar
                   title={item.titulo}
+                  subtitle={item.descripcion}
                   sx={{
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)',
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%)',
                     borderBottomLeftRadius: 8,
                     borderBottomRightRadius: 8
                   }}
@@ -169,29 +172,22 @@ const Galeria = () => {
         </ImageList>
       </Box>
 
-      {/* Modal para mostrar imagen con descripción */}
-      <Modal
-        open={openModal}
-        onClose={handleCloseModal}
-        aria-labelledby="image-modal-title"
-        aria-describedby="image-modal-description"
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          p: 2
+      {/* Dialog para ver imagen */}
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog} 
+        maxWidth={(!selectedImage || selectedImage.titulo || selectedImage.descripcion) ? "md" : "md"} 
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#2a2a2a',
+            maxHeight: '90vh'
+          }
         }}
       >
-        <Card 
-          sx={{ 
-            maxWidth: { xs: '95%', md: 600 },
-            maxHeight: '90vh',
-            overflow: 'auto',
-            position: 'relative'
-          }}
-        >
+        <Box sx={{ position: 'relative' }}>
           <IconButton
-            onClick={handleCloseModal}
+            onClick={handleCloseDialog}
             sx={{
               position: 'absolute',
               right: 8,
@@ -206,41 +202,64 @@ const Galeria = () => {
           >
             <CloseIcon />
           </IconButton>
-          
-          <CardMedia
-            component="img"
-            image={selectedImage?.imagen}
-            alt={selectedImage?.titulo}
-            sx={{ 
-              width: '100%',
-              height: { xs: 300, md: 400 },
-              objectFit: 'cover'
-            }}
-          />
-          
-          <CardContent sx={{ p: 3 }}>
-            <Typography 
-              variant="h5" 
-              component="h2" 
-              gutterBottom
-              sx={{ fontWeight: 'bold', color: '#232b3b' }}
-            >
-              {selectedImage?.titulo}
-            </Typography>
-            
-            <Typography 
-              variant="body1" 
-              sx={{ 
-                color: '#555',
-                lineHeight: 1.6,
-                fontSize: '1.1rem'
-              }}
-            >
-              {selectedImage?.descripcion}
-            </Typography>
-          </CardContent>
-        </Card>
-      </Modal>
+          <DialogContent sx={{ p: 0 }}>
+            {(!selectedImage || selectedImage.titulo || selectedImage.descripcion) ? (
+              <Box sx={{ width: '100%' }}>
+                <Box sx={{ 
+                  width: '100%',
+                  height: '60vh',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  bgcolor: 'rgba(0, 0, 0, 0.2)',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}>
+                  <img
+                    src={selectedImage?.imagen}
+                    alt={selectedImage?.titulo || ''}
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      objectFit: 'contain'
+                    }}
+                  />
+                </Box>
+                <Box sx={{ p: 3 }}>
+                  {selectedImage?.titulo && (
+                    <Typography variant="h5" sx={{ color: 'white', mb: 2, fontWeight: 'bold' }}>
+                      {selectedImage.titulo}
+                    </Typography>
+                  )}
+                  {selectedImage?.descripcion && (
+                    <Typography sx={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '1.1rem', lineHeight: 1.6 }}>
+                      {selectedImage.descripcion}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            ) : (
+              <Box sx={{ 
+                width: '100%',
+                minHeight: '60vh',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+                <img
+                  src={selectedImage?.imagen}
+                  alt=""
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '80vh',
+                    objectFit: 'contain'
+                  }}
+                />
+              </Box>
+            )}
+          </DialogContent>
+        </Box>
+      </Dialog>
     </Box>
   );
 };
