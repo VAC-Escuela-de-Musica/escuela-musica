@@ -5,6 +5,7 @@ import './index.css';
 import App from './App.jsx';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import ErrorBoundary from './components/base/ErrorBoundary.jsx';
 
 const theme = createTheme({
   palette: {
@@ -20,10 +21,12 @@ const theme = createTheme({
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ThemeProvider theme={theme}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ThemeProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );

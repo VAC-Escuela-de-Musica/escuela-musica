@@ -1,6 +1,6 @@
-import internalMessageService from '../services/internalMessage.service.js';
-import { respondSuccess, respondError } from '../../../core/utils/responseHandler.util.js';
-import { handleError } from '../../../core/utils/errorHandler.util.js';
+import internalMessageService from '../services/internalMessage.service.js'
+import { respondSuccess, respondError } from '../../../core/utils/responseHandler.util.js'
+import { handleError } from '../../../core/utils/errorHandler.util.js'
 
 class InternalMessageController {
   /**
@@ -8,33 +8,33 @@ class InternalMessageController {
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
-  async createMessage(req, res) {
+  async createMessage (req, res) {
     try {
-      const { subject, content, recipientType, recipient, filters, type, priority, delivery, scheduledFor } = req.body;
-      const senderId = req.user.id;
+      const { subject, content, recipientType, recipient, filters, type, priority, delivery, scheduledFor } = req.body
+      const senderId = req.user.id
 
       // Validar campos requeridos
       if (!subject || !content) {
-        return respondError(req, res, 400, 'Asunto y contenido son requeridos');
+        return respondError(req, res, 400, 'Asunto y contenido son requeridos')
       }
 
       // Validar tipo de destinatario
       if (!['individual', 'all_students', 'by_instrument', 'by_level'].includes(recipientType)) {
-        return respondError(req, res, 400, 'Tipo de destinatario inválido');
+        return respondError(req, res, 400, 'Tipo de destinatario inválido')
       }
 
       // Validar destinatario individual
       if (recipientType === 'individual' && !recipient) {
-        return respondError(req, res, 400, 'Destinatario es requerido para mensajes individuales');
+        return respondError(req, res, 400, 'Destinatario es requerido para mensajes individuales')
       }
 
       // Validar filtros para mensajes masivos
       if (recipientType === 'by_instrument' && !filters?.instrument) {
-        return respondError(req, res, 400, 'Instrumento es requerido para mensajes por instrumento');
+        return respondError(req, res, 400, 'Instrumento es requerido para mensajes por instrumento')
       }
 
       if (recipientType === 'by_level' && !filters?.level) {
-        return respondError(req, res, 400, 'Nivel es requerido para mensajes por nivel');
+        return respondError(req, res, 400, 'Nivel es requerido para mensajes por nivel')
       }
 
       const messageData = {
@@ -47,18 +47,18 @@ class InternalMessageController {
         priority: priority || 'medium',
         delivery: delivery || { sendInternal: true, sendEmail: false, sendWhatsApp: false },
         scheduledFor: scheduledFor || null
-      };
-
-      const [message, error] = await internalMessageService.createMessage(messageData, senderId);
-
-      if (error) {
-        return respondError(req, res, 400, error);
       }
 
-      respondSuccess(req, res, 201, message, 'Mensaje creado correctamente');
+      const [message, error] = await internalMessageService.createMessage(messageData, senderId)
+
+      if (error) {
+        return respondError(req, res, 400, error)
+      }
+
+      respondSuccess(req, res, 201, message, 'Mensaje creado correctamente')
     } catch (error) {
-      handleError(error, 'internalMessage.controller -> createMessage');
-      respondError(req, res, 500, 'Error interno del servidor');
+      handleError(error, 'internalMessage.controller -> createMessage')
+      respondError(req, res, 500, 'Error interno del servidor')
     }
   }
 
@@ -67,21 +67,21 @@ class InternalMessageController {
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
-  async getAllMessages(req, res) {
+  async getAllMessages (req, res) {
     try {
-      const { type, status, priority, sender, recipientType } = req.query;
-      const filters = { type, status, priority, sender, recipientType };
+      const { type, status, priority, sender, recipientType } = req.query
+      const filters = { type, status, priority, sender, recipientType }
 
-      const [messages, error] = await internalMessageService.getAllMessages(filters);
+      const [messages, error] = await internalMessageService.getAllMessages(filters)
 
       if (error) {
-        return respondError(req, res, 400, error);
+        return respondError(req, res, 400, error)
       }
 
-      respondSuccess(req, res, 200, messages);
+      respondSuccess(req, res, 200, messages)
     } catch (error) {
-      handleError(error, 'internalMessage.controller -> getAllMessages');
-      respondError(req, res, 500, 'Error interno del servidor');
+      handleError(error, 'internalMessage.controller -> getAllMessages')
+      respondError(req, res, 500, 'Error interno del servidor')
     }
   }
 
@@ -90,26 +90,26 @@ class InternalMessageController {
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
-  async getStudentMessages(req, res) {
+  async getStudentMessages (req, res) {
     try {
-      const { studentId } = req.params;
-      const { unreadOnly, limit, skip } = req.query;
+      const { studentId } = req.params
+      const { unreadOnly, limit, skip } = req.query
       const options = {
         unreadOnly: unreadOnly === 'true',
         limit: parseInt(limit) || 50,
         skip: parseInt(skip) || 0
-      };
-
-      const [messages, error] = await internalMessageService.getStudentMessages(studentId, options);
-
-      if (error) {
-        return respondError(req, res, 400, error);
       }
 
-      respondSuccess(req, res, 200, messages);
+      const [messages, error] = await internalMessageService.getStudentMessages(studentId, options)
+
+      if (error) {
+        return respondError(req, res, 400, error)
+      }
+
+      respondSuccess(req, res, 200, messages)
     } catch (error) {
-      handleError(error, 'internalMessage.controller -> getStudentMessages');
-      respondError(req, res, 500, 'Error interno del servidor');
+      handleError(error, 'internalMessage.controller -> getStudentMessages')
+      respondError(req, res, 500, 'Error interno del servidor')
     }
   }
 
@@ -118,20 +118,20 @@ class InternalMessageController {
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
-  async getUnreadMessages(req, res) {
+  async getUnreadMessages (req, res) {
     try {
-      const { studentId } = req.params;
+      const { studentId } = req.params
 
-      const [messages, error] = await internalMessageService.getUnreadMessages(studentId);
+      const [messages, error] = await internalMessageService.getUnreadMessages(studentId)
 
       if (error) {
-        return respondError(req, res, 400, error);
+        return respondError(req, res, 400, error)
       }
 
-      respondSuccess(req, res, 200, messages);
+      respondSuccess(req, res, 200, messages)
     } catch (error) {
-      handleError(error, 'internalMessage.controller -> getUnreadMessages');
-      respondError(req, res, 500, 'Error interno del servidor');
+      handleError(error, 'internalMessage.controller -> getUnreadMessages')
+      respondError(req, res, 500, 'Error interno del servidor')
     }
   }
 
@@ -140,21 +140,21 @@ class InternalMessageController {
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
-  async markAsRead(req, res) {
+  async markAsRead (req, res) {
     try {
-      const { messageId } = req.params;
-      const studentId = req.user.id;
+      const { messageId } = req.params
+      const studentId = req.user.id
 
-      const [message, error] = await internalMessageService.markAsRead(messageId, studentId);
+      const [message, error] = await internalMessageService.markAsRead(messageId, studentId)
 
       if (error) {
-        return respondError(req, res, 400, error);
+        return respondError(req, res, 400, error)
       }
 
-      respondSuccess(req, res, 200, message, 'Mensaje marcado como leído');
+      respondSuccess(req, res, 200, message, 'Mensaje marcado como leído')
     } catch (error) {
-      handleError(error, 'internalMessage.controller -> markAsRead');
-      respondError(req, res, 500, 'Error interno del servidor');
+      handleError(error, 'internalMessage.controller -> markAsRead')
+      respondError(req, res, 500, 'Error interno del servidor')
     }
   }
 
@@ -163,20 +163,20 @@ class InternalMessageController {
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
-  async sendMessage(req, res) {
+  async sendMessage (req, res) {
     try {
-      const { messageId } = req.params;
+      const { messageId } = req.params
 
-      const [message, error] = await internalMessageService.sendMessage(messageId);
+      const [message, error] = await internalMessageService.sendMessage(messageId)
 
       if (error) {
-        return respondError(req, res, 400, error);
+        return respondError(req, res, 400, error)
       }
 
-      respondSuccess(req, res, 200, message, 'Mensaje enviado correctamente');
+      respondSuccess(req, res, 200, message, 'Mensaje enviado correctamente')
     } catch (error) {
-      handleError(error, 'internalMessage.controller -> sendMessage');
-      respondError(req, res, 500, 'Error interno del servidor');
+      handleError(error, 'internalMessage.controller -> sendMessage')
+      respondError(req, res, 500, 'Error interno del servidor')
     }
   }
 
@@ -185,18 +185,18 @@ class InternalMessageController {
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
-  async getMessageStats(req, res) {
+  async getMessageStats (req, res) {
     try {
-      const [stats, error] = await internalMessageService.getMessageStats();
+      const [stats, error] = await internalMessageService.getMessageStats()
 
       if (error) {
-        return respondError(req, res, 400, error);
+        return respondError(req, res, 400, error)
       }
 
-      respondSuccess(req, res, 200, stats);
+      respondSuccess(req, res, 200, stats)
     } catch (error) {
-      handleError(error, 'internalMessage.controller -> getMessageStats');
-      respondError(req, res, 500, 'Error interno del servidor');
+      handleError(error, 'internalMessage.controller -> getMessageStats')
+      respondError(req, res, 500, 'Error interno del servidor')
     }
   }
 
@@ -205,20 +205,20 @@ class InternalMessageController {
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
-  async deleteMessage(req, res) {
+  async deleteMessage (req, res) {
     try {
-      const { messageId } = req.params;
+      const { messageId } = req.params
 
-      const [result, error] = await internalMessageService.deleteMessage(messageId);
+      const [result, error] = await internalMessageService.deleteMessage(messageId)
 
       if (error) {
-        return respondError(req, res, 400, error);
+        return respondError(req, res, 400, error)
       }
 
-      respondSuccess(req, res, 200, null, 'Mensaje eliminado correctamente');
+      respondSuccess(req, res, 200, null, 'Mensaje eliminado correctamente')
     } catch (error) {
-      handleError(error, 'internalMessage.controller -> deleteMessage');
-      respondError(req, res, 500, 'Error interno del servidor');
+      handleError(error, 'internalMessage.controller -> deleteMessage')
+      respondError(req, res, 500, 'Error interno del servidor')
     }
   }
 
@@ -227,22 +227,22 @@ class InternalMessageController {
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
-  async getMessageById(req, res) {
+  async getMessageById (req, res) {
     try {
-      const { messageId } = req.params;
+      const { messageId } = req.params
 
-      const [message, error] = await internalMessageService.getMessageById(messageId);
+      const [message, error] = await internalMessageService.getMessageById(messageId)
 
       if (error) {
-        return respondError(req, res, 404, error);
+        return respondError(req, res, 404, error)
       }
 
-      respondSuccess(req, res, 200, message);
+      respondSuccess(req, res, 200, message)
     } catch (error) {
-      handleError(error, 'internalMessage.controller -> getMessageById');
-      respondError(req, res, 500, 'Error interno del servidor');
+      handleError(error, 'internalMessage.controller -> getMessageById')
+      respondError(req, res, 500, 'Error interno del servidor')
     }
   }
 }
 
-export default new InternalMessageController(); 
+export default new InternalMessageController()

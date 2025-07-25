@@ -1,41 +1,41 @@
-"use strict";
+'use strict'
 
-import mongoose from "mongoose";
+import mongoose from 'mongoose'
 
 const mensajeSchema = new mongoose.Schema({
-  emisor: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "User",
+  emisor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
-  receptorId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    required: true,
+  receptorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
   },
-  receptorTipo: { 
-    type: String, 
-    enum: ["User", "Estudiante"], 
-    required: true,
+  receptorTipo: {
+    type: String,
+    enum: ['User', 'Estudiante'],
+    required: true
   },
   contenido: {
     type: String,
-    required: [true, "El contenido del mensaje es requerido"],
-    trim: true,
+    required: [true, 'El contenido del mensaje es requerido'],
+    trim: true
   },
-  enviadoPorCorreo: { 
-    type: Boolean, 
-    default: false,
+  enviadoPorCorreo: {
+    type: Boolean,
+    default: false
   },
-  enviadoPorWhatsapp: { 
-    type: Boolean, 
-    default: false,
+  enviadoPorWhatsapp: {
+    type: Boolean,
+    default: false
   },
-  fecha: { 
-    type: Date, 
-    default: Date.now,
-  },
+  fecha: {
+    type: Date,
+    default: Date.now
+  }
 }, {
   timestamps: true,
-  versionKey: false,
-});
+  versionKey: false
+})
 
-export default mongoose.model("Mensaje", mensajeSchema); 
+export default mongoose.model('Mensaje', mensajeSchema)

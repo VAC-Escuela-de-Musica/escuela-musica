@@ -1,65 +1,65 @@
-import { 
-  generateUploadUrl, 
-  generateDownloadUrl, 
-  deleteImageFromMinio,
-} from "../services/presignedUrl.service.js";
-import { respondSuccess, respondError } from "../../../core/utils/resHandler.js";
-import { handleError } from "../../../core/utils/errorHandler.js";
+import {
+  generateUploadUrl,
+  generateDownloadUrl,
+  deleteImageFromMinio
+} from '../services/presignedUrl.service.js'
+import { respondSuccess, respondError } from '../../../core/utils/responseHandler.util.js'
+import { handleError } from '../../../core/utils/errorHandler.util.js'
 
 /**
  * Generar URL pre-firmada para subir imagen
  */
 export const getUploadUrl = async (req, res) => {
   try {
-    const { fileName, contentType } = req.body;
-    
+    const { fileName, contentType } = req.body
+
     if (!contentType) {
-      return respondError(req, res, 400, "contentType es requerido");
+      return respondError(req, res, 400, 'contentType es requerido')
     }
 
-    const result = await generateUploadUrl(fileName, contentType);
-    respondSuccess(req, res, 200, result, "URL de subida generada exitosamente");
+    const result = await generateUploadUrl(fileName, contentType)
+    respondSuccess(req, res, 200, result, 'URL de subida generada exitosamente')
   } catch (error) {
-    console.error("Error en getUploadUrl:", error);
-    respondError(req, res, 500, "Error al generar URL de subida");
+    console.error('Error en getUploadUrl:', error)
+    respondError(req, res, 500, 'Error al generar URL de subida')
   }
-};
+}
 
 /**
  * Generar URL pre-firmada para descargar imagen
  */
 export const getDownloadUrl = async (req, res) => {
   try {
-    const { fileName } = req.params;
-    const { duration } = req.query;
-    
+    const { fileName } = req.params
+    const { duration } = req.query
+
     if (!fileName) {
-      return respondError(req, res, 400, "fileName es requerido");
+      return respondError(req, res, 400, 'fileName es requerido')
     }
 
-    const result = await generateDownloadUrl(fileName, duration);
-    respondSuccess(req, res, 200, result, "URL de descarga generada exitosamente");
+    const result = await generateDownloadUrl(fileName, duration)
+    respondSuccess(req, res, 200, result, 'URL de descarga generada exitosamente')
   } catch (error) {
-    console.error("Error en getDownloadUrl:", error);
-    respondError(req, res, 500, "Error al generar URL de descarga");
+    console.error('Error en getDownloadUrl:', error)
+    respondError(req, res, 500, 'Error al generar URL de descarga')
   }
-};
+}
 
 /**
  * Eliminar imagen de MinIO
  */
 export const deleteImage = async (req, res) => {
   try {
-    const { fileName } = req.params;
-    
+    const { fileName } = req.params
+
     if (!fileName) {
-      return respondError(req, res, 400, "fileName es requerido");
+      return respondError(req, res, 400, 'fileName es requerido')
     }
 
-    const result = await deleteImageFromMinio(fileName);
-    respondSuccess(req, res, 200, result, "Imagen eliminada exitosamente");
+    const result = await deleteImageFromMinio(fileName)
+    respondSuccess(req, res, 200, result, 'Imagen eliminada exitosamente')
   } catch (error) {
-    console.error("Error en deleteImage:", error);
-    respondError(req, res, 500, "Error al eliminar imagen");
+    console.error('Error en deleteImage:', error)
+    respondError(req, res, 500, 'Error al eliminar imagen')
   }
-}; 
+}

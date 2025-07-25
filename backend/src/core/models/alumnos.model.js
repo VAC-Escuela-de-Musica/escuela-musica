@@ -4,12 +4,12 @@ import alumnoSchema from '../schemas/alumnos.schema.js'
 import bcrypt from 'bcryptjs'
 
 // Métodos para hashear y comparar contraseñas
-alumnoSchema.statics.encryptPassword = async function(password) {
+alumnoSchema.statics.encryptPassword = async function (password) {
   const salt = await bcrypt.genSalt(10)
   return await bcrypt.hash(password, salt)
 }
 
-alumnoSchema.statics.comparePassword = async function(password, receivedPassword) {
+alumnoSchema.statics.comparePassword = async function (password, receivedPassword) {
   return await bcrypt.compare(password, receivedPassword)
 }
 

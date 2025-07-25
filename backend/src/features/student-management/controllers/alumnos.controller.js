@@ -133,7 +133,7 @@ async function deleteAlumnos (req, res) {
 }
 
 // Controlador para obtener un alumno por email
-async function getAlumnoByEmail(req, res) {
+async function getAlumnoByEmail (req, res) {
   try {
     const { email } = req.params
     const [alumno, errorAlumno] = await AlumnoService.getAlumnoByEmail(email)
@@ -146,7 +146,7 @@ async function getAlumnoByEmail(req, res) {
 }
 
 // Controlador para obtener un alumno por userId
-async function getAlumnoByUserId(req, res) {
+async function getAlumnoByUserId (req, res) {
   try {
     const { userId } = req.params
     const [alumno, errorAlumno] = await AlumnoService.getAlumnoByUserId(userId)
@@ -159,7 +159,7 @@ async function getAlumnoByUserId(req, res) {
 }
 
 // Controlador para que los estudiantes actualicen su propia información
-async function updateStudentProfile(req, res) {
+async function updateStudentProfile (req, res) {
   console.log('[PUT] /api/alumnos/profile/update - Actualizar perfil de estudiante', req.body)
   try {
     // Verificar que el usuario autenticado es un estudiante
@@ -212,7 +212,7 @@ async function updateStudentProfile(req, res) {
 
     // Actualizar el estudiante
     const [updatedAlumno, updateError] = await AlumnoService.updateAlumnos(alumno._id, updateData)
-    
+
     if (updateError) {
       return respondError(req, res, 400, updateError)
     }

@@ -1,5 +1,5 @@
 // Importa el archivo 'configEnv.js' para cargar las variables de entorno
-import { PORT, HOST, SESSION_SECRET } from './core/core/config/configEnv.js'
+import { PORT, HOST, SESSION_SECRET } from './core/config/configEnv.js'
 import path from 'node:path'
 // Importa el módulo 'cors' para agregar los cors
 import cors from 'cors'
@@ -11,13 +11,12 @@ import morgan from 'morgan'
 import cookieParser from 'cookie-parser'
 // Importa el módulo 'lusca' para manejar la seguridad de la aplicación
 import lusca from 'lusca'
-const { csrf } = lusca
 /** El enrutador principal */
 import indexRoutes from './routes/index.routes.js'
 // Importa el archivo 'configDB.js' para crear la conexión a la base de datos
-import { setupDB } from './core/core/config/configDB.js'
+import { setupDB } from './core/config/configDB.js'
 // Importa la configuración de MinIO
-import { setupMinIO } from './core/core/config/minio.config.js'
+import { setupMinIO } from './core/config/minio.config.js'
 // Importa el handler de errores
 import { handleFatalError, handleError } from './core/utils/errorHandler.util.js'
 import { createRoles, createUsers } from './core/config/initialSetup.js'
@@ -25,6 +24,7 @@ import { createRoles, createUsers } from './core/config/initialSetup.js'
 import { initializeServices } from './services/index.js'
 // Importa el módulo 'express-session' para manejar sesiones
 import session from 'express-session'
+const { csrf } = lusca
 
 /**
  * Inicia el servidor web
@@ -64,24 +64,24 @@ async function setupServer () {
         /^\/api\/files\/upload$/,
         /^\/api\/alumnos.*$/, // Excluir todas las rutas de alumnos
         /^\/api\/messaging\/whatsapp-web\/(reset|initialize)$/, // Excluir rutas públicas de WhatsApp Web
-         /^\/api\/messaging\/(send-whatsapp|send-email|send-message|test-message)$/, // Excluir rutas de envío de mensajes
+        /^\/api\/messaging\/(send-whatsapp|send-email|send-message|test-message)$/, // Excluir rutas de envío de mensajes
         /^\/api\/internal-messages.*$/ // Excluir todas las rutas de mensajes internos
-      ];
+      ]
       const isExcluded = csrfExcluded.some(pattern => {
-        if (pattern instanceof RegExp) return pattern.test(req.path);
-        return req.path === pattern;
-      });
-      
+        if (pattern instanceof RegExp) return pattern.test(req.path)
+        return req.path === pattern
+      })
+
       // Debug logging para CSRF
       if (req.method === 'POST' && (req.path.includes('galeria') || req.path.includes('upload') || req.path.includes('internal-messages'))) {
-        console.log(`[CSRF DEBUG] ${req.method} ${req.path} | excluded: ${isExcluded} | patterns checked:`, csrfExcluded.map(p => p instanceof RegExp ? p.toString() : p));
+        console.log(`[CSRF DEBUG] ${req.method} ${req.path} | excluded: ${isExcluded} | patterns checked:`, csrfExcluded.map(p => p instanceof RegExp ? p.toString() : p))
       }
-      
+
       if (isExcluded) {
-        return next();
+        return next()
       }
-      return csrf()(req, res, next);
-    });
+      return csrf()(req, res, next)
+    })
     // Agregamos morgan para ver las peticiones que se hacen al servidor
     app.use(morgan('dev'))
     // Agrega el enrutador principal al servidor

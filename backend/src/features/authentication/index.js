@@ -15,7 +15,7 @@ export {
 } from './services/authorization.service.js'
 
 // Exportar middlewares individuales
-export { default as authenticationMiddleware } from './middlewares/authentication.middleware.js'
+export { verifyJWT as authenticationMiddleware } from './middlewares/index.js'
 export { authorizeRoles } from './middlewares/authorization.middleware.js'
 
 // Exportar middlewares agrupados

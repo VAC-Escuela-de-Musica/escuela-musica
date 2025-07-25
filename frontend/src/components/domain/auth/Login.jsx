@@ -20,7 +20,7 @@ import {
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import Notification from './common/Notification';
+import Notification from '../../common/Notification';
 
 export default function Login() {
   const [formData, setFormData] = useState({

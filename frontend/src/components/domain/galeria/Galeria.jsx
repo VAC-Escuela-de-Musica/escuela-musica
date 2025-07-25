@@ -29,7 +29,7 @@ const Galeria = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230';
 
   // Fetch galería from backend
   useEffect(() => {

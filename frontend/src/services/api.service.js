@@ -6,7 +6,7 @@ import { logger } from '../utils/logger.js';
  */
 class ApiService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:1230';
+    this.baseURL = import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230';
     this.token = null;
     this.defaultHeaders = {
       'Content-Type': 'application/json'
@@ -32,6 +32,13 @@ class ApiService {
     } else {
       delete this.defaultHeaders.Authorization;
     }
+  }
+
+  /**
+   * Limpiar token de autenticación
+   */
+  clearToken() {
+    this.setToken(null);
   }
 
   /**

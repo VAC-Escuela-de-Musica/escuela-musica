@@ -94,7 +94,7 @@ export async function getCarouselImagesWithUrls () {
         try {
           // Generar URL presignada usando el servicio MinIO
           const presignedUrl = await minioService.generateDownloadUrl(BUCKET_PUBLIC, image.nombreArchivo, 3600)
-          
+
           return {
             ...image.toObject(),
             presignedUrl,

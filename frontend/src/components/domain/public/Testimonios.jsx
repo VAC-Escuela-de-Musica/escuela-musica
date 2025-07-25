@@ -16,13 +16,13 @@ const Testimonios = () => {
   const [loading, setLoading] = useState(true);
 
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230';
 
   // Fetch testimonios from backend
   useEffect(() => {
     const fetchTestimonios = async () => {
       try {
-        const response = await fetch(`${API_URL}/testimonios/active`);
+        const response = await fetch(`${API_URL}/api/testimonios/active`);
         if (response.ok) {
           const data = await response.json();
           console.log('Testimonios recibidos:', data.data);

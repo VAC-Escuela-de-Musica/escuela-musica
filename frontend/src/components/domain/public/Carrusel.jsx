@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import React, { useState, useEffect } from "react";
 import { IconButton, Typography, Paper } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
-import { useCarouselConfig } from "../hooks/useCarouselConfig.js";
+import { useCarouselConfig } from "../../../hooks/useCarouselConfig.js";
 
 const CarouselClases = () => {
   const [currentIndex, setCurrentIndex] = useState(0);

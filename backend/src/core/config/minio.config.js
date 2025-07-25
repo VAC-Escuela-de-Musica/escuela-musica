@@ -41,15 +41,15 @@ async function setupMinIO () {
         // Si es el bucket público, configuramos la política pública de solo lectura
         if (bucket.name === MINIO_BUCKET_PUBLIC) {
           const policy = {
-            Version: "2012-10-17",
+            Version: '2012-10-17',
             Statement: [
               {
-                Effect: "Allow",
-                Principal: { AWS: ["*"] },
-                Action: ["s3:GetObject"],
-                Resource: [`arn:aws:s3:::${MINIO_BUCKET_PUBLIC}/*`],
-              },
-            ],
+                Effect: 'Allow',
+                Principal: { AWS: ['*'] },
+                Action: ['s3:GetObject'],
+                Resource: [`arn:aws:s3:::${MINIO_BUCKET_PUBLIC}/*`]
+              }
+            ]
           }
           await minioClient.setBucketPolicy(MINIO_BUCKET_PUBLIC, JSON.stringify(policy))
           console.log(`=> Política pública configurada para el bucket '${MINIO_BUCKET_PUBLIC}'`)
@@ -64,15 +64,15 @@ async function setupMinIO () {
           } catch (policyError) {
             // Si no tiene política, la configuramos
             const policy = {
-              Version: "2012-10-17",
+              Version: '2012-10-17',
               Statement: [
                 {
-                  Effect: "Allow",
-                  Principal: { AWS: ["*"] },
-                  Action: ["s3:GetObject"],
-                  Resource: [`arn:aws:s3:::${MINIO_BUCKET_PUBLIC}/*`],
-                },
-              ],
+                  Effect: 'Allow',
+                  Principal: { AWS: ['*'] },
+                  Action: ['s3:GetObject'],
+                  Resource: [`arn:aws:s3:::${MINIO_BUCKET_PUBLIC}/*`]
+                }
+              ]
             }
             await minioClient.setBucketPolicy(MINIO_BUCKET_PUBLIC, JSON.stringify(policy))
             console.log(`=> Política pública configurada para el bucket '${MINIO_BUCKET_PUBLIC}'`)

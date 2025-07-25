@@ -13,8 +13,9 @@ dist-ssr
 *.local
 
 # Editor directories and files
-.trae
-.claude
+*.trae
+*.claude
+CLAUDE.md
 .vercel
 .vscode/*
 !.vscode/extensions.json

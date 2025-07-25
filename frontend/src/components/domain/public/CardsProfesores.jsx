@@ -9,7 +9,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 
 // URL del backend usando la configuración de Vite
-const API_URL = `${import.meta.env.VITE_API_URL}/api/cards-profesores/active`;
+const API_URL = `${import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230'}/api/cards-profesores/active`;
 
 const CardsProfesores = () => {
   const [profesores, setProfesores] = useState([]);

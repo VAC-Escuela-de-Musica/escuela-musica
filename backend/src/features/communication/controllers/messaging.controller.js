@@ -263,7 +263,7 @@ class MessagingController {
     try {
       console.log('🔄 Controller: Reseteando WhatsApp Web...')
       const result = await messagingService.resetWhatsAppWeb()
-      
+
       return res.status(200).json({
         success: true,
         data: result

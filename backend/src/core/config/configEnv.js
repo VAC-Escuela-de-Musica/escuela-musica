@@ -1,65 +1,65 @@
-"use strict";
+'use strict'
 
 // Import the 'path' module to get the absolute path of the .env file
-import path from "node:path";
-import { fileURLToPath } from "url";
-import dotenv from "dotenv";
+import path from 'node:path'
+import { fileURLToPath } from 'url'
+import dotenv from 'dotenv'
 
 // Obtener __filename y __dirname en ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 /** Get the absolute path of the .env file. */
-const envFilePath = path.resolve(__dirname, "../../../.env");
+const envFilePath = path.resolve(__dirname, '../../../.env')
 
 // Load environment variables from the .env file
-const result = dotenv.config({ path: envFilePath });
+const result = dotenv.config({ path: envFilePath })
 if (result.error) {
   // eslint-disable-next-line no-console
-  console.error("[dotenv] Error cargando .env:", result.error);
+  console.error('[dotenv] Error cargando .env:', result.error)
 } else {
   // eslint-disable-next-line no-console
-  console.log("[dotenv] Variables de entorno cargadas correctamente");
+  console.log('[dotenv] Variables de entorno cargadas correctamente')
   // eslint-disable-next-line no-console
-  console.log("[dotenv] DB_URL:", process.env.DB_URL);
+  console.log('[dotenv] DB_URL:', process.env.DB_URL)
   // eslint-disable-next-line no-console
-  console.log("[dotenv] MINIO_ENDPOINT:", process.env.MINIO_ENDPOINT);
+  console.log('[dotenv] MINIO_ENDPOINT:', process.env.MINIO_ENDPOINT)
 }
 
 /**
  * Validates that all required environment variables are present
  * @throws {Error} If any required environment variable is missing
  */
-function validateEnvironment() {
+function validateEnvironment () {
   const requiredVars = [
-    "PORT",
-    "HOST",
-    "DB_URL",
-    "ACCESS_JWT_SECRET",
-    "REFRESH_JWT_SECRET",
-    "MINIO_ENDPOINT",
-    "MINIO_PORT",
-    "MINIO_ACCESS_KEY",
-    "MINIO_SECRET_KEY",
-    "MINIO_BUCKET_PRIVATE",
-    "MINIO_BUCKET_PUBLIC",
-    "MINIO_BUCKET_GALERY"
-  ];
+    'PORT',
+    'HOST',
+    'DB_URL',
+    'ACCESS_JWT_SECRET',
+    'REFRESH_JWT_SECRET',
+    'MINIO_ENDPOINT',
+    'MINIO_PORT',
+    'MINIO_ACCESS_KEY',
+    'MINIO_SECRET_KEY',
+    'MINIO_BUCKET_PRIVATE',
+    'MINIO_BUCKET_PUBLIC',
+    'MINIO_BUCKET_GALERY'
+  ]
 
-  const missingVars = requiredVars.filter(varName => !process.env[varName]);
+  const missingVars = requiredVars.filter(varName => !process.env[varName])
 
   if (missingVars.length > 0) {
-    throw new Error(`Missing required environment variables: ${missingVars.join(", ")}`);
+    throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`)
   }
 
-  console.log("✅ Environment variables validated successfully");
+  console.log('✅ Environment variables validated successfully')
 }
 
 // Validate environment on module load
-validateEnvironment();
+validateEnvironment()
 
 /** Session secret */
-export const SESSION_SECRET = process.env.SESSION_SECRET || "cambia_este_secreto_en_env";
+export const SESSION_SECRET = process.env.SESSION_SECRET || 'cambia_este_secreto_en_env'
 
 /** Server port */
 export const PORT = process.env.PORT || 3000
