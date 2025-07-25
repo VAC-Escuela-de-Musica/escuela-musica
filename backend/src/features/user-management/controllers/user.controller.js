@@ -1,9 +1,9 @@
 "use strict";
 
-import { respondSuccess, respondError } from "../utils/resHandler.js";
+import { respondSuccess, respondError } from "../../../utils/resHandler.js";
 import UserService from "../services/user.service.js";
-import { userBodySchema, userUpdateSchema, userIdSchema } from "../schema/user.schema.js";
-import { handleError } from "../utils/errorHandler.js";
+import { userBodySchema, userUpdateSchema, userIdSchema } from "../../../schema/user.schema.js";
+import { handleError } from "../../../utils/errorHandler.js";
 
 /**
  * Obtiene todos los usuarios

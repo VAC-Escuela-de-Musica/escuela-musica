@@ -1,6 +1,6 @@
 "use strict";
 // Importa el modelo de datos 'User'
-import User from "../models/user.model.js";
+import User from "../features/user-management/models/user.model.js";
 
 /**
  * Crea los usuarios por defecto en la base de datos.

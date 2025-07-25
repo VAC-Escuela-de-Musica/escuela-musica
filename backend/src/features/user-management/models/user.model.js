@@ -2,7 +2,7 @@
 // Import the 'mongoose' module to create the database connection
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import ROLES from "../constants/roles.constants.js";
+import ROLES from "../../../constants/roles.constants.js";
 
 // Create the 'users' collection schema
 const userSchema = new mongoose.Schema(

@@ -6,10 +6,11 @@ import { Router } from "express";
 import usuarioController from "../controllers/user.controller.js";
 
 /** Middlewares de autorización */
-import { isAdmin } from "../middlewares/authorization.middleware.js";
+import { isAdmin } from "../../authentication/middlewares/authorization.middleware.js";
 
 /** Middleware de autenticación */
-import authenticationMiddleware from "../middlewares/authentication.middleware.js";
+import authenticationMiddleware from 
+  "../../authentication/middlewares/authentication.middleware.js";
 
 /** Instancia del enrutador */
 const router = Router();

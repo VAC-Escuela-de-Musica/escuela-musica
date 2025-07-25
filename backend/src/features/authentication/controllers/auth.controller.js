@@ -1,11 +1,11 @@
 "use strict";
 
-import { respondSuccess, respondError } from "../utils/resHandler.js";
-import { handleError } from "../utils/errorHandler.js";
+import { respondSuccess, respondError } from "../../../utils/resHandler.js";
+import { handleError } from "../../../utils/errorHandler.js";
 
 /** Servicios de autenticación */
-import AuthService from "../services/auth.service.js";
-import { authLoginBodySchema } from "../schema/auth.schema.js";
+import AuthService from "../services/authentication.service.js";
+import { authLoginBodySchema } from "../../../schema/auth.schema.js";
 
 /**
  * Inicia sesión con un usuario.

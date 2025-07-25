@@ -1,49 +1,57 @@
 "use strict";
-// Importa el modulo 'express' para crear las rutas
+
 import { Router } from "express";
 
-/** Enrutador de usuarios  */
-import userRoutes from "./user.routes.js";
+// Authentication Feature
+import { authRoutes, authenticationMiddleware } from "../features/authentication/index.js";
 
-/** Enrutador de autenticación */
-import authRoutes from "./auth.routes.js";
+// User Management Feature
+import { userRoutes } from "../features/user-management/index.js";
 
-/** Enrutador de roles */
-import roleRoutes from "./role.routes.js";
+// Student Management Feature
+import { alumnoRoutes } from "../features/student-management/index.js";
 
-/** Enrutador de tarjetas de profesores */
-import cardsProfesoresRoutes from "./cardsProfesores.routes.js";
+// Content Management Feature
+import { galeriaRoutes } from "../features/content-management/index.js";
 
-/** Enrutador de testimonios */
-import testimonioRoutes from "./testimonio.routes.js";
+// Website Content Feature
+import { cardsProfesoresRoutes, testimonioRoutes } from "../features/website-content/index.js";
 
-/** Enrutador de galería */
-import galeriaRoutes from "./galeria.routes.js";
+// File System Feature
+import { archivoRoutes } from "../features/file-system/index.js";
 
-/** Enrutador de URLs pre-firmadas */
-import presignedUrlRoutes from "./presignedUrl.routes.js";
+// Communication Feature
+import { mensajeRoutes } from "../features/communication/index.js";
 
-/** Middleware de autenticación */
-import authenticationMiddleware from "../middlewares/authentication.middleware.js";
+// Monitoring Feature
+import { metricaRoutes, eventoRoutes } from "../features/monitoring/index.js";
 
-/** Instancia del enrutador */
 const router = Router();
 
-// Define las rutas para los usuarios /api/usuarios
-router.use("/users", authenticationMiddleware, userRoutes);
-// Define las rutas para la autenticación /api/auth
+// Authentication routes
 router.use("/auth", authRoutes);
-// Define las rutas para los roles /api/roles
-router.use("/roles", roleRoutes);
-// Define las rutas para las tarjetas de profesores /api/cards-profesores
-router.use("/cards-profesores", cardsProfesoresRoutes);
-// Define las rutas para los testimonios /api/testimonios
-router.use("/testimonios", testimonioRoutes);
-// Define las rutas para la galería /api/galeria
+
+// User Management routes
+router.use("/users", authenticationMiddleware, userRoutes);
+
+// Student Management routes
+router.use("/alumnos", authenticationMiddleware, alumnoRoutes);
+
+// Content Management routes
 router.use("/galeria", galeriaRoutes);
 
-// Define las rutas para URLs pre-firmadas /api/presigned
-router.use("/presigned", presignedUrlRoutes);
+// Website Content routes
+router.use("/cards-profesores", cardsProfesoresRoutes);
+router.use("/testimonios", testimonioRoutes);
 
-// Exporta el enrutador
+// File System routes
+router.use("/archivos", archivoRoutes);
+
+// Communication routes
+router.use("/mensajes", mensajeRoutes);
+
+// Monitoring routes
+router.use("/metricas", metricaRoutes);
+router.use("/eventos", eventoRoutes);
+
 export default router;

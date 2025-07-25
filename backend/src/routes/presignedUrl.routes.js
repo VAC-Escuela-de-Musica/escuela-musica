@@ -1,7 +1,13 @@
 import express from "express";
-import { getUploadUrl, getDownloadUrl, deleteImage } from "../controllers/presignedUrl.controller.js";
-import verifyJWT from "../middlewares/authentication.middleware.js";
-import { authorizeRoles } from "../middlewares/authorization.middleware.js";
+import {
+  getUploadUrl,
+  getDownloadUrl,
+  deleteImage,
+} from "../controllers/presignedUrl.controller.js";
+import {
+  authenticationMiddleware as verifyJWT,
+  authorizeRoles,
+} from "../features/authentication/index.js";
 
 const router = express.Router();
 

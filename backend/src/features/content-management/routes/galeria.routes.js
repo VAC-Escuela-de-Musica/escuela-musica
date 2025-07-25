@@ -1,3 +1,5 @@
+"use strict";
+
 import express from "express";
 import {
   getActiveGallery,
@@ -11,10 +13,8 @@ import {
   updateImageOrder,
   getImageUrl,
 } from "../controllers/galeria.controller.js";
-import {
-  authenticationMiddleware as verifyJWT,
-  authorizeRoles,
-} from "../features/authentication/index.js";
+import verifyJWT from "../../authentication/middlewares/authentication.middleware.js";
+import { authorizeRoles } from "../../authentication/middlewares/authorization.middleware.js";
 
 const router = express.Router();
 
