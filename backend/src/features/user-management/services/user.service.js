@@ -1,9 +1,9 @@
 "use strict";
 // Importa el modelo de datos 'User'
-import User from "../models/user.model.js";
+import User from "../../../core/models/user.entity.js";
 // import Role from "../models/role.model.js";
-import ROLES from "../../../constants/roles.constants.js";
-import { handleError } from "../../../utils/errorHandler.js";
+import ROLES from "../../../core/constants/roles.constants.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 /**
  * Obtiene todos los usuarios de la base de datos

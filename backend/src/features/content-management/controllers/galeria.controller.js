@@ -1,7 +1,8 @@
 "use strict";
 
-import { galeriaService } from "../services/galeria.service.js";
-import { respondSuccess, respondError } from "../../../utils/resHandler.js";
+import { respondSuccess, respondError } from "../../../core/utils/resHandler.js";
+import galeriaService from "../services/galeria.service.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 /**
  * Obtener galería activa (pública)

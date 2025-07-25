@@ -7,7 +7,7 @@ import {
 import {
   authenticationMiddleware as verifyJWT,
   authorizeRoles,
-} from "../features/authentication/index.js";
+} from "../../authentication/index.js";
 
 const router = express.Router();
 

@@ -1,13 +1,16 @@
 "use strict";
 
+/** Importaciones de módulos */
+import bcrypt from "bcryptjs";
+
 /** Modelo de datos 'User' */
-import User from "../../user-management/models/user.model.js";
+import User from "../../../core/models/user.entity.js";
 /** Modulo 'jsonwebtoken' para crear tokens */
 import jwt from "jsonwebtoken";
+/** Variables de entorno relacionadas con los jwt */
+import { ACCESS_JWT_SECRET, REFRESH_JWT_SECRET } from "../../../core/config/configEnv.js";
 
-import { ACCESS_JWT_SECRET, REFRESH_JWT_SECRET } from "../../../config/configEnv.js";
-
-import { handleError } from "../../../utils/errorHandler.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 /**
  * Inicia sesión con un usuario.

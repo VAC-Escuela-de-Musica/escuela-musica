@@ -1,8 +1,8 @@
 import galeriaController from "./controllers/galeria.controller.js";
 import galeriaRoutes from "./routes/galeria.routes.js";
 import galeriaService from "./services/galeria.service.js";
-import Galeria from "./models/galeria.model.js";
-import Material from "./models/material.model.js";
+import Galeria from "../../core/models/galeria.entity.js";
+import Material from "../../core/models/material.entity.js";
 
 export {
     galeriaController,

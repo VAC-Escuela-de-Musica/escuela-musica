@@ -1,8 +1,8 @@
 "use strict";
 
-import { respondSuccess, respondError } from "../../../utils/resHandler.js";
+import { respondSuccess, respondError } from "../../../core/utils/resHandler.js";
 import cardsProfesoresService from "../services/cardsProfesores.service.js";
-import { handleError } from "../../../utils/errorHandler.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 /**
  * Obtiene todas las cards de profesores

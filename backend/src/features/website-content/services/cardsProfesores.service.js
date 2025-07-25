@@ -1,7 +1,7 @@
 "use strict";
 
-import CardsProfesores from "../models/cardsProfesores.model.js";
-import { handleError } from "../../../utils/errorHandler.js";
+import CardsProfesores from "../../../core/models/cardsProfesores.entity.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 /**
  * Obtiene todas las cards de profesores

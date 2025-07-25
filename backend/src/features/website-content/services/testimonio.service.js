@@ -1,7 +1,7 @@
 "use strict";
 
-import Testimonio from "../models/testimonio.model.js";
-import { handleError } from "../../../utils/errorHandler.js";
+import Testimonio from "../../../core/models/testimonio.entity.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 /**
  * Obtiene todos los testimonios activos para el frontend

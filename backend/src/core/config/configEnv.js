@@ -8,13 +8,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /** Get the absolute path of the .env file. */
-const envFilePath = path.resolve(__dirname, "../../.env");
+const envFilePath = path.resolve(__dirname, "../../../.env");
 // Load environment variables from the .env file
 import dotenv from "dotenv";
 dotenv.config({ path: envFilePath });
 
 // También cargar desde la raíz del backend como fallback
-const backendEnvPath = path.resolve(__dirname, "../../.env");
+const backendEnvPath = path.resolve(__dirname, "../../../.env");
 dotenv.config({ path: backendEnvPath });
 
 /** Server port */

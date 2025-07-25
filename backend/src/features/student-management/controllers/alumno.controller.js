@@ -1,8 +1,8 @@
 "use strict";
 
-import { respondSuccess, respondError } from "../../../utils/resHandler.js";
+import { respondSuccess, respondError } from "../../../core/utils/resHandler.js";
 import AlumnoService from "../services/alumno.service.js";
-import { handleError } from "../../../utils/errorHandler.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 /**
  * Obtiene todos los alumnos

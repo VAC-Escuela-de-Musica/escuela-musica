@@ -1,9 +1,9 @@
 "use strict";
 
 import jwt from "jsonwebtoken";
-import { respondError } from "../../../utils/resHandler.js";
-import { handleError } from "../../../utils/errorHandler.js";
-import { ACCESS_JWT_SECRET } from "../../../config/configEnv.js";
+import { ACCESS_JWT_SECRET } from "../../../core/config/configEnv.js";
+import { respondError } from "../../../core/utils/resHandler.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 /**
  * Verifica el token de acceso

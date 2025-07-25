@@ -1,6 +1,6 @@
 "use strict";
 
-import Galeria from '../models/galeria.model.js';
+import Galeria from '../../../core/models/galeria.entity.js';
 
 class GaleriaService {
   /**
@@ -12,7 +12,7 @@ class GaleriaService {
       
       // Procesar URLs de imágenes para hacerlas públicas
       const { MINIO_ENDPOINT, MINIO_PORT } = process.env;
-      const { MINIO_PUBLIC_BUCKET } = await import('../../../config/minio.config.js');
+      const { MINIO_PUBLIC_BUCKET } = await import('../../../core/config/minio.config.js');
       
       const galeriaConUrls = galeria.map((imagen) => {
         const imagenObj = imagen.toObject();
@@ -45,7 +45,7 @@ class GaleriaService {
       
       // Procesar URLs de imágenes para hacerlas públicas
       const { MINIO_ENDPOINT, MINIO_PORT } = process.env;
-      const { MINIO_PUBLIC_BUCKET } = await import('../../../config/minio.config.js');
+      const { MINIO_PUBLIC_BUCKET } = await import('../../../core/config/minio.config.js');
       
       const galeriaConUrls = galeria.map((imagen) => {
         const imagenObj = imagen.toObject();
@@ -79,7 +79,7 @@ class GaleriaService {
       
       // Procesar URLs de imágenes para hacerlas públicas
       const { MINIO_ENDPOINT, MINIO_PORT } = process.env;
-      const { MINIO_PUBLIC_BUCKET } = await import('../../../config/minio.config.js');
+      const { MINIO_PUBLIC_BUCKET } = await import('../../../core/config/minio.config.js');
       
       const galeriaConUrls = galeria.map((imagen) => {
         const imagenObj = imagen.toObject();
@@ -298,8 +298,8 @@ class GaleriaService {
       }
       
       // Si es un nombre de archivo, generar URL pública
-      const { MINIO_ENDPOINT, MINIO_PORT } = await import('../../../config/configEnv.js');
-      const { MINIO_PUBLIC_BUCKET } = await import('../../../config/minio.config.js');
+      const { MINIO_ENDPOINT, MINIO_PORT } = await import('../../../core/config/configEnv.js');
+      const { MINIO_PUBLIC_BUCKET } = await import('../../../core/config/minio.config.js');
       
       const publicUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${MINIO_PUBLIC_BUCKET}/${imagen.imagen}`;
       

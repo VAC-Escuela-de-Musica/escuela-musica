@@ -31,6 +31,10 @@ const router = Router();
 // Authentication routes
 router.use("/auth", authRoutes);
 
+// Role routes (importación directa temporal)
+import roleRoutes from "../features/authentication/routes/role.routes.js";
+router.use("/roles", roleRoutes);
+
 // User Management routes
 router.use("/users", authenticationMiddleware, userRoutes);
 

@@ -1,9 +1,10 @@
-import { 
-  generateUploadUrl, 
-  generateDownloadUrl, 
-  deleteImageFromMinIO 
+import {
+  generateUploadUrl,
+  generateDownloadUrl,
+  deleteImageFromMinio,
 } from "../services/presignedUrl.service.js";
-import { respondSuccess, respondError } from "../../../utils/resHandler.js";
+import { respondSuccess, respondError } from "../../../core/utils/resHandler.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 /**
  * Generar URL pre-firmada para subir imagen
@@ -55,7 +56,7 @@ export const deleteImage = async (req, res) => {
       return respondError(req, res, 400, "fileName es requerido");
     }
 
-    const result = await deleteImageFromMinIO(fileName);
+    const result = await deleteImageFromMinio(fileName);
     respondSuccess(req, res, 200, result, "Imagen eliminada exitosamente");
   } catch (error) {
     console.error("Error en deleteImage:", error);

@@ -1,7 +1,7 @@
 "use strict";
 
-import Mensaje from "../models/mensaje.model.js";
-import { handleError } from "../../../utils/errorHandler.js";
+import Mensaje from "../../../core/models/mensaje.entity.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 /**
  * Obtiene todos los mensajes

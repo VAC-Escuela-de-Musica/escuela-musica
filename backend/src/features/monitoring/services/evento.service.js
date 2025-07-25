@@ -1,7 +1,7 @@
 "use strict";
 
-import Evento from "../models/evento.model.js";
-import { handleError } from "../../../utils/errorHandler.js";
+import Evento from "../../../core/models/evento.entity.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 async function getEventos() {
   try {

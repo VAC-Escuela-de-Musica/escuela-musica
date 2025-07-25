@@ -1,7 +1,7 @@
 "use strict";
 
-import Archivo from "../models/archivo.model.js";
-import { handleError } from "../../../utils/errorHandler.js";
+import Archivo from "../../../core/models/archivo.entity.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 /**
  * Obtiene todos los archivos

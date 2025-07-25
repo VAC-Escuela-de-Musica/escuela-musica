@@ -1,7 +1,7 @@
 "use strict";
 
-import Metrica from "../models/metrica.model.js";
-import { handleError } from "../../../utils/errorHandler.js";
+import Metrica from "../../../core/models/metricas.entity.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
 async function getMetricas() {
   try {
