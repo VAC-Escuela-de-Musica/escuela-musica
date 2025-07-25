@@ -463,519 +463,740 @@ const GaleriaManager = () => {
         Gestión de Imágenes
       </Typography>
 
-      {/* Sección 1: Subida de Imágenes */}
-      <Card sx={{ mb: 4, bgcolor: '#2a2a2a', color: 'white' }}>
-        <CardContent sx={{ p: 3 }}>
-          <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold', mb: 3 }}>
-            📤 Subir Nuevas Imágenes
-          </Typography>
-          
-          {/* Área de subida de archivos */}
-          <Box
-            sx={{
-              border: '2px dashed #666',
-              borderRadius: 2,
-              p: 4,
-              textAlign: 'center',
-              bgcolor: 'rgba(255, 255, 255, 0.05)',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                borderColor: '#1976d2',
-                bgcolor: 'rgba(25, 118, 210, 0.1)',
-              },
-              mb: 3
-            }}
-            onClick={() => document.getElementById('file-upload').click()}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.currentTarget.style.borderColor = '#1976d2';
-              e.currentTarget.style.bgcolor = 'rgba(25, 118, 210, 0.1)';
-            }}
-            onDragLeave={(e) => {
-              e.currentTarget.style.borderColor = '#666';
-              e.currentTarget.style.bgcolor = 'rgba(255, 255, 255, 0.05)';
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              e.currentTarget.style.borderColor = '#666';
-              e.currentTarget.style.bgcolor = 'rgba(255, 255, 255, 0.05)';
-              const files = Array.from(e.dataTransfer.files);
-              setSelectedFiles(prev => [...prev, ...files]);
-            }}
-          >
-            <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
-              Arrastra archivos a cualquier lugar para subirlos
-            </Typography>
-            <Typography variant="body1" sx={{ color: '#ccc', mb: 3 }}>
-              o
-            </Typography>
-            <Button
-              variant="outlined"
-              component="span"
-              sx={{
-                borderColor: '#1976d2',
-                color: '#1976d2',
-                '&:hover': {
-                  borderColor: '#1565c0',
-                  bgcolor: 'rgba(25, 118, 210, 0.1)',
-                }
-              }}
-            >
-              Seleccionar archivos
-            </Button>
-            <Typography variant="body2" sx={{ color: '#888', mt: 2 }}>
-              Tamaño máximo de archivo: 256 MB.
-            </Typography>
-            <input
-              id="file-upload"
-              type="file"
-              multiple
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                const files = Array.from(e.target.files);
-                setSelectedFiles(prev => [...prev, ...files]);
-              }}
-            />
-          </Box>
+      <Box sx={{ display: 'flex', gap: 3 }}>
+        {/* Sección izquierda: Galería y Carrusel */}
+        <Box sx={{ flex: '1 1 70%' }}>
+          {/* Galería de imágenes */}
+          <Card sx={{ bgcolor: '#2a2a2a', color: 'white', mb: 4 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold' }}>
+                  🖼️ Galería de Imágenes
+                </Typography>
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <TextField
+                      size="small"
+                      placeholder="Buscar imágenes..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        minWidth: 200,
+                        '& .MuiOutlinedInput-root': {
+                          color: 'white',
+                          '& fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.23)',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#1976d2',
+                          },
+                        },
+                        '& .MuiInputBase-input::placeholder': {
+                          color: 'rgba(255, 255, 255, 0.5)',
+                        },
+                      }}
+                    />
+                    <Tooltip title="Modo reordenar">
+                      <IconButton
+                        onClick={() => setReorderMode(!reorderMode)}
+                        sx={{ 
+                          bgcolor: reorderMode ? 'primary.main' : 'transparent',
+                          color: reorderMode ? 'white' : 'white',
+                          '&:hover': { bgcolor: reorderMode ? 'primary.dark' : 'rgba(255,255,255,0.1)' }
+                        }}
+                      >
+                        <ReorderIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+              </Box>
 
-          {/* Vista previa de archivos seleccionados */}
-          {selectedFiles.length > 0 && (
-            <Box sx={{ mt: 3 }}>
-              <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
-                Archivos Seleccionados ({selectedFiles.length})
-              </Typography>
-              
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                {selectedFiles.map((file, index) => (
-                  <Grid item xs={12} sm={6} md={3} key={index}>
-                    <Card sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)' }}>
-                      <Box sx={{ position: 'relative', paddingTop: '100%' }}>
-                        <Box
-                          component="img"
-                          src={URL.createObjectURL(file)}
-                          alt={file.name}
-                          sx={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                          }}
-                        />
+              <ImageList
+                sx={{ 
+                  width: '100%', 
+                  height: 'auto',
+                  maxHeight: '70vh',
+                  overflowY: 'auto',
+                  bgcolor: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: 2,
+                  p: 2,
+                  '&::-webkit-scrollbar': {
+                    width: '8px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '4px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      background: 'rgba(255, 255, 255, 0.3)',
+                    },
+                  },
+                }}
+                variant="quilted"
+                cols={4}
+                rowHeight={160}
+              >
+                {Array.isArray(galeria) && galeria
+                  .filter(imagen => {
+                    if (!searchQuery) return true;
+                    const searchLower = searchQuery.toLowerCase();
+                    return (
+                      (imagen.titulo && imagen.titulo.toLowerCase().includes(searchLower)) ||
+                      (imagen.descripcion && imagen.descripcion.toLowerCase().includes(searchLower)) ||
+                      (imagen.categoria && imagen.categoria.toLowerCase().includes(searchLower))
+                    );
+                  })
+                  .map((imagen, index) => (
+                  <ImageListItem 
+                    key={imagen._id} 
+                    cols={imagen.cols || 1} 
+                    rows={imagen.rows || 1}
+                    sx={{ 
+                      position: 'relative',
+                      cursor: 'pointer',
+                      '& img': {
+                        transition: 'transform 0.2s',
+                      },
+                      '&:hover img': {
+                        transform: 'scale(1.02)'
+                      }
+                    }}
+                    onClick={() => handleOpenDialog(imagen)}
+                  >
+                    {/* Botones de acción */}
+                    <Box sx={{ 
+                      position: 'absolute', 
+                      top: 8, 
+                      right: 8, 
+                      zIndex: 10,
+                      display: 'flex',
+                      gap: 0.5
+                    }}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleStatus(imagen._id);
+                        }}
+                        sx={{ 
+                          backgroundColor: imagen.activo 
+                            ? 'rgba(76, 175, 80, 0.1)' 
+                            : 'rgba(255, 152, 0, 0.1)',
+                          color: imagen.activo ? '#4caf50' : '#f44336',
+                          width: 28,
+                          height: 28,
+                          '&:hover': {
+                            backgroundColor: imagen.activo 
+                              ? 'rgba(76, 175, 80, 0.2)' 
+                              : 'rgba(255, 152, 0, 0.2)',
+                          }
+                        }}
+                        title={imagen.activo ? "Ocultar imagen" : "Mostrar imagen"}
+                      >
+                        {imagen.activo ? <VisibilityIcon sx={{ fontSize: 16 }} /> : <VisibilityOffIcon sx={{ fontSize: 16 }} />}
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenDialog(imagen);
+                        }}
+                        sx={{ 
+                          backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                          color: '#2196f3',
+                          width: 28,
+                          height: 28,
+                          '&:hover': {
+                            backgroundColor: 'rgba(25, 118, 210, 0.2)',
+                          }
+                        }}
+                        title="Editar imagen"
+                      >
+                        <EditIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(imagen._id);
+                        }}
+                        sx={{ 
+                          backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                          color: '#f44336',
+                          width: 28,
+                          height: 28,
+                          '&:hover': {
+                            backgroundColor: 'rgba(211, 47, 47, 0.2)',
+                          }
+                        }}
+                        title="Eliminar imagen"
+                      >
+                        <DeleteIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCarousel(imagen);
+                        }}
+                        sx={{ 
+                          backgroundColor: isImageSelected(imagen._id) 
+                            ? 'rgba(255, 193, 7, 0.1)' 
+                            : 'rgba(76, 175, 80, 0.1)',
+                          color: isImageSelected(imagen._id) 
+                            ? '#ffc107' 
+                            : '#4caf50',
+                          width: 28,
+                          height: 28,
+                          '&:hover': {
+                            backgroundColor: isImageSelected(imagen._id) 
+                              ? 'rgba(255, 193, 7, 0.2)' 
+                              : 'rgba(76, 175, 80, 0.2)',
+                          }
+                        }}
+                        title={isImageSelected(imagen._id) 
+                          ? "Ya está en el carrusel" 
+                          : "Agregar al carrusel"
+                        }
+                      >
+                        {isImageSelected(imagen._id) ? (
+                          <VisibilityIcon sx={{ fontSize: 16 }} />
+                        ) : (
+                          <AddIcon sx={{ fontSize: 16 }} />
+                        )}
+                      </IconButton>
+                    </Box>
+
+                    <img
+                      src={imagen.imagen}
+                      alt={imagen.titulo}
+                      loading="lazy"
+                      style={{ 
+                        borderRadius: 8,
+                        objectFit: 'cover',
+                        width: '100%',
+                        height: '100%'
+                      }}
+                    />
+                    
+                    <ImageListItemBar
+                      title={imagen.titulo}
+                      subtitle={
+                        <Box>
+                          <Chip 
+                            label={imagen.activo ? 'Activo' : 'Inactivo'}
+                            size="small"
+                            color={imagen.activo ? 'success' : 'default'}
+                            sx={{ fontSize: '0.7rem', mb: 0.5 }}
+                          />
+                          
+                        </Box>
+                      }
+                      sx={{
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%)',
+                        borderBottomLeftRadius: 8,
+                        borderBottomRightRadius: 8
+                      }}
+                    />
+
+                    {/* Controles de reordenamiento */}
+                    {reorderMode && (
+                      <Box sx={{ 
+                        position: 'absolute', 
+                        left: 8, 
+                        top: 8, 
+                        zIndex: 10,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 0.5
+                      }}>
                         <IconButton
                           size="small"
-                          onClick={() => {
-                            setSelectedFiles(files => files.filter((_, i) => i !== index));
-                          }}
-                          sx={{
-                            position: 'absolute',
-                            top: 8,
-                            right: 8,
-                            bgcolor: 'rgba(0, 0, 0, 0.5)',
-                            color: 'white',
-                            '&:hover': {
-                              bgcolor: 'rgba(211, 47, 47, 0.8)',
-                            }
+                          onClick={() => handleReorder(imagen._id, 'up')}
+                          disabled={index === 0}
+                          sx={{ 
+                            color: 'white', 
+                            p: 0.5,
+                            bgcolor: 'rgba(0,0,0,0.5)',
+                            '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
                           }}
                         >
-                          <DeleteIcon />
+                          <ArrowUpIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleReorder(imagen._id, 'down')}
+                          disabled={index === galeria.length - 1}
+                          sx={{ 
+                            color: 'white', 
+                            p: 0.5,
+                            bgcolor: 'rgba(0,0,0,0.5)',
+                            '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                          }}
+                        >
+                          <ArrowDownIcon fontSize="small" />
                         </IconButton>
                       </Box>
-                      <CardContent sx={{ py: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography noWrap variant="caption" sx={{ color: 'white', flex: 1 }}>
-                            {file.name}
-                          </Typography>
-                          <IconButton
-                            size="small"
-                            onClick={() => setEditingFile(editingFile === index ? null : index)}
-                            sx={{ 
-                              ml: 1,
-                              backgroundColor: editingFile === index ? 'rgba(25, 118, 210, 0.2)' : 'rgba(25, 118, 210, 0.1)',
-                              color: '#2196f3',
-                              width: 24,
-                              height: 24,
-                              '&:hover': {
-                                backgroundColor: 'rgba(25, 118, 210, 0.3)',
-                              }
-                            }}
-                          >
-                            <EditIcon sx={{ fontSize: 14 }} />
-                          </IconButton>
-                        </Box>
-                        {editingFile === index && (
-                          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            <TextField
-                              fullWidth
-                              size="small"
-                              placeholder="Título (opcional)"
-                              value={fileTitles[index] || ''}
-                              onChange={(e) => setFileTitles(prev => ({
-                                ...prev,
-                                [index]: e.target.value
-                              }))}
-                              sx={{
-                                '& .MuiOutlinedInput-root': {
-                                  color: 'white',
-                                  fontSize: '0.75rem',
-                                  '& fieldset': {
-                                    borderColor: 'rgba(255, 255, 255, 0.23)',
-                                  },
-                                  '&:hover fieldset': {
-                                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                                  },
-                                  '&.Mui-focused fieldset': {
-                                    borderColor: '#2196f3',
-                                  },
-                                },
-                              }}
-                            />
-                            <TextField
-                              fullWidth
-                              size="small"
-                              multiline
-                              maxRows={3}
-                              placeholder="Descripción (opcional)"
-                              value={fileDescriptions[index] || ''}
-                              onChange={(e) => setFileDescriptions(prev => ({
-                                ...prev,
-                                [index]: e.target.value
-                              }))}
-                              sx={{
-                                '& .MuiOutlinedInput-root': {
-                                  color: 'white',
-                                  fontSize: '0.75rem',
-                                  '& fieldset': {
-                                    borderColor: 'rgba(255, 255, 255, 0.23)',
-                                  },
-                                  '&:hover fieldset': {
-                                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                                  },
-                                  '&.Mui-focused fieldset': {
-                                    borderColor: '#2196f3',
-                                  },
-                                },
-                              }}
-                            />
-                          </Box>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Grid>
+                    )}
+                  </ImageListItem>
                 ))}
-              </Grid>
+              </ImageList>
+            </CardContent>
+          </Card>
 
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+          {/* Carrusel */}
+          <Card sx={{ bgcolor: '#2a2a2a', color: 'white' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold' }}>
+                  🎠 Imágenes del Carrusel
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography variant="body2" sx={{ color: '#ccc' }}>
+                    Imágenes seleccionadas ({selectedImages.length})
+                  </Typography>
+                  <Tooltip title="Modo reordenar carrusel">
+                    <IconButton
+                      onClick={() => setCarouselReorderMode(!carouselReorderMode)}
+                      sx={{ 
+                        bgcolor: carouselReorderMode ? 'primary.main' : 'transparent',
+                        color: carouselReorderMode ? 'white' : 'white',
+                        '&:hover': { bgcolor: carouselReorderMode ? 'primary.dark' : 'rgba(255,255,255,0.1)' }
+                      }}
+                    >
+                      <ReorderIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+
+              <ImageList
+                sx={{ 
+                  width: '100%', 
+                  height: 'auto',
+                  maxHeight: '30vh',
+                  overflowY: 'auto',
+                  bgcolor: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: 2,
+                  p: 2,
+                  '&::-webkit-scrollbar': {
+                    width: '8px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '4px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      background: 'rgba(255, 255, 255, 0.3)',
+                    },
+                  },
+                }}
+                variant="quilted"
+                cols={4}
+                rowHeight={120}
+              >
+                {selectedImages.map((imagen, index) => (
+                  <ImageListItem 
+                    key={imagen._id} 
+                    sx={{ 
+                      position: 'relative',
+                      cursor: 'pointer',
+                      '& img': {
+                        transition: 'transform 0.2s',
+                      },
+                      '&:hover img': {
+                        transform: 'scale(1.02)'
+                      }
+                    }}
+                    onClick={() => handleOpenDialog(imagen)}
+                  >
+                    {/* Botones de acción para carrusel */}
+                    <Box sx={{ 
+                      position: 'absolute', 
+                      top: 8, 
+                      right: 8, 
+                      zIndex: 10,
+                      display: 'flex',
+                      gap: 0.5
+                    }}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFromCarousel(imagen._id);
+                        }}
+                        sx={{ 
+                          backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                          color: '#f44336',
+                          width: 28,
+                          height: 28,
+                          '&:hover': {
+                            backgroundColor: 'rgba(211, 47, 47, 0.2)',
+                          }
+                        }}
+                        title="Remover del carrusel"
+                      >
+                        <DeleteIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Box>
+
+                    {/* Controles de reordenamiento para carrusel */}
+                    {carouselReorderMode && (
+                      <Box sx={{ 
+                        position: 'absolute', 
+                        left: 8, 
+                        top: 8, 
+                        zIndex: 10,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 0.5
+                      }}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleReorderCarousel(index, index - 1);
+                          }}
+                          disabled={index === 0}
+                          sx={{ 
+                            color: 'white', 
+                            p: 0.5,
+                            bgcolor: 'rgba(0,0,0,0.5)',
+                            '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                          }}
+                        >
+                          <ArrowUpIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleReorderCarousel(index, index + 1);
+                          }}
+                          disabled={index === selectedImages.length - 1}
+                          sx={{ 
+                            color: 'white', 
+                            p: 0.5,
+                            bgcolor: 'rgba(0,0,0,0.5)',
+                            '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                          }}
+                        >
+                          <ArrowDownIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    )}
+                    <img
+                      src={imagen.imagen}
+                      alt={imagen.titulo}
+                      loading="lazy"
+                      style={{ 
+                        borderRadius: 8,
+                        objectFit: 'cover',
+                        width: '100%',
+                        height: '100%'
+                      }}
+                    />
+                    
+                    <ImageListItemBar
+                      title={imagen.titulo}
+                      
+                      sx={{
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%)',
+                        borderBottomLeftRadius: 8,
+                        borderBottomRightRadius: 8
+                      }}
+                    />
+                  </ImageListItem>
+                ))}
+              </ImageList>
+              
+              {selectedImages.length === 0 && (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body1" sx={{ color: '#888' }}>
+                    No hay imágenes seleccionadas para el carrusel. Selecciona imágenes de la galería para agregarlas.
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* Sección derecha: Subida de imágenes */}
+        <Box sx={{ flex: '1 1 30%' }}>
+          <Card sx={{ bgcolor: '#2a2a2a', color: 'white', position: 'sticky', top: '1rem' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold', mb: 3 }}>
+                📤 Subir Nuevas Imágenes
+              </Typography>
+              
+              {/* Área de subida de archivos */}
+              <Box
+                sx={{
+                  border: '2px dashed #666',
+                  borderRadius: 2,
+                  p: 4,
+                  textAlign: 'center',
+                  bgcolor: 'rgba(255, 255, 255, 0.05)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    borderColor: '#1976d2',
+                    bgcolor: 'rgba(25, 118, 210, 0.1)',
+                  },
+                  mb: 3
+                }}
+                onClick={() => document.getElementById('file-upload').click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = '#1976d2';
+                  e.currentTarget.style.bgcolor = 'rgba(25, 118, 210, 0.1)';
+                }}
+                onDragLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#666';
+                  e.currentTarget.style.bgcolor = 'rgba(255, 255, 255, 0.05)';
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = '#666';
+                  e.currentTarget.style.bgcolor = 'rgba(255, 255, 255, 0.05)';
+                  const files = Array.from(e.dataTransfer.files);
+                  setSelectedFiles(prev => [...prev, ...files]);
+                }}
+              >
+                <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+                  Arrastra archivos aquí
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#ccc', mb: 3 }}>
+                  o
+                </Typography>
                 <Button
                   variant="outlined"
-                  color="error"
-                  onClick={() => setSelectedFiles([])}
-                  disabled={uploading}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => {
-                    setUploading(true);
-                    handleMultipleFileUpload(selectedFiles)
-                      .finally(() => {
-                        setUploading(false);
-                        setSelectedFiles([]);
-                      });
-                  }}
-                  disabled={uploading}
-                  startIcon={uploading ? <CircularProgress size={20} /> : null}
-                >
-                  {uploading ? 'Subiendo...' : 'Subir Imágenes'}
-                </Button>
-              </Box>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* gestión galería */}
-      <Card sx={{ bgcolor: '#2a2a2a', color: 'white' }}>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold' }}>
-              🖼️ Galería de Imágenes
-            </Typography>
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <TextField
-                  size="small"
-                  placeholder="Buscar imágenes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
-                      </InputAdornment>
-                    ),
-                  }}
+                  component="span"
                   sx={{
-                    minWidth: 200,
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                      '& fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.23)',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#1976d2',
-                      },
-                    },
-                    '& .MuiInputBase-input::placeholder': {
-                      color: 'rgba(255, 255, 255, 0.5)',
-                    },
-                  }}
-                />
-                <Tooltip title="Modo reordenar">
-                  <IconButton
-                    onClick={() => setReorderMode(!reorderMode)}
-                    sx={{ 
-                      bgcolor: reorderMode ? 'primary.main' : 'transparent',
-                      color: reorderMode ? 'white' : 'white',
-                      '&:hover': { bgcolor: reorderMode ? 'primary.dark' : 'rgba(255,255,255,0.1)' }
-                    }}
-                  >
-                    <ReorderIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
-          </Box>
-
-          <ImageList
-            sx={{ 
-              width: '100%', 
-              height: 'auto',
-              bgcolor: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: 2,
-              p: 2
-            }}
-            variant="quilted"
-            cols={4}
-            rowHeight={160}
-          >
-            {Array.isArray(galeria) && galeria
-              .filter(imagen => {
-                if (!searchQuery) return true;
-                const searchLower = searchQuery.toLowerCase();
-                return (
-                  (imagen.titulo && imagen.titulo.toLowerCase().includes(searchLower)) ||
-                  (imagen.descripcion && imagen.descripcion.toLowerCase().includes(searchLower)) ||
-                  (imagen.categoria && imagen.categoria.toLowerCase().includes(searchLower))
-                );
-              })
-              .map((imagen, index) => (
-              <ImageListItem 
-                key={imagen._id} 
-                cols={imagen.cols || 1} 
-                rows={imagen.rows || 1}
-                sx={{ 
-                  position: 'relative',
-                  cursor: 'pointer',
-                  '& img': {
-                    transition: 'transform 0.2s',
-                  },
-                  '&:hover img': {
-                    transform: 'scale(1.02)'
-                  }
-                }}
-                onClick={() => handleOpenDialog(imagen)}
-              >
-                {/* Botones de acción */}
-                <Box sx={{ 
-                  position: 'absolute', 
-                  top: 8, 
-                  right: 8, 
-                  zIndex: 10,
-                  display: 'flex',
-                  gap: 0.5
-                }}>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleStatus(imagen._id);
-                    }}
-                    sx={{ 
-                      backgroundColor: imagen.activo 
-                        ? 'rgba(76, 175, 80, 0.1)' 
-                        : 'rgba(255, 152, 0, 0.1)',
-                      color: imagen.activo ? '#4caf50' : '#f44336',
-                      width: 28,
-                      height: 28,
-                      '&:hover': {
-                        backgroundColor: imagen.activo 
-                          ? 'rgba(76, 175, 80, 0.2)' 
-                          : 'rgba(255, 152, 0, 0.2)',
-                      }
-                    }}
-                    title={imagen.activo ? "Ocultar imagen" : "Mostrar imagen"}
-                  >
-                    {imagen.activo ? <VisibilityIcon sx={{ fontSize: 16 }} /> : <VisibilityOffIcon sx={{ fontSize: 16 }} />}
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenDialog(imagen);
-                    }}
-                    sx={{ 
-                      backgroundColor: 'rgba(25, 118, 210, 0.1)',
-                      color: '#2196f3',
-                      width: 28,
-                      height: 28,
-                      '&:hover': {
-                        backgroundColor: 'rgba(25, 118, 210, 0.2)',
-                      }
-                    }}
-                    title="Editar imagen"
-                  >
-                    <EditIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(imagen._id);
-                    }}
-                    sx={{ 
-                      backgroundColor: 'rgba(211, 47, 47, 0.1)',
-                      color: '#f44336',
-                      width: 28,
-                      height: 28,
-                      '&:hover': {
-                        backgroundColor: 'rgba(211, 47, 47, 0.2)',
-                      }
-                    }}
-                    title="Eliminar imagen"
-                  >
-                    <DeleteIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAddToCarousel(imagen);
-                    }}
-                    sx={{ 
-                      backgroundColor: isImageSelected(imagen._id) 
-                        ? 'rgba(255, 193, 7, 0.1)' 
-                        : 'rgba(76, 175, 80, 0.1)',
-                      color: isImageSelected(imagen._id) 
-                        ? '#ffc107' 
-                        : '#4caf50',
-                      width: 28,
-                      height: 28,
-                      '&:hover': {
-                        backgroundColor: isImageSelected(imagen._id) 
-                          ? 'rgba(255, 193, 7, 0.2)' 
-                          : 'rgba(76, 175, 80, 0.2)',
-                      }
-                    }}
-                    title={isImageSelected(imagen._id) 
-                      ? "Ya está en el carrusel" 
-                      : "Agregar al carrusel"
+                    borderColor: '#1976d2',
+                    color: '#1976d2',
+                    '&:hover': {
+                      borderColor: '#1565c0',
+                      bgcolor: 'rgba(25, 118, 210, 0.1)',
                     }
-                  >
-                    {isImageSelected(imagen._id) ? (
-                      <VisibilityIcon sx={{ fontSize: 16 }} />
-                    ) : (
-                      <AddIcon sx={{ fontSize: 16 }} />
-                    )}
-                  </IconButton>
-                </Box>
-
-                <img
-                  src={imagen.imagen}
-                  alt={imagen.titulo}
-                  loading="lazy"
-                  style={{ 
-                    borderRadius: 8,
-                    objectFit: 'cover',
-                    width: '100%',
-                    height: '100%'
+                  }}
+                >
+                  Seleccionar archivos
+                </Button>
+                <Typography variant="body2" sx={{ color: '#888', mt: 2 }}>
+                  Tamaño máximo: 256 MB
+                </Typography>
+                <input
+                  id="file-upload"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files);
+                    setSelectedFiles(prev => [...prev, ...files]);
                   }}
                 />
-                
-                <ImageListItemBar
-                  title={imagen.titulo}
-                  subtitle={
-                    <Box>
-                      <Chip 
-                        label={imagen.activo ? 'Activo' : 'Inactivo'}
-                        size="small"
-                        color={imagen.activo ? 'success' : 'default'}
-                        sx={{ fontSize: '0.7rem', mb: 0.5 }}
-                      />
-                      
-                    </Box>
-                  }
-                  sx={{
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%)',
-                    borderBottomLeftRadius: 8,
-                    borderBottomRightRadius: 8
-                  }}
-                />
+              </Box>
 
-                {/* Controles de reordenamiento */}
-                {reorderMode && (
+              {/* Vista previa de archivos seleccionados */}
+              {selectedFiles.length > 0 && (
+                <Box sx={{ mt: 3 }}>
+                  <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+                    Archivos Seleccionados ({selectedFiles.length})
+                  </Typography>
+                  
                   <Box sx={{ 
-                    position: 'absolute', 
-                    left: 8, 
-                    top: 8, 
-                    zIndex: 10,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 0.5
+                    maxHeight: '50vh', 
+                    overflowY: 'auto',
+                    '&::-webkit-scrollbar': {
+                      width: '8px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: '4px',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      borderRadius: '4px',
+                      '&:hover': {
+                        background: 'rgba(255, 255, 255, 0.3)',
+                      },
+                    },
                   }}>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleReorder(imagen._id, 'up')}
-                      disabled={index === 0}
-                      sx={{ 
-                        color: 'white', 
-                        p: 0.5,
-                        bgcolor: 'rgba(0,0,0,0.5)',
-                        '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
-                      }}
-                    >
-                      <ArrowUpIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleReorder(imagen._id, 'down')}
-                      disabled={index === galeria.length - 1}
-                      sx={{ 
-                        color: 'white', 
-                        p: 0.5,
-                        bgcolor: 'rgba(0,0,0,0.5)',
-                        '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
-                      }}
-                    >
-                      <ArrowDownIcon fontSize="small" />
-                    </IconButton>
+                    <Grid container spacing={2}>
+                      {selectedFiles.map((file, index) => (
+                        <Grid item xs={12} key={index}>
+                          <Card sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)' }}>
+                            <Box sx={{ display: 'flex', gap: 2, p: 2 }}>
+                              <Box sx={{ position: 'relative', width: 100, height: 100, flexShrink: 0 }}>
+                                <Box
+                                  component="img"
+                                  src={URL.createObjectURL(file)}
+                                  alt={file.name}
+                                  sx={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                    borderRadius: 1
+                                  }}
+                                />
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    setSelectedFiles(files => files.filter((_, i) => i !== index));
+                                  }}
+                                  sx={{
+                                    position: 'absolute',
+                                    top: 4,
+                                    right: 4,
+                                    bgcolor: 'rgba(0, 0, 0, 0.5)',
+                                    color: 'white',
+                                    '&:hover': {
+                                      bgcolor: 'rgba(211, 47, 47, 0.8)',
+                                    }
+                                  }}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </Box>
+                              <Box sx={{ flex: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                  <Typography noWrap variant="caption" sx={{ color: 'white', flex: 1 }}>
+                                    {file.name}
+                                  </Typography>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => setEditingFile(editingFile === index ? null : index)}
+                                    sx={{ 
+                                      ml: 1,
+                                      backgroundColor: editingFile === index ? 'rgba(25, 118, 210, 0.2)' : 'rgba(25, 118, 210, 0.1)',
+                                      color: '#2196f3',
+                                      width: 24,
+                                      height: 24,
+                                      '&:hover': {
+                                        backgroundColor: 'rgba(25, 118, 210, 0.3)',
+                                      }
+                                    }}
+                                  >
+                                    <EditIcon sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                </Box>
+                                {editingFile === index && (
+                                  <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      placeholder="Título (opcional)"
+                                      value={fileTitles[index] || ''}
+                                      onChange={(e) => setFileTitles(prev => ({
+                                        ...prev,
+                                        [index]: e.target.value
+                                      }))}
+                                      sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                          color: 'white',
+                                          fontSize: '0.75rem',
+                                          '& fieldset': {
+                                            borderColor: 'rgba(255, 255, 255, 0.23)',
+                                          },
+                                          '&:hover fieldset': {
+                                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                                          },
+                                          '&.Mui-focused fieldset': {
+                                            borderColor: '#2196f3',
+                                          },
+                                        },
+                                      }}
+                                    />
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      multiline
+                                      maxRows={3}
+                                      placeholder="Descripción (opcional)"
+                                      value={fileDescriptions[index] || ''}
+                                      onChange={(e) => setFileDescriptions(prev => ({
+                                        ...prev,
+                                        [index]: e.target.value
+                                      }))}
+                                      sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                          color: 'white',
+                                          fontSize: '0.75rem',
+                                          '& fieldset': {
+                                            borderColor: 'rgba(255, 255, 255, 0.23)',
+                                          },
+                                          '&:hover fieldset': {
+                                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                                          },
+                                          '&.Mui-focused fieldset': {
+                                            borderColor: '#2196f3',
+                                          },
+                                        },
+                                      }}
+                                    />
+                                  </Box>
+                                )}
+                              </Box>
+                            </Box>
+                          </Card>
+                        </Grid>
+                      ))}
+                    </Grid>
                   </Box>
-                )}
-              </ImageListItem>
-            ))}
-          </ImageList>
-        </CardContent>
-      </Card>
 
-      {/* Dialog para crear/editar */}
+                  <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={() => setSelectedFiles([])}
+                      disabled={uploading}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => {
+                        setUploading(true);
+                        handleMultipleFileUpload(selectedFiles)
+                          .finally(() => {
+                            setUploading(false);
+                            setSelectedFiles([]);
+                          });
+                      }}
+                      disabled={uploading}
+                      startIcon={uploading ? <CircularProgress size={20} /> : null}
+                    >
+                      {uploading ? 'Subiendo...' : 'Subir Imágenes'}
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
+      </Box>
+
+      {/* Dialog para editar imagen */}
       <Dialog 
         open={openDialog} 
         onClose={handleCloseDialog} 
@@ -1125,178 +1346,6 @@ const GaleriaManager = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-
-      {/* Divider */}
-      <Box sx={{ 
-        height: 2,  
-        mb: 4, 
-        borderRadius: 1,
-        mx: 'auto',
-        width: '80%'
-      }} />
-
-      {/* gestión carrusel */}
-      <Card sx={{ mb: 4, bgcolor: '#2a2a2a', color: 'white' }}>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold' }}>
-              🎠 Imágenes del Carrusel
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Typography variant="body2" sx={{ color: '#ccc' }}>
-                Imágenes seleccionadas de la galería para mostrar en el carrusel ({selectedImages.length} seleccionadas)
-              </Typography>
-              <Tooltip title="Modo reordenar carrusel">
-                <IconButton
-                  onClick={() => setCarouselReorderMode(!carouselReorderMode)}
-                  sx={{ 
-                    bgcolor: carouselReorderMode ? 'primary.main' : 'transparent',
-                    color: carouselReorderMode ? 'white' : 'white',
-                    '&:hover': { bgcolor: carouselReorderMode ? 'primary.dark' : 'rgba(255,255,255,0.1)' }
-                  }}
-                >
-                  <ReorderIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Box>
-          
-          <ImageList
-            sx={{ 
-              width: '100%', 
-              height: 'auto',
-              bgcolor: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: 2,
-              p: 2
-            }}
-            variant="quilted"
-            cols={4}
-            rowHeight={120}
-          >
-            {selectedImages.map((imagen, index) => (
-              <ImageListItem 
-                key={imagen._id} 
-                sx={{ 
-                  position: 'relative',
-                  cursor: 'pointer',
-                  '& img': {
-                    transition: 'transform 0.2s',
-                  },
-                  '&:hover img': {
-                    transform: 'scale(1.02)'
-                  }
-                }}
-                onClick={() => handleOpenDialog(imagen)}
-              >
-                {/* Botones de acción para carrusel */}
-                <Box sx={{ 
-                  position: 'absolute', 
-                  top: 8, 
-                  right: 8, 
-                  zIndex: 10,
-                  display: 'flex',
-                  gap: 0.5
-                }}>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveFromCarousel(imagen._id);
-                    }}
-                    sx={{ 
-                      backgroundColor: 'rgba(211, 47, 47, 0.1)',
-                      color: '#f44336',
-                      width: 28,
-                      height: 28,
-                      '&:hover': {
-                        backgroundColor: 'rgba(211, 47, 47, 0.2)',
-                      }
-                    }}
-                    title="Remover del carrusel"
-                  >
-                    <DeleteIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Box>
-
-                {/* Controles de reordenamiento para carrusel */}
-                {carouselReorderMode && (
-                  <Box sx={{ 
-                    position: 'absolute', 
-                    left: 8, 
-                    top: 8, 
-                    zIndex: 10,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 0.5
-                  }}>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleReorderCarousel(index, index - 1);
-                      }}
-                      disabled={index === 0}
-                      sx={{ 
-                        color: 'white', 
-                        p: 0.5,
-                        bgcolor: 'rgba(0,0,0,0.5)',
-                        '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
-                      }}
-                    >
-                      <ArrowUpIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleReorderCarousel(index, index + 1);
-                      }}
-                      disabled={index === selectedImages.length - 1}
-                      sx={{ 
-                        color: 'white', 
-                        p: 0.5,
-                        bgcolor: 'rgba(0,0,0,0.5)',
-                        '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
-                      }}
-                    >
-                      <ArrowDownIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                )}
-                <img
-                  src={imagen.imagen}
-                  alt={imagen.titulo}
-                  loading="lazy"
-                  style={{ 
-                    borderRadius: 8,
-                    objectFit: 'cover',
-                    width: '100%',
-                    height: '100%'
-                  }}
-                />
-                
-                <ImageListItemBar
-                  title={imagen.titulo}
-                  
-                  sx={{
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%)',
-                    borderBottomLeftRadius: 8,
-                    borderBottomRightRadius: 8
-                  }}
-                />
-              </ImageListItem>
-            ))}
-          </ImageList>
-          
-          {selectedImages.length === 0 && (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="body1" sx={{ color: '#888' }}>
-                No hay imágenes seleccionadas para el carrusel. Selecciona imágenes de la galería para agregarlas.
-              </Typography>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
     </Box>
   );
 };

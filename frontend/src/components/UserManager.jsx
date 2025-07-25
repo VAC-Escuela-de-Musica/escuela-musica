@@ -12,7 +12,6 @@ import {
   TextField,
   IconButton,
   Grid,
-  Alert,
   CircularProgress,
   FormControl,
   InputLabel,
@@ -29,11 +28,12 @@ import {
   Email as EmailIcon,
   Badge as BadgeIcon,
 } from "@mui/icons-material";
+import Notification from './common/Notification';
 
 const UserManager = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const [openDialog, setOpenDialog] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({
@@ -74,7 +74,11 @@ const UserManager = () => {
         console.log("Roles del primer usuario:", data.data[0].roles);
       }
     } catch (err) {
-      setError("Error al cargar los usuarios: " + err.message);
+      setNotification({
+        open: true,
+        message: "Error al cargar los usuarios: " + err.message,
+        severity: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -138,9 +142,18 @@ const UserManager = () => {
       setOpenDialog(false);
       setEditingUser(null);
       setFormData({ username: "", email: "", rut: "", password: "", roles: [] });
+      setNotification({
+        open: true,
+        message: editingUser ? "Usuario actualizado correctamente" : "Usuario creado correctamente",
+        severity: 'success'
+      });
       fetchUsers();
     } catch (err) {
-      setError("Error al guardar el usuario: " + err.message);
+      setNotification({
+        open: true,
+        message: "Error al guardar el usuario: " + err.message,
+        severity: 'error'
+      });
     }
   };
 
@@ -161,9 +174,18 @@ const UserManager = () => {
         throw new Error("Error al eliminar el usuario");
       }
 
+      setNotification({
+        open: true,
+        message: "Usuario eliminado correctamente",
+        severity: 'success'
+      });
       fetchUsers();
     } catch (err) {
-      setError("Error al eliminar el usuario: " + err.message);
+      setNotification({
+        open: true,
+        message: "Error al eliminar el usuario: " + err.message,
+        severity: 'error'
+      });
     }
   };
 
@@ -202,6 +224,10 @@ const UserManager = () => {
     setOpenDialog(true);
   };
 
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -233,11 +259,7 @@ const UserManager = () => {
         sx={{ mb: 3, input: { color: "white" }, label: { color: "gray" } }}
         InputProps={{ sx: { color: "white" } }}
       />
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+
       <Box display="flex" alignItems="flex-start">
         <Box flex={1}>
           <Grid container spacing={3}>
@@ -308,7 +330,7 @@ const UserManager = () => {
         </Box>
       </Box>
 
-      {/* agregar/editar usuario */}
+      {/* Dialog para agregar/editar usuario */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ backgroundColor: "#333333", color: "white" }}>
           {editingUser ? "Editar Usuario" : "Agregar Nuevo Usuario"}
@@ -400,6 +422,13 @@ const UserManager = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+      />
     </Box>
   );
 };

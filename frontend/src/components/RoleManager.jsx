@@ -9,16 +9,15 @@ import {
   TextField,
   Button,
   Divider,
-  Alert,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import Notification from './common/Notification';
 
 const RoleManager = () => {
   const [roles, setRoles] = useState([]);
   const [newRole, setNewRole] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   const API_URL = `${import.meta.env.VITE_API_URL}/roles`;
 
@@ -37,7 +36,11 @@ const RoleManager = () => {
       const data = await response.json();
       setRoles(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
-      setError("Error al cargar los roles: " + err.message);
+      setNotification({
+        open: true,
+        message: "Error al cargar los roles: " + err.message,
+        severity: 'error'
+      });
     }
   };
 
@@ -57,12 +60,18 @@ const RoleManager = () => {
         throw new Error(errorData.message || "Error al agregar rol");
       }
       setNewRole("");
-      setSuccess("Rol agregado correctamente");
+      setNotification({
+        open: true,
+        message: "Rol agregado correctamente",
+        severity: 'success'
+      });
       fetchRoles();
-      setTimeout(() => setSuccess(""), 2000);
     } catch (err) {
-      setError("Error al agregar rol: " + err.message);
-      setTimeout(() => setError(""), 2000);
+      setNotification({
+        open: true,
+        message: "Error al agregar rol: " + err.message,
+        severity: 'error'
+      });
     }
   };
 
@@ -76,11 +85,23 @@ const RoleManager = () => {
         },
       });
       if (!response.ok) throw new Error("Error al eliminar rol");
+      setNotification({
+        open: true,
+        message: "Rol eliminado correctamente",
+        severity: 'success'
+      });
       fetchRoles();
     } catch (err) {
-      setError("Error al eliminar rol: " + err.message);
-      setTimeout(() => setError(""), 2000);
+      setNotification({
+        open: true,
+        message: "Error al eliminar rol: " + err.message,
+        severity: 'error'
+      });
     }
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
   };
 
   return (
@@ -89,8 +110,6 @@ const RoleManager = () => {
         Roles del sistema
       </Typography>
       <Divider sx={{ mb: 2, background: "#444" }} />
-      {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 1 }}>{success}</Alert>}
       <List dense>
         {roles.map((role) => (
           <ListItem key={role._id} secondaryAction={
@@ -114,6 +133,13 @@ const RoleManager = () => {
           Agregar
         </Button>
       </Box>
+
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+      />
     </Box>
   );
 };
