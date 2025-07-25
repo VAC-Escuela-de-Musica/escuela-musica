@@ -54,40 +54,38 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
   }, [autoFetch]);
 
   /**
-   * Obtener todos los items
+   * Obtener todos los items - CORREGIDO
    */
   const fetchItems = useCallback(async (filters = {}) => {
     try {
       let data;
       
       if (service && service.getAll) {
-        // Usar service especializado si está disponible
         const response = await service.getAll(filters);
         data = response.data || response;
       } else {
-        // Usar API service genérico - FIX: Bind the method properly
-        const response = await api.execute(() => apiService.get(endpoint), endpoint);
+        // ✅ Corregir la llamada API
+        const response = await api.execute(async () => {
+          return await apiService.get(endpoint);
+        });
         data = response.data || response;
       }
       
-      // ✅ Asegurar que siempre sea un array
       const items = Array.isArray(data) ? data : [];
       api.updateData(items);
       return items;
     } catch (error) {
       errorHandler.captureError(error, { operation: 'fetchItems', endpoint });
-      // ✅ Establecer array vacío en caso de error
       api.updateData([]);
       throw error;
     }
-  }, [endpoint, service, api, errorHandler]);
+  }, [endpoint, service]); // ✅ Remover api y errorHandler de dependencias
 
   /**
-   * Crear nuevo item
+   * Crear nuevo item - CORREGIDO
    */
   const createItem = useCallback(async (data) => {
     try {
-      // Validación si está disponible
       if (validator) {
         const validation = validator(data);
         if (!validation.isValid) {
@@ -98,15 +96,15 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
       let result;
       
       if (service && service.create) {
-        // Usar service especializado
         result = await service.create(data);
       } else {
-        // Usar API service genérico - FIX: Bind the method properly
-        result = await api.execute(() => apiService.post(endpoint, data));
+        // ✅ Corregir la llamada API
+        result = await api.execute(async () => {
+          return await apiService.post(endpoint, data);
+        });
       }
 
-      // Update optimista
-      if (optimisticUpdates) {
+      if (optimisticUpdates && api.data) {
         const newItem = result.data || result;
         api.updateData([...api.data, newItem]);
       } else {
@@ -117,19 +115,18 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
         onSuccess(`${itemName} creado exitosamente`, result);
       }
 
-      return result;
+      return { success: true, data: result.data || result };
     } catch (error) {
       errorHandler.captureError(error, { operation: 'createItem', data });
-      throw error;
+      return { success: false, error: error.message };
     }
-  }, [endpoint, itemName, service, validator, api, optimisticUpdates, onSuccess, errorHandler, fetchItems]);
+  }, [endpoint, itemName, service, validator, optimisticUpdates, onSuccess, fetchItems]);
 
   /**
-   * Actualizar item existente
+   * Actualizar item existente - CORREGIDO
    */
   const updateItem = useCallback(async (id, data) => {
     try {
-      // Validación si está disponible
       if (validator) {
         const validation = validator(data);
         if (!validation.isValid) {
@@ -140,15 +137,15 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
       let result;
       
       if (service && service.update) {
-        // Usar service especializado
         result = await service.update(id, data);
       } else {
-        // Usar API service genérico - FIX: Bind the method properly
-        result = await api.execute(() => apiService.put(`${endpoint}/${id}`, data));
+        // ✅ Corregir la llamada API
+        result = await api.execute(async () => {
+          return await apiService.put(`${endpoint}/${id}`, data);
+        });
       }
 
-      // Update optimista
-      if (optimisticUpdates) {
+      if (optimisticUpdates && api.data) {
         const updatedItem = result.data || result;
         const updatedData = api.data.map(item => 
           (item.id === id || item._id === id) ? updatedItem : item
@@ -162,32 +159,43 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
         onSuccess(`${itemName} actualizado exitosamente`, result);
       }
 
-      return result;
+      return { success: true, data: result.data || result };
     } catch (error) {
       errorHandler.captureError(error, { operation: 'updateItem', id, data });
-      throw error;
+      return { success: false, error: error.message };
     }
-  }, [endpoint, itemName, service, validator, api, optimisticUpdates, onSuccess, errorHandler, fetchItems]);
+  }, [endpoint, itemName, service, validator, optimisticUpdates, onSuccess, fetchItems]);
+
+  // ✅ Agregar función saveItem faltante
+  const saveItem = useCallback(async (formData) => {
+    const isEditing = !!dialogState.editing;
+    const id = dialogState.editing?.id || dialogState.editing?._id;
+    
+    if (isEditing && id) {
+      return await updateItem(id, formData);
+    } else {
+      return await createItem(formData);
+    }
+  }, [dialogState.editing, createItem, updateItem]);
 
   /**
-   * Eliminar item
+   * Eliminar item individual
    */
   const deleteItem = useCallback(async (id) => {
     try {
       let result;
       
       if (service && service.delete) {
-        // Usar service especializado
         result = await service.delete(id);
       } else {
-        // Usar API service genérico - FIX: Bind the method properly
-        result = await api.execute(() => apiService.delete(`${endpoint}/${id}`));
+        result = await api.execute(async () => {
+          return await apiService.delete(`${endpoint}/${id}`);
+        });
       }
 
-      // Update optimista
-      if (optimisticUpdates) {
+      if (optimisticUpdates && api.data) {
         const filteredData = api.data.filter(item => 
-          item.id !== id && item._id !== id
+          (item.id !== id && item._id !== id)
         );
         api.updateData(filteredData);
       } else {
@@ -198,62 +206,57 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
         onSuccess(`${itemName} eliminado exitosamente`, result);
       }
 
-      return result;
+      return { success: true, data: result.data || result };
     } catch (error) {
       errorHandler.captureError(error, { operation: 'deleteItem', id });
-      throw error;
+      return { success: false, error: error.message };
     }
-  }, [endpoint, itemName, service, validator, api, optimisticUpdates, onSuccess, errorHandler, fetchItems]);
+  }, [endpoint, itemName, service, optimisticUpdates, onSuccess, fetchItems]);
 
   /**
-   * Reordenar items (si está habilitado)
+   * Reordenar items (para drag & drop)
    */
-  const reorderItems = useCallback(async (reorderedItems) => {
+  const reorderItems = useCallback(async (newOrder) => {
     if (!enableReordering) return;
-
+    
     try {
-      const orderData = reorderedItems.map((item, index) => ({
-        id: item.id || item._id,
-        orden: index + 1
-      }));
-
-      if (service && service.reorder) {
-        await service.reorder(orderData);
-      } else {
-        await api.execute(apiService.put, `${endpoint}/reorder`, { items: orderData });
-      }
-
-      // Update optimista
+      // Actualización optimista
       if (optimisticUpdates) {
-        api.updateData(reorderedItems);
-      } else {
-        await fetchItems();
+        api.updateData(newOrder);
       }
-
-      if (onSuccess) {
-        onSuccess('Orden actualizado exitosamente');
+      
+      // Si hay servicio personalizado para reordenar
+      if (service && service.reorder) {
+        await service.reorder(newOrder);
       }
+      
+      return { success: true };
     } catch (error) {
-      errorHandler.captureError(error, { operation: 'reorderItems', items: reorderedItems });
-      throw error;
+      errorHandler.captureError(error, { operation: 'reorderItems' });
+      // Revertir en caso de error
+      await fetchItems();
+      return { success: false, error: error.message };
     }
-  }, [enableReordering, endpoint, service, api, optimisticUpdates, onSuccess, errorHandler, fetchItems]);
+  }, [enableReordering, optimisticUpdates, service, fetchItems]);
 
   /**
-   * Operaciones masivas (si están habilitadas)
+   * Eliminación masiva
    */
   const bulkDelete = useCallback(async (ids) => {
     if (!enableBulkOperations) return;
-
+    
     try {
-      const promises = ids.map(id => 
-        service?.delete ? service.delete(id) : apiService.delete(`${endpoint}/${id}`)
-      );
+      let result;
       
-      await Promise.all(promises);
-      
-      // Update optimista
-      if (optimisticUpdates) {
+      if (service && service.bulkDelete) {
+        result = await service.bulkDelete(ids);
+      } else {
+        result = await api.execute(async () => {
+          return await apiService.delete(`${endpoint}/bulk`, { data: { ids } });
+        });
+      }
+
+      if (optimisticUpdates && api.data) {
         const filteredData = api.data.filter(item => 
           !ids.includes(item.id) && !ids.includes(item._id)
         );
@@ -262,24 +265,34 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
         await fetchItems();
       }
 
+      // Limpiar selección
+      setSelectedItems(new Set());
+
       if (onSuccess) {
-        onSuccess(`${ids.length} ${itemName}s eliminados exitosamente`);
+        onSuccess(`${ids.length} ${itemName}s eliminados exitosamente`, result);
       }
+
+      return { success: true, data: result.data || result };
     } catch (error) {
       errorHandler.captureError(error, { operation: 'bulkDelete', ids });
-      throw error;
+      return { success: false, error: error.message };
     }
-  }, [enableBulkOperations, endpoint, itemName, service, api, optimisticUpdates, onSuccess, errorHandler, fetchItems]);
+  }, [enableBulkOperations, endpoint, itemName, service, optimisticUpdates, onSuccess, fetchItems]);
 
-  // Gestión del diálogo
-  const openDialog = useCallback((item = null) => {
+  /**
+   * Gestión de diálogo - Abrir
+   */
+  const openDialog = useCallback((item = null, initialData = {}) => {
     setDialogState({
       open: true,
       editing: item,
-      formData: item ? { ...item } : {}
+      formData: item ? { ...item, ...initialData } : initialData
     });
   }, []);
 
+  /**
+   * Gestión de diálogo - Cerrar
+   */
   const closeDialog = useCallback(() => {
     setDialogState({
       open: false,
@@ -288,14 +301,19 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
     });
   }, []);
 
-  const updateFormData = useCallback((newData) => {
+  /**
+   * Actualizar datos del formulario
+   */
+  const updateFormData = useCallback((data) => {
     setDialogState(prev => ({
       ...prev,
-      formData: { ...prev.formData, ...newData }
+      formData: { ...prev.formData, ...data }
     }));
   }, []);
 
-  // Gestión de confirmación de eliminación
+  /**
+   * Gestión de confirmación de eliminación - Abrir
+   */
   const openDeleteConfirm = useCallback((item) => {
     setDeleteConfirm({
       open: true,
@@ -303,6 +321,9 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
     });
   }, []);
 
+  /**
+   * Gestión de confirmación de eliminación - Cerrar
+   */
   const closeDeleteConfirm = useCallback(() => {
     setDeleteConfirm({
       open: false,
@@ -310,24 +331,36 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
     });
   }, []);
 
-  // Gestión de selección múltiple
+  /**
+   * Gestión de selección - Toggle individual
+   */
   const toggleSelection = useCallback((id) => {
+    if (!enableBulkOperations) return;
+    
     setSelectedItems(prev => {
-      const newSelection = new Set(prev);
-      if (newSelection.has(id)) {
-        newSelection.delete(id);
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
       } else {
-        newSelection.add(id);
+        newSet.add(id);
       }
-      return newSelection;
+      return newSet;
     });
-  }, []);
+  }, [enableBulkOperations]);
 
+  /**
+   * Gestión de selección - Seleccionar todos
+   */
   const selectAll = useCallback(() => {
-    const allIds = new Set(api.data.map(item => item.id || item._id));
-    setSelectedItems(allIds);
-  }, [api.data]);
+    if (!enableBulkOperations || !api.data) return;
+    
+    const allIds = api.data.map(item => item.id || item._id);
+    setSelectedItems(new Set(allIds));
+  }, [enableBulkOperations, api.data]);
 
+  /**
+   * Gestión de selección - Limpiar selección
+   */
   const clearSelection = useCallback(() => {
     setSelectedItems(new Set());
   }, []);
@@ -348,6 +381,7 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
     createItem,
     updateItem,
     deleteItem,
+    saveItem,
     reorderItems,
     bulkDelete,
     

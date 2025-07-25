@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiService from "../services/api.service.js";
+import authService from "../services/auth.service.js";
 import { setCsrfToken as setGlobalCsrfToken } from "../config/api.js";
 
 const AuthContext = createContext();
@@ -29,22 +30,48 @@ export function AuthProvider({ children }) {
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    const initCSRF = async () => {
+    const initAuth = async () => {
       setLoading(true);
       try {
+        // Initialize authService from localStorage
+        authService.init();
+        
+        // Get token from localStorage and set it in apiService
+        const token = localStorage.getItem('token');
+        if (token) {
+          apiService.setToken(token);
+        }
+        
+        // Initialize CSRF token
         const data = await apiService.get('/csrf-token');
         setCsrfToken(data.csrfToken);
-        // También establecer el token globalmente para API_HEADERS
         setGlobalCsrfToken(data.csrfToken);
+        
+        // Verify token if it exists
+        if (token) {
+          const verifyResult = await authService.verifyToken();
+          if (verifyResult.success) {
+            setUser(verifyResult.data.user);
+          } else {
+            // Token is invalid, clear it
+            authService.logout();
+            apiService.clearToken();
+            setUser(null);
+          }
+        }
       } catch (error) {
-        console.error('Error loading CSRF token:', error);
+        console.error('Error during auth initialization:', error);
+        // Clear invalid auth state
+        authService.logout();
+        apiService.clearToken();
+        setUser(null);
       } finally {
         setIsInitialized(true);
         setLoading(false);
       }
     };
     
-    initCSRF();
+    initAuth();
   }, []);
 
   // Actualiza localStorage cuando el usuario cambia
@@ -57,27 +84,14 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   // Función de logout
+  // Update logout function to use authService
   const logout = async () => {
     try {
-      // Intentar logout en el backend
-      const token = localStorage.getItem("token");
-      if (token) {
-        await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          credentials: "include"
-        });
-      }
+      await authService.logout();
+      apiService.clearToken();
+      setUser(null);
     } catch (error) {
       console.error("Error durante logout:", error);
-    } finally {
-      // Limpiar datos locales
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      setUser(null);
     }
   };
 
