@@ -21,6 +21,7 @@ export {
   requireRole,
   requireAdmin,
   requireAdminOrProfesor,
+  requireAdminOrAsistente,
   requireAuthenticated,
   requireOwnershipOrAdmin
 } from '../features/authentication/middlewares/index.js'

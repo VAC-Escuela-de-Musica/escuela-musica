@@ -1,6 +1,6 @@
-import { Outlet } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import { logout } from "../services/auth.service";
+import React from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
+import authService from '../services/auth.service.js';
 import { AuthProvider, useAuth } from "../context/AuthContext";
 
 function Root() {
@@ -15,7 +15,7 @@ function PageRoot() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
+    authService.logout(); // Cambiar de logout() a authService.logout()
     navigate("/auth");
   };
 

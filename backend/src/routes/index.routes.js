@@ -1,4 +1,15 @@
+
 'use strict'
+
+// Función para validar que la URL de redirección es local
+function isLocalUrl(path) {
+  try {
+    const baseUrl = 'http://localhost'; // Cambia esto por el dominio de tu app si es necesario
+    return new URL(path, baseUrl).origin === baseUrl;
+  } catch (e) {
+    return false;
+  }
+}
 
 import { Router } from 'express'
 
@@ -38,6 +49,13 @@ router.use(securityHeaders)
 router.use(sanitizeInput)
 
 // ============= DEFINICIÓN DE RUTAS =============
+// Ruta para exponer el token CSRF al frontend
+import lusca from 'lusca'
+const { csrf } = lusca
+
+router.get('/csrf-token', csrf(), (req, res) => {
+  res.json({ csrfToken: req.csrfToken() })
+})
 
 // Health check global del sistema
 router.get('/health', (req, res) => {
@@ -85,7 +103,12 @@ router.use('/carousel', carouselRoutes)
 // ============= COMPATIBILIDAD CON RUTAS OBSOLETAS =============
 router.use('/materiales', (req, res) => {
   console.log(`⚠️ Acceso a ruta obsoleta: ${req.method} ${req.originalUrl}`)
-  res.redirect(307, req.originalUrl.replace('/materiales', '/materials'))
+  const targetUrl = req.originalUrl.replace('/materiales', '/materials');
+  if (isLocalUrl(targetUrl)) {
+    res.redirect(307, targetUrl);
+  } else {
+    res.redirect(307, '/');
+  }
 })
 
 // ============= MANEJO DE ERRORES =============

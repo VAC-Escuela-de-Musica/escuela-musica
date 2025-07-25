@@ -100,10 +100,8 @@ class AuthService {
 
       const response = await fetch(API_ENDPOINTS.auth.verify, {
         method: 'GET',
-        headers: {
-          ...API_HEADERS.basic,
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include',
+        headers: API_HEADERS.withAuth()
       });
 
       const data = await response.json();
@@ -170,7 +168,7 @@ class AuthService {
     try {
       const response = await fetch(API_ENDPOINTS.auth.refresh, {
         method: 'GET',
-        headers: API_HEADERS.basic,
+        headers: API_HEADERS.withAuth(),
         credentials: 'include' // Para incluir cookies httpOnly
       });
 

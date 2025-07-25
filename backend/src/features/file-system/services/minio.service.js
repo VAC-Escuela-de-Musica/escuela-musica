@@ -232,6 +232,18 @@ class MinioService {
    */
   async initializeBuckets () {
     try {
+      // Configuración CORS para permitir acceso desde frontend
+      const corsConfig = {
+        CORSRules: [
+          {
+            AllowedOrigins: ['*'],
+            AllowedMethods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE'],
+            AllowedHeaders: ['*'],
+            MaxAgeSeconds: 3600
+          }
+        ]
+      }
+
       // Crear bucket privado
       const privateBucketExists = await this.client.bucketExists(this.buckets.private)
       if (!privateBucketExists) {
@@ -261,6 +273,33 @@ class MinioService {
         await this.client.setBucketPolicy(this.buckets.public, JSON.stringify(publicPolicy))
         console.log(`✅ Política pública aplicada a '${this.buckets.public}'`)
       }
+
+      // Crear bucket galería
+      const galeryBucketExists = await this.client.bucketExists(this.buckets.galery)
+      if (!galeryBucketExists) {
+        await this.client.makeBucket(this.buckets.galery)
+        console.log(`✅ Bucket galería '${this.buckets.galery}' creado exitosamente`)
+
+        // Configurar política para hacer público el bucket galería
+        const galeryPolicy = {
+          Version: '2012-10-17',
+          Statement: [
+            {
+              Effect: 'Allow',
+              Principal: { AWS: ['*'] },
+              Action: ['s3:GetObject'],
+              Resource: [`arn:aws:s3:::${this.buckets.galery}/*`]
+            }
+          ]
+        }
+
+        await this.client.setBucketPolicy(this.buckets.galery, JSON.stringify(galeryPolicy))
+        console.log(`✅ Política pública aplicada a '${this.buckets.galery}'`)
+      }
+
+      // Nota: setBucketCors no está disponible en esta versión de MinIO
+      // En su lugar, usaremos URLs presignadas con headers CORS apropiados
+      console.log('ℹ️ CORS se manejará a través de URLs presignadas y middleware del servidor')
 
       console.log('✅ Buckets inicializados correctamente')
     } catch (error) {

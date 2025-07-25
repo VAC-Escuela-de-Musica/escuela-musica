@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit'
 import {
   uploadImage,
   getImages,
+  getImagesWithUrls,
   getAllImages,
   updateImage,
   deleteImage,
@@ -45,6 +46,7 @@ const upload = multer({
 
 // Rutas públicas
 router.get('/', getImages) // Obtener imágenes activas del carrusel
+router.get('/active-with-urls', getImagesWithUrls) // Obtener imágenes activas con URLs presignadas
 
 // Rutas protegidas (requieren autenticación)
 router.use(protectedRoutesLimiter, verifyJWT)

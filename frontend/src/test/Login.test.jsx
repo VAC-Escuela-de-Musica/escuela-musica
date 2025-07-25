@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, it, expect } from 'vitest';
-import Login from '../components/Login';
+import Login from '../components/domain/auth/Login';
 import { useAuth } from '../context/AuthContext.jsx';
 import { mockFetchSuccess, mockUserData, mockAuthToken } from './testUtils.js';
 

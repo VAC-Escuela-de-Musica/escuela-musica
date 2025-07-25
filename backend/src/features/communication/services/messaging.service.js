@@ -515,6 +515,47 @@ class MessagingService {
   getWhatsAppWebQR () {
     return whatsappWebService.getQrCode()
   }
+
+  /**
+   * Resetea/limpia la sesión de WhatsApp Web
+   * @returns {Promise<Object>} - Resultado del reseteo
+   */
+  async resetWhatsAppWeb () {
+    try {
+      console.log('🔄 Reseteando WhatsApp Web...')
+      
+      // Destruir la conexión actual
+      await whatsappWebService.destroy()
+      
+      // Eliminar archivos de sesión usando la variable de entorno
+      const fs = await import('fs')
+      const path = await import('path')
+      const sessionPath = process.env.WHATSAPP_SESSION_PATH || './.wwebjs_auth'
+      const fullSessionPath = path.resolve(sessionPath)
+      
+      if (fs.existsSync(fullSessionPath)) {
+        console.log(`🗑️ Eliminando archivos de sesión en: ${fullSessionPath}`)
+        fs.rmSync(fullSessionPath, { recursive: true, force: true })
+        console.log('✅ Archivos de sesión eliminados')
+      } else {
+        console.log('ℹ️ No se encontraron archivos de sesión para eliminar')
+      }
+      
+      console.log('✅ WhatsApp Web reseteado correctamente')
+      
+      return {
+        success: true,
+        message: 'WhatsApp Web reseteado correctamente. Ahora puedes generar un nuevo código QR.'
+      }
+    } catch (error) {
+      console.error('❌ Error reseteando WhatsApp Web:', error)
+      return {
+        success: false,
+        error: error.message,
+        message: 'Error al resetear WhatsApp Web'
+      }
+    }
+  }
 }
 
 export default new MessagingService()

@@ -1,0 +1,23 @@
+{
+  "name": "escuela-musica-gps",
+  "version": "1.0.0",
+  "description": "Sistema GPS para Escuela de Música",
+  "type": "module",
+  "scripts": {
+    "test-whatsapp": "node run-whatsapp-tests.js",
+    "test-whatsapp-complete": "node test-whatsapp-complete.js",
+    "test-whatsapp-web": "node backend/test-whatsapp-web.js",
+    "test-whatsapp-frontend": "node frontend/test-whatsapp-frontend.js",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "dev": "cd backend && npm run start",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "keywords": ["whatsapp", "messaging", "school", "music", "gps"],
+  "author": "Equipo GPS",
+  "license": "ISC"
+}

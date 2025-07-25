@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import apiService from "../services/api.service.js";
+import { setCsrfToken as setGlobalCsrfToken } from "../config/api.js";
 
 const AuthContext = createContext();
 
@@ -23,14 +25,26 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(getUserFromStorage);
   const [isInitialized, setIsInitialized] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [csrfToken, setCsrfToken] = useState(null);
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setIsInitialized(true);
-      setLoading(false);
-    }, 500);
+    const initCSRF = async () => {
+      setLoading(true);
+      try {
+        const data = await apiService.get('/csrf-token');
+        setCsrfToken(data.csrfToken);
+        // También establecer el token globalmente para API_HEADERS
+        setGlobalCsrfToken(data.csrfToken);
+      } catch (error) {
+        console.error('Error loading CSRF token:', error);
+      } finally {
+        setIsInitialized(true);
+        setLoading(false);
+      }
+    };
+    
+    initCSRF();
   }, []);
 
   // Actualiza localStorage cuando el usuario cambia
@@ -48,7 +62,7 @@ export function AuthProvider({ children }) {
       // Intentar logout en el backend
       const token = localStorage.getItem("token");
       if (token) {
-        await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/logout`, {
+        await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -102,7 +116,8 @@ export function AuthProvider({ children }) {
       hasRole,
       isAdmin,
       isTeacher,
-      isStudent
+      isStudent,
+      csrfToken
     }}>
       {children}
     </AuthContext.Provider>

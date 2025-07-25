@@ -17,6 +17,7 @@ export {
   requireRole,
   requireAdmin,
   requireAdminOrProfesor,
+  requireAdminOrAsistente,
   requireAuthenticated,
   requireOwnershipOrAdmin
 } from './role.middleware.js'

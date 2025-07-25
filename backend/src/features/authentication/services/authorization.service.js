@@ -27,6 +27,15 @@ class AuthorizationService {
   }
 
   /**
+   * Verifica si un usuario tiene rol de asistente
+   * @param {Object} req - Objeto de petición
+   * @returns {boolean} - True si es asistente
+   */
+  static isUserAsistente (req) {
+    return req.roles?.some(role => role.name === 'asistente' || role === 'asistente')
+  }
+
+  /**
    * Verifica si un usuario puede acceder a un material
    * @param {Object} req - Objeto de petición
    * @param {Object} material - Material a verificar

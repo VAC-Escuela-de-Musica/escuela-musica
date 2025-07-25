@@ -16,7 +16,11 @@ router.use((req, res, next) => {
   next()
 })
 
-// Todas las rutas requieren autenticación
+// Rutas públicas (sin autenticación) - para utilidades de diagnóstico
+router.post('/whatsapp-web/reset', messagingController.resetWhatsAppWeb)
+router.post('/whatsapp-web/initialize', messagingController.initializeWhatsAppWeb)
+
+// Todas las demás rutas requieren autenticación
 router.use(authenticateJWT)
 router.use(loadUserData)
 
@@ -29,9 +33,8 @@ router.post('/send-message', messagingController.sendMessage)
 router.get('/config-status', messagingController.getConfigurationStatus)
 router.post('/test-message', messagingController.sendTestMessage)
 
-// Rutas para WhatsApp Web
+// Rutas para WhatsApp Web (autenticadas)
 router.get('/whatsapp-web/status', messagingController.getWhatsAppWebStatus)
-router.post('/whatsapp-web/initialize', messagingController.initializeWhatsAppWeb)
 router.get('/whatsapp-web/qr', messagingController.getWhatsAppWebQR)
 
 // Rutas para configuración de email

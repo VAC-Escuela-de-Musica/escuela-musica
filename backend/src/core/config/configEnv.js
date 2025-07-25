@@ -4,6 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'url'
 // Load environment variables from the .env file
 // ...existing code...
+export const SESSION_SECRET = process.env.SESSION_SECRET || 'cambia_este_secreto_en_env';
 import dotenv from 'dotenv'
 
 // Obtener __filename y __dirname en ES Modules

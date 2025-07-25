@@ -1,4 +1,4 @@
-import RepositorioProfesor from '../components/RepositorioProfesor';
+import RepositorioProfesor from '../components/domain/materials/RepositorioProfesor';
 
 /**
  * Página del Dashboard principal - Lista de materiales

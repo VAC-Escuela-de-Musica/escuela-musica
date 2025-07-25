@@ -158,7 +158,7 @@ export const deleteMaterial = asyncHandler(async (req, res) => {
     return respondError(req, res, 404, 'Material no encontrado')
   }
 
-  // Verificar permisos - Solo el propietario o admin pueden eliminar
+  // Verificar permisos: el usuario debe ser el propietario o un administrador
   const isOwner = material.usuario === req.email
   const isAdmin = AuthorizationService.isUserAdmin(req)
 

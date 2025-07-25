@@ -1,4 +1,5 @@
-import SubirArchivos from '../components/SubirArchivos';
+
+import SubirArchivos from '../components/domain/materials/SubirArchivos';
 
 /**
  * Página para subir materiales

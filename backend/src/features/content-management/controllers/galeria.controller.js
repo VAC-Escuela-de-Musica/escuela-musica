@@ -93,11 +93,11 @@ export const updateImageOrder = asyncHandler(async (req, res) => {
 })
 
 /**
- * Obtener URL de imagen con autenticación
+ * Obtener URL presignada de imagen para evitar problemas de CORS
  */
 export const getImageUrl = asyncHandler(async (req, res) => {
   const { id } = req.params
-  const { action = 'view', duration = 300 } = req.query
+  const { action = 'view', duration = 3600 } = req.query
 
   const imageResult = await galeriaService.getImageById(id)
   const urlResult = await galeriaService.getImageUrl(imageResult.data, {
@@ -106,6 +106,34 @@ export const getImageUrl = asyncHandler(async (req, res) => {
   })
 
   respondSuccess(req, res, 200, urlResult.data, urlResult.message)
+})
+
+/**
+ * Obtener URLs presignadas para todas las imágenes activas (público)
+ */
+export const getActiveGalleryWithUrls = asyncHandler(async (req, res) => {
+  const result = await galeriaService.getActiveGallery()
+  
+  // Generar URLs presignadas para todas las imágenes
+  const imagesWithUrls = await Promise.all(
+    result.data.map(async (imagen) => {
+      try {
+        const urlResult = await galeriaService.getImageUrl(imagen, { duration: 3600 })
+        return {
+          ...imagen.toObject(),
+          presignedUrl: urlResult.data.url
+        }
+      } catch (error) {
+        console.error('Error generando URL para imagen:', imagen._id, error)
+        return {
+          ...imagen.toObject(),
+          presignedUrl: imagen.imagen // Fallback a URL original
+        }
+      }
+    })
+  )
+  
+  respondSuccess(req, res, 200, imagesWithUrls, 'Galería activa con URLs presignadas obtenida exitosamente')
 })
 
 /**
@@ -143,13 +171,13 @@ export const getUploadUrl = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Usar el bucket de galería específicamente
-    const bucketToUse = 'galery'
+    // Usar el tipo de bucket 'galery' que el servicio MinIO mapea al bucket configurado
+    const bucketType = 'galery'
     const finalFilename = filename || `galeria_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
     // Generar URL prefirmada usando MinioService
     const uploadData = await minioService.generateUploadUrl(
-      bucketToUse,
+      bucketType,
       finalFilename,
       300, // 5 minutos
       {
@@ -158,7 +186,8 @@ export const getUploadUrl = asyncHandler(async (req, res) => {
     )
 
     // Generar URL pública para la respuesta
-    const publicUrl = `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${uploadData.bucket}/${finalFilename}`
+    const minioPort = process.env.MINIO_PORT || 9000
+    const publicUrl = `http://${process.env.MINIO_ENDPOINT}:${minioPort}/${uploadData.bucket}/${finalFilename}`
 
     const responseData = {
       uploadUrl: uploadData.uploadUrl,

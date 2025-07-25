@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import SimpleTest from './components/SimpleTest.jsx';
+import SimpleTest from './components/domain/admin/SimpleTest.jsx';
 
 function AppTest() {
   const [message, setMessage] = useState('Cargando...');

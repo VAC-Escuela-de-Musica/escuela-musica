@@ -11,7 +11,7 @@ class WhatsAppWebService {
     this.isReady = false
     this.qrCode = null
     this.qrCodeImage = null
-    this.sessionPath = path.join(process.cwd(), '.wwebjs_auth')
+    this.sessionPath = path.resolve(process.env.WHATSAPP_SESSION_PATH || './.wwebjs_auth')
 
     // Crear directorio de sesión si no existe
     if (!fs.existsSync(this.sessionPath)) {
@@ -26,14 +26,10 @@ class WhatsAppWebService {
     try {
       console.log('🚀 Inicializando WhatsApp Web...')
 
-      this.client = new Client({
-        authStrategy: new LocalAuth({
-          clientId: 'gps-system',
-          dataPath: this.sessionPath
-        }),
-        puppeteer: {
-          headless: true,
-          args: [
+      // Obtener argumentos de Puppeteer desde variables de entorno
+      const puppeteerArgs = process.env.WHATSAPP_PUPPETEER_ARGS 
+        ? process.env.WHATSAPP_PUPPETEER_ARGS.split(',')
+        : [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
@@ -43,6 +39,16 @@ class WhatsAppWebService {
             '--single-process',
             '--disable-gpu'
           ]
+
+      this.client = new Client({
+        authStrategy: new LocalAuth({
+          clientId: 'gps-system',
+          dataPath: this.sessionPath
+        }),
+        puppeteer: {
+          headless: true,
+          args: puppeteerArgs,
+          timeout: parseInt(process.env.WHATSAPP_TIMEOUT) || 60000
         }
       })
 

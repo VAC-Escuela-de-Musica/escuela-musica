@@ -6,11 +6,19 @@ import { logger } from '../utils/logger.js';
  */
 class ApiService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:1230';
     this.token = null;
     this.defaultHeaders = {
       'Content-Type': 'application/json'
     };
+    
+    // Bind methods to preserve 'this' context
+    this.get = this.get.bind(this);
+    this.post = this.post.bind(this);
+    this.put = this.put.bind(this);
+    this.patch = this.patch.bind(this);
+    this.delete = this.delete.bind(this);
+    this.request = this.request.bind(this);
   }
 
   /**
@@ -103,6 +111,7 @@ class ApiService {
     const config = {
       method,
       headers: this.getHeaders(headers),
+      credentials: 'include', // Incluir cookies de sesión
       signal: AbortSignal.timeout(timeout)
     };
 
