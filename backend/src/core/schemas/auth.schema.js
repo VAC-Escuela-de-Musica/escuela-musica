@@ -1,6 +1,6 @@
-'use strict'
+"use strict";
 
-import Joi from 'joi'
+import Joi from "joi";
 
 /**
  * Esquema de validación para el cuerpo de la solicitud de inicio de sesión.

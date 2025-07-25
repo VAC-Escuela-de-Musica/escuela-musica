@@ -1,47 +1,22 @@
-'use strict'
-import express from 'express'
-import cardsProfesoresController from '../controllers/cardsProfesores.controller.js'
-import { authenticateJWT, verifyJWT } from '../../authentication/middlewares/jwt.middleware.js'
-import { requireRole } from '../../authentication/middlewares/role.middleware.js'
-const ADMIN_ROLE = 'administrador'
-const ASISTENTE_ROLE = 'asistente'
+"use strict";
 
-const router = express.Router()
+import { Router } from "express";
+import cardsProfesoresController from "../controllers/cardsProfesores.controller.js";
+import { authenticationMiddleware, authorizeRoles } from "../../authentication/index.js";
+
+const router = Router();
 
 // Rutas públicas (sin autenticación)
-router.get('/', cardsProfesoresController.getAllCards)
-router.get('/active', cardsProfesoresController.getActiveCards)
-router.get('/:id', cardsProfesoresController.getCardById)
+router.get("/", cardsProfesoresController.getCardsProfesores);
+router.get("/active", cardsProfesoresController.getCardsProfesores);
 
-// Rutas protegidas (requieren autenticación y autorización)
-router.post('/',
-  authenticateJWT,
-  requireRole([ADMIN_ROLE, ASISTENTE_ROLE]),
-  cardsProfesoresController.createCard
-)
+// Rutas protegidas (requieren autenticación)
+router.use(authenticationMiddleware);
 
-router.put('/order',
-  verifyJWT,
-  requireRole([ADMIN_ROLE, ASISTENTE_ROLE]),
-  cardsProfesoresController.updateOrder
-)
+// Rutas de administración (solo administrador y asistente)
+router.post("/", authorizeRoles(["administrador", "asistente"]), cardsProfesoresController.createCardProfesor);
+router.get("/:id", authorizeRoles(["administrador", "asistente"]), cardsProfesoresController.getCardProfesorById);
+router.put("/:id", authorizeRoles(["administrador", "asistente"]), cardsProfesoresController.updateCardProfesor);
+router.delete("/:id", authorizeRoles(["administrador", "asistente"]), cardsProfesoresController.deleteCardProfesor);
 
-router.put(':id',
-  verifyJWT,
-  requireRole([ADMIN_ROLE, ASISTENTE_ROLE]),
-  cardsProfesoresController.updateCard
-)
-
-router.delete(':id',
-  verifyJWT,
-  requireRole([ADMIN_ROLE, ASISTENTE_ROLE]),
-  cardsProfesoresController.deleteCard
-)
-
-router.patch(':id/restore',
-  verifyJWT,
-  requireRole([ADMIN_ROLE, ASISTENTE_ROLE]),
-  cardsProfesoresController.restoreCard
-)
-
-export default router
+export default router; 

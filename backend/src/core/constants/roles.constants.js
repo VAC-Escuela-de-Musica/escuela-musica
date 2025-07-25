@@ -1,4 +1,11 @@
 /** Roles permitidos por la base de datos */
-const ROLES = ['administrador', 'profesor', 'asistente']
+const ROLES = ["administrador", "asistente", "profesor", "estudiante"];
 
-export default ROLES
+// Constantes para roles específicos
+const ADMIN = "administrador";
+
+export default ROLES;
+export {
+  ROLES,
+  ADMIN,
+};

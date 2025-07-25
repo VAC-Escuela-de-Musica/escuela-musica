@@ -17,10 +17,11 @@ import {
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
 import LogoutIcon from "@mui/icons-material/Logout";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
+
 const UserManager = React.lazy(() => import("./domain/users/UserManager"));
-// Imports que necesitan actualización:
 const CardsProfesoresManager = React.lazy(() => import("./domain/profesores/CardsProfesoresManager"));
 const RepositorioProfesor = React.lazy(() => import("./domain/materials/RepositorioProfesor"));
 const MensajeriaManager = React.lazy(() => import("./domain/messaging/MensajeriaManager"));
@@ -51,6 +52,19 @@ const LoadingFallback = ({ message }) => (
 
 export default function ClippedDrawer() {
   const [activeModule, setActiveModule] = React.useState("inicio");
+  const [userName, setUserName] = React.useState('');
+
+  React.useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUserName(payload.email);
+      } catch (error) {
+        console.error("Error al decodificar el token:", error);
+      }
+    }
+  }, []);
 
   const handleLogout = () => {
     // Limpiar el token del localStorage
@@ -221,9 +235,14 @@ export default function ClippedDrawer() {
         <Toolbar />
         {activeModule === "inicio" && (
           <>
-            <Typography sx={{ marginBottom: 2 }}>
-              {/* Aquí tu texto de bienvenida o dashboard */}
-              Bienvenido al panel de administración.
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, marginBottom: 2 }}>
+              <AccountCircleIcon sx={{ fontSize: 40 }} />
+              <Typography variant="h5">
+                Bienvenido(a), {userName}
+              </Typography>
+            </Box>
+            <Typography variant="body1" sx={{ marginBottom: 2 }}>
+              Panel de administración de VAC Escuela de Música
             </Typography>
           </>
         )}

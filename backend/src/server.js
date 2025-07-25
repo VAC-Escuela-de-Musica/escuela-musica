@@ -1,5 +1,5 @@
 // Importa el archivo 'configEnv.js' para cargar las variables de entorno
-import { PORT, HOST, SESSION_SECRET } from './core/config/configEnv.js'
+import { PORT, HOST, SESSION_SECRET } from './core/core/config/configEnv.js'
 import path from 'node:path'
 // Importa el módulo 'cors' para agregar los cors
 import cors from 'cors'
@@ -15,9 +15,9 @@ const { csrf } = lusca
 /** El enrutador principal */
 import indexRoutes from './routes/index.routes.js'
 // Importa el archivo 'configDB.js' para crear la conexión a la base de datos
-import { setupDB } from './core/config/configDB.js'
+import { setupDB } from './core/core/config/configDB.js'
 // Importa la configuración de MinIO
-import { setupMinIO } from './core/config/minio.config.js'
+import { setupMinIO } from './core/core/config/minio.config.js'
 // Importa el handler de errores
 import { handleFatalError, handleError } from './core/utils/errorHandler.util.js'
 import { createRoles, createUsers } from './core/config/initialSetup.js'
