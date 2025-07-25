@@ -71,28 +71,14 @@ export default function Login() {
       }
       
       localStorage.setItem("token", data.data.accessToken);
-      
-      try {
-        const verifyRes = await fetch(API_ENDPOINTS.auth.verify, {
-          method: "GET",
-          headers: API_HEADERS.withAuth(),
-          credentials: "include"
-        });
-        
-        const verifyData = await verifyRes.json();
-        
-        if (verifyData.success && verifyData.data?.user) {
-          localStorage.setItem("user", JSON.stringify(verifyData.data.user));
-          setUser(verifyData.data.user);
-          navigate("/usuario", { replace: true });
-        } else {
-          setError("No se pudo obtener el usuario");
-        }
-      } catch (err) {
-        setError("Error verificando usuario tras login");
-      }
-    } catch (error) {
-      setError("Error de red o del servidor");
+      // Redirige al usuario
+      window.location.href = "/usuario";
+    } catch {
+      setNotification({
+        open: true,
+        message: "Error de red o del servidor",
+        severity: 'error'
+      });
     } finally {
       setLoading(false);
     }

@@ -17,10 +17,11 @@ import {
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
 import LogoutIcon from "@mui/icons-material/Logout";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
+
 const UserManager = React.lazy(() => import("./domain/users/UserManager"));
-// Imports que necesitan actualización:
 const CardsProfesoresManager = React.lazy(() => import("./domain/profesores/CardsProfesoresManager"));
 const RepositorioProfesor = React.lazy(() => import("./domain/materials/RepositorioProfesor"));
 const MensajeriaManager = React.lazy(() => import("./domain/messaging/MensajeriaManager"));
@@ -64,13 +65,6 @@ export default function ClippedDrawer() {
       }
     }
   }, []);
-
-  const handleLogout = () => {
-    // Limpiar el token del localStorage
-    localStorage.removeItem("token");
-    // Redirigir al login
-    window.location.href = "/login";
-  };
 
   const handleLogout = () => {
     // Limpiar el token del localStorage
