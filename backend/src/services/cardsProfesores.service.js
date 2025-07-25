@@ -83,14 +83,10 @@ class CardsProfesoresService {
     }
   }
 
-  // Eliminar una tarjeta (soft delete)
+  // Eliminar una tarjeta (borrado real)
   async deleteCard(id) {
     try {
-      const card = await CardsProfesores.findByIdAndUpdate(
-        id, 
-        { activo: false }, 
-        { new: true }
-      );
+      const card = await CardsProfesores.findByIdAndDelete(id);
       if (!card) {
         return { success: false, error: "Tarjeta no encontrada" };
       }

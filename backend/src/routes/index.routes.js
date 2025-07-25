@@ -45,9 +45,5 @@ router.use("/galeria", galeriaRoutes);
 // Define las rutas para URLs pre-firmadas /api/presigned
 router.use("/presigned", presignedUrlRoutes);
 
-router.get("/saludo", (req, res) => {
-  res.send("¡Hola desde el backend!");
-});
-
 // Exporta el enrutador
 export default router;

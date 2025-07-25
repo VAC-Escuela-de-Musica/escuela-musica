@@ -175,30 +175,6 @@ export default function ButtonAppBar() {
               </ListItemButton>
             </ListItem>
           </List>
-
-          {/* Divisor */}
-          <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-
-          {/* Botones de usuario (después de login) */}
-          <List>
-            <ListItem disablePadding>
-              <ListItemButton>
-                <ListItemText primary="User Button 1" />
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding>
-              <ListItemButton>
-                <ListItemText primary="User Button 2" />
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding>
-              <ListItemButton>
-                <ListItemText primary="User Button 3" />
-              </ListItemButton>
-            </ListItem>
-          </List>
         </Box>
       </Drawer>
     </Box>

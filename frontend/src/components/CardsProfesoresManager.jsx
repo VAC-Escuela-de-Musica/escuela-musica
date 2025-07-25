@@ -13,7 +13,6 @@ import {
   DialogActions,
   TextField,
   IconButton,
-  Alert,
   CircularProgress,
   Fab,
   Chip,
@@ -26,7 +25,9 @@ import {
   VisibilityOff as VisibilityOffIcon,
   Visibility as PreviewIcon,
   DragIndicator as DragIcon,
+  CloudUpload as UploadIcon,
 } from "@mui/icons-material";
+import Notification from './common/Notification';
 
 // URL del backend usando la configuración de Vite
 const API_URL = `${import.meta.env.VITE_API_URL}/cards-profesores`;
@@ -34,11 +35,13 @@ const API_URL = `${import.meta.env.VITE_API_URL}/cards-profesores`;
 const CardsProfesoresManager = () => {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const [openDialog, setOpenDialog] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
   const [isReordering, setIsReordering] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     nombre: "",
     especialidad: "",
@@ -59,7 +62,7 @@ const CardsProfesoresManager = () => {
       const sortedCards = (data.data || []).sort((a, b) => a.orden - b.orden);
       setCards(sortedCards);
     } catch (err) {
-      setError(err.message);
+      showNotification(err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -79,6 +82,8 @@ const CardsProfesoresManager = () => {
         descripcion: card.descripcion,
         imagen: card.imagen,
       });
+      setSelectedImage(null); // Limpiar imagen seleccionada al editar
+      setImagePreview('');
     } else {
       setEditingCard(null);
       setFormData({
@@ -87,6 +92,8 @@ const CardsProfesoresManager = () => {
         descripcion: "",
         imagen: "",
       });
+      setSelectedImage(null); // Limpiar imagen seleccionada al crear
+      setImagePreview('');
     }
     setOpenDialog(true);
   };
@@ -101,6 +108,8 @@ const CardsProfesoresManager = () => {
       descripcion: "",
       imagen: "",
     });
+    setSelectedImage(null); // Limpiar imagen seleccionada al cerrar
+    setImagePreview('');
   };
 
   // Manejar cambios en el formulario
@@ -110,50 +119,127 @@ const CardsProfesoresManager = () => {
       ...prev,
       [name]: value
     }));
+    setSelectedImage(null); // Limpiar imagen seleccionada al escribir en el campo de imagen
+    setImagePreview('');
+  };
+
+  // Subir imagen a MinIO
+  const handleImageUpload = async (file) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showNotification("No hay token de autenticación. Por favor, inicia sesión nuevamente.", "error");
+        return null;
+      }
+
+      // Obtener URL pre-firmada para subida
+      const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL}/presigned/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          contentType: file.type
+        })
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Error al obtener URL de subida');
+      }
+
+      const uploadData = await uploadResponse.json();
+      
+      // Subir archivo directamente a MinIO usando la URL pre-firmada
+      const uploadToMinIO = await fetch(uploadData.data.uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type
+        }
+      });
+
+      if (!uploadToMinIO.ok) {
+        throw new Error('Error al subir imagen');
+      }
+
+      return uploadData.data.publicUrl;
+    } catch (error) {
+      console.error('Error al subir imagen:', error);
+      showNotification("Error al subir la imagen: " + error.message, "error");
+      return null;
+    }
+  };
+
+  const showNotification = (message, severity = 'success') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
   };
 
   // Crear nueva tarjeta
   const handleCreate = async () => {
     try {
       // Validar que todos los campos estén llenos
-      if (!formData.nombre || !formData.especialidad || !formData.descripcion || !formData.imagen) {
-        setError("Todos los campos son requeridos");
+      if (!formData.nombre || !formData.especialidad || !formData.descripcion) {
+        showNotification("Todos los campos son requeridos", "error");
         return;
+      }
+
+      if (!selectedImage && !formData.imagen) {
+        showNotification("Debes seleccionar una imagen", "error");
+        return;
+      }
+
+      setUploading(true);
+
+      // Si hay una imagen seleccionada, subirla primero
+      let imageUrl = formData.imagen;
+      if (selectedImage) {
+        imageUrl = await handleImageUpload(selectedImage);
+        if (!imageUrl) {
+          setUploading(false);
+          return;
+        }
       }
 
       // Verificar que hay un token
       const token = localStorage.getItem("token");
       if (!token) {
-        setError("No hay token de autenticación. Por favor, inicia sesión nuevamente.");
+        showNotification("No hay token de autenticación. Por favor, inicia sesión nuevamente.", "error");
+        setUploading(false);
         return;
       }
 
-      console.log("Enviando datos:", formData); // Debug
-      console.log("Token:", token.substring(0, 20) + "..."); // Debug (solo primeros 20 caracteres)
+      const dataToSend = {
+        ...formData,
+        imagen: imageUrl
+      };
 
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error("Error response:", errorData); // Debug
         throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json();
-      console.log("Respuesta exitosa:", result); // Debug
-
+      showNotification("Tarjeta creada exitosamente", "success");
       handleCloseDialog();
       fetchCards();
     } catch (err) {
-      console.error("Error completo:", err); // Debug
-      setError(err.message);
+      console.error("Error completo:", err);
+      showNotification(err.message, "error");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -161,12 +247,32 @@ const CardsProfesoresManager = () => {
   const handleUpdate = async () => {
     try {
       // Validar que todos los campos estén llenos
-      if (!formData.nombre || !formData.especialidad || !formData.descripcion || !formData.imagen) {
-        setError("Todos los campos son requeridos");
+      if (!formData.nombre || !formData.especialidad || !formData.descripcion) {
+        showNotification("Todos los campos son requeridos", "error");
         return;
       }
 
-      console.log("Actualizando datos:", formData); // Debug
+      if (!selectedImage && !formData.imagen) {
+        showNotification("Debes seleccionar una imagen", "error");
+        return;
+      }
+
+      setUploading(true);
+
+      // Si hay una imagen seleccionada, subirla primero
+      let imageUrl = formData.imagen;
+      if (selectedImage) {
+        imageUrl = await handleImageUpload(selectedImage);
+        if (!imageUrl) {
+          setUploading(false);
+          return;
+        }
+      }
+
+      const dataToSend = {
+        ...formData,
+        imagen: imageUrl
+      };
 
       const response = await fetch(`${API_URL}/${editingCard._id}`, {
         method: "PUT",
@@ -174,23 +280,22 @@ const CardsProfesoresManager = () => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error("Error response:", errorData); // Debug
         throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json();
-      console.log("Actualización exitosa:", result); // Debug
-
+      showNotification("Tarjeta actualizada exitosamente", "success");
       handleCloseDialog();
       fetchCards();
     } catch (err) {
-      console.error("Error completo:", err); // Debug
-      setError(err.message);
+      console.error("Error completo:", err);
+      showNotification(err.message, "error");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -201,36 +306,54 @@ const CardsProfesoresManager = () => {
     }
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showNotification("No hay token de autenticación. Por favor, inicia sesión nuevamente.", "error");
+        return;
+      }
+
+      // Guardar el estado actual y actualizar la UI inmediatamente
+      const cardToDelete = cards.find(card => card._id === id);
+      setCards(prevCards => prevCards.filter(card => card._id !== id));
+
       const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error("Error al eliminar la tarjeta");
+        // Si hay error, revertir el cambio
+        setCards(prevCards => [...prevCards, cardToDelete]);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Error al eliminar la tarjeta");
       }
 
-      fetchCards();
+      showNotification("Tarjeta eliminada exitosamente", "success");
     } catch (err) {
-      setError(err.message);
+      console.error("Error:", err);
+      showNotification(err.message, "error");
     }
   };
 
   // Cambiar visibilidad de la tarjeta
   const handleToggleVisibility = async (card) => {
-    const action = card.activo ? "ocultar" : "mostrar";
-    if (!window.confirm(`¿Estás seguro de que quieres ${action} esta tarjeta?`)) {
-      return;
-    }
-
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        setError("No hay token de autenticación. Por favor, inicia sesión nuevamente.");
+        showNotification("No hay token de autenticación. Por favor, inicia sesión nuevamente.", "error");
         return;
       }
+
+      // Actualizar el estado localmente primero para una respuesta inmediata
+      setCards(prevCards => 
+        prevCards.map(c => 
+          c._id === card._id 
+            ? { ...c, activo: !c.activo }
+            : c
+        )
+      );
 
       const response = await fetch(`${API_URL}/${card._id}`, {
         method: "PUT",
@@ -245,14 +368,22 @@ const CardsProfesoresManager = () => {
       });
 
       if (!response.ok) {
+        // Si hay error, revertir el cambio local
+        setCards(prevCards => 
+          prevCards.map(c => 
+            c._id === card._id 
+              ? { ...c, activo: card.activo }
+              : c
+          )
+        );
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
       }
 
-      fetchCards();
+      showNotification("Tarjeta Actualizada", "success");
     } catch (err) {
       console.error("Error completo:", err);
-      setError(err.message);
+      showNotification(err.message, "error");
     }
   };
 
@@ -296,18 +427,12 @@ const CardsProfesoresManager = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        setError("No hay token de autenticación. Por favor, inicia sesión nuevamente.");
+        showNotification("No hay token de autenticación. Por favor, inicia sesión nuevamente.", "error");
         return;
       }
 
       // Crear array con el orden actual de las tarjetas
       const cardsOrder = cards.map(card => card._id);
-      
-      console.log("Token encontrado:", token.substring(0, 20) + "..."); // Debug
-      console.log("Enviando orden:", cardsOrder); // Debug
-
-      const requestBody = { cardsOrder };
-      console.log("Request body:", JSON.stringify(requestBody)); // Debug
       
       const response = await fetch(`${API_URL}/order`, {
         method: "PUT",
@@ -315,20 +440,16 @@ const CardsProfesoresManager = () => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({ cardsOrder }),
       });
-
-      console.log("Respuesta del servidor:", response.status); // Debug
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.log("Error data:", errorData); // Debug
         throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json();
-      console.log("Resultado exitoso:", result); // Debug
-
+      showNotification("Orden guardado exitosamente", "success");
+      
       // Actualizar el orden en el estado local inmediatamente
       const updatedCards = cards.map((card, index) => ({
         ...card,
@@ -338,13 +459,9 @@ const CardsProfesoresManager = () => {
       
       setIsReordering(false);
       
-      // Mostrar mensaje de éxito
-      setError(null); // Limpiar errores previos
-      setSuccess("Orden guardado exitosamente");
-      setTimeout(() => setSuccess(null), 3000); // Ocultar después de 3 segundos
     } catch (error) {
-      console.error("Error completo:", error); // Debug
-      setError(error.message || "Error al guardar el orden");
+      console.error("Error completo:", error);
+      showNotification(error.message || "Error al guardar el orden", "error");
     }
   };
 
@@ -404,16 +521,13 @@ const CardsProfesoresManager = () => {
         </Box>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {success}
-        </Alert>
+      {notification.open && (
+        <Notification
+          open={notification.open}
+          message={notification.message}
+          severity={notification.severity}
+          onClose={handleCloseNotification}
+        />
       )}
 
       {cards.length === 0 ? (
@@ -661,34 +775,141 @@ const CardsProfesoresManager = () => {
               helperText={`${formData.descripcion.length}/500 caracteres`}
               error={formData.descripcion.length > 500}
             />
-            <TextField
-              fullWidth
-              label="URL de la imagen"
-              name="imagen"
-              value={formData.imagen}
-              onChange={handleInputChange}
-              margin="normal"
-              required
-              helperText="Ingresa la URL de la imagen (ej: https://ejemplo.com/imagen.jpg)"
-            />
+            
+            {/* Sección de imagen */}
+            <Box sx={{ mt: 2, mb: 1 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Imagen del Profesor *
+              </Typography>
+              <Box
+                sx={{
+                  border: '2px dashed #666',
+                  borderRadius: 2,
+                  p: 2,
+                  textAlign: 'center',
+                  bgcolor: 'rgba(0, 0, 0, 0.04)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    borderColor: '#1976d2',
+                    bgcolor: 'rgba(25, 118, 210, 0.04)',
+                  },
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 2
+                }}
+                onClick={() => document.getElementById('image-upload').click()}
+              >
+                <input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      if (file.size > 5 * 1024 * 1024) {
+                        showNotification("La imagen no debe superar los 5MB", "error");
+                        return;
+                      }
+                      setSelectedImage(file);
+                      setImagePreview(URL.createObjectURL(file));
+                      setFormData(prev => ({ ...prev, imagen: '' }));
+                    }
+                  }}
+                />
+                
+                {(imagePreview || formData.imagen) ? (
+                  <Box sx={{ position: 'relative', width: '100%', maxWidth: 300, mx: 'auto' }}>
+                    <img
+                      src={imagePreview || formData.imagen}
+                      alt="Vista previa"
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        maxHeight: 200,
+                        objectFit: 'contain',
+                        borderRadius: 4
+                      }}
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedImage(null);
+                        setImagePreview('');
+                        setFormData(prev => ({ ...prev, imagen: '' }));
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        bgcolor: 'rgba(0, 0, 0, 0.5)',
+                        color: 'white',
+                        '&:hover': {
+                          bgcolor: 'rgba(211, 47, 47, 0.8)',
+                        }
+                      }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                ) : (
+                  <>
+                    <UploadIcon sx={{ fontSize: 48, color: '#666' }} />
+                    <Typography>
+                      Arrastra una imagen aquí o haz clic para seleccionar
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      Tamaño máximo: 5MB
+                    </Typography>
+                  </>
+                )}
+              </Box>
+              
+              {/* Campo opcional para URL de imagen */}
+              <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+                O ingresa la URL de una imagen:
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="https://ejemplo.com/imagen.jpg"
+                name="imagen"
+                value={formData.imagen}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, imagen: e.target.value }));
+                  setSelectedImage(null);
+                  setImagePreview('');
+                }}
+                disabled={!!selectedImage}
+                sx={{ mt: 1 }}
+              />
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
+          <Button onClick={handleCloseDialog} disabled={uploading}>
+            Cancelar
+          </Button>
           <Button
             onClick={editingCard ? handleUpdate : handleCreate}
             variant="contained"
             disabled={
+              uploading ||
               formData.nombre.length > 25 ||
               formData.especialidad.length > 50 ||
               formData.descripcion.length > 500 ||
               formData.nombre.length < 2 ||
               formData.especialidad.length < 2 ||
               formData.descripcion.length < 10 ||
-              !formData.imagen
+              (!selectedImage && !formData.imagen)
             }
+            startIcon={uploading && <CircularProgress size={20} />}
           >
-            {editingCard ? "Actualizar" : "Crear"}
+            {uploading ? 'Subiendo...' : (editingCard ? "Actualizar" : "Crear")}
           </Button>
         </DialogActions>
       </Dialog>
