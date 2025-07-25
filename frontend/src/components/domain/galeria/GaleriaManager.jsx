@@ -194,7 +194,7 @@ const GaleriaManager = () => {
       {activeTab === 0 && (
         <DomainManager
           title="Gestión de Galería"
-          endpoint="/galeria"
+          endpoint="/api/galeria"
           itemName="imagen"
           FormComponent={GaleriaForm}
           TableComponent={GaleriaGrid}

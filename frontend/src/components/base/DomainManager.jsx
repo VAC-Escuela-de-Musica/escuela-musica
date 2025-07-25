@@ -39,13 +39,13 @@ const DomainManager = ({
     validator: validator?.validate
   });
 
-  // Cargar datos al montar
+  // Cargar datos al montar - CORREGIDO
   useEffect(() => {
     crud.fetchItems();
-  }, [crud.fetchItems]);
+  }, []); // ✅ Eliminar crud.fetchItems de las dependencias
 
   // Integrar búsqueda si está disponible
-  const displayItems = search ? search.filteredItems : crud.items;
+  const displayItems = search ? search.filteredItems : (crud.items || []); // ✅ Fallback a array vacío
 
   // Manejador de eliminación mejorado
   const handleDelete = async (id, item) => {
@@ -65,7 +65,7 @@ const DomainManager = ({
     }
   };
 
-  // Manejador de guardado mejorado
+  // Manejador de guardado mejorado - CORREGIDO
   const handleSave = async (formData) => {
     if (validator?.validate) {
       const validation = validator.validate(formData);
@@ -79,9 +79,14 @@ const DomainManager = ({
       return await specificLogic.handleSave(formData, crud);
     }
 
-    const result = await crud.saveItem(formData);
-    if (result.success) {
+    // ✅ Usar createItem o updateItem en lugar de saveItem inexistente
+    const result = crud.isEditing 
+      ? await crud.updateItem(crud.dialogState.editing.id || crud.dialogState.editing._id, formData)
+      : await crud.createItem(formData);
+      
+    if (result && result.success) {
       specificLogic.onAfterSave?.(result.data);
+      crud.closeDialog();
     }
     return result;
   };
@@ -97,8 +102,8 @@ const DomainManager = ({
     }
   };
 
-  // Loading inicial
-  if (crud.loading && displayItems.length === 0) {
+  // Loading inicial - también verificar null/undefined
+  if (crud.loading && (!displayItems || displayItems.length === 0)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
