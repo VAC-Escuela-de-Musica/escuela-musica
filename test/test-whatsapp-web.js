@@ -5,8 +5,8 @@
  * Este test se enfoca específicamente en el servicio de WhatsApp Web
  */
 
-import whatsappWebService from './src/features/communication/services/whatsappWeb.service.js'
-import messagingService from './src/features/communication/services/messaging.service.js'
+import whatsappWebService from '../backend/src/features/communication/services/whatsappWeb.service.js'
+import messagingService from '../backend/src/features/communication/services/messaging.service.js'
 
 // Configuración
 const TEST_CONFIG = {

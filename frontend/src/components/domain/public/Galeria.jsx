@@ -10,7 +10,7 @@ function Galeria() {
     const fetchImages = async () => {
       try {
         setLoading(true);
-        const response = await fetch(API_ENDPOINTS.galeria.activeWithUrls, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230'}/api/carousel/active-with-urls`, {
           headers: API_HEADERS.basic
         });
         
@@ -19,8 +19,10 @@ function Galeria() {
         }
         
         const data = await response.json();
-        // Ensure we're setting an array - handle both direct array and object with data property
-        const imageArray = Array.isArray(data) ? data : (data.data || []);
+        // Handle nested data structure from API response
+        const imageArray = Array.isArray(data) ? data : 
+                          Array.isArray(data.data) ? data.data :
+                          Array.isArray(data.data?.data) ? data.data.data : [];
         setImages(imageArray);
       } catch (err) {
         console.error('Error fetching gallery images:', err);

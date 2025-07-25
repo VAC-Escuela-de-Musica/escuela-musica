@@ -12,6 +12,7 @@ import internalMessageRoutes from '../features/communication/routes/internalMess
 import roleRoutes from '../features/user-management/routes/role.routes.js'
 import cardsProfesoresRoutes from '../features/website-content/routes/cardsProfesores.routes.js'
 import carouselRoutes from '../features/website-content/routes/carousel.routes.js'
+import testimonioRoutes from '../features/website-content/routes/testimonio.routes.js'
 
 import adminRoutes from './admin.routes.js'
 
@@ -63,7 +64,7 @@ router.get('/health', (req, res) => {
     success: true,
     message: 'Backend funcionando correctamente',
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    version: '1.0.1'
   })
 })
 
@@ -101,6 +102,9 @@ router.use('/cards-profesores', cardsProfesoresRoutes)
 
 // Rutas para carousel - autenticación manejada en carousel.routes.js
 router.use('/carousel', carouselRoutes)
+
+// Rutas para testimonios - autenticación manejada en testimonio.routes.js
+router.use('/testimonios', testimonioRoutes)
 
 // ============= COMPATIBILIDAD CON RUTAS OBSOLETAS =============
 router.use('/materiales', (req, res) => {

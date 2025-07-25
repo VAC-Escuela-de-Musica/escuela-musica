@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 import { DB_URL } from './src/config/configEnv.js'
-import CardsProfesores from './src/features/website-content/models/cardsProfesores.model.js'
+import CardsProfesores from '../backend/src/features/website-content/models/cardsProfesores.model.js'
 
 // Conectar a la base de datos
 await mongoose.connect(DB_URL)

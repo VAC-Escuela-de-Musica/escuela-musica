@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { minioService } from './src/services/index.js'
+import { minioService } from '../backend/src/services/index.js'
 
 // Cargar variables de entorno
 dotenv.config()
