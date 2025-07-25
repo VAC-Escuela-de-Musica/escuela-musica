@@ -1,36 +1,36 @@
-"use strict";
+'use strict'
 
-import Evento from "../../../core/models/evento.entity.js";
-import { handleError } from "../../../core/utils/errorHandler.js";
+import Evento from '../../../core/models/evento.entity.js'
+import { handleError } from '../../../core/utils/errorHandler.util.js'
 
-async function getEventos() {
+async function getEventos () {
   try {
     const eventos = await Evento.find({ visible: true })
-      .populate("creadoPor")
-      .lean();
+      .populate('creadoPor')
+      .lean()
 
-    if (!eventos) return [null, "No hay eventos registrados"];
+    if (!eventos) return [null, 'No hay eventos registrados']
 
-    return [eventos, null];
+    return [eventos, null]
   } catch (error) {
-    handleError(error, "evento.service -> getEventos");
-    return [null, "Error al obtener los eventos"];
+    handleError(error, 'evento.service -> getEventos')
+    return [null, 'Error al obtener los eventos']
   }
 }
 
-async function createEvento(evento) {
+async function createEvento (evento) {
   try {
-    const newEvento = new Evento(evento);
-    await newEvento.save();
+    const newEvento = new Evento(evento)
+    await newEvento.save()
 
-    return [newEvento, null];
+    return [newEvento, null]
   } catch (error) {
-    handleError(error, "evento.service -> createEvento");
-    return [null, "Error al crear el evento"];
+    handleError(error, 'evento.service -> createEvento')
+    return [null, 'Error al crear el evento']
   }
 }
 
 export default {
   getEventos,
-  createEvento,
-}; 
+  createEvento
+}

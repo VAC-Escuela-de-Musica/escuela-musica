@@ -15,44 +15,44 @@ import { handleError } from '../../../core/utils/errorHandler.util.js'
 const loadUserData = async (req, res, next) => {
   try {
     if (!req.user?.email) {
-      return respondError(req, res, 401, 'Usuario no autenticado');
+      return respondError(req, res, 401, 'Usuario no autenticado')
     }
 
-    const email = req.user.email;
-    let user = await User.findOne({ email }).populate('roles');
+    const email = req.user.email
+    let user = await User.findOne({ email }).populate('roles')
     if (user) {
       // Usuario encontrado en User
     } else {
-      user = await Alumno.findOne({ email });
+      user = await Alumno.findOne({ email })
       if (user) {
         // Alumno encontrado
       }
     }
 
     if (!user) {
-      return respondError(req, res, 401, 'Usuario no encontrado');
+      return respondError(req, res, 401, 'Usuario no encontrado')
     }
 
     // Establecer datos completos del usuario
-    req.user.fullData = user;
+    req.user.fullData = user
     req.user.roleNames = Array.isArray(user.roles)
       ? user.roles.map(r => (typeof r === 'string' ? r : r.name || r))
-      : [];
-    req.user.id = user._id;
-    req.user.email = user.email;
+      : []
+    req.user.id = user._id
+    req.user.email = user.email
     // Si es alumno, poner nombreAlumno como username
-    if (user.nombreAlumno) req.user.username = user.nombreAlumno;
+    if (user.nombreAlumno) req.user.username = user.nombreAlumno
 
     // Asegurar compatibilidad con legacy code
-    req.email = req.user.email;
-    req.roles = req.user.roleNames;
+    req.email = req.user.email
+    req.roles = req.user.roleNames
 
-    next();
+    next()
   } catch (error) {
-    handleError(error, 'user.middleware -> loadUserData');
-    return respondError(req, res, 500, 'Error cargando datos de usuario');
+    handleError(error, 'user.middleware -> loadUserData')
+    return respondError(req, res, 500, 'Error cargando datos de usuario')
   }
-};
+}
 
 /**
  * Verifica que el usuario esté activo

@@ -27,7 +27,7 @@ class WhatsAppWebService {
       console.log('🚀 Inicializando WhatsApp Web...')
 
       // Obtener argumentos de Puppeteer desde variables de entorno
-      const puppeteerArgs = process.env.WHATSAPP_PUPPETEER_ARGS 
+      const puppeteerArgs = process.env.WHATSAPP_PUPPETEER_ARGS
         ? process.env.WHATSAPP_PUPPETEER_ARGS.split(',')
         : [
             '--no-sandbox',

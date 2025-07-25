@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const galeriaSchema = new mongoose.Schema({
   titulo: {
@@ -61,34 +61,34 @@ const galeriaSchema = new mongoose.Schema({
 }, {
   timestamps: true,
   versionKey: false
-});
+})
 
 // Índices para optimizar consultas
-galeriaSchema.index({ activo: 1, orden: 1 });
-galeriaSchema.index({ categoria: 1, activo: 1 });
-galeriaSchema.index({ usuario: 1 });
-galeriaSchema.index({ bucketTipo: 1 });
+galeriaSchema.index({ activo: 1, orden: 1 })
+galeriaSchema.index({ categoria: 1, activo: 1 })
+galeriaSchema.index({ usuario: 1 })
+galeriaSchema.index({ bucketTipo: 1 })
 
 // Middleware para actualizar fechaActualizacion
-galeriaSchema.pre('save', function(next) {
-  this.fechaActualizacion = new Date();
-  next();
-});
+galeriaSchema.pre('save', function (next) {
+  this.fechaActualizacion = new Date()
+  next()
+})
 
 // Método estático para obtener galería activa
-galeriaSchema.statics.getActiveGallery = function() {
+galeriaSchema.statics.getActiveGallery = function () {
   return this.find({ activo: true })
     .sort({ orden: 1, fechaCreacion: -1 })
-    .select('titulo descripcion imagen categoria tags fechaCreacion');
-};
+    .select('titulo descripcion imagen categoria tags fechaCreacion')
+}
 
 // Método estático para obtener galería por categoría
-galeriaSchema.statics.getGalleryByCategory = function(categoria) {
+galeriaSchema.statics.getGalleryByCategory = function (categoria) {
   return this.find({ activo: true, categoria })
     .sort({ orden: 1, fechaCreacion: -1 })
-    .select('titulo descripcion imagen categoria tags fechaCreacion');
-};
+    .select('titulo descripcion imagen categoria tags fechaCreacion')
+}
 
-const Galeria = mongoose.model('Galeria', galeriaSchema);
+const Galeria = mongoose.model('Galeria', galeriaSchema)
 
-export default Galeria; 
+export default Galeria

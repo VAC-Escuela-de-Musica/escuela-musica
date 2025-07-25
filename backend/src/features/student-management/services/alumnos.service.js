@@ -153,7 +153,7 @@ async function deleteAlumnos (id) {
 }
 
 // Buscar alumno por email
-async function getAlumnoByEmail(email) {
+async function getAlumnoByEmail (email) {
   try {
     const alumno = await Alumno.findOne({ email }).exec()
     if (!alumno) return [null, 'Alumno no encontrado']
@@ -165,7 +165,7 @@ async function getAlumnoByEmail(email) {
 }
 
 // Buscar alumno por userId (que es el mismo que el _id del documento)
-async function getAlumnoByUserId(userId) {
+async function getAlumnoByUserId (userId) {
   try {
     const alumno = await Alumno.findById(userId).exec()
     if (!alumno) return [null, 'Alumno no encontrado']

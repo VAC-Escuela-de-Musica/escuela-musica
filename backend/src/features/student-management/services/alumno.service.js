@@ -1,24 +1,24 @@
-"use strict";
+'use strict'
 
-import Alumno from "../../../core/models/alumno.entity.js";
-import { handleError } from "../../../core/utils/errorHandler.js";
+import Alumno from '../../../core/models/alumno.entity.js'
+import { handleError } from '../../../core/utils/errorHandler.util.js'
 
 /**
  * Obtiene todos los alumnos
  * @returns {Promise} Promesa con el objeto de alumnos
  */
-async function getAlumnos() {
+async function getAlumnos () {
   try {
     const alumnos = await Alumno.find()
-      .populate("clasesInscritas.clase")
-      .lean();
+      .populate('clasesInscritas.clase')
+      .lean()
 
-    if (!alumnos) return [null, "No hay alumnos registrados"];
+    if (!alumnos) return [null, 'No hay alumnos registrados']
 
-    return [alumnos, null];
+    return [alumnos, null]
   } catch (error) {
-    handleError(error, "alumno.service -> getAlumnos");
-    return [null, "Error al obtener los alumnos"];
+    handleError(error, 'alumno.service -> getAlumnos')
+    return [null, 'Error al obtener los alumnos']
   }
 }
 
@@ -27,20 +27,20 @@ async function getAlumnos() {
  * @param {Object} alumno Objeto de alumno
  * @returns {Promise} Promesa con el objeto de alumno creado
  */
-async function createAlumno(alumno) {
+async function createAlumno (alumno) {
   try {
-    const { email } = alumno;
+    const { email } = alumno
 
-    const alumnoFound = await Alumno.findOne({ email });
-    if (alumnoFound) return [null, "El alumno ya existe"];
+    const alumnoFound = await Alumno.findOne({ email })
+    if (alumnoFound) return [null, 'El alumno ya existe']
 
-    const newAlumno = new Alumno(alumno);
-    await newAlumno.save();
+    const newAlumno = new Alumno(alumno)
+    await newAlumno.save()
 
-    return [newAlumno, null];
+    return [newAlumno, null]
   } catch (error) {
-    handleError(error, "alumno.service -> createAlumno");
-    return [null, "Error al crear el alumno"];
+    handleError(error, 'alumno.service -> createAlumno')
+    return [null, 'Error al crear el alumno']
   }
 }
 
@@ -49,18 +49,18 @@ async function createAlumno(alumno) {
  * @param {string} id Id del alumno
  * @returns {Promise} Promesa con el objeto de alumno
  */
-async function getAlumnoById(id) {
+async function getAlumnoById (id) {
   try {
     const alumno = await Alumno.findById(id)
-      .populate("clasesInscritas.clase")
-      .lean();
+      .populate('clasesInscritas.clase')
+      .lean()
 
-    if (!alumno) return [null, "El alumno no existe"];
+    if (!alumno) return [null, 'El alumno no existe']
 
-    return [alumno, null];
+    return [alumno, null]
   } catch (error) {
-    handleError(error, "alumno.service -> getAlumnoById");
-    return [null, "Error al obtener el alumno"];
+    handleError(error, 'alumno.service -> getAlumnoById')
+    return [null, 'Error al obtener el alumno']
   }
 }
 
@@ -70,21 +70,21 @@ async function getAlumnoById(id) {
  * @param {Object} alumno Objeto de alumno
  * @returns {Promise} Promesa con el objeto de alumno actualizado
  */
-async function updateAlumno(id, alumno) {
+async function updateAlumno (id, alumno) {
   try {
-    const alumnoFound = await Alumno.findById(id);
-    if (!alumnoFound) return [null, "El alumno no existe"];
+    const alumnoFound = await Alumno.findById(id)
+    if (!alumnoFound) return [null, 'El alumno no existe']
 
     const alumnoUpdated = await Alumno.findByIdAndUpdate(
       id,
       alumno,
-      { new: true },
-    ).populate("clasesInscritas.clase");
+      { new: true }
+    ).populate('clasesInscritas.clase')
 
-    return [alumnoUpdated, null];
+    return [alumnoUpdated, null]
   } catch (error) {
-    handleError(error, "alumno.service -> updateAlumno");
-    return [null, "Error al actualizar el alumno"];
+    handleError(error, 'alumno.service -> updateAlumno')
+    return [null, 'Error al actualizar el alumno']
   }
 }
 
@@ -93,16 +93,16 @@ async function updateAlumno(id, alumno) {
  * @param {string} id Id del alumno
  * @returns {Promise} Promesa con el objeto de alumno eliminado
  */
-async function deleteAlumno(id) {
+async function deleteAlumno (id) {
   try {
-    const alumnoFound = await Alumno.findById(id);
-    if (!alumnoFound) return [null, "El alumno no existe"];
+    const alumnoFound = await Alumno.findById(id)
+    if (!alumnoFound) return [null, 'El alumno no existe']
 
-    const alumnoDeleted = await Alumno.findByIdAndDelete(id);
-    return [alumnoDeleted, null];
+    const alumnoDeleted = await Alumno.findByIdAndDelete(id)
+    return [alumnoDeleted, null]
   } catch (error) {
-    handleError(error, "alumno.service -> deleteAlumno");
-    return [null, "Error al eliminar el alumno"];
+    handleError(error, 'alumno.service -> deleteAlumno')
+    return [null, 'Error al eliminar el alumno']
   }
 }
 
@@ -111,5 +111,5 @@ export default {
   createAlumno,
   getAlumnoById,
   updateAlumno,
-  deleteAlumno,
-}; 
+  deleteAlumno
+}

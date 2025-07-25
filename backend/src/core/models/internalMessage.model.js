@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const internalMessageSchema = new mongoose.Schema({
   // Remitente (solo admins y profesores pueden enviar)
@@ -162,67 +162,67 @@ const internalMessageSchema = new mongoose.Schema({
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
-});
+})
 
 // Índices para optimizar consultas
-internalMessageSchema.index({ sender: 1, createdAt: -1 });
-internalMessageSchema.index({ recipient: 1, createdAt: -1 });
-internalMessageSchema.index({ status: 1, scheduledFor: 1 });
-internalMessageSchema.index({ type: 1, priority: 1 });
-internalMessageSchema.index({ 'readBy.student': 1 });
-internalMessageSchema.index({ 'deliveredTo.student': 1 });
+internalMessageSchema.index({ sender: 1, createdAt: -1 })
+internalMessageSchema.index({ recipient: 1, createdAt: -1 })
+internalMessageSchema.index({ status: 1, scheduledFor: 1 })
+internalMessageSchema.index({ type: 1, priority: 1 })
+internalMessageSchema.index({ 'readBy.student': 1 })
+internalMessageSchema.index({ 'deliveredTo.student': 1 })
 
 // Virtual para contar destinatarios totales
-internalMessageSchema.virtual('totalRecipients').get(function() {
+internalMessageSchema.virtual('totalRecipients').get(function () {
   if (this.recipientType === 'individual' && this.recipient) {
-    return 1;
+    return 1
   }
   // Para mensajes masivos, se calcula dinámicamente
-  return 0;
-});
+  return 0
+})
 
 // Virtual para contar lecturas
-internalMessageSchema.virtual('readCount').get(function() {
-  return this.readBy.length;
-});
+internalMessageSchema.virtual('readCount').get(function () {
+  return this.readBy.length
+})
 
 // Virtual para contar entregas
-internalMessageSchema.virtual('deliveredCount').get(function() {
-  return this.deliveredTo.length;
-});
+internalMessageSchema.virtual('deliveredCount').get(function () {
+  return this.deliveredTo.length
+})
 
 // Método para marcar como leído
-internalMessageSchema.methods.markAsRead = function(studentId) {
-  const existingRead = this.readBy.find(read => read.student.toString() === studentId.toString());
+internalMessageSchema.methods.markAsRead = function (studentId) {
+  const existingRead = this.readBy.find(read => read.student.toString() === studentId.toString())
   if (!existingRead) {
     this.readBy.push({
       student: studentId,
       readAt: new Date()
-    });
+    })
   }
-  return this.save();
-};
+  return this.save()
+}
 
 // Método para marcar como entregado
-internalMessageSchema.methods.markAsDelivered = function(studentId, method = 'internal') {
-  const existingDelivery = this.deliveredTo.find(delivery => delivery.student.toString() === studentId.toString());
+internalMessageSchema.methods.markAsDelivered = function (studentId, method = 'internal') {
+  const existingDelivery = this.deliveredTo.find(delivery => delivery.student.toString() === studentId.toString())
   if (!existingDelivery) {
     this.deliveredTo.push({
       student: studentId,
       deliveredAt: new Date(),
       deliveryMethod: method
-    });
+    })
   }
-  return this.save();
-};
+  return this.save()
+}
 
 // Método estático para obtener mensajes no leídos de un estudiante
-internalMessageSchema.statics.getUnreadMessages = function(studentId) {
+internalMessageSchema.statics.getUnreadMessages = function (studentId) {
   return this.find({
     $or: [
       { recipient: studentId },
       { recipientType: 'all_students' },
-      { 
+      {
         recipientType: 'by_instrument',
         'filters.instrument': { $exists: true }
       },
@@ -233,16 +233,16 @@ internalMessageSchema.statics.getUnreadMessages = function(studentId) {
     ],
     status: 'sent',
     'readBy.student': { $ne: studentId }
-  }).sort({ createdAt: -1 });
-};
+  }).sort({ createdAt: -1 })
+}
 
 // Método estático para obtener mensajes de un estudiante
-internalMessageSchema.statics.getStudentMessages = function(studentId, options = {}) {
+internalMessageSchema.statics.getStudentMessages = function (studentId, options = {}) {
   const query = {
     $or: [
       { recipient: studentId },
       { recipientType: 'all_students' },
-      { 
+      {
         recipientType: 'by_instrument',
         'filters.instrument': { $exists: true }
       },
@@ -252,19 +252,19 @@ internalMessageSchema.statics.getStudentMessages = function(studentId, options =
       }
     ],
     status: 'sent'
-  };
+  }
 
   if (options.unreadOnly) {
-    query['readBy.student'] = { $ne: studentId };
+    query['readBy.student'] = { $ne: studentId }
   }
 
   return this.find(query)
     .populate('sender', 'username email')
     .sort({ createdAt: -1 })
     .limit(options.limit || 50)
-    .skip(options.skip || 0);
-};
+    .skip(options.skip || 0)
+}
 
-const InternalMessage = mongoose.model('InternalMessage', internalMessageSchema);
+const InternalMessage = mongoose.model('InternalMessage', internalMessageSchema)
 
-export default InternalMessage; 
+export default InternalMessage

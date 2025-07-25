@@ -235,10 +235,10 @@ async function verifyToken (token) {
     let userFound = await User.findOne({ email: decoded.email })
       .populate('roles')
       .exec()
-    let isAlumno = false;
+    let isAlumno = false
     if (!userFound) {
       userFound = await Alumno.findOne({ email: decoded.email })
-      isAlumno = !!userFound;
+      isAlumno = !!userFound
     }
 
     if (!userFound) {
@@ -249,7 +249,7 @@ async function verifyToken (token) {
       }
     }
 
-    let userData;
+    let userData
     if (isAlumno) {
       // Para alumnos
       const alumnoRoles = (userFound.roles || ['student']).map(r => typeof r === 'string' ? { name: r } : r)

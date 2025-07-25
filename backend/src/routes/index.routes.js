@@ -1,16 +1,3 @@
-
-'use strict'
-
-// Función para validar que la URL de redirección es local
-function isLocalUrl(path) {
-  try {
-    const baseUrl = 'http://localhost'; // Cambia esto por el dominio de tu app si es necesario
-    return new URL(path, baseUrl).origin === baseUrl;
-  } catch (e) {
-    return false;
-  }
-}
-
 import { Router } from 'express'
 
 // Importación de rutas
@@ -39,6 +26,22 @@ import {
   sanitizeInput
 } from '../middlewares/index.js'
 
+// ============= DEFINICIÓN DE RUTAS =============
+// Ruta para exponer el token CSRF al frontend
+import lusca from 'lusca'
+
+'use strict'
+
+// Función para validar que la URL de redirección es local
+function isLocalUrl (path) {
+  try {
+    const baseUrl = 'http://localhost' // Cambia esto por el dominio de tu app si es necesario
+    return new URL(path, baseUrl).origin === baseUrl
+  } catch (e) {
+    return false
+  }
+}
+
 // Instancia del enrutador
 const router = Router()
 
@@ -48,10 +51,6 @@ router.use(requestLogger)
 router.use(performanceMonitor)
 router.use(securityHeaders)
 router.use(sanitizeInput)
-
-// ============= DEFINICIÓN DE RUTAS =============
-// Ruta para exponer el token CSRF al frontend
-import lusca from 'lusca'
 const { csrf } = lusca
 
 router.get('/csrf-token', csrf(), (req, res) => {
@@ -106,11 +105,11 @@ router.use('/carousel', carouselRoutes)
 // ============= COMPATIBILIDAD CON RUTAS OBSOLETAS =============
 router.use('/materiales', (req, res) => {
   console.log(`⚠️ Acceso a ruta obsoleta: ${req.method} ${req.originalUrl}`)
-  const targetUrl = req.originalUrl.replace('/materiales', '/materials');
+  const targetUrl = req.originalUrl.replace('/materiales', '/materials')
   if (isLocalUrl(targetUrl)) {
-    res.redirect(307, targetUrl);
+    res.redirect(307, targetUrl)
   } else {
-    res.redirect(307, '/');
+    res.redirect(307, '/')
   }
 })
 
