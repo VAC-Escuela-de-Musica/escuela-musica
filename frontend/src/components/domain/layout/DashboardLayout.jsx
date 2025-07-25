@@ -32,9 +32,14 @@ const DashboardLayout = () => {
               
               {/* Solo mostrar para admins y profesores */}
               {(isAdmin() || isTeacher()) && (
-                <Link to="/dashboard/upload" className="nav-link">
-                  <span className="nav-icon">📤</span> Cargar
-                </Link>
+                <>
+                  <Link to="/dashboard/upload" className="nav-link">
+                    <span className="nav-icon">📤</span> Cargar
+                  </Link>
+                  <Link to="/dashboard/mensajes-internos" className="nav-link">
+                    <span className="nav-icon">💬</span> Mensajes
+                  </Link>
+                </>
               )}
             </div>
             

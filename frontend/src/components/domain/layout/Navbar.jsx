@@ -35,6 +35,11 @@ export default function ButtonAppBar() {
     navigate('/login');
   };
 
+  const handleEstudianteClick = () => {
+    setDrawerOpen(false);
+    navigate('/login-estudiante');
+  };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
@@ -99,10 +104,17 @@ export default function ButtonAppBar() {
           onKeyDown={toggleDrawer(false)}
         >
           <List>
-            {/* Botón de acceso */}
+            {/* Botón de acceso administrativo */}
             <ListItem disablePadding>
               <ListItemButton onClick={handleAccesoClick}>
-                <ListItemText primary="Acceso" />
+                <ListItemText primary="Acceso Administrativo" />
+              </ListItemButton>
+            </ListItem>
+
+            {/* Botón de acceso para estudiantes */}
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleEstudianteClick}>
+                <ListItemText primary="Acceso Estudiantes" />
               </ListItemButton>
             </ListItem>
 

@@ -35,15 +35,6 @@ const requireRole = (allowedRoles) => {
         userRoles = Array.isArray(req.roles) ? req.roles : [req.roles]
       }
 
-      // Log seguro sin información sensible
-      logger.debug('Verificando roles de usuario', {
-        userEmail: req.user?.email || req.email,
-        userRolesCount: userRoles.length,
-        allowedRoles,
-        hasRoleNames: !!req.user?.roleNames,
-        hasTokenRoles: !!req.user?.roles
-      })
-
       if (!userRoles.length) {
         return respondError(req, res, 401, 'Información de roles no disponible')
       }

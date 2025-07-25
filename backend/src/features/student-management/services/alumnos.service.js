@@ -57,6 +57,14 @@ async function createAlumnos (alumno) {
       const alumnoFound = await Alumno.findOne({ rutAlumno: { $eq: rutAlumno } })
       if (alumnoFound) return [null, 'El alumno ya existe']
     }
+    // Verificar si ya existe un alumno con el mismo email
+    if (email) {
+      const alumnoEmailFound = await Alumno.findOne({ email: { $eq: email } })
+      if (alumnoEmailFound) return [null, 'Ya existe un alumno con ese email']
+    }
+    // Hashear la contraseña
+    if (!alumno.password) return [null, 'La contraseña es obligatoria']
+    const hashedPassword = await Alumno.encryptPassword(alumno.password)
 
     const nuevoAlumno = new Alumno({
       nombreAlumno,
@@ -84,7 +92,9 @@ async function createAlumnos (alumno) {
       curso,
       tipoCurso,
       modalidadClase,
-      clase
+      clase,
+      password: hashedPassword,
+      roles: ['student']
     })
 
     console.log('[SERVICE] createAlumnos - Nuevo alumno a guardar:', nuevoAlumno)
@@ -142,13 +152,39 @@ async function deleteAlumnos (id) {
   }
 }
 
+// Buscar alumno por email
+async function getAlumnoByEmail(email) {
+  try {
+    const alumno = await Alumno.findOne({ email }).exec()
+    if (!alumno) return [null, 'Alumno no encontrado']
+    return [alumno, null]
+  } catch (error) {
+    handleError(error, 'alumnos.service -> getAlumnoByEmail')
+    return [null, error.message || 'Error al buscar alumno por email']
+  }
+}
+
+// Buscar alumno por userId (que es el mismo que el _id del documento)
+async function getAlumnoByUserId(userId) {
+  try {
+    const alumno = await Alumno.findById(userId).exec()
+    if (!alumno) return [null, 'Alumno no encontrado']
+    return [alumno, null]
+  } catch (error) {
+    handleError(error, 'alumnos.service -> getAlumnoByUserId')
+    return [null, error.message || 'Error al buscar alumno por userId']
+  }
+}
+
 // Exportar las funciones individualmente
 export {
   getAllAlumnos,
   createAlumnos,
   getAlumnosById,
   updateAlumnos,
-  deleteAlumnos
+  deleteAlumnos,
+  getAlumnoByEmail,
+  getAlumnoByUserId
 }
 
 // Exportar el servicio como default también
@@ -157,5 +193,7 @@ export default {
   createAlumnos,
   getAlumnosById,
   updateAlumnos,
-  deleteAlumnos
+  deleteAlumnos,
+  getAlumnoByEmail,
+  getAlumnoByUserId
 }

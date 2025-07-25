@@ -11,6 +11,7 @@ export const fieldValidators = {
   edadAlumno: (v) => !v || isNaN(v) || v < 1 || v > 99 ? "La edad debe ser un número entre 1 y 99." : "",
   telefonoAlumno: (v) => !/^[0-9]{9}$/.test(v) ? "Debe tener exactamente 9 dígitos." : "",
   email: (v) => !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v) ? "Email no válido." : "",
+  password: (v) => !v || v.length < 6 ? "La contraseña es obligatoria y debe tener al menos 6 caracteres." : "",
   fechaIngreso: (v) => {
     if (!v) return "La fecha es obligatoria.";
     // Acepta formato DD-MM-AAAA o ISO yyyy-MM-dd
