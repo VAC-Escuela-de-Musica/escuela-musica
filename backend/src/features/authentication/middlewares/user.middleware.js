@@ -1,6 +1,7 @@
 'use strict'
 
 import User from '../../../core/models/user.model.js'
+import Alumno from '../../../core/models/alumnos.model.js'
 import Role from '../../../core/models/role.model.js'
 import { respondError } from '../../../core/utils/responseHandler.util.js'
 import { handleError } from '../../../core/utils/errorHandler.util.js'
@@ -13,57 +14,45 @@ import { handleError } from '../../../core/utils/errorHandler.util.js'
  */
 const loadUserData = async (req, res, next) => {
   try {
-    console.log('🔍 [LOAD-USER] Iniciando carga de datos del usuario')
-    console.log('🔍 [LOAD-USER] req.user:', req.user)
-    console.log('🔍 [LOAD-USER] req.user.email:', req.user?.email)
-
     if (!req.user?.email) {
-      console.log('❌ [LOAD-USER] No hay email en req.user')
-      return respondError(req, res, 401, 'Usuario no autenticado')
+      return respondError(req, res, 401, 'Usuario no autenticado');
     }
 
-    console.log(`📥 [LOAD-USER] Buscando usuario en BD: ${req.user.email}`)
-
-    const user = await User.findOne({ email: req.user.email }).populate('roles')
-    console.log('🔍 [LOAD-USER] Resultado de búsqueda:', {
-      encontrado: !!user,
-      id: user?._id,
-      email: user?.email,
-      username: user?.username,
-      rolesCount: user?.roles?.length,
-      roles: user?.roles?.map(r => ({ id: r._id, name: r.name }))
-    })
+    const email = req.user.email;
+    let user = await User.findOne({ email }).populate('roles');
+    if (user) {
+      // Usuario encontrado en User
+    } else {
+      user = await Alumno.findOne({ email });
+      if (user) {
+        // Alumno encontrado
+      }
+    }
 
     if (!user) {
-      console.error(`❌ [LOAD-USER] Usuario no encontrado en BD: ${req.user.email}`)
-      return respondError(req, res, 401, 'Usuario no encontrado')
+      return respondError(req, res, 401, 'Usuario no encontrado');
     }
 
     // Establecer datos completos del usuario
-    req.user.fullData = user
-    req.user.roleNames = user.roles.map(role => role.name)
-    req.user.id = user._id
-    req.user.email = user.email
+    req.user.fullData = user;
+    req.user.roleNames = Array.isArray(user.roles)
+      ? user.roles.map(r => (typeof r === 'string' ? r : r.name || r))
+      : [];
+    req.user.id = user._id;
+    req.user.email = user.email;
+    // Si es alumno, poner nombreAlumno como username
+    if (user.nombreAlumno) req.user.username = user.nombreAlumno;
 
     // Asegurar compatibilidad con legacy code
-    req.email = req.user.email
-    req.roles = req.user.roleNames
+    req.email = req.user.email;
+    req.roles = req.user.roleNames;
 
-    console.log('✅ [LOAD-USER] Datos cargados exitosamente:')
-    console.log(`  - Usuario: ${user.email}`)
-    console.log(`  - ID: ${user._id}`)
-    console.log(`  - Username: ${user.username}`)
-    console.log(`  - Roles: ${req.user.roleNames.join(', ')}`)
-    console.log('  - req.user.fullData configurado:', !!req.user.fullData)
-
-    next()
+    next();
   } catch (error) {
-    console.error('💥 [LOAD-USER] Error en loadUserData:', error)
-    console.error('💥 [LOAD-USER] Stack trace:', error.stack)
-    handleError(error, 'user.middleware -> loadUserData')
-    return respondError(req, res, 500, 'Error cargando datos de usuario')
+    handleError(error, 'user.middleware -> loadUserData');
+    return respondError(req, res, 500, 'Error cargando datos de usuario');
   }
-}
+};
 
 /**
  * Verifica que el usuario esté activo

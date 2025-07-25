@@ -52,6 +52,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     modalidadClase: safeInitialData.modalidadClase || "",
     dia,
     hora,
+    password: ""
   });
   const [error, setError] = useState("");
   const [showError, setShowError] = useState(false);
@@ -93,8 +94,14 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     Object.entries(fieldValidators).forEach(([key, fn]) => {
       newFieldErrors[key] = fn(form[key]);
     });
-    setFieldErrors(newFieldErrors);
+    // Validación de contraseña solo al crear
+    if (!safeInitialData._id) {
+      if (!form.password || form.password.length < 6) {
+        newFieldErrors.password = "La contraseña es obligatoria y debe tener al menos 6 caracteres.";
+      }
+    }
     const firstError = Object.values(newFieldErrors).find((v) => v);
+    setFieldErrors(newFieldErrors);
     if (firstError) {
       setError(firstError);
       setShowError(true);
@@ -146,6 +153,10 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
                 <AlumnoDatos values={form} errors={fieldErrors} onChange={handleChange} gridField="email" />
                 <AlumnoDatos values={form} errors={fieldErrors} onChange={handleChange} gridField="fechaIngreso" />
                 <AlumnoDatos values={form} errors={fieldErrors} onChange={handleChange} gridField="direccion" />
+                {/* Campo de contraseña solo al crear */}
+                {!safeInitialData._id && (
+                  <AlumnoDatos values={form} errors={fieldErrors} onChange={handleChange} gridField="password" />
+                )}
               </Box>
             </AccordionDetails>
           </Accordion>

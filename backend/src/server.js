@@ -64,7 +64,8 @@ async function setupServer () {
         /^\/api\/files\/upload$/,
         /^\/api\/alumnos.*$/, // Excluir todas las rutas de alumnos
         /^\/api\/messaging\/whatsapp-web\/(reset|initialize)$/, // Excluir rutas públicas de WhatsApp Web
-         /^\/api\/messaging\/(send-whatsapp|send-email|send-message|test-message)$/ // Excluir rutas de envío de mensajes
+         /^\/api\/messaging\/(send-whatsapp|send-email|send-message|test-message)$/, // Excluir rutas de envío de mensajes
+        /^\/api\/internal-messages.*$/ // Excluir todas las rutas de mensajes internos
       ];
       const isExcluded = csrfExcluded.some(pattern => {
         if (pattern instanceof RegExp) return pattern.test(req.path);
@@ -72,7 +73,7 @@ async function setupServer () {
       });
       
       // Debug logging para CSRF
-      if (req.method === 'POST' && (req.path.includes('galeria') || req.path.includes('upload'))) {
+      if (req.method === 'POST' && (req.path.includes('galeria') || req.path.includes('upload') || req.path.includes('internal-messages'))) {
         console.log(`[CSRF DEBUG] ${req.method} ${req.path} | excluded: ${isExcluded} | patterns checked:`, csrfExcluded.map(p => p instanceof RegExp ? p.toString() : p));
       }
       

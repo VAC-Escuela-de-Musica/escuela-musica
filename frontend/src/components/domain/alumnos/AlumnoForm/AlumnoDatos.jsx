@@ -183,6 +183,25 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
       </div>
     );
   }
+  if (gridField === "password") {
+    return (
+      <TextField
+        label="Contraseña para acceso"
+        name="password"
+        type="password"
+        value={values.password}
+        onChange={onChange}
+        required
+        fullWidth
+        margin="normal"
+        variant="outlined"
+        error={!!errors.password}
+        helperText={errors.password || "Mínimo 6 caracteres. El alumno podrá cambiarla luego."}
+        placeholder="Contraseña segura"
+        sx={{ mb: 0 }}
+      />
+    );
+  }
   // fallback vertical
   return null;
 }

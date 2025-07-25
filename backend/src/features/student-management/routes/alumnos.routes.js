@@ -27,5 +27,10 @@ router.post('/', requireAdmin, asyncHandler(AlumnosController.createAlumnos))
 router.put('/:id', validateMongoId('id'), requireAdmin, asyncHandler(AlumnosController.updateAlumnos))
 router.delete('/:id', validateMongoId('id'), requireAdmin, asyncHandler(AlumnosController.deleteAlumnos))
 router.get('/:id', validateMongoId('id'), asyncHandler(AlumnosController.getAlumnosById))
+router.get('/email/:email', asyncHandler(AlumnosController.getAlumnoByEmail))
+router.get('/user/:userId', validateMongoId('userId'), asyncHandler(AlumnosController.getAlumnoByUserId))
+
+// Ruta para que los estudiantes actualicen su propia información
+router.put('/profile/update', asyncHandler(AlumnosController.updateStudentProfile))
 
 export default router

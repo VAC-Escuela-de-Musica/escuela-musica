@@ -1,5 +1,7 @@
 import DashboardLayout from "./components/domain/layout/DashboardLayout";
+import StudentDashboardLayout from "./components/domain/layout/StudentDashboardLayout";
 import ProtectedRoute from "./components/domain/auth/ProtectedRoute";
+import StudentProtectedRoute from "./components/domain/auth/StudentProtectedRoute";
 import DashboardPage from "./pages/DashboardPage";
 import UploadPage from "./pages/UploadPage";
 
@@ -10,6 +12,12 @@ const HomePage = lazy(() => import("./pages/Homepage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const InicioUsuario = lazy(() => import("./pages/paginaUsuario"));
 const AlumnosPage = lazy(() => import("./pages/AlumnosPage"));
+const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
+const StudentLoginPage = lazy(() => import("./pages/StudentLoginPage"));
+const StudentGalleryPage = lazy(() => import("./pages/StudentGalleryPage"));
+const StudentProfilePage = lazy(() => import("./pages/StudentProfilePage"));
+const StudentMessagesPage = lazy(() => import("./pages/StudentMessagesPage"));
+const InternalMessageManager = lazy(() => import("./pages/InternalMessageManager"));
 
 import Navbar from "./components/domain/layout/Navbar";
 import Loader from "./components/domain/layout/Loader";
@@ -30,10 +38,17 @@ function App() {
           </Suspense>
         } />
 
-        {/* Ruta pública - Login */}
+        {/* Ruta pública - Login administrativo */}
         <Route path="/login" element={
           <Suspense fallback={<Loader />}>
             <LoginPage />
+          </Suspense>
+        } />
+
+        {/* Ruta pública - Login de estudiantes */}
+        <Route path="/login-estudiante" element={
+          <Suspense fallback={<Loader />}>
+            <StudentLoginPage />
           </Suspense>
         } />
 
@@ -45,6 +60,11 @@ function App() {
         }>
           <Route index element={<DashboardPage />} />
           <Route path="upload" element={<UploadPage />} />
+          <Route path="mensajes-internos" element={
+            <Suspense fallback={<Loader />}>
+              <InternalMessageManager />
+            </Suspense>
+          } />
         </Route>
 
         {/* Ruta protegida - Panel de administración */}
@@ -55,6 +75,30 @@ function App() {
             </Suspense>
           </ProtectedRoute>
         } />
+
+        {/* Rutas protegidas para estudiantes bajo /estudiante */}
+        <Route path="/estudiante" element={
+          <StudentProtectedRoute>
+            <StudentDashboardLayout />
+          </StudentProtectedRoute>
+        }>
+          <Route index element={<StudentDashboard />} />
+          <Route path="galeria" element={
+            <Suspense fallback={<Loader />}>
+              <StudentGalleryPage />
+            </Suspense>
+          } />
+          <Route path="mensajes" element={
+            <Suspense fallback={<Loader />}>
+              <StudentMessagesPage />
+            </Suspense>
+          } />
+          <Route path="perfil" element={
+            <Suspense fallback={<Loader />}>
+              <StudentProfilePage />
+            </Suspense>
+          } />
+        </Route>
 
         {/* Ruta catch-all - redirige a la landing */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -132,13 +132,110 @@ async function deleteAlumnos (req, res) {
   }
 }
 
+// Controlador para obtener un alumno por email
+async function getAlumnoByEmail(req, res) {
+  try {
+    const { email } = req.params
+    const [alumno, errorAlumno] = await AlumnoService.getAlumnoByEmail(email)
+    if (errorAlumno) return respondError(req, res, 404, errorAlumno)
+    respondSuccess(req, res, 200, alumno)
+  } catch (error) {
+    handleError(error, 'alumnos.controller -> getAlumnoByEmail')
+    respondError(req, res, 500, 'error al obtener el alumno por email')
+  }
+}
+
+// Controlador para obtener un alumno por userId
+async function getAlumnoByUserId(req, res) {
+  try {
+    const { userId } = req.params
+    const [alumno, errorAlumno] = await AlumnoService.getAlumnoByUserId(userId)
+    if (errorAlumno) return respondError(req, res, 404, errorAlumno)
+    respondSuccess(req, res, 200, alumno)
+  } catch (error) {
+    handleError(error, 'alumnos.controller -> getAlumnoByUserId')
+    respondError(req, res, 500, 'error al obtener el alumno por userId')
+  }
+}
+
+// Controlador para que los estudiantes actualicen su propia información
+async function updateStudentProfile(req, res) {
+  console.log('[PUT] /api/alumnos/profile/update - Actualizar perfil de estudiante', req.body)
+  try {
+    // Verificar que el usuario autenticado es un estudiante
+    if (!req.user || !req.user.id) {
+      return respondError(req, res, 401, 'Usuario no autenticado')
+    }
+
+    // Buscar el estudiante por el ID del usuario autenticado
+    const [alumno, errorAlumno] = await AlumnoService.getAlumnoByUserId(req.user.id)
+    if (errorAlumno || !alumno) {
+      return respondError(req, res, 404, 'Estudiante no encontrado')
+    }
+
+    // Campos permitidos para que los estudiantes editen (solo información de contacto)
+    const allowedFields = [
+      'email',
+      'telefono',
+      'direccion',
+      'instrumento'
+    ]
+
+    // Filtrar solo los campos permitidos
+    const updateData = Object.keys(req.body)
+      .filter((key) => allowedFields.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = req.body[key]
+        return obj
+      }, {})
+
+    // Validar que hay al menos un campo para actualizar
+    if (Object.keys(updateData).length === 0) {
+      return respondError(req, res, 400, 'No se proporcionaron campos válidos para actualizar')
+    }
+
+    // Validar email si se está actualizando
+    if (updateData.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(updateData.email)) {
+        return respondError(req, res, 400, 'Formato de email inválido')
+      }
+    }
+
+    // Validar teléfono si se está actualizando
+    if (updateData.telefono) {
+      const phoneRegex = /^\+?[\d\s\-\(\)]+$/
+      if (!phoneRegex.test(updateData.telefono)) {
+        return respondError(req, res, 400, 'Formato de teléfono inválido')
+      }
+    }
+
+    // Actualizar el estudiante
+    const [updatedAlumno, updateError] = await AlumnoService.updateAlumnos(alumno._id, updateData)
+    
+    if (updateError) {
+      return respondError(req, res, 400, updateError)
+    }
+
+    console.log('[PUT] /api/alumnos/profile/update - Perfil actualizado exitosamente')
+    respondSuccess(req, res, 200, updatedAlumno, 'Perfil actualizado correctamente')
+  } catch (error) {
+    console.error('[PUT] /api/alumnos/profile/update - Error:', error)
+    handleError(error, 'alumnos.controller -> updateStudentProfile')
+    respondError(req, res, 500, 'Error al actualizar el perfil')
+  }
+}
+
 // Exportar las funciones individualmente
 export {
   getAllAlumnos,
   createAlumnos,
   getAlumnosById,
   updateAlumnos,
-  deleteAlumnos
+  deleteAlumnos,
+  getAlumnoByEmail,
+  getAlumnoByUserId,
+  updateStudentProfile
 }
 
 // Exportar los controladores como default también
@@ -147,5 +244,8 @@ export default {
   createAlumnos,
   getAlumnosById,
   updateAlumnos,
-  deleteAlumnos
+  deleteAlumnos,
+  getAlumnoByEmail,
+  getAlumnoByUserId,
+  updateStudentProfile
 }

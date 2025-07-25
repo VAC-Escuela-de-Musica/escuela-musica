@@ -15,6 +15,7 @@ export const API_ENDPOINTS = {
   // Materiales
   materials: {
     list: `${API_BASE_URL}/api/materials`,
+    getAll: `${API_BASE_URL}/api/materials`,
     create: `${API_BASE_URL}/api/materials`,
     uploadUrl: `${API_BASE_URL}/api/materials/upload-url`,
     confirmUpload: `${API_BASE_URL}/api/materials/confirm-upload`,
@@ -39,10 +40,37 @@ export const API_ENDPOINTS = {
     update: (id) => `${API_BASE_URL}/api/users/${id}`,
     getById: (id) => `${API_BASE_URL}/api/users/${id}`
   },
+
+  // Alumnos/Estudiantes
+  alumnos: {
+    base: `${API_BASE_URL}/api/alumnos`,
+    list: `${API_BASE_URL}/api/alumnos`,
+    create: `${API_BASE_URL}/api/alumnos`,
+    delete: (id) => `${API_BASE_URL}/api/alumnos/${id}`,
+    update: (id) => `${API_BASE_URL}/api/alumnos/${id}`,
+    getById: (id) => `${API_BASE_URL}/api/alumnos/${id}`,
+    getByUserId: (userId) => `${API_BASE_URL}/api/alumnos/user/${userId}`
+  },
+
+  // Mensajes Internos
+  internalMessages: {
+    base: `${API_BASE_URL}/api/internal-messages`,
+    list: `${API_BASE_URL}/api/internal-messages`,
+    create: `${API_BASE_URL}/api/internal-messages`,
+    delete: (id) => `${API_BASE_URL}/api/internal-messages/${id}`,
+    update: (id) => `${API_BASE_URL}/api/internal-messages/${id}`,
+    getById: (id) => `${API_BASE_URL}/api/internal-messages/${id}`,
+    send: (id) => `${API_BASE_URL}/api/internal-messages/${id}/send`,
+    markAsRead: (id) => `${API_BASE_URL}/api/internal-messages/${id}/read`,
+    getStudentMessages: (studentId) => `${API_BASE_URL}/api/internal-messages/student/${studentId}`,
+    getUnreadMessages: (studentId) => `${API_BASE_URL}/api/internal-messages/student/${studentId}/unread`,
+    stats: `${API_BASE_URL}/api/internal-messages/stats`
+  },
   
   // Galería
   galeria: {
     list: `${API_BASE_URL}/api/galeria`,
+    getAll: `${API_BASE_URL}/api/galeria`,
     active: `${API_BASE_URL}/api/galeria/active`,
     activeWithUrls: `${API_BASE_URL}/api/galeria/active-with-urls`,
     getById: (id) => `${API_BASE_URL}/api/galeria/${id}`,

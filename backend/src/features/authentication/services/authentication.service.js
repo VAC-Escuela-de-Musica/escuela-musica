@@ -2,6 +2,7 @@
 
 /** Modelo de datos 'User' */
 import User from '../../../core/models/user.model.js'
+import Alumno from '../../../core/models/alumnos.model.js'
 /** Modulo 'jsonwebtoken' para crear tokens */
 import jwt from 'jsonwebtoken'
 
@@ -22,61 +23,104 @@ async function login (user) {
 
     logger.info('Intento de login', { email })
 
+    // Buscar primero en usuarios normales
     const userFound = await User.findOne({ email })
       .populate('roles')
       .exec()
 
-    if (!userFound) {
-      logger.warn('Intento de login fallido: usuario no encontrado', { email })
+    if (userFound) {
+      const matchPassword = await User.comparePassword(password, userFound.password)
+      if (!matchPassword) {
+        logger.warn('Intento de login fallido: contraseña incorrecta', { email })
+        return {
+          success: false,
+          error: 'El usuario y/o contraseña son incorrectos',
+          data: null
+        }
+      }
+      const accessToken = jwt.sign(
+        {
+          id: userFound._id,
+          email: userFound.email,
+          roles: userFound.roles.map(role => ({ _id: role._id, name: role.name }))
+        },
+        ACCESS_JWT_SECRET,
+        { expiresIn: '1d' }
+      )
+      const refreshToken = jwt.sign(
+        {
+          id: userFound._id,
+          email: userFound.email
+        },
+        REFRESH_JWT_SECRET,
+        { expiresIn: '7d' }
+      )
+      logger.auth('login_success', userFound._id, { email })
+      return {
+        success: true,
+        data: {
+          accessToken,
+          refreshToken,
+          user: {
+            id: userFound._id,
+            email: userFound.email,
+            username: userFound.username,
+            roles: userFound.roles.map(role => ({ _id: role._id, name: role.name }))
+          }
+        },
+        error: null
+      }
+    }
+
+    // Si no es usuario normal, buscar en alumnos
+    const alumnoFound = await Alumno.findOne({ email }).select('+password roles nombreAlumno email').exec()
+    if (!alumnoFound) {
+      logger.warn('Intento de login fallido: usuario/alumno no encontrado', { email })
       return {
         success: false,
         error: 'El usuario y/o contraseña son incorrectos',
         data: null
       }
     }
-
-    const matchPassword = await User.comparePassword(password, userFound.password)
-
-    if (!matchPassword) {
-      logger.warn('Intento de login fallido: contraseña incorrecta', { email })
+    const matchAlumnoPassword = await Alumno.comparePassword(password, alumnoFound.password)
+    if (!matchAlumnoPassword) {
+      logger.warn('Intento de login fallido: contraseña incorrecta (alumno)', { email })
       return {
         success: false,
         error: 'El usuario y/o contraseña son incorrectos',
         data: null
       }
     }
-
+    // Generar token para alumno
+    const alumnoRoles = (alumnoFound.roles || ['student']).map(r => typeof r === 'string' ? { name: r } : r)
     const accessToken = jwt.sign(
       {
-        id: userFound._id,
-        email: userFound.email,
-        roles: userFound.roles.map(role => ({ _id: role._id, name: role.name }))
+        id: alumnoFound._id,
+        email: alumnoFound.email,
+        roles: alumnoRoles
       },
       ACCESS_JWT_SECRET,
       { expiresIn: '1d' }
     )
-
     const refreshToken = jwt.sign(
       {
-        id: userFound._id,
-        email: userFound.email
+        id: alumnoFound._id,
+        email: alumnoFound.email
       },
       REFRESH_JWT_SECRET,
       { expiresIn: '7d' }
     )
-
-    logger.auth('login_success', userFound._id, { email })
-
+    logger.auth('login_success', alumnoFound._id, { email, alumno: true })
     return {
       success: true,
       data: {
         accessToken,
         refreshToken,
         user: {
-          id: userFound._id,
-          email: userFound.email,
-          username: userFound.username,
-          roles: userFound.roles.map(role => ({ _id: role._id, name: role.name }))
+          id: alumnoFound._id,
+          email: alumnoFound.email,
+          username: alumnoFound.nombreAlumno,
+          roles: alumnoRoles
         }
       },
       error: null
@@ -188,9 +232,14 @@ async function verifyToken (token) {
     const decoded = jwt.verify(token, ACCESS_JWT_SECRET)
 
     // Buscar usuario por email del token
-    const userFound = await User.findOne({ email: decoded.email })
+    let userFound = await User.findOne({ email: decoded.email })
       .populate('roles')
       .exec()
+    let isAlumno = false;
+    if (!userFound) {
+      userFound = await Alumno.findOne({ email: decoded.email })
+      isAlumno = !!userFound;
+    }
 
     if (!userFound) {
       return {
@@ -200,15 +249,30 @@ async function verifyToken (token) {
       }
     }
 
+    let userData;
+    if (isAlumno) {
+      // Para alumnos
+      const alumnoRoles = (userFound.roles || ['student']).map(r => typeof r === 'string' ? { name: r } : r)
+      userData = {
+        id: userFound._id,
+        email: userFound.email,
+        username: userFound.nombreAlumno,
+        roles: alumnoRoles
+      }
+    } else {
+      // Para usuarios normales
+      userData = {
+        id: userFound._id,
+        email: userFound.email,
+        username: userFound.username,
+        roles: userFound.roles.map(role => ({ _id: role._id, name: role.name }))
+      }
+    }
+
     return {
       success: true,
       data: {
-        user: {
-          id: userFound._id,
-          email: userFound.email,
-          username: userFound.username,
-          roles: userFound.roles.map(role => ({ _id: role._id, name: role.name }))
-        }
+        user: userData
       },
       error: null
     }

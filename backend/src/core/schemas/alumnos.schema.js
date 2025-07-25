@@ -231,6 +231,17 @@ const alumnoSchema = new Schema(
         /^(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo) ([01]\d|2[0-3]):[0-5]\d$/,
         "La clase debe tener el formato 'Día HH:mm', por ejemplo 'Lunes 16:00'"
       ]
+    },
+    password: {
+      type: String,
+      required: [true, 'La contraseña es obligatoria'],
+      minlength: [6, 'La contraseña debe tener al menos 6 caracteres'],
+      select: false // No devolver por defecto
+    },
+    roles: {
+      type: [String],
+      default: ['student'],
+      enum: ['student', 'estudiante']
     }
   },
   {
