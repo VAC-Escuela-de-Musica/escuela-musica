@@ -27,7 +27,7 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
   } = options;
 
   // Hooks base para API y manejo de errores
-  const api = useApiCall([]);
+  const api = useApiCall([]); // ✅ Cambiar de null a array vacío
   const errorHandler = useErrorHandler({
     enableRetry: true,
     maxRetries: 3,
@@ -70,9 +70,14 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
         data = response.data || response;
       }
       
-      return Array.isArray(data) ? data : [];
+      // ✅ Asegurar que siempre sea un array
+      const items = Array.isArray(data) ? data : [];
+      api.updateData(items);
+      return items;
     } catch (error) {
       errorHandler.captureError(error, { operation: 'fetchItems', endpoint });
+      // ✅ Establecer array vacío en caso de error
+      api.updateData([]);
       throw error;
     }
   }, [endpoint, service, api, errorHandler]);

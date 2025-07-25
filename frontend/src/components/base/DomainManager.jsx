@@ -45,7 +45,7 @@ const DomainManager = ({
   }, [crud.fetchItems]);
 
   // Integrar búsqueda si está disponible
-  const displayItems = search ? search.filteredItems : crud.items;
+  const displayItems = search ? search.filteredItems : (crud.items || []); // ✅ Fallback a array vacío
 
   // Manejador de eliminación mejorado
   const handleDelete = async (id, item) => {
@@ -97,8 +97,8 @@ const DomainManager = ({
     }
   };
 
-  // Loading inicial
-  if (crud.loading && displayItems.length === 0) {
+  // Loading inicial - también verificar null/undefined
+  if (crud.loading && (!displayItems || displayItems.length === 0)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />

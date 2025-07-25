@@ -42,8 +42,11 @@ router.use((req, res, next) => {
   next()
 })
 
+// Rutas autenticadas (requieren login)
+router.get('/', getAllGallery)
+
 // Rutas de administración (requieren rol admin)
-router.get('/', requireAdmin, getAllGallery)
+router.get('/admin', requireAdmin, getAllGallery)
 router.get('/:id', validateMongoId('id'), requireAdmin, getImageById)
 router.post('/', requireAdmin, createImage)
 router.put('/:id', validateMongoId('id'), requireAdmin, updateImage)
