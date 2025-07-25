@@ -1,25 +1,41 @@
-import { setupMinIO, minioClient, BUCKET_PRIVATE, BUCKET_PUBLIC, BUCKET_GALERY } from '../src/core/config/minio.config.js'
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-async function checkMinIO () {
+// Configurar dotenv para cargar desde la raíz del backend
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const envPath = path.resolve(__dirname, "../.env");
+dotenv.config({ path: envPath });
+
+import { 
+  setupMinIO, 
+  minioClient, 
+  BUCKET_PRIVATE, 
+  BUCKET_PUBLIC, 
+  BUCKET_GALERY 
+} from "../src/core/config/minio.config.js";
+
+async function checkMinIO() {
   try {
-    console.log('🔍 Verificando configuración de MinIO...')
+    console.log("🔍 Verificando configuración de MinIO...");
 
     // Verificar variables de entorno
     const requiredEnvVars = [
-      'MINIO_ENDPOINT',
-      'MINIO_PORT',
-      'MINIO_ACCESS_KEY',
-      'MINIO_SECRET_KEY',
-      'MINIO_BUCKET_PRIVATE',
-      'MINIO_BUCKET_PUBLIC',
-      'MINIO_BUCKET_GALERY'
-    ]
+      "MINIO_ENDPOINT",
+      "MINIO_PORT", 
+      "MINIO_ACCESS_KEY",
+      "MINIO_SECRET_KEY",
+      "MINIO_BUCKET_PRIVATE",
+      "MINIO_BUCKET_PUBLIC",
+      "MINIO_BUCKET_GALERY",
+    ];
 
-    const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
+    const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
 
     if (missingVars.length > 0) {
-      console.error('❌ Variables de entorno faltantes:', missingVars)
-      console.log('📝 Crea un archivo .env en la carpeta backend con las siguientes variables:')
+      console.error("❌ Variables de entorno faltantes:", missingVars);
+      console.log("📝 Crea un archivo .env en la carpeta backend con las siguientes variables:");
       console.log(`
 MINIO_ENDPOINT=localhost
 MINIO_PORT=9000
@@ -29,8 +45,9 @@ MINIO_SECRET_KEY=minioadmin
 MINIO_BUCKET_PRIVATE=materiales-privados
 MINIO_BUCKET_PUBLIC=materiales-publicos
 MINIO_BUCKET_GALERY=galeria-imagenes
-      `)
-      return
+MINIO_BUCKET_NAME=gps-vac-images
+      `);
+      return;
     }
 
     console.log('✅ Variables de entorno configuradas correctamente')

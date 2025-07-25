@@ -32,7 +32,35 @@ export default function ButtonAppBar() {
 
   const handleAccesoClick = () => {
     setDrawerOpen(false);
-    navigate('/login');
+    
+    // Verificar si hay un token en localStorage
+    const token = localStorage.getItem("token");
+    
+    if (token) {
+      // Si hay token, verificar si es válido decodificándolo
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+        
+        // Verificar si el token no ha expirado
+        if (payload.exp > currentTime) {
+          // Token válido, redirigir a la interfaz de usuario
+          navigate('/usuario');
+        } else {
+          // Token expirado, limpiarlo y redirigir al login
+          localStorage.removeItem("token");
+          navigate('/login');
+        }
+      } catch (error) {
+        // Token inválido, limpiarlo y redirigir al login
+        console.error("Token inválido:", error);
+        localStorage.removeItem("token");
+        navigate('/login');
+      }
+    } else {
+      // No hay token, redirigir al login
+      navigate('/login');
+    }
   };
 
   const handleEstudianteClick = () => {
@@ -156,30 +184,6 @@ export default function ButtonAppBar() {
               >
                 <FacebookIcon sx={{ mr: 1 }} />
                 <ListItemText primary="Facebook" />
-              </ListItemButton>
-            </ListItem>
-          </List>
-
-          {/* Divisor */}
-          <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-
-          {/* Botones de usuario (después de login) */}
-          <List>
-            <ListItem disablePadding>
-              <ListItemButton>
-                <ListItemText primary="User Button 1" />
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding>
-              <ListItemButton>
-                <ListItemText primary="User Button 2" />
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding>
-              <ListItemButton>
-                <ListItemText primary="User Button 3" />
               </ListItemButton>
             </ListItem>
           </List>

@@ -1,163 +1,114 @@
-'use strict'
-import cardsProfesoresService from '../services/cardsProfesores.service.js'
-import { respondSuccess, respondError } from '../../../core/utils/responseHandler.util.js'
+"use strict";
 
-class CardsProfesoresController {
-  // Obtener todas las tarjetas
-  async getAllCards (req, res) {
-    try {
-      const result = await cardsProfesoresService.getAllCards()
-      if (result.success) {
-        return respondSuccess(req, res, 200, result.data)
-      } else {
-        return respondError(req, res, 400, result.error)
-      }
-    } catch (error) {
-      return respondError(req, res, 500, 'Error interno del servidor')
-    }
-  }
+import { respondSuccess, respondError } from "../../../core/utils/resHandler.js";
+import cardsProfesoresService from "../services/cardsProfesores.service.js";
+import { handleError } from "../../../core/utils/errorHandler.js";
 
-  // Obtener solo las tarjetas activas
-  async getActiveCards (req, res) {
-    try {
-      const result = await cardsProfesoresService.getActiveCards()
-      if (result.success) {
-        return respondSuccess(req, res, 200, result.data)
-      } else {
-        return respondError(req, res, 400, result.error)
-      }
-    } catch (error) {
-      return respondError(req, res, 500, 'Error interno del servidor')
-    }
-  }
+/**
+ * Obtiene todas las cards de profesores
+ * @param {Object} req - Objeto de petición
+ * @param {Object} res - Objeto de respuesta
+ */
+async function getCardsProfesores(req, res) {
+  try {
+    console.log("🎯 getCardsProfesores controller called");
+    const [cards, errorCards] = await cardsProfesoresService.getCardsProfesores();
+    if (errorCards) return respondError(req, res, 404, errorCards);
 
-  // Obtener una tarjeta por ID
-  async getCardById (req, res) {
-    try {
-      const { id } = req.params
-      const result = await cardsProfesoresService.getCardById(id)
-      if (result.success) {
-        return respondSuccess(req, res, 200, result.data)
-      } else {
-        return respondError(req, res, 404, result.error)
-      }
-    } catch (error) {
-      return respondError(req, res, 500, 'Error interno del servidor')
-    }
-  }
-
-  // Crear una nueva tarjeta
-  async createCard (req, res) {
-    try {
-      const { nombre, especialidad, descripcion, imagen } = req.body
-
-      // Validaciones básicas
-      if (!nombre || !especialidad || !descripcion || !imagen) {
-        return respondError(req, res, 400, 'Todos los campos son requeridos')
-      }
-
-      const cardData = { nombre, especialidad, descripcion, imagen }
-      const result = await cardsProfesoresService.createCard(cardData)
-
-      if (result.success) {
-        return respondSuccess(req, res, 201, result.data)
-      } else {
-        return respondError(req, res, 400, result.error)
-      }
-    } catch (error) {
-      return respondError(req, res, 500, 'Error interno del servidor')
-    }
-  }
-
-  // Actualizar una tarjeta
-  async updateCard (req, res) {
-    try {
-      const { id } = req.params
-      const { nombre, especialidad, descripcion, imagen, activo } = req.body
-
-      // Validaciones básicas para campos requeridos
-      if (!nombre || !especialidad || !descripcion || !imagen) {
-        return respondError(req, res, 400, 'Todos los campos son requeridos')
-      }
-
-      const cardData = { nombre, especialidad, descripcion, imagen }
-      // Incluir el campo activo si está presente
-      if (typeof activo === 'boolean') {
-        cardData.activo = activo
-      }
-
-      const result = await cardsProfesoresService.updateCard(id, cardData)
-
-      if (result.success) {
-        return respondSuccess(req, res, 200, result.data)
-      } else {
-        return respondError(req, res, 404, result.error)
-      }
-    } catch (error) {
-      return respondError(req, res, 500, 'Error interno del servidor')
-    }
-  }
-
-  // Eliminar una tarjeta
-  async deleteCard (req, res) {
-    try {
-      const { id } = req.params
-      const result = await cardsProfesoresService.deleteCard(id)
-
-      if (result.success) {
-        return respondSuccess(req, res, 200, { message: result.message })
-      } else {
-        return respondError(req, res, 404, result.error)
-      }
-    } catch (error) {
-      return respondError(req, res, 500, 'Error interno del servidor')
-    }
-  }
-
-  // Restaurar una tarjeta
-  async restoreCard (req, res) {
-    try {
-      const { id } = req.params
-      const result = await cardsProfesoresService.restoreCard(id)
-
-      if (result.success) {
-        return respondSuccess(req, res, 200, { message: result.message })
-      } else {
-        return respondError(req, res, 404, result.error)
-      }
-    } catch (error) {
-      return respondError(req, res, 500, 'Error interno del servidor')
-    }
-  }
-
-  // Actualizar el orden de las tarjetas
-  async updateOrder (req, res) {
-    try {
-      console.log('Body recibido:', req.body) // Debug
-      const { cardsOrder } = req.body
-
-      console.log('cardsOrder extraído:', cardsOrder) // Debug
-
-      if (!cardsOrder || !Array.isArray(cardsOrder)) {
-        console.log('Validación fallida - cardsOrder:', cardsOrder) // Debug
-        return respondError(req, res, 400, 'Se requiere un array con el orden de las tarjetas')
-      }
-
-      console.log('Enviando a servicio:', cardsOrder) // Debug
-      const result = await cardsProfesoresService.updateOrder(cardsOrder)
-
-      console.log('Resultado del servicio:', result) // Debug
-
-      if (result.success) {
-        return respondSuccess(req, res, 200, { message: result.message })
-      } else {
-        return respondError(req, res, 400, result.error)
-      }
-    } catch (error) {
-      console.error('Error en updateOrder:', error) // Debug
-      return respondError(req, res, 500, 'Error interno del servidor')
-    }
+    console.log("📊 Cards found:", cards?.length || 0);
+    cards.length === 0
+      ? respondSuccess(req, res, 204)
+      : respondSuccess(req, res, 200, cards);
+  } catch (error) {
+    handleError(error, "cardsProfesores.controller -> getCardsProfesores");
+    respondError(req, res, 400, error.message);
   }
 }
 
-export default new CardsProfesoresController()
+/**
+ * Crea una nueva card de profesor
+ * @param {Object} req - Objeto de petición
+ * @param {Object} res - Objeto de respuesta
+ */
+async function createCardProfesor(req, res) {
+  try {
+    const { body } = req;
+    const [newCard, cardError] = await cardsProfesoresService.createCardProfesor(body);
+
+    if (cardError) return respondError(req, res, 400, cardError);
+    if (!newCard) {
+      return respondError(req, res, 400, "No se pudo crear la card del profesor");
+    }
+
+    respondSuccess(req, res, 201, newCard);
+  } catch (error) {
+    handleError(error, "cardsProfesores.controller -> createCardProfesor");
+    respondError(req, res, 500, "Error al crear la card del profesor");
+  }
+}
+
+/**
+ * Obtiene una card de profesor por su id
+ * @param {Object} req - Objeto de petición
+ * @param {Object} res - Objeto de respuesta
+ */
+async function getCardProfesorById(req, res) {
+  try {
+    const { params } = req;
+    const [card, errorCard] = await cardsProfesoresService.getCardProfesorById(params.id);
+
+    if (errorCard) return respondError(req, res, 404, errorCard);
+
+    respondSuccess(req, res, 200, card);
+  } catch (error) {
+    handleError(error, "cardsProfesores.controller -> getCardProfesorById");
+    respondError(req, res, 500, "Error al obtener la card del profesor");
+  }
+}
+
+/**
+ * Actualiza una card de profesor por su id
+ * @param {Object} req - Objeto de petición
+ * @param {Object} res - Objeto de respuesta
+ */
+async function updateCardProfesor(req, res) {
+  try {
+    const { params, body } = req;
+    const [card, cardError] = await cardsProfesoresService.updateCardProfesor(params.id, body);
+
+    if (cardError) return respondError(req, res, 400, cardError);
+
+    respondSuccess(req, res, 200, card);
+  } catch (error) {
+    handleError(error, "cardsProfesores.controller -> updateCardProfesor");
+    respondError(req, res, 500, "Error al actualizar la card del profesor");
+  }
+}
+
+/**
+ * Elimina una card de profesor por su id
+ * @param {Object} req - Objeto de petición
+ * @param {Object} res - Objeto de respuesta
+ */
+async function deleteCardProfesor(req, res) {
+  try {
+    const { params } = req;
+    const [card, cardError] = await cardsProfesoresService.deleteCardProfesor(params.id);
+
+    if (cardError) return respondError(req, res, 400, cardError);
+    !card
+      ? respondError(req, res, 404, "La card del profesor no existe")
+      : respondSuccess(req, res, 200, card);
+  } catch (error) {
+    handleError(error, "cardsProfesores.controller -> deleteCardProfesor");
+    respondError(req, res, 500, "Error al eliminar la card del profesor");
+  }
+}
+
+export default {
+  getCardsProfesores,
+  createCardProfesor,
+  getCardProfesorById,
+  updateCardProfesor,
+  deleteCardProfesor,
+}; 

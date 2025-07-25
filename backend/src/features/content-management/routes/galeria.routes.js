@@ -1,4 +1,6 @@
-import express from 'express'
+"use strict";
+
+import express from "express";
 import {
   getActiveGallery,
   getGalleryByCategory,
@@ -10,51 +12,27 @@ import {
   toggleImageStatus,
   updateImageOrder,
   getImageUrl,
-  getActiveGalleryWithUrls,
-  getUploadUrl
-} from '../controllers/galeria.controller.js'
-import {
-  authenticateJWT,
-  loadUserData,
-  requireAdmin,
-  requireAdminOrAsistente,
-  validateMongoId,
-  asyncHandler,
-  sanitizeInput
-} from '../../../middlewares/index.js'
+} from "../controllers/galeria.controller.js";
+import verifyJWT from "../../authentication/middlewares/authentication.middleware.js";
+import { authorizeRoles } from "../../authentication/middlewares/authorization.middleware.js";
 
-const router = express.Router()
+const router = express.Router();
 
-// Rutas públicas (sin autenticación)
-router.get('/active', getActiveGallery)
-router.get('/active-with-urls', getActiveGalleryWithUrls)
-router.get('/category/:categoria', getGalleryByCategory)
-router.get('/image/:id/url', getImageUrl)
+// Rutas públicas
+router.get("/active", getActiveGallery);
+router.get("/category/:categoria", getGalleryByCategory);
+router.get("/image/:id/url", getImageUrl);
 
-// Aplicar middlewares de autenticación para rutas protegidas
-router.use(sanitizeInput)
-router.use(authenticateJWT)
-router.use(loadUserData)
+// Rutas protegidas (requieren autenticación)
+router.use(verifyJWT);
 
-// Middleware de debug
-router.use((req, res, next) => {
-  console.log(`[GALERIA] ${req.method} ${req.originalUrl} | user: ${req.user?.username || 'anonimo'}`)
-  next()
-})
+// Rutas de administración (administrador y asistente - acceso completo)
+router.get("/", authorizeRoles(["administrador", "asistente"]), getAllGallery);
+router.get("/:id", authorizeRoles(["administrador", "asistente"]), getImageById);
+router.post("/", authorizeRoles(["administrador", "asistente"]), createImage);
+router.put("/:id", authorizeRoles(["administrador", "asistente"]), updateImage);
+router.delete("/:id", authorizeRoles(["administrador", "asistente"]), deleteImage);
+router.put("/:id/toggle", authorizeRoles(["administrador", "asistente"]), toggleImageStatus);
+router.put("/order/update", authorizeRoles(["administrador", "asistente"]), updateImageOrder);
 
-// Rutas autenticadas (requieren login)
-router.get('/', getAllGallery)
-
-// Rutas de administración (requieren rol admin)
-router.get('/admin', requireAdmin, getAllGallery)
-router.get('/:id', validateMongoId('id'), requireAdmin, getImageById)
-router.post('/', requireAdmin, createImage)
-router.put('/:id', validateMongoId('id'), requireAdmin, updateImage)
-router.delete('/:id', validateMongoId('id'), requireAdmin, deleteImage)
-router.put('/:id/toggle', validateMongoId('id'), requireAdmin, toggleImageStatus)
-router.put('/order/update', requireAdmin, updateImageOrder)
-
-// Endpoint para URLs prefirmadas
-router.post('/upload-url', requireAdminOrAsistente, getUploadUrl)
-
-export default router
+export default router; 

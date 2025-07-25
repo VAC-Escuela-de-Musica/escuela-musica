@@ -1,301 +1,324 @@
-import Galeria from '../../../core/models/galeria.model.js'
-import { handleError } from '../../../core/utils/errorHandler.util.js'
+"use strict";
 
-/**
- * Obtener todas las imágenes de la galería (para administración)
- */
-async function getAllGallery () {
-  try {
-    const imagenes = await Galeria.find().sort({ orden: 1, createdAt: -1 }).exec()
-    return {
-      success: true,
-      data: imagenes,
-      message: 'Galería obtenida exitosamente'
+import Galeria from '../../../core/models/galeria.entity.js';
+
+class GaleriaService {
+  /**
+   * Obtener todas las imágenes de galería activas
+   */
+  async getActiveGallery() {
+    try {
+      const galeria = await Galeria.getActiveGallery();
+      
+      // Procesar URLs de imágenes para hacerlas públicas
+      const { MINIO_ENDPOINT, MINIO_PORT } = process.env;
+      const { MINIO_PUBLIC_BUCKET } = await import('../../../core/config/minio.config.js');
+      
+      const galeriaConUrls = galeria.map((imagen) => {
+        const imagenObj = imagen.toObject();
+        
+        // Si la imagen no es una URL completa, generar URL pública
+        if (!imagenObj.imagen.startsWith('http://') && !imagenObj.imagen.startsWith('https://')) {
+          imagenObj.imagen = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${MINIO_PUBLIC_BUCKET}/${imagenObj.imagen}`;
+        }
+        
+        return imagenObj;
+      });
+      
+      return {
+        success: true,
+        data: galeriaConUrls,
+        message: 'Galería obtenida exitosamente'
+      };
+    } catch (error) {
+      console.error('Error obteniendo galería activa:', error);
+      throw new Error('Error al obtener la galería');
     }
-  } catch (error) {
-    handleError(error, 'galeria.service -> getAllGallery')
-    throw new Error('Error al obtener la galería')
   }
-}
 
-/**
- * Obtener galería activa (pública)
- */
-async function getActiveGallery () {
-  try {
-    const imagenes = await Galeria.find({ activo: true })
-      .sort({ orden: 1, createdAt: -1 })
-      .exec()
-    return {
-      success: true,
-      data: imagenes,
-      message: 'Galería activa obtenida exitosamente'
+  /**
+   * Obtener galería por categoría
+   */
+  async getGalleryByCategory(categoria) {
+    try {
+      const galeria = await Galeria.getGalleryByCategory(categoria);
+      
+      // Procesar URLs de imágenes para hacerlas públicas
+      const { MINIO_ENDPOINT, MINIO_PORT } = process.env;
+      const { MINIO_PUBLIC_BUCKET } = await import('../../../core/config/minio.config.js');
+      
+      const galeriaConUrls = galeria.map((imagen) => {
+        const imagenObj = imagen.toObject();
+        
+        // Si la imagen no es una URL completa, generar URL pública
+        if (!imagenObj.imagen.startsWith('http://') && !imagenObj.imagen.startsWith('https://')) {
+          imagenObj.imagen = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${MINIO_PUBLIC_BUCKET}/${imagenObj.imagen}`;
+        }
+        
+        return imagenObj;
+      });
+      
+      return {
+        success: true,
+        data: galeriaConUrls,
+        message: `Galería de categoría ${categoria} obtenida exitosamente`
+      };
+    } catch (error) {
+      console.error('Error obteniendo galería por categoría:', error);
+      throw new Error('Error al obtener la galería por categoría');
     }
-  } catch (error) {
-    handleError(error, 'galeria.service -> getActiveGallery')
-    throw new Error('Error al obtener la galería activa')
   }
-}
 
-/**
- * Obtener galería por categoría
- */
-async function getGalleryByCategory (categoria) {
-  try {
-    const imagenes = await Galeria.find({
-      categoria,
-      activo: true
-    })
-      .sort({ orden: 1, createdAt: -1 })
-      .exec()
-    return {
-      success: true,
-      data: imagenes,
-      message: `Galería de categoría ${categoria} obtenida exitosamente`
+  /**
+   * Obtener todas las imágenes (para administración)
+   */
+  async getAllGallery() {
+    try {
+      const galeria = await Galeria.find()
+        .sort({ orden: 1, fechaCreacion: -1 });
+      
+      // Procesar URLs de imágenes para hacerlas públicas
+      const { MINIO_ENDPOINT, MINIO_PORT } = process.env;
+      const { MINIO_PUBLIC_BUCKET } = await import('../../../core/config/minio.config.js');
+      
+      const galeriaConUrls = galeria.map((imagen) => {
+        const imagenObj = imagen.toObject();
+        
+        // Si la imagen no es una URL completa, generar URL pública
+        if (!imagenObj.imagen.startsWith('http://') && !imagenObj.imagen.startsWith('https://')) {
+          imagenObj.imagen = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${MINIO_PUBLIC_BUCKET}/${imagenObj.imagen}`;
+        }
+        
+        return imagenObj;
+      });
+      
+      return {
+        success: true,
+        data: galeriaConUrls,
+        message: 'Galería completa obtenida exitosamente'
+      };
+    } catch (error) {
+      console.error('Error obteniendo galería completa:', error);
+      throw new Error('Error al obtener la galería completa');
     }
-  } catch (error) {
-    handleError(error, 'galeria.service -> getGalleryByCategory')
-    throw new Error(`Error al obtener la galería de la categoría ${categoria}`)
   }
-}
 
-/**
- * Obtener imagen por ID
- */
-async function getImageById (id) {
-  try {
-    const imagen = await Galeria.findById(id).exec()
-    if (!imagen) {
-      throw new Error('Imagen no encontrada')
-    }
-    return {
-      success: true,
-      data: imagen,
-      message: 'Imagen obtenida exitosamente'
-    }
-  } catch (error) {
-    if (error.message === 'Imagen no encontrada') {
-      throw error
-    }
-    handleError(error, 'galeria.service -> getImageById')
-    throw new Error('Error al obtener la imagen')
-  }
-}
-
-/**
- * Crear nueva imagen
- */
-async function createImage (imageData) {
-  try {
-    // Obtener el siguiente número de orden
-    const lastImage = await Galeria.findOne().sort({ orden: -1 }).exec()
-    const nextOrder = lastImage ? lastImage.orden + 1 : 0
-
-    const nuevaImagen = new Galeria({
-      ...imageData,
-      orden: nextOrder
-    })
-
-    const imagenGuardada = await nuevaImagen.save()
-    return {
-      success: true,
-      data: imagenGuardada,
-      message: 'Imagen creada exitosamente'
-    }
-  } catch (error) {
-    handleError(error, 'galeria.service -> createImage')
-    throw new Error('Error al crear la imagen')
-  }
-}
-
-/**
- * Actualizar imagen
- */
-async function updateImage (id, imageData) {
-  try {
-    // Validar y sanitizar imageData
-    const allowedFields = ['titulo', 'descripcion', 'categoria', 'activo', 'imagen', 'orden']; // Ajusta según tu modelo
-    const sanitizedData = {};
-    for (const key in imageData) {
-      if (allowedFields.includes(key)) {
-        sanitizedData[key] = imageData[key];
+  /**
+   * Obtener imagen por ID
+   */
+  async getImageById(id) {
+    try {
+      const imagen = await Galeria.findById(id);
+      if (!imagen) {
+        throw new Error('Imagen no encontrada');
       }
-    }
-
-    const imagenActualizada = await Galeria.findByIdAndUpdate(
-      id,
-      { $set: sanitizedData }, // Usar $set para evitar inyección
-      {
-        new: true,
-        runValidators: true
-      }
-    ).exec();
-
-    if (!imagenActualizada) {
-      throw new Error('Imagen no encontrada');
-    }
-
-    return {
-      success: true,
-      data: imagenActualizada,
-      message: 'Imagen actualizada exitosamente'
-    };
-  } catch (error) {
-    if (error.message === 'Imagen no encontrada') {
+      
+      return {
+        success: true,
+        data: imagen,
+        message: 'Imagen obtenida exitosamente'
+      };
+    } catch (error) {
+      console.error('Error obteniendo imagen por ID:', error);
       throw error;
     }
-    handleError(error, 'galeria.service -> updateImage');
-    throw new Error('Error al actualizar la imagen');
   }
-}
 
-/**
- * Eliminar imagen
- */
-async function deleteImage (id) {
-  try {
-    const imagenEliminada = await Galeria.findByIdAndDelete(id).exec()
-    if (!imagenEliminada) {
-      throw new Error('Imagen no encontrada')
+  /**
+   * Crear nueva imagen en galería
+   */
+  async createImage(imageData) {
+    try {
+      const nuevaImagen = new Galeria(imageData);
+      await nuevaImagen.save();
+      
+      // Auditoría (comentado hasta implementar auditService)
+      // await auditService.logGalleryAction(nuevaImagen, 'create', {
+      //   action: 'create_image',
+      //   details: `Nueva imagen creada: ${nuevaImagen.titulo}`
+      // });
+      
+      return {
+        success: true,
+        data: nuevaImagen,
+        message: 'Imagen creada exitosamente'
+      };
+    } catch (error) {
+      console.error('Error creando imagen:', error);
+      throw new Error('Error al crear la imagen');
     }
-
-    return {
-      success: true,
-      message: 'Imagen eliminada exitosamente'
-    }
-  } catch (error) {
-    if (error.message === 'Imagen no encontrada') {
-      throw error
-    }
-    handleError(error, 'galeria.service -> deleteImage')
-    throw new Error('Error al eliminar la imagen')
   }
-}
 
-/**
- * Cambiar estado activo/inactivo
- */
-async function toggleImageStatus (id) {
-  try {
-    const imagen = await Galeria.findById(id).exec()
-    if (!imagen) {
-      throw new Error('Imagen no encontrada')
+  /**
+   * Actualizar imagen
+   */
+  async updateImage(id, updateData) {
+    try {
+      const imagen = await Galeria.findByIdAndUpdate(
+        id,
+        { ...updateData, fechaActualizacion: new Date() },
+        { new: true, runValidators: true }
+      );
+      
+      if (!imagen) {
+        throw new Error('Imagen no encontrada');
+      }
+      
+      // Auditoría (comentado hasta implementar auditService)
+      // await auditService.logGalleryAction(imagen, 'update', {
+      //   action: 'update_image',
+      //   details: `Imagen actualizada: ${imagen.titulo}`
+      // });
+      
+      return {
+        success: true,
+        data: imagen,
+        message: 'Imagen actualizada exitosamente'
+      };
+    } catch (error) {
+      console.error('Error actualizando imagen:', error);
+      throw error;
     }
-
-    imagen.activo = !imagen.activo
-    const imagenActualizada = await imagen.save()
-
-    return {
-      success: true,
-      data: imagenActualizada,
-      message: `Imagen ${imagenActualizada.activo ? 'activada' : 'desactivada'} exitosamente`
-    }
-  } catch (error) {
-    if (error.message === 'Imagen no encontrada') {
-      throw error
-    }
-    handleError(error, 'galeria.service -> toggleImageStatus')
-    throw new Error('Error al cambiar el estado de la imagen')
   }
-}
 
-/**
- * Actualizar orden de imágenes
- */
-async function updateImageOrder (ordenData) {
-  try {
-    const updatePromises = ordenData.map(async (item) => {
-      return await Galeria.findByIdAndUpdate(
-        item.id,
-        { orden: item.orden },
-        { new: true }
-      )
-    })
-
-    await Promise.all(updatePromises)
-
-    return {
-      success: true,
-      message: 'Orden de imágenes actualizado exitosamente'
+  /**
+   * Eliminar imagen
+   */
+  async deleteImage(id) {
+    try {
+      const imagen = await Galeria.findById(id);
+      if (!imagen) {
+        throw new Error('Imagen no encontrada');
+      }
+      
+      // Eliminar archivo de MinIO si existe (comentado hasta implementar fileService)
+      // try {
+      //   await fileService.deleteFile(imagen.bucket, imagen.imagen);
+      // } catch (fileError) {
+      //   console.warn('No se pudo eliminar archivo de MinIO:', fileError.message);
+      // }
+      
+      await Galeria.findByIdAndDelete(id);
+      
+      // Auditoría (comentado hasta implementar auditService)
+      // await auditService.logGalleryAction(imagen, 'delete', {
+      //   action: 'delete_image',
+      //   details: `Imagen eliminada: ${imagen.titulo}`
+      // });
+      
+      return {
+        success: true,
+        message: 'Imagen eliminada exitosamente'
+      };
+    } catch (error) {
+      console.error('Error eliminando imagen:', error);
+      throw error;
     }
-  } catch (error) {
-    handleError(error, 'galeria.service -> updateImageOrder')
-    throw new Error('Error al actualizar el orden de las imágenes')
   }
-}
 
-/**
- * Generar URL presignada de imagen para evitar problemas de CORS
- */
-async function getImageUrl (imagen, options = {}) {
-  try {
-    const { minioService } = await import('../../../services/index.js')
-    let finalUrl = imagen.imagen
-    
-    // Extraer el nombre del archivo y determinar el bucket
-    let filename = ''
-    let bucketType = 'galery'
-    
-    if (finalUrl && finalUrl.includes('imagenes-publicas')) {
-      // Imagen del bucket legacy
-      console.log('🔄 Generando URL presignada para imagen legacy:', finalUrl)
-      filename = finalUrl.split('/imagenes-publicas/')[1]
-      bucketType = 'public'
-    } else if (finalUrl && finalUrl.includes('galeria-imagenes')) {
-      // Imagen del bucket correcto
-      console.log('✅ Generando URL presignada para imagen de galería:', finalUrl)
-      filename = finalUrl.split('/galeria-imagenes/')[1]
-      bucketType = 'galery'
+  /**
+   * Cambiar estado activo/inactivo
+   */
+  async toggleImageStatus(id) {
+    try {
+      const imagen = await Galeria.findById(id);
+      if (!imagen) {
+        throw new Error('Imagen no encontrada');
+      }
+      
+      imagen.activo = !imagen.activo;
+      await imagen.save();
+      
+      // Auditoría (comentado hasta implementar auditService)
+      // await auditService.logGalleryAction(imagen, 'toggle_status', {
+      //   action: 'toggle_image_status',
+      //   details: `Estado cambiado a: ${imagen.activo ? 'activo' : 'inactivo'}`
+      // });
+      
+      return {
+        success: true,
+        data: imagen,
+        message: `Imagen ${imagen.activo ? 'activada' : 'desactivada'} exitosamente`
+      };
+    } catch (error) {
+      console.error('Error cambiando estado de imagen:', error);
+      throw error;
     }
-    
-    // Si tenemos un filename válido, generar URL presignada
-    if (filename) {
-      try {
-        const presignedData = await minioService.generateDownloadUrl(
-          bucketType, 
-          filename, 
-          options.duration || 3600
-        )
+  }
+
+  /**
+   * Actualizar orden de imágenes
+   */
+  async updateImageOrder(ordenData) {
+    try {
+      const updates = ordenData.map(item => ({
+        updateOne: {
+          filter: { _id: item.id },
+          update: { orden: item.orden }
+        }
+      }));
+      
+      await Galeria.bulkWrite(updates);
+      
+      // Auditoría (comentado hasta implementar auditService)
+      // await auditService.logGalleryAction(null, 'reorder', {
+      //   action: 'reorder_images',
+      //   details: `Orden actualizado para ${ordenData.length} imágenes`
+      // });
+      
+      return {
+        success: true,
+        message: 'Orden de imágenes actualizado exitosamente'
+      };
+    } catch (error) {
+      console.error('Error actualizando orden de imágenes:', error);
+      throw new Error('Error al actualizar el orden de las imágenes');
+    }
+  }
+
+  /**
+   * Obtener URL de imagen con autenticación
+   */
+  async getImageUrl(imagen, options = {}) {
+    try {
+      const { action = 'view', duration = 300 } = options;
+      
+      // Si la imagen ya es una URL completa y pública, devolverla tal como está
+      if (imagen.imagen.startsWith('http://') || imagen.imagen.startsWith('https://')) {
+        const downloadData = {
+          downloadUrl: imagen.imagen,
+          expiresIn: duration
+        };
         
         return {
           success: true,
-          data: {
-            url: presignedData.url,
-            action: options.action || 'view',
-            expiresIn: options.duration || 3600
-          },
-          message: 'URL presignada generada exitosamente'
-        }
-      } catch (presignedError) {
-        console.log('⚠️ Error generando URL presignada, usando URL original:', presignedError.message)
+          data: downloadData,
+          message: 'URL de imagen generada exitosamente'
+        };
       }
+      
+      // Si es un nombre de archivo, generar URL pública
+      const { MINIO_ENDPOINT, MINIO_PORT } = await import('../../../core/config/configEnv.js');
+      const { MINIO_PUBLIC_BUCKET } = await import('../../../core/config/minio.config.js');
+      
+      const publicUrl = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${MINIO_PUBLIC_BUCKET}/${imagen.imagen}`;
+      
+      const downloadData = {
+        downloadUrl: publicUrl,
+        expiresIn: duration
+      };
+      
+      return {
+        success: true,
+        data: downloadData,
+        message: 'URL de imagen generada exitosamente'
+      };
+    } catch (error) {
+      console.error('Error generando URL de imagen:', error);
+      throw new Error('Error al generar URL de imagen');
     }
-    
-    // Fallback: devolver la URL original
-    return {
-      success: true,
-      data: {
-        url: finalUrl,
-        action: options.action || 'view',
-        expiresIn: options.duration || 3600
-      },
-      message: 'URL de imagen obtenida (fallback)'
-    }
-  } catch (error) {
-    handleError(error, 'galeria.service -> getImageUrl')
-    throw new Error('Error al generar URL de imagen')
   }
 }
 
-export const galeriaService = {
-  getAllGallery,
-  getActiveGallery,
-  getGalleryByCategory,
-  getImageById,
-  createImage,
-  updateImage,
-  deleteImage,
-  toggleImageStatus,
-  updateImageOrder,
-  getImageUrl
-}
+export const galeriaService = new GaleriaService();
+export default galeriaService; 
