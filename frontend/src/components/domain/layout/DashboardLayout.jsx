@@ -44,6 +44,18 @@ const DashboardLayout = () => {
                   </Link>
                 </>
               )}
+              
+              {/* Solo mostrar para administradores */}
+              {isAdmin() && (
+                <>
+                  <Link to="/dashboard/alumnos" className="nav-link">
+                    <span className="nav-icon">👨‍🎓</span> Alumnos
+                  </Link>
+                  <Link to="/dashboard/profesores" className="nav-link">
+                    <span className="nav-icon">👨‍🏫</span> Profesores
+                  </Link>
+                </>
+              )}
             </div>
             
             <div className="user-info">

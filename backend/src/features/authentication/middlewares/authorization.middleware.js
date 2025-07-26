@@ -48,13 +48,20 @@ function normalizeRoles (roles) {
  * @param {Function} next - Función para continuar con la siguiente función
  */
 export function isAdmin (req, res, next) {
+  console.log('🔍 [IS-ADMIN] Verificando si el usuario es administrador')
+  console.log('🔍 [IS-ADMIN] req.roles:', req.roles)
+  console.log('🔍 [IS-ADMIN] req.user:', req.user)
+  
   const normalizedRoles = normalizeRoles(req.roles)
+  console.log('🔍 [IS-ADMIN] Roles normalizados:', normalizedRoles)
 
   // Verificar si el usuario tiene el rol "administrador"
   if (normalizedRoles.includes('administrador')) {
+    console.log('✅ [IS-ADMIN] Usuario es administrador - Acceso permitido')
     return next()
   }
 
+  console.log('❌ [IS-ADMIN] Usuario NO es administrador - Acceso denegado')
   return res.status(403).json({ message: 'No autorizado' })
 }
 

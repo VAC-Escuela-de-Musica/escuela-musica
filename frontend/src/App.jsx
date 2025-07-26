@@ -12,6 +12,7 @@ const HomePage = lazy(() => import("./pages/Homepage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const InicioUsuario = lazy(() => import("./pages/paginaUsuario"));
 const AlumnosPage = lazy(() => import("./pages/AlumnosPage"));
+const ProfesoresPage = lazy(() => import("./pages/ProfesoresPage"));
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
 const StudentLoginPage = lazy(() => import("./pages/StudentLoginPage"));
 const StudentGalleryPage = lazy(() => import("./pages/StudentGalleryPage"));
@@ -61,9 +62,20 @@ function App() {
         }>
           <Route index element={<DashboardPage />} />
           <Route path="upload" element={<UploadPage />} />
+
           <Route path="galeria" element={
             <Suspense fallback={<Loader />}>
               <GaleriaManager />
+
+          <Route path="alumnos" element={
+            <Suspense fallback={<Loader />}>
+              <AlumnosPage />
+            </Suspense>
+          } />
+          <Route path="profesores" element={
+            <Suspense fallback={<Loader />}>
+              <ProfesoresPage />
+
             </Suspense>
           } />
           <Route path="mensajes-internos" element={
