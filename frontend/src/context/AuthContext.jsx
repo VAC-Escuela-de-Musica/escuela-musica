@@ -49,12 +49,20 @@ export function AuthProvider({ children }) {
         
         // Verify token if it exists
         if (token) {
-          const verifyResult = await authService.verifyToken();
-          if (verifyResult.success) {
-            setUser(verifyResult.data.user);
-          } else {
-            // Token is invalid, clear it
-            authService.logout();
+          try {
+            const verifyResult = await authService.verifyToken();
+            if (verifyResult.success) {
+              setUser(verifyResult.data.user);
+            } else {
+              // Token is invalid, clear it silently
+              authService.clearLocalData();
+              apiService.clearToken();
+              setUser(null);
+            }
+          } catch (error) {
+            console.warn('Token verification failed, clearing local data:', error);
+            // Token is invalid, clear it silently
+            authService.clearLocalData();
             apiService.clearToken();
             setUser(null);
           }
