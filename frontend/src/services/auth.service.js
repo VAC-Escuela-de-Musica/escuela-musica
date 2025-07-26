@@ -133,6 +133,22 @@ class AuthService {
   }
 
   /**
+   * Limpia solo los datos locales sin hacer llamada al servidor
+   */
+  clearLocalData() {
+    this.token = null;
+    this.user = null;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Cancelar timer de renovación
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+  }
+
+  /**
    * Cierra sesión del usuario
    */
   async logout() {
@@ -149,16 +165,7 @@ class AuthService {
     }
 
     // Limpiar datos locales
-    this.token = null;
-    this.user = null;
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    
-    // Cancelar timer de renovación
-    if (this.refreshTimer) {
-      clearTimeout(this.refreshTimer);
-      this.refreshTimer = null;
-    }
+    this.clearLocalData();
   }
 
   /**

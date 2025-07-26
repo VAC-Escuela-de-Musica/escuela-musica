@@ -57,7 +57,11 @@ class ApiService {
    * @param {string} endpoint - Endpoint de la API
    */
   buildURL(endpoint) {
-    return `${this.baseURL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+    // Asegurar que el endpoint tenga el prefijo /api
+    const apiEndpoint = endpoint.startsWith('/api/') ? endpoint : 
+                       endpoint.startsWith('/') ? `/api${endpoint}` : 
+                       `/api/${endpoint}`;
+    return `${this.baseURL}${apiEndpoint}`;
   }
 
   /**
