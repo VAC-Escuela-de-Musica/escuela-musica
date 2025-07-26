@@ -370,7 +370,7 @@ async function getProfesorById(req, res) {
     }
 }
 
-export default { 
+export { 
     createClase,
     getAllClases,
     getClaseById,

@@ -1,46 +1,46 @@
 "use strict";
 import { Router } from "express";  
-// import { isAdmin } from "../middlewares/authorization.middleware.js";
-// import authenticationMiddleware from "../middlewares/authentication.middleware.js";
-import claseController from "../controllers/clase.controller.js";
+import { authenticateJWT } from "../../authentication/middlewares/index.js";
+import { authorizeRoles } from "../../authentication/middlewares/authorization.middleware.js";
+import {
+    createClase,
+    getAllClases,
+    getPreviousClases,
+    getTodayClases,
+    getNextClases,
+    getAllCanceledClases,
+    getPreviousCanceledClases,
+    getTodayCanceledClases,
+    getNextCanceledClases,
+    getClaseById,
+    updateClase,
+    cancelClase,
+    getHorarioDia,
+    getHorarioSemana,
+    getHorarioMes,
+    getProfesores,
+    getProfesorById,
+} from "../controllers/clase.controller.js";
 
 const router = Router();
-// router.use(authenticationMiddleware);
+router.use(authenticateJWT);
 
-/* router.post("/create", isAdmin, claseController.createClase);
-router.get("/all", isAdmin, claseController.getAllClases);
-router.get("/previous", isAdmin, claseController.getPreviousClases);
-router.get("/today", isAdmin, claseController.getTodayClases);
-router.get("/next", isAdmin, claseController.getNextClases);
-router.get("/canceled_all", isAdmin, claseController.getAllCanceledClases);
-router.get("/canceled_previous", isAdmin, claseController.getPreviousCanceledClases);
-router.get("/canceled_today", isAdmin, claseController.getTodayCanceledClases);
-router.get("/canceled_next", isAdmin, claseController.getNextCanceledClases);
-router.get("/find/:id", isAdmin, claseController.getClaseById);
-router.put("/update/:id", isAdmin, claseController.updateClase);
-router.put("/cancel/:id", isAdmin, claseController.cancelClase);
-router.get("/horario/dia", isAdmin, claseController.getHorarioDia);
-router.get("/horario/semana", isAdmin, claseController.getHorarioSemana);
-router.get("/horario/mes", isAdmin, claseController.getHorarioMes);
-router.get("/profesores", isAdmin, claseController.getProfesores);
-router.get("/profesor/:id", isAdmin, claseController.getProfesorById); */
-
-router.post("/create", claseController.createClase);
-router.get("/all", claseController.getAllClases);
-router.get("/previous", claseController.getPreviousClases);
-router.get("/today", claseController.getTodayClases);
-router.get("/next", claseController.getNextClases);
-router.get("/canceled_all", claseController.getAllCanceledClases);
-router.get("/canceled_previous", claseController.getPreviousCanceledClases);
-router.get("/canceled_today", claseController.getTodayCanceledClases);
-router.get("/canceled_next", claseController.getNextCanceledClases);
-router.get("/find/:id", claseController.getClaseById);
-router.put("/update/:id", claseController.updateClase);
-router.put("/cancel/:id", claseController.cancelClase);
-router.get("/horario/dia", claseController.getHorarioDia);
-router.get("/horario/semana", claseController.getHorarioSemana);
-router.get("/horario/mes", claseController.getHorarioMes);
-router.get("/profesores", claseController.getProfesores);
-router.get("/profesor/:id", claseController.getProfesorById);
+router.post("/create", authorizeRoles(["administrador", "asistente"]), createClase);
+router.get("/all", authorizeRoles(["administrador", "asistente"]), getAllClases);
+router.get("/previous", authorizeRoles(["administrador", "asistente"]), getPreviousClases);
+router.get("/today", authorizeRoles(["administrador", "asistente"]), getTodayClases);
+router.get("/next", authorizeRoles(["administrador", "asistente"]), getNextClases);
+router.get("/canceled_all", authorizeRoles(["administrador", "asistente"]), getAllCanceledClases);
+router.get("/canceled_previous", authorizeRoles(["administrador", "asistente"]), getPreviousCanceledClases);
+router.get("/canceled_today", authorizeRoles(["administrador", "asistente"]), getTodayCanceledClases);
+router.get("/canceled_next", authorizeRoles(["administrador", "asistente"]), getNextCanceledClases);
+router.get("/find/:id", authorizeRoles(["administrador", "asistente"]), getClaseById);
+router.put("/update/:id", authorizeRoles(["administrador", "asistente"]), updateClase);
+router.put("/cancel/:id", authorizeRoles(["administrador", "asistente"]), cancelClase);
+router.get("/horario/dia", authorizeRoles(["administrador", "asistente"]), getHorarioDia);
+router.get("/horario/semana", authorizeRoles(["administrador", "asistente"]), getHorarioSemana);
+router.get("/horario/mes", authorizeRoles(["administrador", "asistente"]), getHorarioMes);
+router.get("/profesores", authorizeRoles(["administrador", "asistente"]), getProfesores);
+router.get("/profesor/:id", authorizeRoles(["administrador", "asistente"]), getProfesorById);
 
 export default router;
