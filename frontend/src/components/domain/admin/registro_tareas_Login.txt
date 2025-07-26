@@ -1,0 +1,12 @@
+Registro de tareas realizadas sobre Login.jsx
+Fecha: 21/07/2025
+
+1. Backup creado: Login.backup.jsx
+2. Análisis de errores de compilación y sintaxis.
+3. Unificación de contexto de autenticación: se usa useAuth del contexto global.
+4. Corrección de cierre de función y eliminación de llaves extra.
+5. Mejora de flujo de login: ahora actualiza el contexto y redirige correctamente.
+6. Limpieza de código y eliminación de posibles caracteres invisibles.
+7. Validación de integración con ProtectedRoute y navegación.
+
+Estado final: Login.jsx funcional, sin errores de compilación, con backup y registro de cambios.

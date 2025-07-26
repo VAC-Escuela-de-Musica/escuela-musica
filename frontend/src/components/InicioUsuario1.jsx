@@ -1,33 +1,77 @@
-import * as React from "react";
-import Box from "@mui/material/Box";
-import Drawer from "@mui/material/Drawer";
-import AppBar from "@mui/material/AppBar";
-import CssBaseline from "@mui/material/CssBaseline";
-import Toolbar from "@mui/material/Toolbar";
-import List from "@mui/material/List";
-import Typography from "@mui/material/Typography";
-import Divider from "@mui/material/Divider";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
+import React, { Suspense } from "react";
+import {
+  Box,
+  Drawer,
+  AppBar,
+  CssBaseline,
+  Toolbar,
+  List,
+  Typography,
+  Divider,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  CircularProgress,
+} from "@mui/material";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
-
+import LogoutIcon from "@mui/icons-material/Logout";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
 
-import CarouselManager from "./CarouselManager";
-import UserManager from "./UserManager";
-import Clases from "./Clases";
-import ClasesCrear from "./ClasesCrear";
-import ClasesCanceladas from "./ClasesCanceladas";
-import Horario from "./Horario";
-
+const UserManager = React.lazy(() => import("./domain/users/UserManager"));
+const CardsProfesoresManager = React.lazy(() => import("./domain/profesores/CardsProfesoresManager"));
+const RepositorioProfesor = React.lazy(() => import("./domain/materials/RepositorioProfesor"));
+const MensajeriaManager = React.lazy(() => import("./domain/messaging/MensajeriaManager"));
+const AlumnosList = React.lazy(() => import("./domain/alumnos/AlumnosList"));
+const TestimoniosManager = React.lazy(() => import("./domain/testimonios/TestimoniosManager"));
+const GaleriaManager = React.lazy(() => import("./domain/galeria/GaleriaManager"));
 const drawerWidth = 240;
+
+// Professional loading component
+const LoadingFallback = ({ message }) => (
+  <Box 
+    sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      minHeight: '300px',
+      color: '#ffffff',
+      backgroundColor: '#222222'
+    }}
+  >
+    <CircularProgress sx={{ color: '#2196F3', mb: 2 }} size={40} />
+    <Typography variant="h6" sx={{ color: '#ffffff' }}>
+      {message}
+    </Typography>
+  </Box>
+);
 
 export default function ClippedDrawer() {
   const [activeModule, setActiveModule] = React.useState("inicio");
+  const [userName, setUserName] = React.useState('');
+
+  React.useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUserName(payload.email);
+      } catch (error) {
+        console.error("Error al decodificar el token:", error);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    // Limpiar el token del localStorage
+    localStorage.removeItem("token");
+    // Redirigir al login
+    window.location.href = "/login";
+  };
 
   return (
     <Box
@@ -42,7 +86,7 @@ export default function ClippedDrawer() {
           <Typography variant="h6" noWrap component="div">
             Menú de Navegación
           </Typography>
-          <img
+          <img 
             src={coverImage}
             alt="Cover"
             style={{ width: "40%", height: "auto", marginLeft: "auto" }}
@@ -82,11 +126,8 @@ export default function ClippedDrawer() {
               (text, index) => (
                 <ListItem key={text} disablePadding>
                   <ListItemButton
-                    onClick={() => { 
-                      if (text === "Horario") setActiveModule("horario");
-                      /* if (text === "Estudiantes") setActiveModule("estudiantes");
-                      if (text === "Profesores") setActiveModule("profesores"); */
-                      if (text === "Clases") setActiveModule("clases");
+                    onClick={() => {
+                      if (text === "Estudiantes") setActiveModule("alumnos");
                     }}
                   >
                     <ListItemIcon sx={{ color: "#FFFFFF" }}>
@@ -102,15 +143,12 @@ export default function ClippedDrawer() {
           <List>
             {[
               "Imágenes Galería",
-              "Imágenes Carrusel",
               "Presentación Prof.",
               "Gestionar Reseñas",
             ].map((text, index) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton
                   onClick={() => {
-                    if (text === "Imágenes Carrusel")
-                      setActiveModule("carrusel");
                     if (text === "Imágenes Galería") setActiveModule("galeria");
                     if (text === "Presentación Prof.")
                       setActiveModule("presentacion");
@@ -128,11 +166,13 @@ export default function ClippedDrawer() {
           </List>
           <Divider sx={{ borderColor: "#3F4147" }} />
           <List>
-            {["Repositorio Prof.", "Credenciales", "modulo2"].map((text, index) => (
+            {["Repositorio Prof.", "Credenciales", "Mensajería"].map((text, index) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton
                   onClick={() => {
+                    if (text === "Repositorio Prof.") setActiveModule("repositorio");
                     if (text === "Credenciales") setActiveModule("credenciales");
+                    if (text === "Mensajería") setActiveModule("mensajeria");
                   }}
                 >
                   <ListItemIcon sx={{ color: "#FFFFFF" }}>
@@ -159,10 +199,34 @@ export default function ClippedDrawer() {
             fontWeight: "bold",
             textAlign: "center",
             textDecoration: "none",
+            marginBottom: "10px",
           }}
         >
           Volver al inicio
         </Link>
+        <button
+          onClick={handleLogout}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            padding: "10px",
+            backgroundColor: "#d32f2f",
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontSize: "16px",
+            fontWeight: "bold",
+            textAlign: "center",
+            textDecoration: "none",
+            gap: "8px",
+          }}
+        >
+          <LogoutIcon style={{ fontSize: "20px" }} />
+          Cerrar Sesión
+        </button>
       </Drawer>
       <Box
         component="main"
@@ -171,20 +235,55 @@ export default function ClippedDrawer() {
         <Toolbar />
         {activeModule === "inicio" && (
           <>
-            <Typography sx={{ marginBottom: 2 }}>
-              {/* Aquí tu texto de bienvenida o dashboard */}
-              Bienvenido al panel de administración.
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, marginBottom: 2 }}>
+              <AccountCircleIcon sx={{ fontSize: 40 }} />
+              <Typography variant="h5">
+                Bienvenido(a), {userName}
+              </Typography>
+            </Box>
+            <Typography variant="body1" sx={{ marginBottom: 2 }}>
+              Panel de administración de VAC Escuela de Música
             </Typography>
           </>
         )}
-        {activeModule === "carrusel" && <CarouselManager />}
-        {activeModule === "credenciales" && <UserManager />}
-        {activeModule === "horario" && <Horario setActiveModule={setActiveModule} />}
-        {activeModule === "clases" && <Clases setActiveModule={setActiveModule} />}
-        {activeModule === "clasesCanceladas" && <ClasesCanceladas setActiveModule={setActiveModule} />}
-        {activeModule === "clasesCrear" && <ClasesCrear setActiveModule={setActiveModule} />}
+        {activeModule === "galeria" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Galería..." />}>
+            <GaleriaManager />
+          </Suspense>
+        )}
+        {activeModule === "credenciales" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Credenciales..." />}>
+            <UserManager />
+          </Suspense>
+        )}
+        {activeModule === "presentacion" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Presentación..." />}>
+            <CardsProfesoresManager />
+          </Suspense>
+        )}
+        {activeModule === "resenas" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Reseñas..." />}>
+            <TestimoniosManager />
+          </Suspense>
+        )}
+        {activeModule === "repositorio" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Repositorio..." />}>
+            <RepositorioProfesor />
+          </Suspense>
+        )}
+        {activeModule === "mensajeria" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Mensajería..." />}>
+            <MensajeriaManager />
+          </Suspense>
+        )}
+        {activeModule === "alumnos" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Estudiantes..." />}>
+            <AlumnosList />
+          </Suspense>
+        )}
         {/* Puedes agregar más módulos así */}
       </Box>
     </Box>
   );
 }
+

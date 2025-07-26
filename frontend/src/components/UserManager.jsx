@@ -12,7 +12,6 @@ import {
   TextField,
   IconButton,
   Grid,
-  Alert,
   CircularProgress,
   FormControl,
   InputLabel,
@@ -29,11 +28,12 @@ import {
   Email as EmailIcon,
   Badge as BadgeIcon,
 } from "@mui/icons-material";
+import Notification from './common/Notification';
 
 const UserManager = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const [openDialog, setOpenDialog] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({
@@ -64,13 +64,21 @@ const UserManager = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Error al cargar los usuarios");
+        throw new Error("No posee el rol de administrador");
       }
 
       const data = await response.json();
       setUsers(Array.isArray(data.data) ? data.data : []);
+      console.log("Usuarios cargados:", data.data);
+      if (data.data && data.data.length > 0) {
+        console.log("Roles del primer usuario:", data.data[0].roles);
+      }
     } catch (err) {
-      setError("Error al cargar los usuarios: " + err.message);
+      setNotification({
+        open: true,
+        message: "Error al cargar los usuarios: " + err.message,
+        severity: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -89,8 +97,10 @@ const UserManager = () => {
         } else if (data.data && Array.isArray(data.data.data)) {
           rolesArray = data.data.data;
         }
+        // Asegurar que todos los roles estén en minúscula
+        rolesArray = rolesArray.map(role => role.toLowerCase());
         setRoles(rolesArray);
-        console.log("Roles cargados (robusto):", rolesArray);
+        console.log("Roles cargados:", rolesArray);
       }
     } catch (err) {
       console.error("Error al cargar roles:", err);
@@ -101,7 +111,13 @@ const UserManager = () => {
     event.preventDefault();
     
     try {
-      console.log("Datos enviados:", formData);
+      // Asegurar que los roles se envíen en minúscula
+      const formDataToSend = {
+        ...formData,
+        roles: formData.roles.map(role => role.toLowerCase())
+      };
+      
+      console.log("Datos enviados:", formDataToSend);
       const url = editingUser 
         ? `${API_URL}/${editingUser._id}`
         : `${API_URL}`;
@@ -114,7 +130,7 @@ const UserManager = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formDataToSend),
       });
 
       if (!response.ok) {
@@ -126,9 +142,18 @@ const UserManager = () => {
       setOpenDialog(false);
       setEditingUser(null);
       setFormData({ username: "", email: "", rut: "", password: "", roles: [] });
+      setNotification({
+        open: true,
+        message: editingUser ? "Usuario actualizado correctamente" : "Usuario creado correctamente",
+        severity: 'success'
+      });
       fetchUsers();
     } catch (err) {
-      setError("Error al guardar el usuario: " + err.message);
+      setNotification({
+        open: true,
+        message: "Error al guardar el usuario: " + err.message,
+        severity: 'error'
+      });
     }
   };
 
@@ -149,9 +174,18 @@ const UserManager = () => {
         throw new Error("Error al eliminar el usuario");
       }
 
+      setNotification({
+        open: true,
+        message: "Usuario eliminado correctamente",
+        severity: 'success'
+      });
       fetchUsers();
     } catch (err) {
-      setError("Error al eliminar el usuario: " + err.message);
+      setNotification({
+        open: true,
+        message: "Error al eliminar el usuario: " + err.message,
+        severity: 'error'
+      });
     }
   };
 
@@ -162,7 +196,7 @@ const UserManager = () => {
       email: user.email || "",
       rut: user.rut || "",
       password: "",
-      roles: user.roles ? user.roles.map(role => role._id || role) : [],
+      roles: user.roles || [], // Los roles ya son strings, no necesitamos mapear
     });
     setOpenDialog(true);
   };
@@ -173,9 +207,9 @@ const UserManager = () => {
     setFormData({ username: "", email: "", rut: "", password: "", roles: [] });
   };
 
-  const getRoleName = (roleId) => {
-    const role = roles.find(r => r._id === roleId);
-    return role ? role.name : "Rol desconocido";
+  const getRoleName = (roleString) => {
+    // Los roles ahora son strings directos, no necesitamos buscar por ID
+    return roleString ? roleString.charAt(0).toUpperCase() + roleString.slice(1) : "Rol desconocido";
   };
 
   // Filtrar usuarios
@@ -190,7 +224,9 @@ const UserManager = () => {
     setOpenDialog(true);
   };
 
-  console.log("Estado roles en render:", roles);
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
 
   if (loading) {
     return (
@@ -199,8 +235,6 @@ const UserManager = () => {
       </Box>
     );
   }
-
-  console.log("Estado roles en render:", roles);
 
   return (
     <Box sx={{ p: 3, backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
@@ -225,11 +259,7 @@ const UserManager = () => {
         sx={{ mb: 3, input: { color: "white" }, label: { color: "gray" } }}
         InputProps={{ sx: { color: "white" } }}
       />
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+
       <Box display="flex" alignItems="flex-start">
         <Box flex={1}>
           <Grid container spacing={3}>
@@ -265,7 +295,7 @@ const UserManager = () => {
                           {user.roles && user.roles.map((role, index) => (
                             <Chip
                               key={index}
-                              label={getRoleName(role._id || role)}
+                              label={getRoleName(role)}
                               size="small"
                               sx={{ 
                                 backgroundColor: "#4CAF50", 
@@ -300,7 +330,7 @@ const UserManager = () => {
         </Box>
       </Box>
 
-      {/* agregar/editar usuario */}
+      {/* Dialog para agregar/editar usuario */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ backgroundColor: "#333333", color: "white" }}>
           {editingUser ? "Editar Usuario" : "Agregar Nuevo Usuario"}
@@ -392,6 +422,13 @@ const UserManager = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+      />
     </Box>
   );
 };

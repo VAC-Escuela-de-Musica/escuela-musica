@@ -24,7 +24,6 @@ const ClasesCanceladas = ({ setActiveModule }) => {
     return response;
   };
 
-  // Función para obtener el nombre del profesor por ID
   const obtenerNombreProfesor = async (id) => {
     if (!id || nombresProfesores[id]) return;
     try {

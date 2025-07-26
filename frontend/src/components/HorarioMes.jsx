@@ -18,7 +18,6 @@ export default function HorarioMes() {
     const [errorMessage, setErrorMessage] = useState("");
     const [autorizado, setAutorizado] = useState(true);
     const [nombresProfesores, setNombresProfesores] = useState({});
-    // Agregar estados para profesor y listaProfesores
     const [profesor, setProfesor] = useState("0");
     const [listaProfesores, setListaProfesores] = useState([]);
 
@@ -74,7 +73,6 @@ export default function HorarioMes() {
                 if (horaInicioStr) queryParams.append("horaInicio", horaInicioStr);
                 if (horaFinStr) queryParams.append("horaFin", horaFinStr);
                 if (sala && sala !== "0") queryParams.append("sala", sala);
-                // Agregar filtro de profesor si corresponde
                 if (profesor && profesor !== "0") {
                   queryParams.append("profesor", profesor);
                 }
@@ -111,7 +109,6 @@ export default function HorarioMes() {
         fetchClasesMes();
     }, [fecha, horaInicio, horaFin, sala, profesor]);
 
-    // Cargar profesores al montar el componente
     useEffect(() => {
       const cargarProfesores = async () => {
         try {
@@ -128,7 +125,6 @@ export default function HorarioMes() {
           setListaProfesores(data.data);
         } catch (error) {
           console.error("Error al cargar profesores:", error);
-          // Si quieres mostrar error visual, podrías usar setErrorMessage aquí
         }
       };
       cargarProfesores();
@@ -368,7 +364,7 @@ export default function HorarioMes() {
                   .reduce((acc, clase) => {
                     const fechaClase = parse(clase.horario.dia, "dd-MM-yyyy", new Date());
                     const diaSemana = fechaClase.getDay();
-                    if (diaSemana === 0 || diaSemana === 6) return acc; // Excluir domingo (0) y sábado (6)
+                    if (diaSemana === 0 || diaSemana === 6) return acc;
                     if (!acc[clase.horario.dia]) acc[clase.horario.dia] = [];
                     acc[clase.horario.dia].push(clase);
                     return acc;

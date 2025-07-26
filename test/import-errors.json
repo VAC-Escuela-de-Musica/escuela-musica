@@ -1,0 +1,14 @@
+{
+  "errors": [
+    {
+      "file": "components\\domain\\materials\\ListaMateriales.jsx",
+      "importPath": "./SubirMultiplesMateriales.jsx",
+      "suggestion": null
+    },
+    {
+      "file": "routes\\Root.jsx",
+      "importPath": "../services/auth.service",
+      "suggestion": null
+    }
+  ]
+}

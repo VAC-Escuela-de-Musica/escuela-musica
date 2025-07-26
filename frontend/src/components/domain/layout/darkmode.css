@@ -1,0 +1,179 @@
+/* Estilos para modo oscuro y claro */
+:root {
+  /* Modo claro (por defecto) */
+  --bg-color: #d0d0d0;
+  --bg-secondary: #f0f0f0;
+  --text-color: #333333;
+  --text-muted: #555555; /* Cambiado de #666666 para mejor contraste */
+  --heading-color: #333333;
+  --border-color: #dee2e6;
+  --table-bg: #ffffff;
+  --table-header-bg: #f8f9fa;
+  --table-row-bg: transparent;
+  --primary-color: #007bff;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  
+  /* Colores de alertas */
+  --info-bg: #e3f2fd;
+  --info-border: #2196f3;
+  --info-text: #1976d2;
+  
+  --warning-bg: #fff3cd;
+  --warning-border: #ffeaa7;
+  --warning-text: #856404;
+  
+  --danger-bg: #ffebee;
+  --danger-border: #ffcdd2;
+  
+  --code-bg: rgba(0,0,0,0.1);
+  --code-text: #d63384;
+}
+
+/* Modo oscuro con clases */
+.dark-theme {
+  --bg-color: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --text-color: #e0e0e0;
+  --text-muted: #999999;
+  --heading-color: #ffffff;
+  --border-color: #444444;
+  --table-bg: #2d2d2d;
+  --table-header-bg: #3a3a3a;
+  --table-row-bg: transparent;
+  --primary-color: #4a9eff;
+  --success-color: #4caf50;
+  --danger-color: #f44336;
+  --warning-color: #ff9800;
+  --info-color: #00bcd4;
+  
+  /* Colores de alertas para modo oscuro */
+  --info-bg: #1e3a5f;
+  --info-border: #4a9eff;
+  --info-text: #81c784;
+  
+  --warning-bg: #3d2f00;
+  --warning-border: #ff9800;
+  --warning-text: #ffb74d;
+  
+  --danger-bg: #2d1b1b;
+  --danger-border: #f44336;
+  
+  --code-bg: rgba(255,255,255,0.1);
+  --code-text: #ff6b9d;
+}
+
+/* Fallback para preferencia del sistema (si no hay clase manual) */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light-theme):not(.dark-theme) {
+    --bg-color: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-color: #e0e0e0;
+    --text-muted: #999999;
+    --heading-color: #ffffff;
+    --border-color: #444444;
+    --table-bg: #2d2d2d;
+    --table-header-bg: #3a3a3a;
+    --table-row-bg: transparent;
+    --primary-color: #4a9eff;
+    --success-color: #4caf50;
+    --danger-color: #f44336;
+    --warning-color: #ff9800;
+    --info-color: #00bcd4;
+    
+    --info-bg: #1e3a5f;
+    --info-border: #4a9eff;
+    --info-text: #81c784;
+    
+    --warning-bg: #3d2f00;
+    --warning-border: #ff9800;
+    --warning-text: #ffb74d;
+    
+    --danger-bg: #2d1b1b;
+    --danger-border: #f44336;
+    
+    --code-bg: rgba(255,255,255,0.1);
+    --code-text: #ff6b9d;
+  }
+}
+
+/* Aplicar estilos automáticamente */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Override del root cuando no hay tema manual */
+#root {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  min-height: 100vh;
+}
+
+/* Estilos para tablas */
+.material-table {
+  background-color: var(--table-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.material-table th {
+  background-color: var(--table-header-bg);
+  color: var(--heading-color);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.material-table td {
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.material-table tr:hover {
+  background-color: var(--table-row-bg);
+}
+
+/* Estilos para botones */
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+/* Estilos para alertas */
+.alert-info {
+  background-color: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-text);
+}
+
+.alert-warning {
+  background-color: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+}
+
+/* Inputs y formularios */
+input, select, textarea {
+  background-color: var(--table-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Códigos inline */
+code {
+  background-color: var(--code-bg);
+  color: var(--code-text);
+  padding: 2px 4px;
+  border-radius: 3px;
+}

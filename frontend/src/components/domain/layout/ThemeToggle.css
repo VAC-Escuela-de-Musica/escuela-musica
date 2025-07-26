@@ -1,0 +1,162 @@
+.theme-toggle {
+  position: relative;
+  width: 58px;
+  height: 30px;
+  background: linear-gradient(45deg, #ffd700, #ff8c00);
+  border: 2px solid #e0e0e0;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.theme-toggle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.theme-toggle:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+.theme-toggle.dark {
+  background: linear-gradient(45deg, #2c3e50, #34495e);
+  border-color: #4a5568;
+}
+
+.toggle-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+}
+
+.toggle-circle {
+  width: 22px;
+  height: 22px;
+  background: #ffffff;
+  border-radius: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: translateX(0);
+  position: relative;
+}
+
+.theme-toggle.dark .toggle-circle {
+  transform: translateX(14px);
+  background: #2d3748;
+  color: #ffd700;
+}
+
+.theme-toggle.light .toggle-circle {
+  transform: translateX(-14px);
+  color: #ff8c00;
+}
+
+.toggle-circle svg {
+  transition: all 0.2s ease;
+  width: 13px;
+  height: 13px;
+  display: block;
+  margin: auto;
+}
+
+/* Animaciones adicionales */
+.theme-toggle:active .toggle-circle {
+  transform: scale(0.9) translateX(2px);
+}
+
+.theme-toggle.dark:active .toggle-circle {
+  transform: scale(0.9) translateX(26px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .theme-toggle {
+    width: 50px;
+    height: 26px;
+  }
+  
+  .toggle-circle {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .toggle-circle svg {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .theme-toggle.dark .toggle-circle {
+    transform: translateX(22px);
+  }
+  
+  .theme-toggle.dark:active .toggle-circle {
+    transform: scale(0.9) translateX(24px);
+  }
+  
+  .theme-toggle.light:active .toggle-circle {
+    transform: scale(0.9) translateX(2px);
+  }
+}
+
+/* Tooltip personalizado */
+.theme-toggle::before {
+  content: attr(title);
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.theme-toggle::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #333;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.theme-toggle:hover::before,
+.theme-toggle:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Dark mode para el tooltip */
+.theme-toggle.dark::before {
+  background: #f7fafc;
+  color: #2d3748;
+}
+
+.theme-toggle.dark::after {
+  border-top-color: #f7fafc;
+}

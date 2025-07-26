@@ -1,36 +1,135 @@
-"use strict";
-import { Router } from "express"; // Importa el modulo 'express' para crear las rutas
-import userRoutes from "./user.routes.js"; /** Enrutador de usuarios  */
-import authRoutes from "./auth.routes.js"; /** Enrutador de autenticación */
-import claseRoutes from "./clase.routes.js"; /** Enrutador de horario */
+import { Router } from 'express'
 
-/** Enrutador del carrusel */
-import carouselRoutes from "./carousel.routes.js";
+// Importación de rutas
+import userRoutes from '../features/user-management/routes/user.routes.js'
+import authRoutes from '../features/authentication/routes/auth.routes.js'
+import materialRoutes from '../features/content-management/routes/material.routes.js'
+import fileRoutes from '../features/file-system/routes/file.routes.js'
+import alumnosRoutes from '../features/student-management/routes/alumnos.routes.js'
+import galeriaRoutes from '../features/content-management/routes/galeria.routes.js'
+import messagingRoutes from '../features/communication/routes/messaging.routes.js'
+import internalMessageRoutes from '../features/communication/routes/internalMessage.routes.js'
+import roleRoutes from '../features/user-management/routes/role.routes.js'
+import cardsProfesoresRoutes from '../features/website-content/routes/cardsProfesores.routes.js'
+import carouselRoutes from '../features/website-content/routes/carousel.routes.js'
+import testimonioRoutes from '../features/website-content/routes/testimonio.routes.js'
+import clasesRoutes from '../features/clases-management/routes/clase.routes.js'
 
-/** Enrutador de roles */
-import roleRoutes from "./role.routes.js";
+import adminRoutes from './admin.routes.js'
 
+// Middlewares centralizados
+import {
+  requestLogger,
+  performanceMonitor,
+  securityHeaders,
+  requestInfo,
+  globalErrorHandler,
+  notFoundHandler,
+  sanitizeInput
+} from '../middlewares/index.js'
 
-/** Middleware de autenticación */
-import authenticationMiddleware from "../middlewares/authentication.middleware.js";
+// ============= DEFINICIÓN DE RUTAS =============
+// Ruta para exponer el token CSRF al frontend
+import lusca from 'lusca'
 
-/** Instancia del enrutador */
-const router = Router();
+'use strict'
 
-// Define las rutas para los usuarios /api/usuarios
-router.use("/users", authenticationMiddleware, userRoutes);
-// Define las rutas para la autenticación /api/auth
-router.use("/auth", authRoutes);
-// Define las rutas para el carrusel /api/carousel
-router.use("/carousel", carouselRoutes);
-// Define las rutas para los roles /api/roles
-router.use("/roles", roleRoutes);
-// Define las rutas para las clases /api/clases
-router.use("/clases", claseRoutes);
+// Función para validar que la URL de redirección es local
+function isLocalUrl (path) {
+  try {
+    const baseUrl = 'http://localhost' // Cambia esto por el dominio de tu app si es necesario
+    return new URL(path, baseUrl).origin === baseUrl
+  } catch (e) {
+    return false
+  }
+}
 
-router.get("/saludo", (req, res) => {
-  res.send("¡Hola desde el backend!");
-});
+// Instancia del enrutador
+const router = Router()
 
-// Exporta el enrutador
-export default router;
+// ============= MIDDLEWARES GLOBALES =============
+router.use(requestInfo)
+router.use(requestLogger)
+router.use(performanceMonitor)
+router.use(securityHeaders)
+router.use(sanitizeInput)
+const { csrf } = lusca
+
+router.get('/csrf-token', csrf(), (req, res) => {
+  res.json({ csrfToken: req.csrfToken() })
+})
+
+// Health check global del sistema
+router.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Backend funcionando correctamente',
+    timestamp: new Date().toISOString(),
+    version: '1.0.1'
+  })
+})
+
+// ============= RUTAS DE AUTENTICACIÓN =============
+// Rutas públicas de autenticación
+router.use('/auth', authRoutes)
+
+// ============= RUTAS PROTEGIDAS =============
+// Rutas para usuarios - autenticación manejada en user.routes.js
+router.use('/users', userRoutes)
+
+// Rutas para roles - autenticación manejada en role.routes.js
+router.use('/roles', roleRoutes)
+
+// Rutas para archivos - autenticación manejada en file.routes.js
+router.use('/files', fileRoutes)
+
+// Rutas para materiales - autenticación manejada en material.routes.js
+router.use('/materials', materialRoutes)
+
+// Rutas para galería - autenticación manejada en galeria.routes.js
+router.use('/galeria', galeriaRoutes)
+
+// Rutas para alumnos - autenticación manejada en alumnos.routes.js
+router.use('/alumnos', alumnosRoutes)
+
+// Rutas para mensajería - autenticación manejada en messaging.routes.js
+router.use('/messaging', messagingRoutes)
+
+// Rutas para mensajes internos - autenticación manejada en internalMessage.routes.js
+router.use('/internal-messages', internalMessageRoutes)
+
+// Rutas para cards de profesores - autenticación manejada en cardsProfesores.routes.js
+router.use('/cards-profesores', cardsProfesoresRoutes)
+
+// Rutas para carousel - autenticación manejada en carousel.routes.js
+router.use('/carousel', carouselRoutes)
+
+// Rutas para testimonios - autenticación manejada en testimonio.routes.js
+router.use('/testimonios', testimonioRoutes)
+
+// Rutas para clases - autenticación manejada en clase.routes.js
+router.use('/clases', clasesRoutes)
+
+// ============= COMPATIBILIDAD CON RUTAS OBSOLETAS =============
+router.use('/materiales', (req, res) => {
+  console.log(`⚠️ Acceso a ruta obsoleta: ${req.method} ${req.originalUrl}`)
+  const targetUrl = req.originalUrl.replace('/materiales', '/materials')
+  if (isLocalUrl(targetUrl)) {
+    res.redirect(307, targetUrl)
+  } else {
+    res.redirect(307, '/')
+  }
+})
+
+// ============= RUTAS DE ADMINISTRACIÓN =============
+// Rutas de administración - autenticación manejada en admin.routes.js
+router.use('/admin', adminRoutes)
+
+// ============= MANEJO DE ERRORES =============
+// Middleware para manejar rutas no encontradas
+router.use(notFoundHandler)
+
+// Middleware global para manejo de errores
+router.use(globalErrorHandler)
+
+export default router
