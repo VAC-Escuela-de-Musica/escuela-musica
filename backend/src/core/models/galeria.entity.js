@@ -57,6 +57,18 @@ const galeriaSchema = new mongoose.Schema({
   fechaActualizacion: {
     type: Date,
     default: Date.now
+  },
+  cols: {
+    type: Number,
+    default: 1,
+    min: 1,
+    max: 4
+  },
+  rows: {
+    type: Number,
+    default: 1,
+    min: 1,
+    max: 4
   }
 }, {
   timestamps: true,
@@ -77,9 +89,28 @@ galeriaSchema.pre('save', function (next) {
 
 // Método estático para obtener galería activa
 galeriaSchema.statics.getActiveGallery = function () {
-  return this.find({ activo: true })
+  console.log('🔍 [GALERIA-MODEL] Ejecutando getActiveGallery...');
+  
+  const query = this.find({ activo: true })
     .sort({ orden: 1, fechaCreacion: -1 })
-    .select('titulo descripcion imagen categoria tags fechaCreacion')
+    .select('titulo descripcion imagen categoria tags fechaCreacion cols rows')
+  
+  console.log('🔍 [GALERIA-MODEL] Query ejecutada:', query.getQuery());
+  
+  return query.then(result => {
+    console.log('🔍 [GALERIA-MODEL] Resultado de BD:', result.length, 'documentos encontrados');
+    if (result.length > 0) {
+      console.log('🔍 [GALERIA-MODEL] Primer documento:', {
+        id: result[0]._id,
+        titulo: result[0].titulo,
+        imagen: result[0].imagen,
+        activo: result[0].activo,
+        cols: result[0].cols,
+        rows: result[0].rows
+      });
+    }
+    return result;
+  });
 }
 
 // Método estático para obtener galería por categoría

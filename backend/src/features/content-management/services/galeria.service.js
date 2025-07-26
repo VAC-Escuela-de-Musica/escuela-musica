@@ -8,22 +8,53 @@ class GaleriaService {
    */
   async getActiveGallery () {
     try {
+      console.log('🔍 [GALERIA-SERVICE] Iniciando getActiveGallery...');
+      
       const galeria = await Galeria.getActiveGallery()
+      console.log('🔍 [GALERIA-SERVICE] Datos obtenidos de BD:', galeria.length, 'imágenes');
+      
+      if (galeria.length > 0) {
+        console.log('🔍 [GALERIA-SERVICE] Primer item de BD:', {
+          id: galeria[0]._id,
+          titulo: galeria[0].titulo,
+          imagen: galeria[0].imagen,
+          activo: galeria[0].activo
+        });
+      }
 
       // Procesar URLs de imágenes para hacerlas públicas
       const { MINIO_ENDPOINT, MINIO_PORT } = process.env
       const { MINIO_PUBLIC_BUCKET } = await import('../../../core/config/minio.config.js')
+      
+      console.log('🔍 [GALERIA-SERVICE] Configuración MinIO:', {
+        MINIO_ENDPOINT,
+        MINIO_PORT,
+        MINIO_PUBLIC_BUCKET
+      });
 
-      const galeriaConUrls = galeria.map((imagen) => {
+      const galeriaConUrls = galeria.map((imagen, index) => {
         const imagenObj = imagen.toObject()
+        const originalUrl = imagenObj.imagen;
 
         // Si la imagen no es una URL completa, generar URL pública
         if (!imagenObj.imagen.startsWith('http://') && !imagenObj.imagen.startsWith('https://')) {
           imagenObj.imagen = `http://${MINIO_ENDPOINT}:${MINIO_PORT}/${MINIO_PUBLIC_BUCKET}/${imagenObj.imagen}`
+          console.log(`🔍 [GALERIA-SERVICE] URL generada para imagen ${index + 1}:`, {
+            original: originalUrl,
+            generated: imagenObj.imagen
+          });
+        } else {
+          console.log(`🔍 [GALERIA-SERVICE] URL ya completa para imagen ${index + 1}:`, imagenObj.imagen);
         }
 
         return imagenObj
       })
+
+      console.log('🔍 [GALERIA-SERVICE] Galería procesada con URLs:', galeriaConUrls.length, 'imágenes');
+      console.log('🔍 [GALERIA-SERVICE] URLs finales:');
+      galeriaConUrls.forEach((item, index) => {
+        console.log(`  ${index + 1}. ${item.titulo || 'Sin título'}: ${item.imagen}`);
+      });
 
       return {
         success: true,
@@ -31,7 +62,7 @@ class GaleriaService {
         message: 'Galería obtenida exitosamente'
       }
     } catch (error) {
-      console.error('Error obteniendo galería activa:', error)
+      console.error('❌ [GALERIA-SERVICE] Error obteniendo galería activa:', error)
       throw new Error('Error al obtener la galería')
     }
   }
@@ -130,7 +161,16 @@ class GaleriaService {
   async createImage (imageData) {
     try {
       console.log("DEBUG - Datos recibidos en createImage:", imageData);
-      const nuevaImagen = new Galeria(imageData);
+      
+      // Asegurar que las nuevas imágenes vayan al bucket público
+      const imageDataWithPublicBucket = {
+        ...imageData,
+        bucket: 'imagenes-publicas',
+        bucketTipo: 'publico'
+      };
+      
+      console.log("DEBUG - Datos con bucket público:", imageDataWithPublicBucket);
+      const nuevaImagen = new Galeria(imageDataWithPublicBucket);
       console.log("DEBUG - Objeto Galeria creado:", nuevaImagen);
       await nuevaImagen.save();
       console.log("DEBUG - Imagen guardada en BD:", nuevaImagen);

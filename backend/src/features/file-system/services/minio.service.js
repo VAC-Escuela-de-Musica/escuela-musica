@@ -33,7 +33,7 @@ class MinioService {
 
     this.buckets = {
       private: process.env.MINIO_BUCKET_PRIVATE || 'materiales-privados',
-      public: process.env.MINIO_BUCKET_PUBLIC || 'materiales-publicos',
+      public: 'imagenes-publicas', // Forzar uso del bucket público correcto
       galery: process.env.MINIO_BUCKET_GALERY || 'galeria-imagenes'
     }
   }
