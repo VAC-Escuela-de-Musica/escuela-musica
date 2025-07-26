@@ -1,35 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  TextField,
   Box,
   Typography,
   Grid,
-  FormControlLabel,
-  Switch,
+  TextField,
   Rating,
   Avatar,
-  Card,
-  CardContent,
-  Alert,
-  Divider
+  Switch,
+  FormControlLabel,
+  IconButton,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import {
-  Person as PersonIcon,
-  Work as WorkIcon,
-  Comment as CommentIcon,
-  Photo as PhotoIcon,
-  Star as StarIcon
+  Delete as DeleteIcon,
+  CloudUpload as UploadIcon
 } from '@mui/icons-material';
 
-/**
- * Formulario específico para testimonios - Capa 3
- * Versión mejorada del formulario original con validaciones
- * Incluye rating visual, preview de foto y tema oscuro
- */
-const TestimonioForm = ({ 
-  data = {}, 
-  onChange, 
-  isEditing = false, 
+const TestimonioForm = ({
+  data = {},
+  onChange,
+  isEditing = false,
   loading = false,
   theme = null
 }) => {
@@ -43,19 +34,12 @@ const TestimonioForm = ({
     activo: true,
     ...data
   });
-
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [photoPreview, setPhotoPreview] = useState('');
+  const fileInputRef = useRef(null);
 
-  // Estilos del tema oscuro
-  const darkTheme = {
-    backgroundColor: '#2a2a2a',
-    color: '#ffffff',
-    cardBackground: '#333333',
-    borderColor: '#555555'
-  };
-
-  // Sincronizar con props
   useEffect(() => {
     setFormData({
       nombre: '',
@@ -67,307 +51,254 @@ const TestimonioForm = ({
       activo: true,
       ...data
     });
-    setPhotoPreview(data.foto || '');
+    setImagePreview(data.foto || '');
+    setSelectedImage(null);
   }, [data]);
 
-  // Manejador de cambios
   const handleInputChange = (field, value) => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);
+    if (onChange) onChange(newData);
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
+  };
 
-    // Limpiar error del campo
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: null
-      }));
-    }
-
-    // Validación en tiempo real para foto
-    if (field === 'foto') {
-      setPhotoPreview('');
-      if (value && isValidUrl(value)) {
-        setPhotoPreview(value);
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, foto: 'La imagen no debe superar los 5MB' }));
+        return;
       }
-    }
-
-    // Propagate change
-    if (onChange) {
-      onChange(newData);
-    }
-  };
-
-  // Validar URL
-  const isValidUrl = (string) => {
-    try {
-      new URL(string);
-      return true;
-    } catch (_) {
-      return false;
+      setSelectedImage(file);
+      setImagePreview(URL.createObjectURL(file));
+      setFormData(prev => ({ ...prev, foto: '' }));
+      if (onChange) onChange({ ...formData, foto: '' });
     }
   };
 
-  // Validación de formulario
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, foto: 'La imagen no debe superar los 5MB' }));
+        return;
+      }
+      setSelectedImage(file);
+      setImagePreview(URL.createObjectURL(file));
+      setFormData(prev => ({ ...prev, foto: '' }));
+      if (onChange) onChange({ ...formData, foto: '' });
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, foto: '' }));
+    if (onChange) onChange({ ...formData, foto: '' });
+  };
+
+  // Validación básica
   const validateField = (field, value) => {
     switch (field) {
       case 'nombre':
         if (!value?.trim()) return 'El nombre es requerido';
-        if (value.length > 50) return 'El nombre no puede exceder 50 caracteres';
+        if (value.length > 50) return 'Máximo 50 caracteres';
         return null;
-      
       case 'cargo':
         if (!value?.trim()) return 'El cargo es requerido';
-        if (value.length > 100) return 'El cargo no puede exceder 100 caracteres';
+        if (value.length > 100) return 'Máximo 100 caracteres';
         return null;
-      
       case 'opinion':
         if (!value?.trim()) return 'La opinión es requerida';
-        if (value.length < 10) return 'La opinión debe tener al menos 10 caracteres';
-        if (value.length > 500) return 'La opinión no puede exceder 500 caracteres';
+        if (value.length > 500) return 'Máximo 500 caracteres';
         return null;
-      
-      case 'foto':
-        if (value && !isValidUrl(value)) return 'Debe ser una URL válida';
-        return null;
-      
       case 'institucion':
-        if (value && value.length > 100) return 'La institución no puede exceder 100 caracteres';
+        if (value && value.length > 100) return 'Máximo 100 caracteres';
         return null;
-      
       default:
         return null;
     }
   };
 
-  // Validar al perder foco
   const handleBlur = (field) => {
     const error = validateField(field, formData[field]);
-    setErrors(prev => ({
-      ...prev,
-      [field]: error
-    }));
+    setErrors(prev => ({ ...prev, [field]: error }));
   };
 
   return (
-    <Box sx={{ 
-      minWidth: 500,
-      color: theme?.isDark ? darkTheme.color : 'text.primary'
-    }}>
-      {/* Información básica */}
-      <Typography variant="h6" gutterBottom>
-        Información del Testimonio
-      </Typography>
-
-      <Grid container spacing={3}>
-        {/* Columna izquierda - Datos personales */}
-        <Grid item xs={12} md={6}>
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
-            <PersonIcon color="primary" />
-            <Typography variant="subtitle2">Datos Personales</Typography>
-          </Box>
-
+    <Box sx={{ bgcolor: 'white', color: 'black', p: 2, borderRadius: 2 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: 3,
+          width: '100%',
+        }}
+      >
+        {/* Columna izquierda - Campos de texto */}
+        <Box sx={{ flex: '1 1 60%' }}>
           <TextField
             fullWidth
-            label="Nombre completo"
+            label="Nombre"
             value={formData.nombre}
-            onChange={(e) => handleInputChange('nombre', e.target.value)}
+            onChange={e => handleInputChange('nombre', e.target.value)}
             onBlur={() => handleBlur('nombre')}
-            margin="normal"
-            required
-            disabled={loading}
-            error={!!errors.nombre}
-            helperText={errors.nombre || 'Nombre de la persona que da el testimonio'}
             inputProps={{ maxLength: 50 }}
-            sx={{
-              '& .MuiInputBase-input': {
-                color: theme?.isDark ? darkTheme.color : 'text.primary'
-              }
+            helperText={`${formData.nombre.length}/50 caracteres`}
+            error={!!errors.nombre}
+            sx={{ mb: 2,
+              '& .MuiOutlinedInput-root': { color: 'black' },
+              '& .MuiInputLabel-root': { color: 'rgba(0,0,0,0.7)' },
+              '& .MuiFormHelperText-root': { color: 'rgba(0,0,0,0.5)' }
             }}
+            disabled={loading}
           />
-
           <TextField
             fullWidth
-            label="Cargo o profesión"
+            label="Cargo"
             value={formData.cargo}
-            onChange={(e) => handleInputChange('cargo', e.target.value)}
+            onChange={e => handleInputChange('cargo', e.target.value)}
             onBlur={() => handleBlur('cargo')}
-            margin="normal"
-            required
-            disabled={loading}
-            error={!!errors.cargo}
-            helperText={errors.cargo || 'Cargo, profesión o especialidad'}
             inputProps={{ maxLength: 100 }}
-            sx={{
-              '& .MuiInputBase-input': {
-                color: theme?.isDark ? darkTheme.color : 'text.primary'
-              }
+            helperText={`${formData.cargo.length}/100 caracteres`}
+            error={!!errors.cargo}
+            sx={{ mb: 2,
+              '& .MuiOutlinedInput-root': { color: 'black' },
+              '& .MuiInputLabel-root': { color: 'rgba(0,0,0,0.7)' },
+              '& .MuiFormHelperText-root': { color: 'rgba(0,0,0,0.5)' }
             }}
+            disabled={loading}
           />
-
           <TextField
             fullWidth
             label="Institución (opcional)"
             value={formData.institucion}
-            onChange={(e) => handleInputChange('institucion', e.target.value)}
+            onChange={e => handleInputChange('institucion', e.target.value)}
             onBlur={() => handleBlur('institucion')}
-            margin="normal"
-            disabled={loading}
-            error={!!errors.institucion}
-            helperText={errors.institucion || 'Empresa, institución o centro de trabajo'}
             inputProps={{ maxLength: 100 }}
-            sx={{
-              '& .MuiInputBase-input': {
-                color: theme?.isDark ? darkTheme.color : 'text.primary'
-              }
+            helperText={`${formData.institucion.length}/100 caracteres`}
+            error={!!errors.institucion}
+            sx={{ mb: 2,
+              '& .MuiOutlinedInput-root': { color: 'black' },
+              '& .MuiInputLabel-root': { color: 'rgba(0,0,0,0.7)' },
+              '& .MuiFormHelperText-root': { color: 'rgba(0,0,0,0.5)' }
             }}
+            disabled={loading}
           />
-        </Grid>
-
-        {/* Columna derecha - Foto y calificación */}
-        <Grid item xs={12} md={6}>
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
-            <PhotoIcon color="primary" />
-            <Typography variant="subtitle2">Foto y Calificación</Typography>
+          <Typography component="legend" sx={{ color: 'black', mb: 1 }}>
+            Calificación (Estrellas)
+          </Typography>
+          <Rating
+            name="estrellas"
+            value={formData.estrellas}
+            onChange={(event, newValue) => handleInputChange('estrellas', newValue)}
+            sx={{ mb: 2, '& .MuiRating-iconEmpty': { color: 'rgba(0,0,0,0.3)' } }}
+            disabled={loading}
+          />
+        </Box>
+        {/* Columna derecha - Imagen */}
+        <Box sx={{ flex: '1 1 40%' }}>
+          <Box
+            sx={{
+              border: '2px dashed rgba(0,0,0,0.3)',
+              borderRadius: 2,
+              p: 2,
+              textAlign: 'center',
+              cursor: 'pointer',
+              mb: 2,
+              position: 'relative',
+              minHeight: '200px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {imagePreview ? (
+              <>
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
+                />
+                <IconButton
+                  onClick={e => { e.stopPropagation(); handleRemoveImage(); }}
+                  sx={{ position: 'absolute', top: 8, right: 8, color: 'black', backgroundColor: 'rgba(255,255,255,0.8)', '&:hover': { backgroundColor: 'rgba(255,255,255,1)' } }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </>
+            ) : (
+              <>
+                <UploadIcon sx={{ fontSize: 40, color: 'black', mb: 1 }} />
+                <Typography sx={{ color: 'black' }}>
+                  Arrastra una imagen o haz clic para seleccionar
+                </Typography>
+              </>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              accept="image/*"
+              style={{ display: 'none' }}
+            />
           </Box>
-
           <TextField
             fullWidth
-            label="URL de la foto"
+            label="URL de la imagen"
             value={formData.foto}
-            onChange={(e) => handleInputChange('foto', e.target.value)}
-            onBlur={() => handleBlur('foto')}
-            margin="normal"
-            type="url"
-            disabled={loading}
-            error={!!errors.foto}
-            helperText={errors.foto || 'URL de la imagen del perfil (opcional)'}
-            placeholder="https://ejemplo.com/foto.jpg"
+            onChange={e => handleInputChange('foto', e.target.value)}
+            disabled={!!selectedImage || loading}
             sx={{
-              '& .MuiInputBase-input': {
-                color: theme?.isDark ? darkTheme.color : 'text.primary'
-              }
+              '& .MuiOutlinedInput-root': { color: 'black' },
+              '& .MuiInputLabel-root': { color: 'rgba(0,0,0,0.7)' }
             }}
           />
-
-          {/* Preview de la foto */}
-          {photoPreview && (
-            <Box display="flex" justifyContent="center" mt={2}>
-              <Avatar
-                src={photoPreview}
-                alt="Preview"
-                sx={{
-                  width: 80,
-                  height: 80,
-                  border: theme?.isDark ? `2px solid ${darkTheme.borderColor}` : '2px solid #e0e0e0'
-                }}
-              >
-                {formData.nombre?.charAt(0)?.toUpperCase()}
-              </Avatar>
-            </Box>
-          )}
-
-          {/* Calificación con estrellas */}
-          <Box mt={3}>
-            <Box display="flex" alignItems="center" gap={1} mb={1}>
-              <StarIcon color="primary" />
-              <Typography variant="subtitle2">Calificación</Typography>
-            </Box>
-            <Box display="flex" alignItems="center" gap={2}>
-              <Rating
-                value={formData.estrellas || 0}
-                onChange={(event, newValue) => {
-                  handleInputChange('estrellas', newValue || 1);
-                }}
-                disabled={loading}
-                size="large"
-                sx={{ 
-                  '& .MuiRating-iconFilled': { 
-                    color: '#FFD700' 
-                  },
-                  '& .MuiRating-iconEmpty': { 
-                    color: theme?.isDark ? '#555' : '#e0e0e0'
-                  }
-                }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                ({formData.estrellas || 0} estrella{formData.estrellas !== 1 ? 's' : ''})
-              </Typography>
-            </Box>
-          </Box>
-        </Grid>
-      </Grid>
-
-      <Divider sx={{ my: 3 }} />
-
-      {/* Opinión */}
-      <Box display="flex" alignItems="center" gap={1} mb={2}>
-        <CommentIcon color="primary" />
-        <Typography variant="subtitle2">Testimonio</Typography>
+          {errors.foto && <Alert severity="error" sx={{ mt: 1 }}>{errors.foto}</Alert>}
+        </Box>
       </Box>
-
-      <TextField
-        fullWidth
-        label="Opinión o testimonio"
-        value={formData.opinion}
-        onChange={(e) => handleInputChange('opinion', e.target.value)}
-        onBlur={() => handleBlur('opinion')}
-        margin="normal"
-        multiline
-        rows={4}
-        required
-        disabled={loading}
-        error={!!errors.opinion}
-        helperText={
-          errors.opinion || 
-          `${formData.opinion?.length || 0}/500 caracteres. Mínimo 10 caracteres requeridos.`
-        }
-        placeholder="Escribe aquí la opinión o testimonio..."
-        inputProps={{ maxLength: 500 }}
-        sx={{
-          '& .MuiInputBase-input': {
-            color: theme?.isDark ? darkTheme.color : 'text.primary'
+      {/* Campo de opinión a todo el ancho */}
+      <Box sx={{ mt: 3 }}>
+        <TextField
+          fullWidth
+          label="Opinión"
+          multiline
+          rows={6}
+          value={formData.opinion}
+          onChange={e => handleInputChange('opinion', e.target.value)}
+          onBlur={() => handleBlur('opinion')}
+          inputProps={{ maxLength: 500 }}
+          helperText={`${formData.opinion.length}/500 caracteres`}
+          error={!!errors.opinion}
+          sx={{
+            '& .MuiOutlinedInput-root': { color: 'black' },
+            '& .MuiInputLabel-root': { color: 'rgba(0,0,0,0.7)' },
+            '& .MuiFormHelperText-root': { color: 'rgba(0,0,0,0.5)' }
+          }}
+          disabled={loading}
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={formData.activo}
+              onChange={e => handleInputChange('activo', e.target.checked)}
+              color="primary"
+              disabled={loading}
+            />
           }
-        }}
-      />
-
-      <Divider sx={{ my: 3 }} />
-
-      {/* Estado */}
-      <FormControlLabel
-        control={
-          <Switch
-            checked={formData.activo}
-            onChange={(e) => handleInputChange('activo', e.target.checked)}
-            disabled={loading}
-            color="primary"
-          />
-        }
-        label="Testimonio activo y visible"
-        sx={{ 
-          color: theme?.isDark ? darkTheme.color : 'text.primary',
-          mt: 2 
-        }}
-      />
-
-      {/* Información sobre el formulario */}
-      <Alert 
-        severity="info" 
-        sx={{ 
-          mt: 2,
-          bgcolor: theme?.isDark ? 'rgba(25, 118, 210, 0.1)' : undefined,
-          color: theme?.isDark ? darkTheme.color : undefined
-        }}
-      >
-        <Typography variant="body2">
-          <strong>Consejos:</strong>
-          <br />
-          • Una foto profesional mejora la credibilidad del testimonio
-          <br />
-          • La opinión debe ser auténtica y específica sobre la experiencia
-          <br />
-          • La calificación debe reflejar la satisfacción real del cliente
-        </Typography>
-      </Alert>
+          label="Testimonio activo y visible"
+          sx={{ color: 'black', mt: 2 }}
+        />
+      </Box>
     </Box>
   );
 };

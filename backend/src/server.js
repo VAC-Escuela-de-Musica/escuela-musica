@@ -61,6 +61,7 @@ async function setupServer () {
         '/api/galeria/confirm-upload',
         /^\/api\/galeria.*$/, // Excluir todas las rutas de galería
         /^\/api\/cards-profesores.*$/, // Excluir todas las rutas de cards-profesores
+        /^\/api\/testimonios.*$/, // Excluir todas las rutas de testimonios
         /^\/api\/carousel\/upload$/,
         /^\/api\/files\/upload$/,
         /^\/api\/alumnos.*$/, // Excluir todas las rutas de alumnos
@@ -73,11 +74,6 @@ async function setupServer () {
         if (pattern instanceof RegExp) return pattern.test(req.path)
         return req.path === pattern
       })
-
-      // Debug logging para CSRF
-      if (req.method === 'POST' && (req.path.includes('galeria') || req.path.includes('upload') || req.path.includes('internal-messages'))) {
-        console.log(`[CSRF DEBUG] ${req.method} ${req.path} | excluded: ${isExcluded} | patterns checked:`, csrfExcluded.map(p => p instanceof RegExp ? p.toString() : p))
-      }
 
       if (isExcluded) {
         return next()
