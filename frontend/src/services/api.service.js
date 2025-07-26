@@ -1,4 +1,5 @@
 import { logger } from '../utils/logger.js';
+import { API_HEADERS } from '../config/api.js';
 
 /**
  * Servicio centralizado de API para eliminar duplicación
@@ -8,9 +9,6 @@ class ApiService {
   constructor() {
     this.baseURL = import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230';
     this.token = null;
-    this.defaultHeaders = {
-      'Content-Type': 'application/json'
-    };
     
     // Bind methods to preserve 'this' context
     this.get = this.get.bind(this);
@@ -27,11 +25,6 @@ class ApiService {
    */
   setToken(token) {
     this.token = token;
-    if (token) {
-      this.defaultHeaders.Authorization = `Bearer ${token}`;
-    } else {
-      delete this.defaultHeaders.Authorization;
-    }
   }
 
   /**
@@ -46,8 +39,10 @@ class ApiService {
    * @param {Object} customHeaders - Headers personalizados
    */
   getHeaders(customHeaders = {}) {
+    // Usar API_HEADERS.withAuth() que incluye CSRF token
+    const authHeaders = API_HEADERS.withAuth();
     return {
-      ...this.defaultHeaders,
+      ...authHeaders,
       ...customHeaders
     };
   }

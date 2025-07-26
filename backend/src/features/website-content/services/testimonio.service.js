@@ -75,9 +75,47 @@ async function createTestimonio (testimonioData) {
   }
 }
 
+/**
+ * Actualiza un testimonio existente
+ */
+async function updateTestimonio (id, testimonioData) {
+  try {
+    const updatedTestimonio = await Testimonio.findByIdAndUpdate(
+      id,
+      testimonioData,
+      { new: true, runValidators: true }
+    ).lean()
+
+    if (!updatedTestimonio) return [null, 'Testimonio no encontrado']
+
+    return [updatedTestimonio, null]
+  } catch (error) {
+    handleError(error, 'testimonio.service -> updateTestimonio')
+    return [null, 'Error al actualizar testimonio']
+  }
+}
+
+/**
+ * Elimina un testimonio
+ */
+async function deleteTestimonio (id) {
+  try {
+    const deletedTestimonio = await Testimonio.findByIdAndDelete(id).lean()
+
+    if (!deletedTestimonio) return [null, 'Testimonio no encontrado']
+
+    return [deletedTestimonio, null]
+  } catch (error) {
+    handleError(error, 'testimonio.service -> deleteTestimonio')
+    return [null, 'Error al eliminar testimonio']
+  }
+}
+
 export default {
   getActiveTestimonios,
   getAllTestimonios,
   getTestimonioById,
-  createTestimonio
+  createTestimonio,
+  updateTestimonio,
+  deleteTestimonio
 }

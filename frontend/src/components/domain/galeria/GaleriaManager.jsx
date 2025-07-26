@@ -466,8 +466,8 @@ const GaleriaManager = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Typography variant="h3" sx={{ mb: 4, textAlign: 'center' }}>
-        📸 Gestión de Galería
+      <Typography variant="h3" sx={{ mb: 4, textAlign: 'left' }}>
+        Gestión de Galería
       </Typography>
 
       <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', lg: 'row' } }}>
