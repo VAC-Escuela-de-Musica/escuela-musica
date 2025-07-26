@@ -1,4 +1,3 @@
-// Componente principal orquestador del formulario de alumno
 import React, { useState } from "react";
 import {
   Dialog,
@@ -32,7 +31,6 @@ import styles from "./AlumnoForm.module.css";
 
 function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
   const safeInitialData = initialData || {};
-  // Extraer dia y hora desde el campo 'clase' si existen, usando utilitario
   let dia = safeInitialData.dia || "";
   let hora = safeInitialData.hora || "";
   if (!dia && !hora && safeInitialData.clase) {
@@ -40,7 +38,10 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     dia = extraidos.dia;
     hora = extraidos.hora;
   }
-  // Inicialización de estado global
+
+  // Estado para mostrar el campo de cambiar contraseña al editar
+  const [showPasswordField, setShowPasswordField] = useState(false);
+
   const [form, setForm] = useState({
     nombreAlumno: safeInitialData.nombreAlumno || "",
     rutAlumno: safeInitialData.rutAlumno || "",
@@ -80,8 +81,10 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     modalidadClase: safeInitialData.modalidadClase || "",
     dia,
     hora,
-    password: "",
+    // Contraseña censurada al editar, vacía al crear
+    password: safeInitialData._id ? "********" : "",
   });
+
   const [error, setError] = useState("");
   const [showError, setShowError] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -94,6 +97,12 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     if (name === "instrumentos" || name === "estilosMusicales") {
       val = value.split(",").map((i) => i.trim());
     }
+    // Si el usuario empieza a escribir en el campo de contraseña, borra la censura
+    if (name === "password" && value !== "********") {
+      newForm.password = value;
+    } else {
+      newForm[name] = val;
+    }
     // Limpiar detalles si se desmarcan los checks
     if (name === "condicionMedica" && !checked) {
       newForm.detalleCondicionMedica = "";
@@ -101,7 +110,6 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     if (name === "condicionAprendizaje" && !checked) {
       newForm.detalleCondicionAprendizaje = "";
     }
-    newForm[name] = val;
     setForm(newForm);
     if (fieldValidators[name]) {
       setFieldErrors((prev) => ({
@@ -110,6 +118,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
       }));
     }
   };
+
   const handleSelectChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
@@ -120,6 +129,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
       }));
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -128,13 +138,18 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     Object.entries(fieldValidators).forEach(([key, fn]) => {
       newFieldErrors[key] = fn(form[key]);
     });
-    // Validación de contraseña solo al crear
-    if (!safeInitialData._id) {
+
+    // Validación de contraseña solo al crear o si el usuario la está cambiando
+    if (
+      !safeInitialData._id ||
+      (safeInitialData._id && showPasswordField && form.password !== "********")
+    ) {
       if (!form.password || form.password.length < 6) {
         newFieldErrors.password =
           "La contraseña es obligatoria y debe tener al menos 6 caracteres.";
       }
     }
+
     const firstError = Object.values(newFieldErrors).find((v) => v);
     setFieldErrors(newFieldErrors);
     if (firstError) {
@@ -156,7 +171,10 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
       telefonoApoderado,
       fechaIngreso: form.fechaIngreso,
     };
-    if (safeInitialData._id && !form.password) {
+    if (
+      safeInitialData._id &&
+      (!showPasswordField || form.password === "********")
+    ) {
       delete dataToSend.password;
     }
 
@@ -256,6 +274,25 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
                 />
                 {/* Campo de contraseña solo al crear */}
                 {!safeInitialData._id && (
+                  <AlumnoDatos
+                    values={form}
+                    errors={fieldErrors}
+                    onChange={handleChange}
+                    gridField="password"
+                  />
+                )}
+                {/* Al editar, mostrar botón y campo censurado */}
+                {safeInitialData._id && !showPasswordField && (
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    onClick={() => setShowPasswordField(true)}
+                    sx={{ gridColumn: "1 / -1", mt: 1 }}
+                  >
+                    Cambiar contraseña
+                  </Button>
+                )}
+                {safeInitialData._id && showPasswordField && (
                   <AlumnoDatos
                     values={form}
                     errors={fieldErrors}
