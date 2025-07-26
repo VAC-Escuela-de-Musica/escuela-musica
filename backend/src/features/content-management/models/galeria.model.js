@@ -59,6 +59,18 @@ const galeriaSchema = new mongoose.Schema({
   fechaActualizacion: {
     type: Date,
     default: Date.now
+  },
+  cols: {
+    type: Number,
+    default: 1,
+    min: 1,
+    max: 4
+  },
+  rows: {
+    type: Number,
+    default: 1,
+    min: 1,
+    max: 4
   }
 }, {
   timestamps: true,
@@ -81,7 +93,7 @@ galeriaSchema.pre('save', function (next) {
 galeriaSchema.statics.getActiveGallery = function () {
   return this.find({ activo: true })
     .sort({ orden: 1, fechaCreacion: -1 })
-    .select('titulo descripcion imagen categoria tags fechaCreacion')
+    .select('titulo descripcion imagen categoria tags fechaCreacion cols rows')
 }
 
 // Método estático para obtener galería por categoría

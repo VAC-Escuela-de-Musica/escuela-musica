@@ -66,7 +66,8 @@ function App() {
           <Route path="galeria" element={
             <Suspense fallback={<Loader />}>
               <GaleriaManager />
-
+            </Suspense>
+          } />
           <Route path="alumnos" element={
             <Suspense fallback={<Loader />}>
               <AlumnosPage />
@@ -75,7 +76,6 @@ function App() {
           <Route path="profesores" element={
             <Suspense fallback={<Loader />}>
               <ProfesoresPage />
-
             </Suspense>
           } />
           <Route path="mensajes-internos" element={

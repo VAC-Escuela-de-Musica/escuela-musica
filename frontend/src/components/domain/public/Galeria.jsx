@@ -36,16 +36,17 @@ const Galeria = () => {
     const fetchGaleria = async () => {
       try {
         const response = await fetch(`${API_URL}/api/galeria/active`);
+        
         if (response.ok) {
           const data = await response.json();
-          console.log('Galería recibida:', data.data);
+          console.log('🔍 [GALERIA] Galería cargada:', data.data ? data.data.length : 0, 'imágenes');
           setGaleria(data.data || []);
         } else {
-          console.error('Error fetching galería');
+          console.error('❌ [GALERIA] Error al cargar galería:', response.status, response.statusText);
           setError('Error al cargar la galería');
         }
       } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ [GALERIA] Error de conexión:', error);
         setError('Error de conexión');
       } finally {
         setLoading(false);
@@ -98,7 +99,7 @@ const Galeria = () => {
       </Box>
     );
   }
-
+  
   return (
     <Box id="galeria" sx={{ py: 8, px: { xs: 1, md: 3 }, bgcolor: '#222222', position: 'relative', zIndex: 6 }}>
       <Typography 
@@ -127,7 +128,7 @@ const Galeria = () => {
           cols={4}
           rowHeight={160}
         >
-          {galeria.map((item) => (
+          {galeria.map((item, index) => (
             <ImageListItem 
               key={item._id} 
               cols={item.cols || 1} 
@@ -153,6 +154,16 @@ const Galeria = () => {
                   objectFit: 'cover',
                   width: '100%',
                   height: '100%'
+                }}
+                onError={(e) => {
+                  console.error(`❌ [GALERIA] Error al cargar imagen:`, {
+                    src: e.target.src,
+                    originalUrl: item.imagen,
+                    titulo: item.titulo,
+                    id: item._id
+                  });
+                  // Mostrar imagen de placeholder en caso de error
+                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg==';
                 }}
               />
               {(item.titulo || item.descripcion) && (

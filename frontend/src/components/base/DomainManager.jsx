@@ -41,11 +41,17 @@ const DomainManager = ({
 
   // Cargar datos al montar - CORREGIDO
   useEffect(() => {
-    crud.fetchItems();
-  }, []); // ✅ Eliminar crud.fetchItems de las dependencias
+    if (crud.fetchItems) {
+      crud.fetchItems();
+    }
+  }, [endpoint]); // ✅ Sólo depender del endpoint para evitar bucles infinitos
 
-  // Integrar búsqueda si está disponible
-  const displayItems = search ? search.filteredItems : (crud.items || []); // ✅ Fallback a array vacío
+  // Integrar búsqueda si está disponible - SEGURIDAD GARANTIZADA
+  const displayItems = React.useMemo(() => {
+    const items = search ? search.filteredItems : (crud.items || []);
+    // ✅ Asegurar que siempre sea un array válido para evitar objetos como React children
+    return Array.isArray(items) ? items : [];
+  }, [search, crud.items]);
 
   // Manejador de eliminación mejorado
   const handleDelete = async (id, item) => {
@@ -102,8 +108,8 @@ const DomainManager = ({
     }
   };
 
-  // Loading inicial - también verificar null/undefined
-  if (crud.loading && (!displayItems || displayItems.length === 0)) {
+  // Loading inicial - verificación completa de seguridad
+  if (crud.loading && (!Array.isArray(displayItems) || displayItems.length === 0)) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
@@ -122,7 +128,7 @@ const DomainManager = ({
           <Typography variant="h4" component="h1">
             {title}
           </Typography>
-          {displayItems.length > 0 && (
+          {Array.isArray(displayItems) && displayItems.length > 0 && (
             <Box display="flex" alignItems="center" gap={1} mt={1}>
               <Chip 
                 size="small" 

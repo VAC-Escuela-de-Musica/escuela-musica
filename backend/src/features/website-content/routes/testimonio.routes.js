@@ -2,7 +2,8 @@
 
 import { Router } from "express";
 import testimonioController from "../controllers/testimonio.controller.js";
-import { authenticationMiddleware, authorizeRoles } from "../../authentication/index.js";
+import { authenticateJWT } from "../../authentication/middlewares/index.js";
+import { authorizeRoles } from "../../authentication/middlewares/authorization.middleware.js";
 
 const router = Router();
 
@@ -14,10 +15,24 @@ router.get("/", testimonioController.getAllTestimonios);
 
 // ============= RUTAS PROTEGIDAS =============
 // Aplicar middleware de autenticación
-router.use(authenticationMiddleware);
+router.use(authenticateJWT);
 
 // Rutas de administración (requieren autenticación y roles específicos)
-router.get("/:id", authorizeRoles(["administrador", "asistente"]), testimonioController.getTestimonioById);
-router.post("/", authorizeRoles(["administrador", "asistente"]), testimonioController.createTestimonio);
+router.get("/:id", 
+  authorizeRoles(["administrador", "asistente", "profesor"]), 
+  testimonioController.getTestimonioById,
+);
+router.post("/", 
+  authorizeRoles(["administrador", "asistente", "profesor"]), 
+  testimonioController.createTestimonio,
+);
+router.put("/:id", 
+  authorizeRoles(["administrador", "asistente", "profesor"]), 
+  testimonioController.updateTestimonio,
+);
+router.delete("/:id", 
+  authorizeRoles(["administrador", "asistente", "profesor"]), 
+  testimonioController.deleteTestimonio,
+);
 
 export default router;
