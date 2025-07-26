@@ -60,6 +60,7 @@ async function setupServer () {
         '/api/galeria/upload-url',
         '/api/galeria/confirm-upload',
         /^\/api\/galeria.*$/, // Excluir todas las rutas de galería
+        /^\/api\/cards-profesores.*$/, // Excluir todas las rutas de cards-profesores
         /^\/api\/carousel\/upload$/,
         /^\/api\/files\/upload$/,
         /^\/api\/alumnos.*$/, // Excluir todas las rutas de alumnos

@@ -18,6 +18,7 @@ const StudentGalleryPage = lazy(() => import("./pages/StudentGalleryPage"));
 const StudentProfilePage = lazy(() => import("./pages/StudentProfilePage"));
 const StudentMessagesPage = lazy(() => import("./pages/StudentMessagesPage"));
 const InternalMessageManager = lazy(() => import("./pages/InternalMessageManager"));
+const GaleriaManager = lazy(() => import("./components/domain/galeria/GaleriaManager"));
 
 import Navbar from "./components/domain/layout/Navbar";
 import Loader from "./components/domain/layout/Loader";
@@ -60,6 +61,11 @@ function App() {
         }>
           <Route index element={<DashboardPage />} />
           <Route path="upload" element={<UploadPage />} />
+          <Route path="galeria" element={
+            <Suspense fallback={<Loader />}>
+              <GaleriaManager />
+            </Suspense>
+          } />
           <Route path="mensajes-internos" element={
             <Suspense fallback={<Loader />}>
               <InternalMessageManager />

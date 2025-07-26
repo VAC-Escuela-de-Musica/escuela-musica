@@ -101,10 +101,39 @@ async function deleteCardProfesor (id) {
   }
 }
 
+/**
+ * Actualiza el orden de las cards de profesores
+ * @param {Array} cardsOrder Array con los IDs de las cards en el nuevo orden
+ * @returns {Promise} Promesa con el resultado de la operación
+ */
+async function updateCardsOrder(cardsOrder) {
+  try {
+    console.log("🔄 Updating cards order:", cardsOrder);
+    
+    // Actualizar el orden de cada card
+    const updatePromises = cardsOrder.map((cardId, index) => 
+      CardsProfesores.findByIdAndUpdate(
+        cardId,
+        { orden: index },
+        { new: true }
+      )
+    );
+
+    const updatedCards = await Promise.all(updatePromises);
+    console.log("✅ Cards order updated successfully");
+    
+    return [updatedCards, null];
+  } catch (error) {
+    handleError(error, "cardsProfesores.service -> updateCardsOrder");
+    return [null, "Error al actualizar el orden de las cards"];
+  }
+}
+
 export default {
   getCardsProfesores,
   createCardProfesor,
   getCardProfesorById,
   updateCardProfesor,
-  deleteCardProfesor
+  deleteCardProfesor,
+  updateCardsOrder
 }

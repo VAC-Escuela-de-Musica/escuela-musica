@@ -51,8 +51,7 @@ import {
   Lock as PrivateIcon
 } from '@mui/icons-material';
 import Tooltip from '@mui/material/Tooltip';
-import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
+import Notification from '../../common/Notification';
 import './ListaMateriales.css';
 
 const ListaMateriales = () => {
@@ -66,25 +65,28 @@ const ListaMateriales = () => {
   // Estado para vista de lista vs grid
   const [viewMode, setViewMode] = useState('list'); // 'list' o 'grid'
   const [expandedRows, setExpandedRows] = useState(new Set());
-    // Callback para subida exitosa
+    // Helper para mostrar notificaciones
+  const showNotification = (message, severity = 'success') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+
+  // Callback para subida exitosa
   const handleUploadSuccess = () => {
     setShowUploadModal(false);
     fetchMaterials();
-    setSnackbarMsg('Materiales subidos correctamente');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
+    showNotification('Materiales subidos correctamente', 'success');
   };
 
   // Callback para error de subida
   const handleUploadError = (msg = 'Error al subir materiales') => {
-    setSnackbarMsg(msg);
-    setSnackbarSeverity('error');
-    setSnackbarOpen(true);
+    showNotification(msg, 'error');
   };
   // Feedback visual para subida
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMsg, setSnackbarMsg] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   // Función para determinar si el usuario puede eliminar un material
   const canDeleteMaterial = (material) => {
@@ -578,16 +580,12 @@ const ListaMateriales = () => {
           />
         </DialogContent>
       </Dialog>
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert severity={snackbarSeverity} onClose={() => setSnackbarOpen(false)} sx={{ width: '100%' }}>
-          {snackbarMsg}
-        </Alert>
-      </Snackbar>
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+      />
     </Box>
   );
 };

@@ -1,32 +1,7 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap");
-/* Forzar el ancho 100% en todos los niveles del DatePicker y sus descendientes */
-.MuiPickersTextField-root,
-.MuiPickersTextField-root .MuiFormControl-root,
-.MuiPickersTextField-root .MuiInputBase-root,
-.MuiPickersTextField-root input {
-  width: 100% !important;
-  min-width: 0 !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-}
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #222222;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
+/* === ESTILOS GLOBALES MEJORADOS === */
 html {
   scroll-behavior: smooth;
 }
@@ -58,6 +33,52 @@ html,
 .MuiDialogContent-root,
 .MuiDialogActions-root {
   font-family: "Raleway", sans-serif !important;
+}
+
+/* === MEJORAS DE SCROLL Y NAVEGACIÓN === */
+section {
+  scroll-margin-top: 80px; /* Para compensar el navbar fijo */
+}
+
+/* === ESTILOS RESPONSIVE MEJORADOS === */
+@media (max-width: 768px) {
+  .MuiContainer-root {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+/* === MEJORAS EN TRANSICIONES === */
+.MuiCard-root,
+.MuiButton-root {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Forzar el ancho 100% en todos los niveles del DatePicker y sus descendientes */
+.MuiPickersTextField-root,
+.MuiPickersTextField-root .MuiFormControl-root,
+.MuiPickersTextField-root .MuiInputBase-root,
+.MuiPickersTextField-root input {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #222222;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Estilos para enlaces */
@@ -93,8 +114,7 @@ button:hover {
 
 button:focus,
 button:focus-visible {
-  outline: 2px solid #d97706;
-  outline-offset: 2px;
+  outline: 4px auto -webkit-focus-ring-color;
 }
 
 /* Estilos para formularios */
@@ -137,24 +157,63 @@ select:focus {
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
-    background-color: #f9fafb;
+    background-color: #ffffff;
   }
-
-  body {
-    background-color: #f9fafb;
-    color: #213547;
-  }
-
   a:hover {
-    color: #b45309;
+    color: #747bff;
   }
-
   button {
-    background-color: #f3f4f6;
-    color: #213547;
+    background-color: #f9f9f9;
   }
+}
 
-  button:hover {
-    background-color: #e5e7eb;
+/* Ensure consistent spacing */
+.MuiContainer-root {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (min-width: 600px) {
+  .MuiContainer-root {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f1f1f;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Text selection styling */
+::selection {
+  background-color: rgba(217, 119, 6, 0.3);
+  color: #ffffff;
+}
+
+/* Focus outline improvements */
+*:focus-visible {
+  outline: 2px solid #d97706;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
   }
 }
