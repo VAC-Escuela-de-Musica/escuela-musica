@@ -13,21 +13,24 @@ import {
   updateImageOrder,
   getImageUrl
 } from '../controllers/galeria.controller.js'
-import { verifyJWT } from '../../authentication/middlewares/index.js'
+import { authenticateJWT } from '../../authentication/middlewares/index.js'
 import { authorizeRoles } from '../../authentication/middlewares/authorization.middleware.js'
 
 const router = express.Router()
 
-// Rutas públicas
+// ============= RUTAS PÚBLICAS =============
+// Estas rutas no requieren autenticación
 router.get('/active', getActiveGallery)
 router.get('/category/:categoria', getGalleryByCategory)
 router.get('/image/:id/url', getImageUrl)
+// Ruta principal de galería - pública para mostrar en frontend
+router.get('/', getAllGallery)
 
-// Rutas protegidas (requieren autenticación)
-router.use(verifyJWT)
+// ============= RUTAS PROTEGIDAS =============
+// Aplicar middleware de autenticación completo (extractJWT + verifyJWT)
+router.use(authenticateJWT)
 
-// Rutas de administración (administrador y asistente - acceso completo)
-router.get('/', authorizeRoles(['administrador', 'asistente']), getAllGallery)
+// Rutas de administración (requieren autenticación y roles específicos)
 router.get('/:id', authorizeRoles(['administrador', 'asistente']), getImageById)
 router.post('/', authorizeRoles(['administrador', 'asistente']), createImage)
 router.put('/:id', authorizeRoles(['administrador', 'asistente']), updateImage)

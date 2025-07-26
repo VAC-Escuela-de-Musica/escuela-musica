@@ -1,6 +1,6 @@
-import { Router } from 'express'
-import multer from 'multer'
-import rateLimit from 'express-rate-limit'
+import { Router } from "express";
+import multer from "multer";
+import rateLimit from "express-rate-limit";
 import {
   uploadImage,
   getImages,
@@ -9,24 +9,24 @@ import {
   updateImage,
   deleteImage,
   updateOrder,
-  toggleStatus
-} from '../controllers/carousel.controller.js'
-import { verifyJWT } from '../../authentication/middlewares/jwt.middleware.js'
-import { requireRole } from '../../authentication/middlewares/role.middleware.js'
-const router = Router()
+  toggleStatus,
+} from "../controllers/carousel.controller.js";
+import { authenticateJWT } from "../../authentication/middlewares/index.js";
+import { requireRole } from "../../authentication/middlewares/role.middleware.js";
+const router = Router();
 
 // Middleware de debug para todas las rutas de este router
 router.use((req, res, next) => {
-  console.log(`[CAROUSEL] ${req.method} ${req.originalUrl} | user: ${req.user?.username || 'anonimo'}`)
-  next()
-})
+  console.log(`[CAROUSEL] ${req.method} ${req.originalUrl} | user: ${req.user?.username || 'anonimo'}`);
+  next();
+});
 
 // Configurar rate limiter para rutas protegidas
 const protectedRoutesLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: 100, // máximo 100 solicitudes por ventana
   message: 'Demasiadas solicitudes desde esta IP, por favor inténtelo de nuevo más tarde.'
-})
+});
 
 // Configurar multer para manejar archivos
 const upload = multer({
@@ -37,26 +37,26 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     // Solo permitir imágenes
     if (file.mimetype.startsWith('image/')) {
-      cb(null, true)
+      cb(null, true);
     } else {
-      cb(new Error('Solo se permiten archivos de imagen'), false)
+      cb(new Error('Solo se permiten archivos de imagen'), false);
     }
   }
-})
+});
 
 // Rutas públicas
-router.get('/', getImages) // Obtener imágenes activas del carrusel
-router.get('/active-with-urls', getImagesWithUrls) // Obtener imágenes activas con URLs presignadas
+router.get('/', getImages); // Obtener imágenes activas del carrusel
+router.get('/active-with-urls', getImagesWithUrls); // Obtener imágenes activas con URLs presignadas
 
 // Rutas protegidas (requieren autenticación)
-router.use(protectedRoutesLimiter, verifyJWT)
+router.use(protectedRoutesLimiter, authenticateJWT);
 
 // Rutas de administrador
-router.get('/admin', requireRole(['administrador']), getAllImages) // Obtener todas las imágenes (admin)
-router.post('/upload', requireRole(['administrador']), upload.single('image'), uploadImage) // Subir imagen
-router.put('/:id', requireRole(['administrador']), updateImage) // Actualizar imagen
-router.delete('/:id', requireRole(['administrador']), deleteImage) // Eliminar imagen
-router.put('/order/update', requireRole(['administrador']), updateOrder) // Actualizar orden
-router.patch('/:id/toggle', requireRole(['administrador']), toggleStatus) // Cambiar estado activo/inactivo
+router.get('/admin', requireRole(['administrador']), getAllImages); // Obtener todas las imágenes (admin)
+router.post('/upload', requireRole(['administrador']), upload.single('image'), uploadImage); // Subir imagen
+router.put('/:id', requireRole(['administrador']), updateImage); // Actualizar imagen
+router.delete('/:id', requireRole(['administrador']), deleteImage); // Eliminar imagen
+router.put('/order/update', requireRole(['administrador']), updateOrder); // Actualizar orden
+router.patch('/:id/toggle', requireRole(['administrador']), toggleStatus); // Cambiar estado activo/inactivo
 
 export default router
