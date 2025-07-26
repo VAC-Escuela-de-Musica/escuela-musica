@@ -163,6 +163,17 @@ function AlumnosList() {
     }
   };
 
+  // Helper para formatear fecha DD-MM-AAAA
+  const formatFecha = (fecha) => {
+    if (!fecha) return "-";
+    const d = new Date(fecha);
+    if (isNaN(d)) return fecha;
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   return (
     <Box sx={{ padding: 2 }}>
       <Typography
@@ -337,7 +348,7 @@ function AlumnosList() {
                   <TableCell>{alumno.curso || "-"}</TableCell>
                   <TableCell>{alumno.tipoCurso || "-"}</TableCell>
                   <TableCell>{alumno.modalidadClase || "-"}</TableCell>
-                  <TableCell>{alumno.fechaIngreso || "-"}</TableCell>
+                  <TableCell>{formatFecha(alumno.fechaIngreso)}</TableCell>
                   <TableCell align="center" sx={{ minWidth: 120 }}>
                     <Box
                       sx={{ display: "flex", justifyContent: "center", gap: 1 }}
@@ -461,8 +472,11 @@ function AlumnosList() {
                     <strong>Email:</strong> {selectedAlumno.email || "-"}
                   </Typography>
                   <Typography>
+                    <strong>RRSS:</strong> {selectedAlumno.rrss || "-"}
+                  </Typography>
+                  <Typography>
                     <strong>Fecha de ingreso:</strong>{" "}
-                    {selectedAlumno.fechaIngreso || "-"}
+                    {formatFecha(selectedAlumno.fechaIngreso)}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -492,9 +506,6 @@ function AlumnosList() {
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
-                  <Typography>
-                    <strong>RRSS:</strong> {selectedAlumno.rrss || "-"}
-                  </Typography>
                   <Typography>
                     <strong>Conocimientos Previos:</strong>{" "}
                     {selectedAlumno.conocimientosPrevios ? "Sí" : "No"}
@@ -582,68 +593,84 @@ function AlumnosList() {
               const doc = new jsPDF("p", "mm", "a4");
               doc.setFontSize(14);
 
+              // Helper para formatear fecha
+              const formatFecha = (fecha) => {
+                if (!fecha) return "-";
+                const d = new Date(fecha);
+                if (isNaN(d)) return fecha;
+                const day = String(d.getDate()).padStart(2, "0");
+                const month = String(d.getMonth() + 1).padStart(2, "0");
+                const year = d.getFullYear();
+                return `${day}-${month}-${year}`;
+              };
+
+              // Encabezado principal
               doc.setFillColor(0, 0, 0);
               doc.rect(10, 10, 190, 12, "F");
               doc.setTextColor(255, 255, 255);
               doc.text("FICHA INSCRIPCIÓN VAC ESCUELA DE MUSICA", 15, 18);
 
+              // Fecha
               doc.setFillColor(200, 200, 200);
               doc.rect(10, 22, 190, 8, "F");
               doc.setTextColor(0, 0, 0);
               doc.setFontSize(10);
               doc.text(
-                `Fecha: ${selectedAlumno?.fechaIngreso || "-"}`,
+                `Fecha: ${formatFecha(selectedAlumno?.fechaIngreso)}`,
                 160,
                 28
               );
 
+              // Datos personales y apoderado (dos columnas)
               doc.setDrawColor(0, 0, 0);
-              doc.rect(10, 30, 190, 40);
-
+              doc.rect(10, 30, 190, 42);
+              doc.setFontSize(11);
               doc.text(
-                `Nombre completo estudiante: ${
-                  selectedAlumno?.nombreAlumno || "-"
-                }`,
+                `Nombre estudiante: ${selectedAlumno?.nombreAlumno || "-"}`,
                 12,
                 36
               );
+              doc.text(`RUT: ${selectedAlumno?.rutAlumno || "-"}`, 12, 42);
+              doc.text(
+                `Teléfono: ${selectedAlumno?.telefonoAlumno || "-"}`,
+                12,
+                48
+              ); // Teléfono debajo del RUT
+              doc.text(
+                `Dirección: ${selectedAlumno?.direccion || "-"}`,
+                12,
+                54
+              );
+              doc.text(`Correo: ${selectedAlumno?.email || "-"}`, 12, 60);
+              doc.text(`RRSS: ${selectedAlumno?.rrss || "-"}`, 12, 66);
+
               doc.text(
                 `Nombre apoderado: ${selectedAlumno?.nombreApoderado || "-"}`,
                 110,
                 36
               );
-
-              doc.text(`RUT: ${selectedAlumno?.rutAlumno || "-"}`, 12, 42);
               doc.text(
                 `RUT apoderado: ${selectedAlumno?.rutApoderado || "-"}`,
                 110,
                 42
               );
-
               doc.text(
-                `Domicilio: ${selectedAlumno?.direccion || "-"}`,
-                12,
-                48
-              );
-              doc.text(
-                `Teléfono: ${selectedAlumno?.telefonoAlumno || "-"}`,
+                `Teléfono apoderado: ${
+                  selectedAlumno?.telefonoApoderado || "-"
+                }`,
                 110,
                 48
               );
 
-              doc.text(`Correo: ${selectedAlumno?.email || "-"}`, 12, 54);
-              doc.text(`RRSS: ${selectedAlumno?.rrss || "-"}`, 110, 54);
-
-              doc.rect(10, 70, 190, 10);
+              // Datos musicales
+              doc.rect(10, 74, 190, 28);
               doc.text(
                 `Conocimientos previos de música: ${
                   selectedAlumno?.conocimientosPrevios ? "SI" : "NO"
                 }`,
                 12,
-                76
+                80
               );
-
-              doc.rect(10, 80, 190, 10);
               doc.text(
                 `Instrumentos: ${
                   Array.isArray(selectedAlumno?.instrumentos)
@@ -653,8 +680,6 @@ function AlumnosList() {
                 12,
                 86
               );
-
-              doc.rect(10, 90, 190, 10);
               doc.text(
                 `Estilos musicales: ${
                   Array.isArray(selectedAlumno?.estilosMusicales)
@@ -662,58 +687,57 @@ function AlumnosList() {
                     : selectedAlumno?.estilosMusicales || "-"
                 }`,
                 12,
-                96
+                92
               );
-
-              doc.rect(10, 100, 190, 10);
               doc.text(
                 `Referente musical: ${selectedAlumno?.referenteMusical || "-"}`,
                 12,
-                106
+                98
               );
 
-              doc.rect(10, 110, 95, 15);
+              // Condiciones y observaciones (dos columnas)
+              doc.rect(10, 104, 190, 20);
               doc.text(
                 `Condición especial de aprendizaje: ${
                   selectedAlumno?.condicionAprendizaje ? "SI" : "NO"
-                } ${selectedAlumno?.detalleCondicionAprendizaje || "-"}`,
+                } ${selectedAlumno?.detalleCondicionAprendizaje || ""}`,
                 12,
-                116
+                110
               );
-              doc.rect(105, 110, 95, 15);
               doc.text(
                 `Condición médica: ${
                   selectedAlumno?.condicionMedica ? "SI" : "NO"
-                } ${selectedAlumno?.detalleCondicionMedica || "-"}`,
-                107,
-                116
+                } ${selectedAlumno?.detalleCondicionMedica || ""}`,
+                110,
+                110
               );
-
-              doc.rect(10, 125, 190, 10);
               doc.text(
                 `Observaciones: ${selectedAlumno?.observaciones || "-"}`,
                 12,
-                131
+                120
               );
 
-              doc.rect(10, 135, 190, 15);
+              // Datos de clase
+              doc.rect(10, 126, 190, 20);
               doc.text(
-                `Fecha de ingreso: ${selectedAlumno?.fechaIngreso || "-"}`,
+                `Fecha de ingreso: ${formatFecha(
+                  selectedAlumno?.fechaIngreso
+                )}`,
                 12,
-                141
+                132
               );
-              doc.text(`Curso: ${selectedAlumno?.curso || "-"}`, 60, 141);
+              doc.text(`Curso: ${selectedAlumno?.curso || "-"}`, 80, 132);
               doc.text(
                 `Tipo de curso: ${selectedAlumno?.tipoCurso || "-"}`,
-                110,
-                141
+                130,
+                132
               );
               doc.text(
                 `Modalidad de clase: ${selectedAlumno?.modalidadClase || "-"}`,
                 12,
-                147
+                138
               );
-              doc.text(`Clase: ${selectedAlumno?.clase || "-"}`, 110, 147);
+              doc.text(`Clase: ${selectedAlumno?.clase || "-"}`, 130, 138);
 
               doc.save(`ficha_${selectedAlumno?.nombreAlumno || "alumno"}.pdf`);
             }}
