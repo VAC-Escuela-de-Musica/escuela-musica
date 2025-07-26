@@ -6,8 +6,7 @@ import {
   deleteAlumno,
 } from "../../../services/alumnos.service";
 import AlumnoForm from "./AlumnoForm/AlumnoForm";
-import Snackbar from "@mui/material/Snackbar";
-import MuiAlert from "@mui/material/Alert";
+import Notification from "../../common/Notification";
 import {
   Card,
   CardContent,
@@ -40,8 +39,16 @@ function AlumnosList() {
   });
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState(null);
-  const [successMsg, setSuccessMsg] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
+
+  // Helper para mostrar notificaciones
+  const showNotification = (message, severity = 'success') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
 
   const fetchAlumnos = () => {
     getAlumnos()
@@ -90,8 +97,7 @@ function AlumnosList() {
         setEditingAlumno(null);
         localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
         localStorage.setItem("alumnos_showForm", "false");
-        setSuccessMsg("Alumno actualizado exitosamente");
-        setShowSuccess(true);
+        showNotification("Alumno actualizado exitosamente", "success");
       } catch (err) {
         alert("Error al actualizar alumno");
       }
@@ -103,8 +109,7 @@ function AlumnosList() {
         setEditingAlumno(null);
         localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
         localStorage.setItem("alumnos_showForm", "false");
-        setSuccessMsg("Alumno creado exitosamente");
-        setShowSuccess(true);
+        showNotification("Alumno creado exitosamente", "success");
       } catch (err) {
         alert("Error al crear alumno");
       }
@@ -395,16 +400,12 @@ function AlumnosList() {
           onClose={handleCloseForm}
         />
       )}
-      <Snackbar
-        open={showSuccess}
-        autoHideDuration={3000}
-        onClose={() => setShowSuccess(false)}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <MuiAlert onClose={() => setShowSuccess(false)} severity="success" sx={{ width: '100%' }}>
-          {successMsg}
-        </MuiAlert>
-      </Snackbar>
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+      />
     </Box>
   );
 }

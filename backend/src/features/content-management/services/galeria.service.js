@@ -129,8 +129,11 @@ class GaleriaService {
    */
   async createImage (imageData) {
     try {
-      const nuevaImagen = new Galeria(imageData)
-      await nuevaImagen.save()
+      console.log("DEBUG - Datos recibidos en createImage:", imageData);
+      const nuevaImagen = new Galeria(imageData);
+      console.log("DEBUG - Objeto Galeria creado:", nuevaImagen);
+      await nuevaImagen.save();
+      console.log("DEBUG - Imagen guardada en BD:", nuevaImagen);
 
       // Auditoría (comentado hasta implementar auditService)
       // await auditService.logGalleryAction(nuevaImagen, 'create', {

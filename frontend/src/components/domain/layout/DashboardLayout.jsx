@@ -36,8 +36,23 @@ const DashboardLayout = () => {
                   <Link to="/dashboard/upload" className="nav-link">
                     <span className="nav-icon">📤</span> Cargar
                   </Link>
+                  <Link to="/dashboard/galeria" className="nav-link">
+                    <span className="nav-icon">📸</span> Galería
+                  </Link>
                   <Link to="/dashboard/mensajes-internos" className="nav-link">
                     <span className="nav-icon">💬</span> Mensajes
+                  </Link>
+                </>
+              )}
+              
+              {/* Solo mostrar para administradores */}
+              {isAdmin() && (
+                <>
+                  <Link to="/dashboard/alumnos" className="nav-link">
+                    <span className="nav-icon">👨‍🎓</span> Alumnos
+                  </Link>
+                  <Link to="/dashboard/profesores" className="nav-link">
+                    <span className="nav-icon">👨‍🏫</span> Profesores
                   </Link>
                 </>
               )}

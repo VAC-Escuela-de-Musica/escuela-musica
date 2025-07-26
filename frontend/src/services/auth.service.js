@@ -141,7 +141,9 @@ class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     
-    // Cancelar timer de renovaci贸n
+
+    // Cancelar timer de renovación
+
     if (this.refreshTimer) {
       clearTimeout(this.refreshTimer);
       this.refreshTimer = null;
@@ -149,7 +151,7 @@ class AuthService {
   }
 
   /**
-   * Cierra sesi贸n del usuario
+   * Cierra sesión del usuario
    */
   async logout() {
     try {
