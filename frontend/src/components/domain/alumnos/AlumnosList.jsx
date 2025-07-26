@@ -44,9 +44,7 @@ function AlumnosList() {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const fetchAlumnos = () => {
-    getAlumnos()
-      .then((res) => setAlumnos(res.data.data || res.data))
-      // ...existing code...
+    getAlumnos().then((res) => setAlumnos(res.data.data || res.data));
   };
 
   useEffect(() => {
@@ -117,7 +115,9 @@ function AlumnosList() {
     return (
       alumno.nombreAlumno?.toLowerCase().includes(term) ||
       alumno.rutAlumno?.toLowerCase().includes(term) ||
-      alumno.email?.toLowerCase().includes(term)
+      alumno.email?.toLowerCase().includes(term) ||
+      alumno.curso?.toLowerCase().includes(term) ||
+      alumno.tipoCurso?.toLowerCase().includes(term)
     );
   });
 
@@ -382,9 +382,7 @@ function AlumnosList() {
           </Grid>
         ) : (
           filteredAlumnos.map((alumno) => (
-            <Grid key={alumno._id}>
-              {renderResumenCard(alumno)}
-            </Grid>
+            <Grid key={alumno._id}>{renderResumenCard(alumno)}</Grid>
           ))
         )}
       </Grid>
@@ -401,7 +399,11 @@ function AlumnosList() {
         onClose={() => setShowSuccess(false)}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <MuiAlert onClose={() => setShowSuccess(false)} severity="success" sx={{ width: '100%' }}>
+        <MuiAlert
+          onClose={() => setShowSuccess(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
           {successMsg}
         </MuiAlert>
       </Snackbar>

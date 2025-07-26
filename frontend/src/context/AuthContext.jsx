@@ -35,32 +35,43 @@ export function AuthProvider({ children }) {
       try {
         // Initialize authService from localStorage
         authService.init();
-        
+
         // Get token from localStorage and set it in apiService
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (token) {
           apiService.setToken(token);
         }
-        
+
         // Initialize CSRF token
-        const data = await apiService.get('/csrf-token');
+        const data = await apiService.get("/csrf-token");
         setCsrfToken(data.csrfToken);
         setGlobalCsrfToken(data.csrfToken);
-        
+
         // Verify token if it exists
         if (token) {
-          const verifyResult = await authService.verifyToken();
-          if (verifyResult.success) {
-            setUser(verifyResult.data.user);
-          } else {
-            // Token is invalid, clear it
-            authService.logout();
+          try {
+            const verifyResult = await authService.verifyToken();
+            if (verifyResult.success) {
+              setUser(verifyResult.data.user);
+            } else {
+              // Token is invalid, clear it silently
+              authService.clearLocalData();
+              apiService.clearToken();
+              setUser(null);
+            }
+          } catch (error) {
+            console.warn(
+              "Token verification failed, clearing local data:",
+              error
+            );
+            // Token is invalid, clear it silently
+            authService.clearLocalData();
             apiService.clearToken();
             setUser(null);
           }
         }
       } catch (error) {
-        console.error('Error during auth initialization:', error);
+        console.error("Error during auth initialization:", error);
         // Clear invalid auth state
         authService.logout();
         apiService.clearToken();
@@ -70,7 +81,7 @@ export function AuthProvider({ children }) {
         setLoading(false);
       }
     };
-    
+
     initAuth();
   }, []);
 
@@ -98,41 +109,43 @@ export function AuthProvider({ children }) {
   // Verificar si el usuario tiene un rol específico
   const hasRole = (roleName) => {
     if (!user || !user.roles) return false;
-    
-    return user.roles.some(role => 
-      typeof role === 'string' ? role === roleName : role.name === roleName
+
+    return user.roles.some((role) =>
+      typeof role === "string" ? role === roleName : role.name === roleName
     );
   };
 
   // Verificar si el usuario es admin
   const isAdmin = () => {
-    return hasRole('administrador');
+    return hasRole("administrador");
   };
 
   // Verificar si el usuario es profesor/teacher
   const isTeacher = () => {
-    return hasRole('teacher') || hasRole('profesor');
+    return hasRole("teacher") || hasRole("profesor");
   };
 
   // Verificar si el usuario es estudiante
   const isStudent = () => {
-    return hasRole('student') || hasRole('estudiante');
+    return hasRole("student") || hasRole("estudiante");
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      isAuthenticated, 
-      user, 
-      setUser, 
-      isInitialized, 
-      loading,
-      logout,
-      hasRole,
-      isAdmin,
-      isTeacher,
-      isStudent,
-      csrfToken
-    }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        user,
+        setUser,
+        isInitialized,
+        loading,
+        logout,
+        hasRole,
+        isAdmin,
+        isTeacher,
+        isStudent,
+        csrfToken,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
