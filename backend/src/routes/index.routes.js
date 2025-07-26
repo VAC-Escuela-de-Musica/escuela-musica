@@ -6,6 +6,7 @@ import authRoutes from '../features/authentication/routes/auth.routes.js'
 import materialRoutes from '../features/content-management/routes/material.routes.js'
 import fileRoutes from '../features/file-system/routes/file.routes.js'
 import alumnosRoutes from '../features/student-management/routes/alumnos.routes.js'
+import profesoresRoutes from '../features/profesor-management/routes/profesores.routes.js'
 import galeriaRoutes from '../features/content-management/routes/galeria.routes.js'
 import messagingRoutes from '../features/communication/routes/messaging.routes.js'
 import internalMessageRoutes from '../features/communication/routes/internalMessage.routes.js'
@@ -90,6 +91,9 @@ router.use('/galeria', galeriaRoutes)
 
 // Rutas para alumnos - autenticación manejada en alumnos.routes.js
 router.use('/alumnos', alumnosRoutes)
+
+// Rutas para profesores - autenticación manejada en profesores.routes.js
+router.use('/profesores', profesoresRoutes)
 
 // Rutas para mensajería - autenticación manejada en messaging.routes.js
 router.use('/messaging', messagingRoutes)

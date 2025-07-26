@@ -23,6 +23,7 @@ import { Link } from "react-router-dom";
 
 const UserManager = React.lazy(() => import("./domain/users/UserManager"));
 const CardsProfesoresManager = React.lazy(() => import("./domain/profesores/CardsProfesoresManager"));
+const ProfesoresList = React.lazy(() => import("./domain/profesores/ProfesoresList"));
 const RepositorioProfesor = React.lazy(() => import("./domain/materials/RepositorioProfesor"));
 const MensajeriaManager = React.lazy(() => import("./domain/messaging/MensajeriaManager"));
 const AlumnosList = React.lazy(() => import("./domain/alumnos/AlumnosList"));
@@ -128,6 +129,7 @@ export default function ClippedDrawer() {
                   <ListItemButton
                     onClick={() => {
                       if (text === "Estudiantes") setActiveModule("alumnos");
+                      if (text === "Profesores") setActiveModule("profesores");
                     }}
                   >
                     <ListItemIcon sx={{ color: "#FFFFFF" }}>
@@ -279,6 +281,11 @@ export default function ClippedDrawer() {
         {activeModule === "alumnos" && (
           <Suspense fallback={<LoadingFallback message="Cargando Estudiantes..." />}>
             <AlumnosList />
+          </Suspense>
+        )}
+        {activeModule === "profesores" && (
+          <Suspense fallback={<LoadingFallback message="Cargando Profesores..." />}>
+            <ProfesoresList />
           </Suspense>
         )}
         {/* Puedes agregar más módulos así */}
