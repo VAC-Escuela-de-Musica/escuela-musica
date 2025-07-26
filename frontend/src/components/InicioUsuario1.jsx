@@ -14,10 +14,17 @@ import {
   ListItemText,
   CircularProgress,
 } from "@mui/material";
-import InboxIcon from "@mui/icons-material/MoveToInbox";
-import MailIcon from "@mui/icons-material/Mail";
-import LogoutIcon from "@mui/icons-material/Logout";
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import PersonIcon from '@mui/icons-material/Person';
+import Person3Icon from '@mui/icons-material/Person3';
+import SchoolIcon from '@mui/icons-material/School';
+import CropOriginalIcon from '@mui/icons-material/CropOriginal';
+import ViewAgendaIcon from '@mui/icons-material/ViewAgenda';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import BackupIcon from '@mui/icons-material/Backup';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import MessageIcon from '@mui/icons-material/Message';
+import LogoutIcon from "@mui/icons-material/Logout";
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
 
@@ -123,64 +130,70 @@ export default function ClippedDrawer() {
         <Divider sx={{ borderColor: "#3F4147" }} />
         <Box sx={{ overflow: "auto" }}>
           <List>
-            {["Horario", "Estudiantes", "Profesores", "Clases"].map(
-              (text, index) => (
-                <ListItem key={text} disablePadding>
-                  <ListItemButton
-                    onClick={() => {
-                      if (text === "Estudiantes") setActiveModule("alumnos");
-                      if (text === "Profesores") setActiveModule("profesores");
-                    }}
-                  >
-                    <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                      {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                    </ListItemIcon>
-                    <ListItemText primary={text} />
-                  </ListItemButton>
-                </ListItem>
-              )
-            )}
+
+            {[
+              { text: "Horario", icon: <CalendarMonthIcon />, module: "horario" },
+              { text: "Estudiantes", icon: <PersonIcon />, module: "alumnos" },
+              { text: "Profesores", icon: <Person3Icon />, module: "profesores" },
+              { text: "Clases", icon: <SchoolIcon />, module: "clases" }
+            ].map((item) => (
+              <ListItem key={item.text} disablePadding>
+                <ListItemButton
+                  onClick={() => {
+                    if (item.text === "Estudiantes") setActiveModule("alumnos");
+                  }}
+                >
+                  <ListItemIcon sx={{ color: "#FFFFFF" }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+
           </List>
           <Divider sx={{ borderColor: "#3F4147" }} />
           <List>
             {[
-              "Imágenes Galería",
-              "Presentación Prof.",
-              "Gestionar Reseñas",
-            ].map((text, index) => (
-              <ListItem key={text} disablePadding>
+              { text: "Imágenes Galería", icon: <CropOriginalIcon />, module: "galeria" },
+              { text: "Presentación Prof.", icon: <ViewAgendaIcon />, module: "presentacion" },
+              { text: "Gestionar Reseñas", icon: <StarBorderIcon />, module: "resenas" }
+            ].map((item) => (
+              <ListItem key={item.text} disablePadding>
                 <ListItemButton
                   onClick={() => {
-                    if (text === "Imágenes Galería") setActiveModule("galeria");
-                    if (text === "Presentación Prof.")
-                      setActiveModule("presentacion");
-                    if (text === "Gestionar Reseñas")
-                      setActiveModule("resenas");
+                    if (item.text === "Imágenes Galería") setActiveModule("galeria");
+                    if (item.text === "Presentación Prof.") setActiveModule("presentacion");
+                    if (item.text === "Gestionar Reseñas") setActiveModule("resenas");
                   }}
                 >
                   <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                    {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                    {item.icon}
                   </ListItemIcon>
-                  <ListItemText primary={text} />
+                  <ListItemText primary={item.text} />
                 </ListItemButton>
               </ListItem>
             ))}
           </List>
           <Divider sx={{ borderColor: "#3F4147" }} />
           <List>
-            {["Repositorio Prof.", "Credenciales", "Mensajería"].map((text, index) => (
-              <ListItem key={text} disablePadding>
+            {[
+              { text: "Repositorio Prof.", icon: <BackupIcon />, module: "repositorio" },
+              { text: "Credenciales", icon: <AccountCircleIcon />, module: "credenciales" },
+              { text: "Mensajería", icon: <MessageIcon />, module: "mensajeria" }
+            ].map((item) => (
+              <ListItem key={item.text} disablePadding>
                 <ListItemButton
                   onClick={() => {
-                    if (text === "Repositorio Prof.") setActiveModule("repositorio");
-                    if (text === "Credenciales") setActiveModule("credenciales");
-                    if (text === "Mensajería") setActiveModule("mensajeria");
+                    if (item.text === "Repositorio Prof.") setActiveModule("repositorio");
+                    if (item.text === "Credenciales") setActiveModule("credenciales");
+                    if (item.text === "Mensajería") setActiveModule("mensajeria");
                   }}
                 >
                   <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                    {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                    {item.icon}
                   </ListItemIcon>
-                  <ListItemText primary={text} />
+                  <ListItemText primary={item.text} />
                 </ListItemButton>
               </ListItem>
             ))}

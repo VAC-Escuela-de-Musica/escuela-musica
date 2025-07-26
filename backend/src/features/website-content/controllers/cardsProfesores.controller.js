@@ -105,10 +105,36 @@ async function deleteCardProfesor (req, res) {
   }
 }
 
+/**
+ * Actualiza el orden de las cards de profesores
+ * @param {Object} req - Objeto de petición
+ * @param {Object} res - Objeto de respuesta
+ */
+async function updateCardsOrder (req, res) {
+  try {
+    const { cardsOrder } = req.body;
+    console.log('📝 Controller received order update request:', cardsOrder);
+
+    if (!Array.isArray(cardsOrder)) {
+      return respondError(req, res, 400, 'cardsOrder debe ser un array');
+    }
+
+    const [updatedCards, orderError] = await cardsProfesoresService.updateCardsOrder(cardsOrder);
+
+    if (orderError) return respondError(req, res, 400, orderError);
+
+    respondSuccess(req, res, 200, updatedCards);
+  } catch (error) {
+    handleError(error, 'cardsProfesores.controller -> updateCardsOrder');
+    respondError(req, res, 500, 'Error al actualizar el orden de las cards');
+  }
+}
+
 export default {
   getCardsProfesores,
   createCardProfesor,
   getCardProfesorById,
   updateCardProfesor,
-  deleteCardProfesor
+  deleteCardProfesor,
+  updateCardsOrder
 }
