@@ -8,7 +8,18 @@ import { asyncHandler } from '../../../middlewares/index.js'
  * Obtener galería activa (pública)
  */
 export const getActiveGallery = asyncHandler(async (req, res) => {
+  console.log('🔍 [GALERIA-CONTROLLER] getActiveGallery llamado');
+  console.log('🔍 [GALERIA-CONTROLLER] Headers:', req.headers);
+  console.log('🔍 [GALERIA-CONTROLLER] URL:', req.url);
+  
   const result = await galeriaService.getActiveGallery()
+  
+  console.log('🔍 [GALERIA-CONTROLLER] Resultado del servicio:', {
+    success: result.success,
+    dataLength: result.data ? result.data.length : 0,
+    message: result.message
+  });
+  
   respondSuccess(req, res, 200, result.data, result.message)
 })
 
@@ -171,8 +182,8 @@ export const getUploadUrl = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Usar el tipo de bucket 'galery' que el servicio MinIO mapea al bucket configurado
-    const bucketType = 'galery'
+    // Usar el tipo de bucket 'public' para que las imágenes vayan al bucket público
+    const bucketType = 'public'
     const finalFilename = filename || `galeria_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
     // Generar URL prefirmada usando MinioService
