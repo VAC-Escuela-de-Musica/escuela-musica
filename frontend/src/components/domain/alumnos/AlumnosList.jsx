@@ -9,24 +9,31 @@ import AlumnoForm from "./AlumnoForm/AlumnoForm";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import {
-  Card,
-  CardContent,
-  CardActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Avatar,
+  IconButton,
+  Paper,
   Typography,
   Button,
-  Grid,
   TextField,
   Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Divider,
-  Collapse,
-  IconButton,
+  Grid,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import jsPDF from "jspdf";
 
 function AlumnosList() {
   const [alumnos, setAlumnos] = useState([]);
@@ -39,9 +46,16 @@ function AlumnosList() {
     return saved === "true";
   });
   const [search, setSearch] = useState("");
-  const [expandedId, setExpandedId] = useState(null);
   const [successMsg, setSuccessMsg] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // Modal ficha
+  const [openFicha, setOpenFicha] = useState(false);
+  const [selectedAlumno, setSelectedAlumno] = useState(null);
+
+  // Ordenamiento
+  const [sortBy, setSortBy] = useState("nombreAlumno");
+  const [sortOrder, setSortOrder] = useState("asc");
 
   const fetchAlumnos = () => {
     getAlumnos().then((res) => setAlumnos(res.data.data || res.data));
@@ -121,227 +135,45 @@ function AlumnosList() {
     );
   });
 
-  // Tarjeta resumen
-  const renderResumenCard = (alumno) => (
-    <Card
-      sx={{
-        background: "#23273a",
-        color: "#fff",
-        mb: 2,
-        boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
-        borderRadius: 3,
-        cursor: "pointer",
-        transition: "box-shadow 0.2s",
-        "&:hover": { boxShadow: "0 8px 32px rgba(0,0,0,0.28)" },
-      }}
-      onClick={() =>
-        setExpandedId(expandedId === alumno._id ? null : alumno._id)
-      }
-    >
-      <CardContent>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-          <PersonIcon sx={{ fontSize: 32, mr: 1, color: "#7f8fa6" }} />
-          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#fff" }}>
-            {alumno.nombreAlumno}
-          </Typography>
-          <Box sx={{ flex: 1 }} />
-          <IconButton
-            size="small"
-            sx={{ color: "#7f8fa6" }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setExpandedId(expandedId === alumno._id ? null : alumno._id);
-            }}
-          >
-            {expandedId === alumno._id ? (
-              <ExpandLessIcon />
-            ) : (
-              <ExpandMoreIcon />
-            )}
-          </IconButton>
-        </Box>
-        <Typography>
-          <strong>RUT:</strong> {alumno.rutAlumno}
-        </Typography>
-        <Typography>
-          <strong>Dirección:</strong> {alumno.direccion}
-        </Typography>
-        <Typography>
-          <strong>Teléfono:</strong> {alumno.telefonoAlumno}
-        </Typography>
-        <Typography>
-          <strong>Email:</strong> {alumno.email}
-        </Typography>
-        <Typography>
-          <strong>Fecha de ingreso:</strong> {alumno.fechaIngreso}
-        </Typography>
-        <Typography>
-          <strong>Curso:</strong> {alumno.curso}
-        </Typography>
-        <Typography>
-          <strong>Tipo de Curso:</strong> {alumno.tipoCurso}
-        </Typography>
-        <Typography>
-          <strong>Modalidad Clase:</strong> {alumno.modalidadClase}
-        </Typography>
-      </CardContent>
-      <CardActions>
-        <Button
-          variant="contained"
-          color="info"
-          startIcon={<EditIcon />}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleEdit(alumno);
-          }}
-          sx={{ mr: 1 }}
-        >
-          Editar
-        </Button>
-        <Button
-          variant="contained"
-          color="error"
-          startIcon={<DeleteIcon />}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDelete(alumno);
-          }}
-        >
-          Eliminar
-        </Button>
-      </CardActions>
-      {/* Ficha completa expandible */}
-      <Collapse in={expandedId === alumno._id} timeout="auto" unmountOnExit>
-        <CardContent sx={{ background: "#20243a", mt: 1, borderRadius: 2 }}>
-          {/* DATOS DEL ALUMNO */}
-          <Typography
-            variant="subtitle1"
-            sx={{ mt: 2, mb: 1, color: "#7f8fa6", fontWeight: "bold" }}
-          >
-            Datos del Alumno
-          </Typography>
-          <Divider sx={{ mb: 1, background: "#7f8fa6" }} />
-          <Typography>
-            <strong>RUT:</strong> {alumno.rutAlumno}
-          </Typography>
-          <Typography>
-            <strong>Dirección:</strong> {alumno.direccion}
-          </Typography>
-          <Typography>
-            <strong>Teléfono:</strong> {alumno.telefonoAlumno}
-          </Typography>
-          <Typography>
-            <strong>Email:</strong> {alumno.email}
-          </Typography>
-          <Typography>
-            <strong>Fecha de ingreso:</strong> {alumno.fechaIngreso}
-          </Typography>
-          {/* OTROS DATOS */}
-          <Typography
-            variant="subtitle1"
-            sx={{ mt: 2, mb: 1, color: "#7f8fa6", fontWeight: "bold" }}
-          >
-            Otros Datos
-          </Typography>
-          <Divider sx={{ mb: 1, background: "#7f8fa6" }} />
-          <Typography>
-            <strong>RRSS:</strong> {alumno.rrss}
-          </Typography>
-          <Typography>
-            <strong>Conocimientos Previos:</strong>{" "}
-            {alumno.conocimientosPrevios ? "Sí" : "No"}
-          </Typography>
-          <Typography>
-            <strong>Instrumentos:</strong>{" "}
-            {Array.isArray(alumno.instrumentos)
-              ? alumno.instrumentos.join(", ")
-              : alumno.instrumentos}
-          </Typography>
-          <Typography>
-            <strong>Estilos Musicales:</strong>{" "}
-            {Array.isArray(alumno.estilosMusicales)
-              ? alumno.estilosMusicales.join(", ")
-              : alumno.estilosMusicales}
-          </Typography>
-          <Typography>
-            <strong>Otro Estilo:</strong> {alumno.otroEstilo}
-          </Typography>
-          <Typography>
-            <strong>Referente Musical:</strong> {alumno.referenteMusical}
-          </Typography>
-          <Typography>
-            <strong>Condición de Aprendizaje:</strong>{" "}
-            {alumno.condicionAprendizaje ? "Sí" : "No"}
-          </Typography>
-          {alumno.condicionAprendizaje && (
-            <Typography>
-              <strong>Detalle Condición de Aprendizaje:</strong>{" "}
-              {alumno.detalleCondicionAprendizaje}
-            </Typography>
-          )}
-          <Typography>
-            <strong>Condición Médica:</strong>{" "}
-            {alumno.condicionMedica ? "Sí" : "No"}
-          </Typography>
-          {alumno.condicionMedica && (
-            <Typography>
-              <strong>Detalle Condición Médica:</strong>{" "}
-              {alumno.detalleCondicionMedica}
-            </Typography>
-          )}
-          <Typography>
-            <strong>Observaciones:</strong> {alumno.observaciones}
-          </Typography>
-          {/* DATOS DE CLASE */}
-          <Typography
-            variant="subtitle1"
-            sx={{ mt: 2, mb: 1, color: "#7f8fa6", fontWeight: "bold" }}
-          >
-            Datos de Clase
-          </Typography>
-          <Divider sx={{ mb: 1, background: "#7f8fa6" }} />
-          <Typography>
-            <strong>Curso:</strong> {alumno.curso}
-          </Typography>
-          <Typography>
-            <strong>Tipo de Curso:</strong> {alumno.tipoCurso}
-          </Typography>
-          <Typography>
-            <strong>Modalidad Clase:</strong> {alumno.modalidadClase}
-          </Typography>
-          <Typography>
-            <strong>Clase:</strong> {alumno.clase}
-          </Typography>
-          {/* DATOS DE APODERADO */}
-          <Typography
-            variant="subtitle1"
-            sx={{ mt: 2, mb: 1, color: "#7f8fa6", fontWeight: "bold" }}
-          >
-            Datos de Apoderado
-          </Typography>
-          <Divider sx={{ mb: 1, background: "#7f8fa6" }} />
-          <Typography>
-            <strong>Nombre Apoderado:</strong> {alumno.nombreApoderado}
-          </Typography>
-          <Typography>
-            <strong>RUT Apoderado:</strong> {alumno.rutApoderado}
-          </Typography>
-          <Typography>
-            <strong>Teléfono Apoderado:</strong> {alumno.telefonoApoderado}
-          </Typography>
-        </CardContent>
-      </Collapse>
-    </Card>
-  );
+  // Ordenar alumnos según columna y orden
+  const sortedAlumnos = [...filteredAlumnos].sort((a, b) => {
+    let aValue = a[sortBy] || "";
+    let bValue = b[sortBy] || "";
+    // Si es fecha, comparar como fecha
+    if (sortBy === "fechaIngreso") {
+      aValue = new Date(aValue);
+      bValue = new Date(bValue);
+      return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+    }
+    // Comparar como texto
+    aValue = aValue.toString().toLowerCase();
+    bValue = bValue.toString().toLowerCase();
+    if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  // Función para cambiar orden y columna
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortOrder("asc");
+    }
+  };
 
   return (
     <Box sx={{ padding: 2 }}>
-      <Typography variant="h4" sx={{ color: "#fff", mb: 2 }}>
+      <Typography
+        variant="h4"
+        sx={{ color: "#43a047", mb: 2, fontWeight: "bold" }}
+      >
         Lista de Alumnos
       </Typography>
       <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
         <TextField
-          label="Buscar alumno por nombre, email o RUT..."
+          label="Buscar alumno por nombre, email, RUT o curso..."
           variant="outlined"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -373,19 +205,182 @@ function AlumnosList() {
           Agregar Alumno
         </Button>
       </Box>
-      <Grid container spacing={3}>
-        {filteredAlumnos.length === 0 ? (
-          <Grid>
-            <Typography color="textSecondary">
-              No hay alumnos registrados.
-            </Typography>
-          </Grid>
-        ) : (
-          filteredAlumnos.map((alumno) => (
-            <Grid key={alumno._id}>{renderResumenCard(alumno)}</Grid>
-          ))
-        )}
-      </Grid>
+      <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 2 }}>
+        <Table>
+          <TableHead sx={{ background: "#e8f5e9" }}>
+            <TableRow>
+              <TableCell align="center">N°</TableCell>
+              <TableCell align="center"></TableCell>
+              <TableCell
+                sx={{ cursor: "pointer", fontWeight: "bold" }}
+                onClick={() => handleSort("nombreAlumno")}
+              >
+                Nombre{" "}
+                {sortBy === "nombreAlumno"
+                  ? sortOrder === "asc"
+                    ? "▲"
+                    : "▼"
+                  : ""}
+              </TableCell>
+              <TableCell
+                sx={{ cursor: "pointer", fontWeight: "bold" }}
+                onClick={() => handleSort("rutAlumno")}
+              >
+                RUT{" "}
+                {sortBy === "rutAlumno"
+                  ? sortOrder === "asc"
+                    ? "▲"
+                    : "▼"
+                  : ""}
+              </TableCell>
+              <TableCell
+                align="center"
+                sx={{ cursor: "pointer", fontWeight: "bold" }}
+                onClick={() => handleSort("email")}
+              >
+                Email{" "}
+                {sortBy === "email" ? (sortOrder === "asc" ? "▲" : "▼") : ""}
+              </TableCell>
+              <TableCell
+                sx={{ cursor: "pointer", fontWeight: "bold" }}
+                onClick={() => handleSort("telefonoAlumno")}
+              >
+                Teléfono{" "}
+                {sortBy === "telefonoAlumno"
+                  ? sortOrder === "asc"
+                    ? "▲"
+                    : "▼"
+                  : ""}
+              </TableCell>
+              <TableCell
+                sx={{ cursor: "pointer", fontWeight: "bold" }}
+                onClick={() => handleSort("curso")}
+              >
+                Curso{" "}
+                {sortBy === "curso" ? (sortOrder === "asc" ? "▲" : "▼") : ""}
+              </TableCell>
+              <TableCell
+                sx={{ cursor: "pointer", fontWeight: "bold" }}
+                onClick={() => handleSort("tipoCurso")}
+              >
+                Tipo de Curso{" "}
+                {sortBy === "tipoCurso"
+                  ? sortOrder === "asc"
+                    ? "▲"
+                    : "▼"
+                  : ""}
+              </TableCell>
+              <TableCell
+                sx={{ cursor: "pointer", fontWeight: "bold" }}
+                onClick={() => handleSort("modalidadClase")}
+              >
+                Modalidad{" "}
+                {sortBy === "modalidadClase"
+                  ? sortOrder === "asc"
+                    ? "▲"
+                    : "▼"
+                  : ""}
+              </TableCell>
+              <TableCell
+                sx={{ cursor: "pointer", fontWeight: "bold" }}
+                onClick={() => handleSort("fechaIngreso")}
+              >
+                Fecha Ingreso{" "}
+                {sortBy === "fechaIngreso"
+                  ? sortOrder === "asc"
+                    ? "▲"
+                    : "▼"
+                  : ""}
+              </TableCell>
+              <TableCell align="center">Acciones</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sortedAlumnos.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={11} align="center">
+                  No hay alumnos registrados.
+                </TableCell>
+              </TableRow>
+            ) : (
+              sortedAlumnos.map((alumno, idx) => (
+                <TableRow
+                  key={alumno._id}
+                  hover
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => {
+                    setSelectedAlumno(alumno);
+                    setOpenFicha(true);
+                  }}
+                >
+                  <TableCell align="center">{idx + 1}</TableCell>
+                  <TableCell align="center">
+                    <Avatar
+                      src={alumno.fotoUrl || ""}
+                      alt={alumno.nombreAlumno}
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        bgcolor: "#eee",
+                        color: "#222",
+                      }}
+                    >
+                      {!alumno.fotoUrl && alumno.nombreAlumno
+                        ? alumno.nombreAlumno[0]
+                        : null}
+                    </Avatar>
+                  </TableCell>
+                  <TableCell>{alumno.nombreAlumno}</TableCell>
+                  <TableCell>{alumno.rutAlumno || "-"}</TableCell>
+                  <TableCell>{alumno.email || "-"}</TableCell>
+                  <TableCell>{alumno.telefonoAlumno || "-"}</TableCell>
+                  <TableCell>{alumno.curso || "-"}</TableCell>
+                  <TableCell>{alumno.tipoCurso || "-"}</TableCell>
+                  <TableCell>{alumno.modalidadClase || "-"}</TableCell>
+                  <TableCell>{alumno.fechaIngreso || "-"}</TableCell>
+                  <TableCell align="center" sx={{ minWidth: 120 }}>
+                    <Box
+                      sx={{ display: "flex", justifyContent: "center", gap: 1 }}
+                    >
+                      <IconButton
+                        color="info"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAlumno(alumno);
+                          setOpenFicha(true);
+                        }}
+                        sx={{ p: 1 }}
+                      >
+                        <PersonIcon />
+                      </IconButton>
+                      <IconButton
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(alumno);
+                        }}
+                        sx={{ p: 1 }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(alumno);
+                        }}
+                        sx={{ p: 1 }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
       {showForm && (
         <AlumnoForm
           initialData={editingAlumno}
@@ -393,6 +388,361 @@ function AlumnosList() {
           onClose={handleCloseForm}
         />
       )}
+      <Dialog
+        open={openFicha}
+        onClose={() => setOpenFicha(false)}
+        fullWidth
+        maxWidth="md"
+        scroll="paper"
+        PaperProps={{
+          sx: {
+            borderRadius: 6,
+            background: "#fff",
+            color: "#222",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+            minHeight: 520,
+            px: { xs: 2, md: 6 },
+            py: { xs: 2, md: 4 },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            fontWeight: "bold",
+            fontSize: 28,
+            color: "#43a047",
+            pb: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <PersonIcon sx={{ fontSize: 32, color: "#43a047", mr: 1 }} />
+          Ficha del Alumno
+        </DialogTitle>
+        <DialogContent
+          dividers
+          sx={{
+            background: "#fff",
+            px: { xs: 2, md: 6 },
+            py: { xs: 2, md: 4 },
+            maxHeight: "65vh",
+            overflowY: "auto",
+            borderRadius: 4,
+          }}
+        >
+          {selectedAlumno && (
+            <Box>
+              <Divider sx={{ my: 2 }} />
+              <Typography
+                variant="h6"
+                sx={{ color: "#43a047", fontWeight: "bold", mb: 2 }}
+              >
+                Datos Personales
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography>
+                    <strong>Nombre:</strong>{" "}
+                    {selectedAlumno.nombreAlumno || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>RUT:</strong> {selectedAlumno.rutAlumno || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>Dirección:</strong>{" "}
+                    {selectedAlumno.direccion || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>Teléfono:</strong>{" "}
+                    {selectedAlumno.telefonoAlumno || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>Email:</strong> {selectedAlumno.email || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>Fecha de ingreso:</strong>{" "}
+                    {selectedAlumno.fechaIngreso || "-"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography>
+                    <strong>Curso:</strong> {selectedAlumno.curso || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>Tipo de Curso:</strong>{" "}
+                    {selectedAlumno.tipoCurso || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>Modalidad Clase:</strong>{" "}
+                    {selectedAlumno.modalidadClase || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>Clase:</strong> {selectedAlumno.clase || "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+              <Divider sx={{ my: 2 }} />
+
+              <Typography
+                variant="h6"
+                sx={{ color: "#43a047", fontWeight: "bold", mb: 2 }}
+              >
+                Otros Datos
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography>
+                    <strong>RRSS:</strong> {selectedAlumno.rrss || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>Conocimientos Previos:</strong>{" "}
+                    {selectedAlumno.conocimientosPrevios ? "Sí" : "No"}
+                  </Typography>
+                  <Typography>
+                    <strong>Instrumentos:</strong>{" "}
+                    {Array.isArray(selectedAlumno.instrumentos)
+                      ? selectedAlumno.instrumentos.join(", ")
+                      : selectedAlumno.instrumentos || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>Estilos Musicales:</strong>{" "}
+                    {Array.isArray(selectedAlumno.estilosMusicales)
+                      ? selectedAlumno.estilosMusicales.join(", ")
+                      : selectedAlumno.estilosMusicales || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>Otro Estilo:</strong>{" "}
+                    {selectedAlumno.otroEstilo || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>Referente Musical:</strong>{" "}
+                    {selectedAlumno.referenteMusical || "-"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography>
+                    <strong>Condición de Aprendizaje:</strong>{" "}
+                    {selectedAlumno.condicionAprendizaje ? "Sí" : "No"}
+                  </Typography>
+                  {selectedAlumno.condicionAprendizaje && (
+                    <Typography>
+                      <strong>Detalle Condición de Aprendizaje:</strong>{" "}
+                      {selectedAlumno.detalleCondicionAprendizaje || "-"}
+                    </Typography>
+                  )}
+                  <Typography>
+                    <strong>Condición Médica:</strong>{" "}
+                    {selectedAlumno.condicionMedica ? "Sí" : "No"}
+                  </Typography>
+                  {selectedAlumno.condicionMedica && (
+                    <Typography>
+                      <strong>Detalle Condición Médica:</strong>{" "}
+                      {selectedAlumno.detalleCondicionMedica || "-"}
+                    </Typography>
+                  )}
+                  <Typography>
+                    <strong>Observaciones:</strong>{" "}
+                    {selectedAlumno.observaciones || "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+              <Divider sx={{ my: 2 }} />
+
+              <Typography
+                variant="h6"
+                sx={{ color: "#43a047", fontWeight: "bold", mb: 2 }}
+              >
+                Datos de Apoderado
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography>
+                    <strong>Nombre Apoderado:</strong>{" "}
+                    {selectedAlumno.nombreApoderado || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>RUT Apoderado:</strong>{" "}
+                    {selectedAlumno.rutApoderado || "-"}
+                  </Typography>
+                  <Typography>
+                    <strong>Teléfono Apoderado:</strong>{" "}
+                    {selectedAlumno.telefonoApoderado || "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ background: "#fff", px: 6, py: 3 }}>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => {
+              const doc = new jsPDF("p", "mm", "a4");
+              doc.setFontSize(14);
+
+              doc.setFillColor(0, 0, 0);
+              doc.rect(10, 10, 190, 12, "F");
+              doc.setTextColor(255, 255, 255);
+              doc.text("FICHA INSCRIPCIÓN VAC ESCUELA DE MUSICA", 15, 18);
+
+              doc.setFillColor(200, 200, 200);
+              doc.rect(10, 22, 190, 8, "F");
+              doc.setTextColor(0, 0, 0);
+              doc.setFontSize(10);
+              doc.text(
+                `Fecha: ${selectedAlumno?.fechaIngreso || "-"}`,
+                160,
+                28
+              );
+
+              doc.setDrawColor(0, 0, 0);
+              doc.rect(10, 30, 190, 40);
+
+              doc.text(
+                `Nombre completo estudiante: ${
+                  selectedAlumno?.nombreAlumno || "-"
+                }`,
+                12,
+                36
+              );
+              doc.text(
+                `Nombre apoderado: ${selectedAlumno?.nombreApoderado || "-"}`,
+                110,
+                36
+              );
+
+              doc.text(`RUT: ${selectedAlumno?.rutAlumno || "-"}`, 12, 42);
+              doc.text(
+                `RUT apoderado: ${selectedAlumno?.rutApoderado || "-"}`,
+                110,
+                42
+              );
+
+              doc.text(
+                `Domicilio: ${selectedAlumno?.direccion || "-"}`,
+                12,
+                48
+              );
+              doc.text(
+                `Teléfono: ${selectedAlumno?.telefonoAlumno || "-"}`,
+                110,
+                48
+              );
+
+              doc.text(`Correo: ${selectedAlumno?.email || "-"}`, 12, 54);
+              doc.text(`RRSS: ${selectedAlumno?.rrss || "-"}`, 110, 54);
+
+              doc.rect(10, 70, 190, 10);
+              doc.text(
+                `Conocimientos previos de música: ${
+                  selectedAlumno?.conocimientosPrevios ? "SI" : "NO"
+                }`,
+                12,
+                76
+              );
+
+              doc.rect(10, 80, 190, 10);
+              doc.text(
+                `Instrumentos: ${
+                  Array.isArray(selectedAlumno?.instrumentos)
+                    ? selectedAlumno.instrumentos.join(", ")
+                    : selectedAlumno?.instrumentos || "-"
+                }`,
+                12,
+                86
+              );
+
+              doc.rect(10, 90, 190, 10);
+              doc.text(
+                `Estilos musicales: ${
+                  Array.isArray(selectedAlumno?.estilosMusicales)
+                    ? selectedAlumno.estilosMusicales.join(", ")
+                    : selectedAlumno?.estilosMusicales || "-"
+                }`,
+                12,
+                96
+              );
+
+              doc.rect(10, 100, 190, 10);
+              doc.text(
+                `Referente musical: ${selectedAlumno?.referenteMusical || "-"}`,
+                12,
+                106
+              );
+
+              doc.rect(10, 110, 95, 15);
+              doc.text(
+                `Condición especial de aprendizaje: ${
+                  selectedAlumno?.condicionAprendizaje ? "SI" : "NO"
+                } ${selectedAlumno?.detalleCondicionAprendizaje || "-"}`,
+                12,
+                116
+              );
+              doc.rect(105, 110, 95, 15);
+              doc.text(
+                `Condición médica: ${
+                  selectedAlumno?.condicionMedica ? "SI" : "NO"
+                } ${selectedAlumno?.detalleCondicionMedica || "-"}`,
+                107,
+                116
+              );
+
+              doc.rect(10, 125, 190, 10);
+              doc.text(
+                `Observaciones: ${selectedAlumno?.observaciones || "-"}`,
+                12,
+                131
+              );
+
+              doc.rect(10, 135, 190, 15);
+              doc.text(
+                `Fecha de ingreso: ${selectedAlumno?.fechaIngreso || "-"}`,
+                12,
+                141
+              );
+              doc.text(`Curso: ${selectedAlumno?.curso || "-"}`, 60, 141);
+              doc.text(
+                `Tipo de curso: ${selectedAlumno?.tipoCurso || "-"}`,
+                110,
+                141
+              );
+              doc.text(
+                `Modalidad de clase: ${selectedAlumno?.modalidadClase || "-"}`,
+                12,
+                147
+              );
+              doc.text(`Clase: ${selectedAlumno?.clase || "-"}`, 110, 147);
+
+              doc.save(`ficha_${selectedAlumno?.nombreAlumno || "alumno"}.pdf`);
+            }}
+            sx={{
+              fontWeight: "bold",
+              px: 3,
+              py: 1,
+              fontSize: 16,
+              borderRadius: 2,
+              boxShadow: 2,
+            }}
+          >
+            DESCARGAR PDF
+          </Button>
+          <Button
+            onClick={() => setOpenFicha(false)}
+            color="info"
+            sx={{
+              fontWeight: "bold",
+              px: 3,
+              py: 1,
+              fontSize: 16,
+              borderRadius: 2,
+            }}
+          >
+            CERRAR
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Snackbar
         open={showSuccess}
         autoHideDuration={3000}
