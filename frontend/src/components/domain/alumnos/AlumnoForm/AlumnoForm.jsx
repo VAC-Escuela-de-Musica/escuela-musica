@@ -270,6 +270,12 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
                   values={form}
                   errors={fieldErrors}
                   onChange={handleChange}
+                  gridField="rrss"
+                />
+                <AlumnoDatos
+                  values={form}
+                  errors={fieldErrors}
+                  onChange={handleChange}
                   gridField="direccion"
                 />
                 {/* Campo de contraseña solo al crear */}

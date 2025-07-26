@@ -1,7 +1,7 @@
-import { format, parseISO, isValid } from 'date-fns';
+import { format, parseISO, isValid } from "date-fns";
 import { formatearRut } from "./utils/rutUtils";
-import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 // Subcomponente: datos del alumno
 import React from "react";
 import { TextField, Box, InputAdornment } from "@mui/material";
@@ -31,8 +31,8 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
       onChange({
         target: {
           name: "rutAlumno",
-          value: formatted
-        }
+          value: formatted,
+        },
       });
     };
     return (
@@ -46,7 +46,11 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
         margin="normal"
         variant="outlined"
         error={!!errors.rutAlumno}
-        helperText={errors.rutAlumno ? 'El RUT no es válido. Debe tener puntos y guion.' : ''}
+        helperText={
+          errors.rutAlumno
+            ? "El RUT no es válido. Debe tener puntos y guion."
+            : ""
+        }
         placeholder="Ejemplo: 12.345.678-9"
         sx={{ mb: 0 }}
       />
@@ -74,7 +78,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
   }
   if (gridField === "telefonoAlumno") {
     return (
-      <Box className="telefonoBox" sx={{ display: 'flex', gap: 1, mb: 0 }}>
+      <Box className="telefonoBox" sx={{ display: "flex", gap: 1, mb: 0 }}>
         <TextField
           label="Código País"
           name="codigoPaisAlumno"
@@ -141,30 +145,33 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
     // Convertir string a Date solo si es string y válido
     let dateValue = null;
     if (values.fechaIngreso) {
-      if (typeof values.fechaIngreso === 'string') {
+      if (typeof values.fechaIngreso === "string") {
         const parsed = parseISO(values.fechaIngreso);
         dateValue = isValid(parsed) ? parsed : null;
-      } else if (values.fechaIngreso instanceof Date && isValid(values.fechaIngreso)) {
+      } else if (
+        values.fechaIngreso instanceof Date &&
+        isValid(values.fechaIngreso)
+      ) {
         dateValue = values.fechaIngreso;
       }
     }
     return (
-      <div style={{ width: '100%', marginTop: 16 }}>
+      <div style={{ width: "100%", marginTop: 16 }}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DatePicker
             enableAccessibleFieldDOMStructure={false}
             label="Fecha de Ingreso"
             value={dateValue}
-            onChange={newValue => {
-              let stringValue = '';
+            onChange={(newValue) => {
+              let stringValue = "";
               if (newValue && isValid(newValue)) {
-                stringValue = format(newValue, 'yyyy-MM-dd');
+                stringValue = format(newValue, "yyyy-MM-dd");
               }
               onChange({
                 target: {
-                  name: 'fechaIngreso',
-                  value: stringValue
-                }
+                  name: "fechaIngreso",
+                  value: stringValue,
+                },
               });
             }}
             slots={{ textField: TextField }}
@@ -175,12 +182,28 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
                 margin: "normal",
                 variant: "outlined",
                 error: !!errors.fechaIngreso,
-                helperText: errors.fechaIngreso
-              }
+                helperText: errors.fechaIngreso,
+              },
             }}
           />
         </LocalizationProvider>
       </div>
+    );
+  }
+  if (gridField === "rrss") {
+    return (
+      <TextField
+        label="RRSS"
+        name="rrss"
+        value={values.rrss}
+        onChange={onChange}
+        fullWidth
+        margin="normal"
+        variant="outlined"
+        error={!!errors.rrss}
+        helperText={errors.rrss}
+        sx={{ mb: 0 }}
+      />
     );
   }
   if (gridField === "password") {
@@ -196,7 +219,10 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
         margin="normal"
         variant="outlined"
         error={!!errors.password}
-        helperText={errors.password || "Mínimo 6 caracteres. El alumno podrá cambiarla luego."}
+        helperText={
+          errors.password ||
+          "Mínimo 6 caracteres. El alumno podrá cambiarla luego."
+        }
         placeholder="Contraseña segura"
         sx={{ mb: 0 }}
       />
