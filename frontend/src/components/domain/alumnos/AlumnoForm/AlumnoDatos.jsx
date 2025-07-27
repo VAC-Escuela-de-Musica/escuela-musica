@@ -73,6 +73,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
         helperText={errors.edadAlumno}
         placeholder="Edad entre 1 y 99 años"
         sx={{ mb: 0 }}
+        onWheel={(e) => e.target.blur()} // <-- Agrega esta línea
       />
     );
   }
@@ -137,7 +138,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
         error={!!errors.direccion}
         helperText={errors.direccion}
         placeholder="Ejemplo: Calle 123, Ciudad"
-        sx={{ mb: 0, mt: 2 }}
+        sx={{ mb: 0 }}
       />
     );
   }
@@ -156,7 +157,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
       }
     }
     return (
-      <div style={{ width: "100%", marginTop: 16 }}>
+      <>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DatePicker
             enableAccessibleFieldDOMStructure={false}
@@ -183,11 +184,13 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
                 variant: "outlined",
                 error: !!errors.fechaIngreso,
                 helperText: errors.fechaIngreso,
+                sx: { mb: 0 },
+                size: "small",
               },
             }}
           />
         </LocalizationProvider>
-      </div>
+      </>
     );
   }
   if (gridField === "rrss") {
