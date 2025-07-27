@@ -5,7 +5,14 @@
 
 // Configuración de API
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230',
+  BASE_URL: (() => {
+    const url = import.meta.env.VITE_API_URL;
+    if (!url) {
+      throw new Error('VITE_API_URL no está configurada en las variables de entorno');
+    }
+    // Normalizar URL (remover /api del final y barra final)
+    return url.replace(/\/api\/?$/, '').replace(/\/$/, '');
+  })(),
   TIMEOUT: 30000,
   RETRY_COUNT: 3,
   RETRY_DELAY: 1000,

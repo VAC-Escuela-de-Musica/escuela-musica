@@ -7,7 +7,16 @@ import { API_HEADERS } from '../config/api.js';
  */
 class ApiService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230';
+    this.baseURL = import.meta.env.VITE_API_URL;
+    
+    // Verificar que la URL esté configurada
+    if (!this.baseURL) {
+      throw new Error('VITE_API_URL no está configurada en las variables de entorno');
+    }
+    
+    // Normalizar URL (remover /api del final y barra final)
+    this.baseURL = this.baseURL.replace(/\/api\/?$/, '').replace(/\/$/, '');
+    
     this.token = null;
     
     // Bind methods to preserve 'this' context
