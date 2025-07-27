@@ -29,7 +29,6 @@ const ProfesorForm = ({ profesor, onSubmit, onCancel, loading = false }) => {
     email: "",
     numero: "",
     password: "",
-    sueldo: "",
     fechaContrato: new Date(),
     activo: true,
   });
@@ -48,7 +47,7 @@ const ProfesorForm = ({ profesor, onSubmit, onCancel, loading = false }) => {
         email: profesor.email || "",
         numero: profesor.numero || "",
         password: "", // No mostrar contraseña existente
-        sueldo: profesor.sueldo || "",
+
         fechaContrato: profesor.fechaContrato ? new Date(profesor.fechaContrato) : new Date(),
         activo: profesor.activo !== undefined ? profesor.activo : true,
       });
@@ -105,12 +104,7 @@ const ProfesorForm = ({ profesor, onSubmit, onCancel, loading = false }) => {
       }
     }
 
-    // Validar sueldo
-    if (!formData.sueldo) {
-      newErrors.sueldo = "El sueldo es obligatorio";
-    } else if (isNaN(formData.sueldo) || Number(formData.sueldo) < 0) {
-      newErrors.sueldo = "El sueldo debe ser un número positivo";
-    }
+
 
     // Validar fecha de contrato
     if (!formData.fechaContrato) {
@@ -128,7 +122,6 @@ const ProfesorForm = ({ profesor, onSubmit, onCancel, loading = false }) => {
     if (validateForm()) {
       const submitData = {
         ...formData,
-        sueldo: Number(formData.sueldo),
         fechaContrato: formData.fechaContrato.toISOString(),
       };
 
@@ -285,22 +278,7 @@ const ProfesorForm = ({ profesor, onSubmit, onCancel, loading = false }) => {
               />
             </Grid>
 
-            {/* Sueldo */}
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Sueldo"
-                type="number"
-                value={formData.sueldo}
-                onChange={(e) => handleChange("sueldo", e.target.value)}
-                error={!!errors.sueldo}
-                helperText={errors.sueldo}
-                required
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                }}
-              />
-            </Grid>
+
 
             {/* Fecha de contrato */}
             <Grid item xs={12} sm={6}>
