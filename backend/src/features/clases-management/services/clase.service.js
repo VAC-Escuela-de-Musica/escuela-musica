@@ -536,7 +536,6 @@ async function getHorarioMes({ mes, year, sala, horaInicio, horaFin, profesor })
   }
 }
 
-
 export default {
   createClase,
   getAllClases,

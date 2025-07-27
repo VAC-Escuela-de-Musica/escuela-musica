@@ -389,7 +389,40 @@ async function getProfesorById(req, res) {
     }
 }
 
-export { 
+
+/**
+ * Crea múltiples clases en un solo request
+ * @param {Object} req 
+ * @param {Object} res 
+ */
+async function createClases(req, res) {
+    try {
+        const { body } = req;
+        if (!Array.isArray(body)) {
+            return respondError(req, res, 400, "El cuerpo de la solicitud debe ser un arreglo de clases");
+        }
+
+        const clasesCreadas = [];
+        for (const clase of body) {
+            const { error: bodyError } = claseBodySchema.validate(clase);
+            if (bodyError) return respondError(req, res, 400, bodyError.message);
+
+            const [nuevaClase, error] = await claseService.createClase(clase);
+            if (error) return respondError(req, res, 400, error);
+            if (!nuevaClase) return respondError(req, res, 400, "No se pudo crear una de las clases");
+
+            clasesCreadas.push(nuevaClase);
+        }
+
+        respondSuccess(req, res, 201, clasesCreadas);
+    } catch (error) {
+        handleError(error, "clase.controller -> createClases");
+        respondError(req, res, 500, "No se pudieron crear las clases");
+    }
+}
+
+export {
+    createClases,
     createClase,
     getAllClases,
     getClaseById,

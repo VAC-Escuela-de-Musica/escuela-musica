@@ -47,8 +47,8 @@ export default function HorarioSemana() {
       const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
       if (response.ok) {
         const data = await response.json();
-        setNombresProfesores(prev => ({ ...prev, [id]: data.data.username }));
-        return data.data.username;
+        setNombresProfesores(prev => ({ ...prev, [id]: data.data.nombreCompleto }));
+        return data.data.nombreCompleto;
       }
     } catch (error) {
       console.error("Error al obtener nombre del profesor:", error);
@@ -288,7 +288,7 @@ export default function HorarioSemana() {
       <MenuItem value="0" sx={{ color: "white" }}>Todos los profesores</MenuItem>
       {listaProfesores.map((prof) => (
         <MenuItem key={prof._id} value={prof._id}>
-          {prof.username}
+          {prof.nombreCompleto}
         </MenuItem>
       ))}
     </TextField>
