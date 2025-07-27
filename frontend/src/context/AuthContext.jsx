@@ -136,6 +136,11 @@ export function AuthProvider({ children }) {
     return hasRole("student") || hasRole("estudiante");
   };
 
+  // Verificar si el usuario es asistente
+  const isAssistant = () => {
+    return hasRole("asistente");
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -149,6 +154,7 @@ export function AuthProvider({ children }) {
         isAdmin,
         isTeacher,
         isStudent,
+        isAssistant,
         csrfToken,
       }}
     >

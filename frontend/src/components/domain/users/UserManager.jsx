@@ -34,11 +34,27 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
+import { useAuth } from '../../../context/AuthContext.jsx';
+import UnauthorizedAccess from '../../common/UnauthorizedAccess.jsx';
 
 /**
  * Gestor de Usuarios - Versión simplificada y funcional (basada en backup)
  */
 const UserManager = () => {
+  const { isAdmin } = useAuth();
+
+  // Verificar permisos de acceso (solo admin puede gestionar usuarios)
+  if (!isAdmin()) {
+    return (
+      <UnauthorizedAccess 
+        title="Gestión de Usuarios"
+        message="Solo administradores pueden gestionar usuarios del sistema."
+        suggestion="Contacta al administrador si necesitas realizar cambios de usuarios."
+        icon={<PersonIcon fontSize="large" />}
+        color="error"
+      />
+    );
+  }
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });

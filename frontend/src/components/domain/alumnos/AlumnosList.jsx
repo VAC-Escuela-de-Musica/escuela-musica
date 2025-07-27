@@ -37,8 +37,24 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { jsPDF } from "jspdf";
+import { useAuth } from '../../../context/AuthContext.jsx';
+import UnauthorizedAccess from '../../common/UnauthorizedAccess.jsx';
 
 function AlumnosList() {
+  const { isAdmin } = useAuth();
+
+  // Verificar permisos de acceso (solo admin puede gestionar estudiantes)
+  if (!isAdmin()) {
+    return (
+      <UnauthorizedAccess 
+        title="Gestión de Estudiantes"
+        message="Solo administradores pueden gestionar la información de estudiantes."
+        suggestion="Contacta al administrador si necesitas consultar o modificar datos de estudiantes."
+        icon={<PersonIcon fontSize="large" />}
+        color="error"
+      />
+    );
+  }
   const [alumnos, setAlumnos] = useState([]);
   const [editingAlumno, setEditingAlumno] = useState(() => {
     const saved = localStorage.getItem("alumnos_editingAlumno");
