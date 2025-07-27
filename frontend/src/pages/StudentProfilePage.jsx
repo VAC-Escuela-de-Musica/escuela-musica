@@ -41,10 +41,12 @@ import {
   Phone as PhoneIcon,
   LocationOn as LocationIcon,
   CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon
+  Error as ErrorIcon,
+  Lock as LockIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext.jsx';
 import { API_ENDPOINTS, API_HEADERS } from '../config/api.js';
+import ChangePasswordDialog from '../components/domain/auth/ChangePasswordDialog.jsx';
 
 const StudentProfilePage = () => {
   const { user } = useAuth();
@@ -54,6 +56,7 @@ const StudentProfilePage = () => {
   const [editingField, setEditingField] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -281,9 +284,27 @@ const StudentProfilePage = () => {
                 sx={{ mb: 2 }}
               />
               
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Miembro desde {new Date(user?.createdAt || Date.now()).toLocaleDateString()}
               </Typography>
+              
+              <Button
+                variant="outlined"
+                startIcon={<LockIcon />}
+                onClick={() => setChangePasswordDialogOpen(true)}
+                sx={{ 
+                  mt: 1,
+                  borderColor: 'primary.main',
+                  color: 'primary.main',
+                  '&:hover': {
+                    borderColor: 'primary.dark',
+                    backgroundColor: 'primary.light',
+                    color: 'primary.dark'
+                  }
+                }}
+              >
+                Cambiar Contraseña
+              </Button>
             </CardContent>
           </Card>
         </Grid>
@@ -477,6 +498,19 @@ const StudentProfilePage = () => {
           </Grid>
         )}
       </Grid>
+
+      {/* Diálogo para cambiar contraseña */}
+      <ChangePasswordDialog
+        open={changePasswordDialogOpen}
+        onClose={() => setChangePasswordDialogOpen(false)}
+        onSuccess={(message) => {
+          setSnackbar({
+            open: true,
+            message: message,
+            severity: 'success'
+          });
+        }}
+      />
 
       {/* Snackbar para notificaciones */}
       <Snackbar
