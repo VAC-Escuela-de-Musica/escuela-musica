@@ -20,7 +20,6 @@ import { ArrowCircleLeftOutlined } from "@mui/icons-material";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/clases`;
 
-// fetchAutenticado: obtiene el token CSRF y lo incluye en las cabeceras de la solicitud.
 const fetchAutenticado = async (url, options = {}) => {
   const token = localStorage.getItem("token");
 
@@ -60,6 +59,7 @@ export default function ClasesCrear({ setActiveModule }) {
   const [repetirClase, setRepetirClase] = useState("");
   const [repeticiones, setRepeticiones] = useState([]);
   const [mismaHora, setMismaHora] = useState(false);
+  const [mismaSala, setMismaSala] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const maxDate = new Date(currentYear +1, 11, 31);
@@ -108,13 +108,13 @@ export default function ClasesCrear({ setActiveModule }) {
       }));
     }
 
-    const nuevaClase = {
-      titulo,
-      descripcion,
-      sala,
-      profesor: profesor,
-      horarios: [
-        {
+    const clasesParaEnviar = [
+      {
+        titulo,
+        descripcion,
+        sala,
+        profesor,
+        horarios: [{
           dia: selectedDate
             ? `${selectedDate.getDate().toString().padStart(2, '0')}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getFullYear()}`
             : null,
@@ -124,9 +124,14 @@ export default function ClasesCrear({ setActiveModule }) {
           horaFin: horaFin
             ? `${horaFin.getHours().toString().padStart(2, "0")}:${horaFin.getMinutes().toString().padStart(2, "0")}`
             : null,
-        },
-        // Agrega las repeticiones si existen
-        ...repeticionesFinal.map(r => ({
+        }]
+      },
+      ...repeticionesFinal.map(r => ({
+        titulo,
+        descripcion,
+        sala,
+        profesor,
+        horarios: [{
           dia: r.fecha
             ? `${r.fecha.getDate().toString().padStart(2, '0')}-${(r.fecha.getMonth() + 1).toString().padStart(2, '0')}-${r.fecha.getFullYear()}`
             : null,
@@ -136,19 +141,19 @@ export default function ClasesCrear({ setActiveModule }) {
           horaFin: r.horaFin
             ? `${r.horaFin.getHours().toString().padStart(2, "0")}:${r.horaFin.getMinutes().toString().padStart(2, "0")}`
             : null,
-        })),
-      ]
-    };
+        }]
+      }))
+    ];
 
     try {
-      console.log("Clase a enviar:", JSON.stringify(nuevaClase, null, 2));
-      console.log("Enviando al backend:", nuevaClase);
-      const response = await fetchAutenticado(`${API_URL}/create`, {
+      console.log("Clases a enviar:", JSON.stringify(clasesParaEnviar, null, 2));
+      console.log("Enviando al backend:", clasesParaEnviar);
+      const response = await fetchAutenticado(`${API_URL}/batch`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(nuevaClase)
+        body: JSON.stringify(clasesParaEnviar)
       });
 
       if (response.status === 403) {
@@ -187,7 +192,8 @@ export default function ClasesCrear({ setActiveModule }) {
           return {
             fecha: null,
             horaInicio: mismaHora ? horaInicio : null,
-            horaFin: mismaHora ? horaFin : null
+            horaFin: mismaHora ? horaFin : null,
+            sala: mismaSala ? sala : repeticiones[i]?.sala || "",
           };
         }
         const nuevaFecha = new Date(selectedDate.getTime());
@@ -195,12 +201,13 @@ export default function ClasesCrear({ setActiveModule }) {
         return {
           fecha: nuevaFecha,
           horaInicio: mismaHora ? horaInicio : null,
-          horaFin: mismaHora ? horaFin : null
+          horaFin: mismaHora ? horaFin : null,
+          sala: mismaSala ? sala : repeticiones[i]?.sala || "",
         };
       });
       setRepeticiones(nuevasRepeticiones);
     }
-  }, [selectedDate, repetirClase, mismaHora]);
+  }, [selectedDate, repetirClase, mismaHora, mismaSala, sala]);
 
   if (!autorizado) {
     return (
@@ -466,8 +473,22 @@ export default function ClasesCrear({ setActiveModule }) {
               sx={{ mt: 2 }}
             />
           )}
+          {/* Switch para misma sala en repeticiones */}
+          {parseInt(repetirClase) > 0 && (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={mismaSala}
+                  onChange={(e) => setMismaSala(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="¿Utilizar la misma sala para todas las semanas?"
+              sx={{ mt: 1 }}
+            />
+          )}
           {parseInt(repetirClase) > 0 && repeticiones.map((r, i) => (
-            <Box key={i} display="flex" gap={1} mt={2}>
+            <Box key={i} display="flex" gap={1} mt={2} alignItems="center">
               <DatePicker
                 label={`Fecha ${i + 1}`}
                 value={r.fecha}
@@ -579,6 +600,65 @@ export default function ClasesCrear({ setActiveModule }) {
                   }}
                 />
               </>
+              <TextField
+                label="Sala"
+                select
+                required
+                fullWidth
+                variant="filled"
+                margin="dense"
+                value={mismaSala ? sala : r.sala}
+                disabled={mismaSala}
+                onChange={(e) => {
+                  if (!mismaSala) {
+                    const nuevas = [...repeticiones];
+                    nuevas[i].sala = e.target.value;
+                    setRepeticiones(nuevas);
+                  }
+                }}
+                InputProps={{
+  style: { backgroundColor: "#333", color: "white" },
+  sx: {
+    color: "white",
+    "&.Mui-disabled": {
+      color: "white"
+    },
+    "& .MuiSelect-icon": {
+      color: "white"
+    }
+  }
+}}
+InputLabelProps={{
+  style: { color: "white" },
+  sx: {
+    "&.Mui-disabled": {
+      color: "white"
+    }
+  }
+}}
+                SelectProps={{
+                  native: false,
+                  sx: {
+                    color: "white",
+                    "& .MuiSelect-icon": {
+                      color: "white"
+                    }
+                  },
+                  MenuProps: {
+                    PaperProps: {
+                      style: {
+                        backgroundColor: "#333",
+                        color: "white",
+                      }
+                    }
+                  }
+                }}
+              >
+                <MenuItem disabled value="" sx={{ color: "white" }}>Elegir sala</MenuItem>
+                <MenuItem value="Sala 1">Sala 1</MenuItem>
+                <MenuItem value="Sala 2">Sala 2</MenuItem>
+                <MenuItem value="Sala 3">Sala 3</MenuItem>
+              </TextField>
             </Box>
           ))}
         </LocalizationProvider>

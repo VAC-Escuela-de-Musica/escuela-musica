@@ -111,6 +111,7 @@ export default function Clases({ setActiveModule }) {
         throw new Error("Error al obtener las próximas clases");
       }
       const data = await response.json();
+      console.log("Clases próximas recibidas:", data.data);
       setClases(data.data);
       data.data.forEach(clase => obtenerNombreProfesor(clase.profesor));
     } catch (error) {
@@ -396,10 +397,14 @@ export default function Clases({ setActiveModule }) {
                     <Typography><strong>Descripción:</strong> {clase.descripcion}</Typography>
                     <Typography><strong>Estado:</strong> {clase.estado}</Typography>
                     <Typography><strong>Profesor:</strong> {nombresProfesores[clase.profesor]}</Typography>
-                    <Typography><strong>Sala:</strong> {clase.sala}</Typography>
-                    <Typography><strong>Fecha:</strong> {clase.horarios[0].dia}</Typography>
-                    <Typography><strong>Hora Inicio:</strong> {clase.horarios[0].horaInicio}</Typography>
-                    <Typography><strong>Hora Fin:</strong> {clase.horarios[0].horaFin}</Typography>
+                    {Array.isArray(clase.horarios) && clase.horarios.map((h, i) => (
+                      <Box key={i} sx={{ pl: 1, borderLeft: '2px solid white' }}>
+                        <Typography><strong>Horario</strong></Typography>
+                        <Typography><strong>Fecha:</strong> {h.dia}</Typography>
+                        <Typography><strong>Hora Inicio:</strong> {h.horaInicio}</Typography>
+                        <Typography><strong>Hora Fin:</strong> {h.horaFin}</Typography>
+                      </Box>
+                    ))}
                   </Box>
                   <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mb: 1 }}>
                     <Button
