@@ -67,7 +67,7 @@ async function setupServer () {
         /^\/api\/alumnos.*$/, // Excluir todas las rutas de alumnos
         /^\/api\/profesores.*$/, // Excluir todas las rutas de profesores
         /^\/api\/messaging\/whatsapp-web\/(reset|initialize)$/, // Excluir rutas públicas de WhatsApp Web
-        /^\/api\/messaging\/(send-whatsapp|send-email|send-message|test-message|test-email-config-unrestricted|email-config.*)$/, // Excluir rutas de envío de mensajes y configuración de email
+        /^\/api\/messaging\/(send-whatsapp|send-email|send-message|test-message|test-email-config-unrestricted|email-config.*|whatsapp.*)$/, // Excluir rutas de envío de mensajes, configuración de email y WhatsApp
         /^\/api\/internal-messages.*$/ // Excluir todas las rutas de mensajes internos
       ]
       const isExcluded = csrfExcluded.some(pattern => {

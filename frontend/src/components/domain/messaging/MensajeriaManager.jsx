@@ -9,11 +9,13 @@ import {
 } from "@mui/material";
 import {
   Message as MessageIcon,
-  Email as EmailIcon
+  Email as EmailIcon,
+  WhatsApp as WhatsAppIcon
 } from '@mui/icons-material';
 
 const InternalMessageManager = React.lazy(() => import("../../../pages/InternalMessageManager"));
 const GmailConfig = React.lazy(() => import("./GmailConfig"));
+const WhatsAppConfig = React.lazy(() => import("./WhatsAppConfig"));
 
 // Professional loading component for messaging
 const MessagingLoadingFallback = ({ message }) => (
@@ -76,6 +78,11 @@ const MensajeriaManager = () => {
             label="Configurar Gmail" 
             iconPosition="start"
           />
+          <Tab 
+            icon={<WhatsAppIcon />} 
+            label="Configurar WhatsApp" 
+            iconPosition="start"
+          />
         </Tabs>
       </Paper>
 
@@ -99,6 +106,18 @@ const MensajeriaManager = () => {
           
           <Suspense fallback={<MessagingLoadingFallback message="Cargando configuración de Gmail..." />}>
             <GmailConfig />
+          </Suspense>
+        </Box>
+      )}
+
+      {activeTab === 2 && (
+        <Box>
+          <Typography variant="body1" sx={{ mb: 3, color: '#cccccc', textAlign: 'center' }}>
+            Configura WhatsApp para enviar mensajes directamente a los estudiantes
+          </Typography>
+          
+          <Suspense fallback={<MessagingLoadingFallback message="Cargando configuración de WhatsApp..." />}>
+            <WhatsAppConfig />
           </Suspense>
         </Box>
       )}
