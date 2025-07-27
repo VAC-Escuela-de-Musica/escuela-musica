@@ -14,6 +14,7 @@ import roleRoutes from '../features/user-management/routes/role.routes.js'
 import cardsProfesoresRoutes from '../features/website-content/routes/cardsProfesores.routes.js'
 import carouselRoutes from '../features/website-content/routes/carousel.routes.js'
 import testimonioRoutes from '../features/website-content/routes/testimonio.routes.js'
+import ClasesRoutes from '../features/clases-management/routes/clase.routes.js'
 
 import adminRoutes from './admin.routes.js'
 
@@ -109,6 +110,9 @@ router.use('/carousel', carouselRoutes)
 
 // Rutas para testimonios - autenticación manejada en testimonio.routes.js
 router.use('/testimonios', testimonioRoutes)
+
+// Rutas para clases - autenticación manejada en clase.routes.js
+router.use("/clases", ClasesRoutes);
 
 // ============= COMPATIBILIDAD CON RUTAS OBSOLETAS =============
 router.use('/materiales', (req, res) => {
