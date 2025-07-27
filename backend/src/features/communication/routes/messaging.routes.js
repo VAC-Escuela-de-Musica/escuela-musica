@@ -5,6 +5,7 @@ import {
   authenticateJWT,
   loadUserData,
   requireAdmin,
+  requireAdminOrAsistente,
   asyncHandler
 } from '../../../middlewares/index.js'
 
@@ -71,11 +72,12 @@ router.post('/test-message', messagingController.sendTestMessage)
 router.get('/whatsapp-web/status', messagingController.getWhatsAppWebStatus)
 router.get('/whatsapp-web/qr', messagingController.getWhatsAppWebQR)
 
-// Rutas para configuración de email
-router.get('/email-config', emailConfigController.getEmailConfig)
-router.post('/email-config', emailConfigController.saveEmailConfig)
-// Ruta de prueba simplificada para debugging
-router.post('/test-email-config', authenticateJWT, (req, res) => {
+// Rutas para configuración de email (administradores y asistentes)
+router.get('/email-config', requireAdminOrAsistente, emailConfigController.getEmailConfig)
+router.post('/email-config', requireAdminOrAsistente, emailConfigController.saveEmailConfig)
+router.post('/email-config/test', requireAdminOrAsistente, emailConfigController.testEmailConfig)
+// Ruta de prueba simplificada para debugging (administradores y asistentes)
+router.post('/test-email-config', requireAdminOrAsistente, (req, res) => {
   console.log('🔍 [TEST-EMAIL-CONFIG] Petición recibida')
   console.log('🔍 [TEST-EMAIL-CONFIG] req.user:', req.user)
   console.log('🔍 [TEST-EMAIL-CONFIG] req.roles:', req.roles)

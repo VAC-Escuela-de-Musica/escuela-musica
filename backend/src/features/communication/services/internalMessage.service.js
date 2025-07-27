@@ -169,7 +169,7 @@ class InternalMessageService {
       let recipients = []
 
       switch (message.recipientType) {
-        case 'individual':
+        case 'specific_student':
           if (message.recipient) {
             const student = await Alumno.findById(message.recipient)
             if (student) recipients.push(student)
@@ -177,27 +177,22 @@ class InternalMessageService {
           break
 
         case 'all_students':
-          const query = {}
-          if (message.filters.activeOnly) {
-            query.estado = 'activo'
-          }
-          recipients = await Alumno.find(query)
+          recipients = await Alumno.find({ estado: 'activo' })
           break
 
-        case 'by_instrument':
-          const instrumentQuery = { instrumento: message.filters.instrument }
-          if (message.filters.activeOnly) {
-            instrumentQuery.estado = 'activo'
+        case 'specific_class':
+          if (message.recipient) {
+            // Obtener estudiantes de la clase específica
+            const Clase = (await import('../../../core/models/clase.model.js')).default
+            const clase = await Clase.findById(message.recipient).populate('estudiantes.alumno')
+            if (clase && clase.estudiantes) {
+              for (const estudianteClase of clase.estudiantes) {
+                if (estudianteClase.estado === 'activo' && estudianteClase.alumno) {
+                  recipients.push(estudianteClase.alumno)
+                }
+              }
+            }
           }
-          recipients = await Alumno.find(instrumentQuery)
-          break
-
-        case 'by_level':
-          const levelQuery = { nivel: message.filters.level }
-          if (message.filters.activeOnly) {
-            levelQuery.estado = 'activo'
-          }
-          recipients = await Alumno.find(levelQuery)
           break
       }
 

@@ -99,6 +99,13 @@ export const API_ENDPOINTS = {
     getUnreadMessages: (studentId) => `${API_BASE_URL}/api/internal-messages/student/${studentId}/unread`,
     stats: `${API_BASE_URL}/api/internal-messages/stats`
   },
+
+  // Configuración de Email
+  emailConfig: {
+    get: `${API_BASE_URL}/api/messaging/email-config`,
+    save: `${API_BASE_URL}/api/messaging/email-config`,
+    test: `${API_BASE_URL}/api/messaging/email-config/test`
+  },
   
   // Galería
   galeria: {

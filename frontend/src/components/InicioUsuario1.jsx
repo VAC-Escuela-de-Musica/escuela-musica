@@ -30,6 +30,8 @@ import ClearIcon from '@mui/icons-material/Clear';
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
 
+
+
 const UserManager = React.lazy(() => import("./domain/users/UserManager"));
 const CardsProfesoresManager = React.lazy(() => import("./domain/profesores/CardsProfesoresManager"));
 const ProfesoresList = React.lazy(() => import("./domain/profesores/ProfesoresList"));
