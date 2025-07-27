@@ -137,6 +137,13 @@ const claseCancelSchema = Joi.object({
       "any.required": "El estado es obligatorio.",
       "string.base": "El estado debe ser de tipo string.",
     }),
+  motivo: Joi.string()
+    .max(500)
+    .optional()
+    .messages({
+      "string.max": "El motivo no puede exceder los 500 caracteres.",
+      "string.base": "El motivo debe ser de tipo string.",
+    }),
   }).messages({
   "object.unknown": "No se permiten propiedades adicionales.",
 });

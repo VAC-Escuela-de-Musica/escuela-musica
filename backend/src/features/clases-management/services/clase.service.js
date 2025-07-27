@@ -95,7 +95,7 @@ async function getClaseById(id) {
  * @param {Object} horario 
  * @returns {Promise} Promesa con el objeto de horario actualizado
  */
-async function updateClase(id, clase) {
+async function updateClase(id, clase, actualizadoPor = null) {
   try {
     const claseFound = await Clase.findById(id);
     if (!claseFound) return [null, "Clase no encontrada"];
@@ -106,9 +106,28 @@ async function updateClase(id, clase) {
 
     const { titulo, descripcion, profesor, sala, horarios = [] } = clase;
 
+    // Detectar cambio de horario (solo primer horario)
+    let cambioHorario = false;
+    let horaAnterior = null;
+    let horaNueva = null;
+    if (
+      Array.isArray(horarios) && horarios.length > 0 &&
+      Array.isArray(claseFound.horarios) && claseFound.horarios.length > 0
+    ) {
+      const hOld = claseFound.horarios[0];
+      const hNew = horarios[0];
+      if (
+        hOld.dia === hNew.dia &&
+        (hOld.horaInicio !== hNew.horaInicio || hOld.horaFin !== hNew.horaFin)
+      ) {
+        cambioHorario = true;
+        horaAnterior = `${hOld.horaInicio} - ${hOld.horaFin}`;
+        horaNueva = `${hNew.horaInicio} - ${hNew.horaFin}`;
+      }
+    }
+
     for (const horario of horarios) {
       const { dia, horaInicio, horaFin } = horario;
-
       const claseExistente = await Clase.findOne({
         _id: { $ne: id },
         estado: "programada",
@@ -117,21 +136,13 @@ async function updateClase(id, clase) {
           $elemMatch: {
             dia,
             $or: [
-              {
-                horaInicio: { $lt: horaFin, $gte: horaInicio },
-              },
-              {
-                horaFin: { $gt: horaInicio, $lte: horaFin },
-              },
-              {
-                horaInicio: { $lte: horaInicio },
-                horaFin: { $gte: horaFin },
-              },
+              { horaInicio: { $lt: horaFin, $gte: horaInicio } },
+              { horaFin: { $gt: horaInicio, $lte: horaFin } },
+              { horaInicio: { $lte: horaInicio }, horaFin: { $gte: horaFin } },
             ],
           },
         },
       });
-
       if (claseExistente) {
         return [null, "Ya existe una clase programada en la sala y horario seleccionado"];
       }
@@ -149,6 +160,26 @@ async function updateClase(id, clase) {
       { new: true },
     );
 
+    // Notificar si hubo cambio de horario
+    if (cambioHorario && claseFound.estudiantes && claseFound.estudiantes.length > 0) {
+      try {
+        const notificationService = (await import('../../communication/services/notification.service.js')).default;
+        notificationService.notifyClassTimeChange(claseUpdated, horaAnterior, horaNueva, actualizadoPor)
+          .then(result => {
+            if (result.success) {
+              console.log('✅ Notificaciones de cambio de horario enviadas correctamente');
+            } else {
+              console.error('❌ Error enviando notificaciones de cambio de horario:', result.error);
+            }
+          })
+          .catch(error => {
+            console.error('❌ Error en notificaciones de cambio de horario:', error);
+          });
+      } catch (notificationError) {
+        console.error('❌ Error inicializando servicio de notificaciones:', notificationError);
+      }
+    }
+
     return [claseUpdated, null];
   } catch (error) {
     handleError(error, "clase.service -> updateClase");
@@ -158,20 +189,45 @@ async function updateClase(id, clase) {
 /**
  * Cancela una clase por su id
  * @param {string} id 
+ * @param {Object} clase - Datos de la cancelación
+ * @param {string} canceladoPor - ID del usuario que cancela la clase
  * @returns {Promise} Promesa con el objeto de la clase cancelada
  */
-async function cancelClase(id, clase) {
+async function cancelClase(id, clase, canceladoPor = null) {
   try {
     const claseFound = await Clase.findById(id);
     if (!claseFound) return [null, "Clase no encontrada"];
 
-    const { estado } = clase;
+    const { estado, motivo } = clase;
 
     const claseUpdated = await Clase.findByIdAndUpdate(
       id,
       { estado: estado },
       { new: true },
     );
+
+    // Si la clase se está cancelando y tiene estudiantes, enviar notificaciones
+    if (estado === "cancelada" && claseFound.estudiantes && claseFound.estudiantes.length > 0) {
+      try {
+        // Importar el servicio de notificaciones dinámicamente para evitar dependencias circulares
+        const notificationService = (await import('../../communication/services/notification.service.js')).default;
+        
+        // Enviar notificaciones de forma asíncrona (no bloquear la respuesta)
+        notificationService.notifyClassCancellation(claseUpdated, motivo, canceladoPor)
+          .then(result => {
+            if (result.success) {
+              console.log('✅ Notificaciones de cancelación enviadas correctamente');
+            } else {
+              console.error('❌ Error enviando notificaciones:', result.error);
+            }
+          })
+          .catch(error => {
+            console.error('❌ Error en notificaciones de cancelación:', error);
+          });
+      } catch (notificationError) {
+        console.error('❌ Error inicializando servicio de notificaciones:', notificationError);
+      }
+    }
 
     return [claseUpdated, null];
   } catch (error) {
