@@ -39,6 +39,7 @@ export default function Clases({ setActiveModule }) {
   const [openDialog, setOpenDialog] = useState(false);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [claseSeleccionada, setClaseSeleccionada] = useState(null);
+  const [motivoCancelacion, setMotivoCancelacion] = useState("");
   const [filtroActivo, setFiltroActivo] = useState("hoy");
   const [autorizado, setAutorizado] = useState(true);
   const [listaProfesores, setListaProfesores] = useState([]);
@@ -255,17 +256,21 @@ export default function Clases({ setActiveModule }) {
     }
   };
 
-  const handleCancelarClase = async (id) => {
+  const handleCancelarClase = async (id, motivo = "") => {
     try {
       const response = await fetchAutenticado(`${API_URL}/cancel/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: "cancelada" }),
+        body: JSON.stringify({ 
+          estado: "cancelada",
+          motivo: motivo.trim() || undefined
+        }),
       });
       if (!response.ok) {
         throw new Error("Error al cancelar la clase");
       }
-      setMensajeExito("Clase cancelada con éxito");
+      setMensajeExito("Clase cancelada con éxito. Se han enviado notificaciones a los estudiantes.");
+      setMotivoCancelacion(""); // Limpiar el campo de motivo
       if (filtroActivo === "hoy") {
         fetchTodayClases();
       } else if (filtroActivo === "proximas") {
@@ -638,28 +643,77 @@ export default function Clases({ setActiveModule }) {
 
         <Dialog
           open={openConfirmDialog}
-          onClose={() => setOpenConfirmDialog(false)}
+          onClose={() => {
+            setOpenConfirmDialog(false);
+            setMotivoCancelacion("");
+          }}
           PaperProps={{
             sx: {
               backgroundColor: "#333333",
-              color: "white"
+              color: "white",
+              minWidth: "400px"
             }
           }}
         >
-          <DialogTitle sx={{ color: "white" }}>¿Está seguro de cancelar esta clase?</DialogTitle>
+          <DialogTitle sx={{ color: "white" }}>
+            🚫 Cancelar Clase
+          </DialogTitle>
+          <DialogContent>
+            <Typography sx={{ color: "white", mb: 2 }}>
+              ¿Está seguro de cancelar la clase "{claseSeleccionada?.titulo}"?
+            </Typography>
+            <Typography sx={{ color: "#cccccc", mb: 3, fontSize: "0.9rem" }}>
+              Se enviarán notificaciones automáticas a todos los estudiantes inscritos.
+            </Typography>
+            <TextField
+              fullWidth
+              label="Motivo de la cancelación (opcional)"
+              variant="outlined"
+              multiline
+              rows={3}
+              value={motivoCancelacion}
+              onChange={(e) => setMotivoCancelacion(e.target.value)}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "#666666",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#888888",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#2196F3",
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  color: "#cccccc",
+                },
+                "& .MuiInputBase-input": {
+                  color: "white",
+                },
+              }}
+            />
+          </DialogContent>
           <DialogActions>
-            <Button onClick={() => setOpenConfirmDialog(false)} color="primary">
-              No
+            <Button 
+              onClick={() => {
+                setOpenConfirmDialog(false);
+                setMotivoCancelacion("");
+              }} 
+              sx={{ color: "#cccccc" }}
+            >
+              Cancelar
             </Button>
             <Button
               onClick={() => {
-                handleCancelarClase(claseSeleccionada._id);
+                handleCancelarClase(claseSeleccionada._id, motivoCancelacion);
                 setOpenConfirmDialog(false);
               }}
               color="error"
               variant="contained"
+              sx={{ backgroundColor: "#F75C03" }}
             >
-              Sí, cancelar
+              Sí, cancelar clase
             </Button>
           </DialogActions>
         </Dialog>

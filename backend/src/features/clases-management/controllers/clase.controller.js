@@ -93,14 +93,17 @@ async function updateClase(req, res) {
         const { error: bodyError } = claseBodySchema.validate(body);
         if (bodyError) return respondError(req, res, 400, bodyError.message);
 
-        const [clase, errorClase] = await claseService.updateClase(params.id, body);
+        // Obtener el ID del usuario que actualiza la clase
+        const actualizadoPor = req.user ? req.user.id : null;
+
+        const [clase, errorClase] = await claseService.updateClase(params.id, body, actualizadoPor);
 
         if (errorClase) return respondError(req, res, 404, errorClase);
 
         respondSuccess(req, res, 200, clase);
     } catch (error) {
         handleError(error, "clase.controller -> updateClase");
-        respondError(req, res, 500, "No se pudo modificar la clase");
+        respondError(req, res, 500, "No se pudo actualizar la clase");
     }
 }
 
@@ -118,7 +121,10 @@ async function cancelClase(req, res) {
         const { error: bodyError } = claseCancelSchema.validate(body);
         if (bodyError) return respondError(req, res, 400, bodyError.message);
 
-        const [clase, errorClase] = await claseService.cancelClase(params.id, body);
+        // Obtener el ID del usuario que cancela la clase
+        const canceladoPor = req.user ? req.user.id : null;
+
+        const [clase, errorClase] = await claseService.cancelClase(params.id, body, canceladoPor);
 
         if (errorClase) return respondError(req, res, 404, errorClase);
 
