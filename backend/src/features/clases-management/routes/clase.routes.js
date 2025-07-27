@@ -15,6 +15,7 @@ import {
     getClaseById,
     updateClase,
     cancelClase,
+    deleteClase,
     getHorarioDia,
     getHorarioSemana,
     getHorarioMes,
@@ -45,6 +46,7 @@ router.get("/canceled_next", authorizeRoles(["administrador", "asistente"]), get
 router.get("/find/:id", authorizeRoles(["administrador", "asistente"]), getClaseById);
 router.put("/update/:id", authorizeRoles(["administrador", "asistente"]), updateClase);
 router.put("/cancel/:id", authorizeRoles(["administrador", "asistente"]), cancelClase);
+router.delete("/:id", authorizeRoles(["administrador"]), deleteClase);
 router.get("/horario/dia", authorizeRoles(["administrador", "asistente"]), getHorarioDia);
 router.get("/horario/semana", authorizeRoles(["administrador", "asistente"]), getHorarioSemana);
 router.get("/horario/mes", authorizeRoles(["administrador", "asistente"]), getHorarioMes);

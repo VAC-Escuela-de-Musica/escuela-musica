@@ -1,4 +1,5 @@
-import { Box, TextField, Button, Typography, MenuItem, Snackbar, Alert } from "@mui/material";
+import { Box, TextField, Button, Typography, MenuItem, Snackbar, Alert, IconButton, Tooltip } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useState, useEffect } from "react";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -87,12 +88,19 @@ export default function HorarioDia() {
       }
 
       try {
-        const response = await fetchAutenticado(`${API_URL}/horario/dia?${queryParams.toString()}`);
+        const url = `${API_URL}/horario/dia?${queryParams.toString()}`;
+        console.log('[HORARIO-DEBUG] Fetching classes from:', url);
+        console.log('[HORARIO-DEBUG] Fecha formatted:', formattedFecha);
+        
+        const response = await fetchAutenticado(url);
         if (response.status === 403) {
           setAutorizado(false);
           return;
         }
         const data = await response.json();
+        console.log('[HORARIO-DEBUG] Response data:', data);
+        console.log('[HORARIO-DEBUG] Classes found:', data.data?.length || 0);
+        
         setClasesFiltradas(
           (data.data || []).sort((a, b) => {
             const h1 = a.horarios[0]?.horaInicio || "";
@@ -147,7 +155,45 @@ export default function HorarioDia() {
 
   const currentYear = new Date().getFullYear();
   const minDate = new Date(currentYear, 0, 1); 
-  const maxDate = new Date(currentYear + 1, 11, 31); 
+  const maxDate = new Date(currentYear + 1, 11, 31);
+
+  const forceRefresh = () => {
+    console.log('[HORARIO-DEBUG] Forcing refresh of classes...');
+    const pad = (n) => n.toString().padStart(2, "0");
+    const formattedFecha = `${pad(fecha.getDate())}-${pad(fecha.getMonth() + 1)}-${fecha.getFullYear()}`;
+    const queryParams = new URLSearchParams();
+    queryParams.append("fecha", formattedFecha);
+
+    if (horaInicio) {
+      queryParams.append("horaInicio", `${pad(horaInicio.getHours())}:${pad(horaInicio.getMinutes())}`);
+    }
+    if (horaFin) {
+      queryParams.append("horaFin", `${pad(horaFin.getHours())}:${pad(horaFin.getMinutes())}`);
+    }
+    if (sala && sala !== "0") {
+      queryParams.append("sala", sala);
+    }
+    if (profesor && profesor !== "0") {
+      queryParams.append("profesor", profesor);
+    }
+
+    const url = `${API_URL}/horario/dia?${queryParams.toString()}`;
+    console.log('[HORARIO-DEBUG] Manual refresh URL:', url);
+    
+    fetchAutenticado(url)
+      .then(response => response.json())
+      .then(data => {
+        console.log('[HORARIO-DEBUG] Manual refresh data:', data);
+        setClasesFiltradas(
+          (data.data || []).sort((a, b) => {
+            const h1 = a.horarios[0]?.horaInicio || "";
+            const h2 = b.horarios[0]?.horaInicio || "";
+            return h1.localeCompare(h2);
+          })
+        );
+      })
+      .catch(error => console.error('[HORARIO-DEBUG] Manual refresh error:', error));
+  };
 
   if (!autorizado) {
     return (
@@ -166,10 +212,29 @@ export default function HorarioDia() {
     <>
       <Box sx={{ padding: 2, backgroundColor: "#333", color: "white" }}>
         
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Typography variant="h6" marginRight={3}>
+              Filtros:
+            </Typography>
+          </Box>
+          <Tooltip title="Actualizar clases">
+            <IconButton 
+              onClick={forceRefresh}
+              sx={{ 
+                color: "#2196F3",
+                backgroundColor: "rgba(33, 150, 243, 0.1)",
+                "&:hover": {
+                  backgroundColor: "rgba(33, 150, 243, 0.2)",
+                }
+              }}
+            >
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+        
         <Box display="flex" alignItems="center" justifyContent="start" gap={2}>
-          <Typography variant="h6" marginRight={3}>
-            Filtros:
-          </Typography>
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
             <div className="horario-datepicker">
               <DatePicker
@@ -316,8 +381,7 @@ export default function HorarioDia() {
                         </MenuItem>
                       ))}
                     </TextField>
-        
-      </Box>
+        </Box>
       
       <Typography variant="h6" align="center" sx={{ mt: 3, mb: 3 }}>
         {fechaCompleta}
