@@ -21,7 +21,7 @@ const fetchAutenticado = async (url, options = {}) => {
   return response;
 };
 
-const API_URL = `${import.meta.env.VITE_API_URL}/clases`;
+const API_URL = `${import.meta.env.VITE_API_URL}/api/clases`;
 
 export default function HorarioDia() {
   const [fecha, setFecha] = useState(new Date());
@@ -171,25 +171,28 @@ export default function HorarioDia() {
             Filtros:
           </Typography>
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-            <DatePicker
-              label="Selecciona una fecha"
-              format="dd/MM/yyyy"
-              value={fecha}
-              onChange={setFecha}
-              minDate={minDate}
-              maxDate={maxDate}
-              slotProps={{
-                textField: {
-                  variant: "filled",
-                  InputProps: { style: { backgroundColor: "#333", color: "white"} },
-                  InputLabelProps: { style: { color: "white" } },
-                  sx: {
-                    "& .MuiSvgIcon-root": { color: "white" },
-                  },
-                  style: { width: "180px" }
-                }
-              }}
-            />
+            <div className="horario-datepicker">
+              <DatePicker
+                label="Selecciona una fecha"
+                format="dd/MM/yyyy"
+                value={fecha}
+                onChange={setFecha}
+                minDate={minDate}
+                maxDate={maxDate}
+                slotProps={{
+                  textField: {
+                    variant: "filled",
+                    InputProps: { style: { backgroundColor: "#333", color: "white"} },
+                    InputLabelProps: { style: { color: "white" } },
+                    sx: {
+                      width: "200px !important",
+                      "& .MuiSvgIcon-root": { color: "white" },
+                    }
+                  }
+                }}
+              />
+            </div>
+            
 
             <TimePicker
               label="Hora de inicio"
@@ -202,9 +205,9 @@ export default function HorarioDia() {
                   InputProps: { style: { backgroundColor: "#333", color: "white"} },
                   InputLabelProps: { style: { color: "white" } },
                   sx: {
+                    width: "160px !important",
                     "& .MuiSvgIcon-root": { color: "white" },
-                  },
-                  style: { width: "160px" }
+                  }
                 }
               }}
             />
@@ -220,9 +223,9 @@ export default function HorarioDia() {
                   InputProps: { style: { backgroundColor: "#333", color: "white"} },
                   InputLabelProps: { style: { color: "white" } },
                   sx: {
+                    width: "160px !important",
                     "& .MuiSvgIcon-root": { color: "white" },
-                  },
-                  style: { width: "160px" }
+                  }
                 }
               }}
             />

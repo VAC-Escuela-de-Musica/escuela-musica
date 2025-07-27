@@ -8,6 +8,7 @@ import {
     claseIdSchema, 
     claseCancelSchema } from "../../../core/schemas/clase.schema.js";
 import User from "../../../core/models/user.model.js";
+import Profesor from "../../../core/models/profesores.model.js";
 
 /**
  * Crea un nuevo horario
@@ -123,6 +124,24 @@ async function cancelClase(req, res) {
     } catch (error) {
         handleError(error, "clase.controller -> cancelClase");
         respondError(req, res, 500, "No se pudo cancelar la clase");
+    }
+}
+
+/**
+ * Obtiene todas las clases programadas
+ * @param {Object} req
+ * @param {Object} res
+ */
+async function getAllProgrammedClases(req, res) {
+    try {
+        const [clases, errorClases] = await claseService.getAllProgrammedClases();
+
+        if (errorClases) return respondError(req, res, 404, errorClases);
+
+        respondSuccess(req, res, 200, clases);
+    } catch (error) {
+        handleError(error, "clase.controller -> getAllProgrammedClases");
+        respondError(req, res, 500, "No se pudieron obtener las clases programadas");
     }
 }
 
@@ -340,7 +359,7 @@ async function getHorarioMes(req, res) {
  */
 async function getProfesores(req, res) {
     try {
-        const profesores = await User.find({ roles: "profesor" }).select("_id username");
+        const profesores = await Profesor.find().select("id nombre apellidos").exec();
         if (!profesores || profesores.length === 0) {
             return respondError(req, res, 404, "No se encontraron profesores");
         }
@@ -359,7 +378,7 @@ async function getProfesores(req, res) {
 async function getProfesorById(req, res) {
     try {
         const { id } = req.params;
-        const profesor = await User.findById(id).select("username");
+        const profesor = await Profesor.findById(id).select("nombre apellidos");
         if (!profesor) {
             return respondError(req, res, 404, "Profesor no encontrado");
         }
@@ -388,4 +407,5 @@ export {
     getHorarioMes,
     getProfesores,
     getProfesorById,
+    getAllProgrammedClases,
 };

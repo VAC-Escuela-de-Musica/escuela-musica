@@ -99,6 +99,10 @@ async function updateClase(id, clase) {
     const claseFound = await Clase.findById(id);
     if (!claseFound) return [null, "Clase no encontrada"];
 
+    if (claseFound.estado === "cancelada") {
+      return [null, "No se puede modificar una clase cancelada"];
+    }
+
     const { titulo, descripcion, profesor, sala, horarios = [] } = clase;
 
     for (const horario of horarios) {
@@ -106,6 +110,7 @@ async function updateClase(id, clase) {
 
       const claseExistente = await Clase.findOne({
         _id: { $ne: id },
+        estado: "programada",
         sala,
         horarios: {
           $elemMatch: {
@@ -173,6 +178,22 @@ async function cancelClase(id, clase) {
   }
 }
 
+
+/**
+ * Obtiene todas las clases programadas
+ * @returns {Promise} Promesa con todas las clases programadas
+ */
+async function getAllProgrammedClases() {
+  try {
+    const clases = await Clase.find({ estado: "programada" });
+    if (!clases) return [null, "No hay clases programadas"];
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getAllProgrammedClases");
+  }
+}
+
 /**
  * Obtiene las clases del día actual
  * @returns {Promise} Promesa con las clases del día
@@ -186,6 +207,7 @@ async function getTodayClases() {
     const formattedDate = `${dd}-${mm}-${yyyy}`;
 
     const clases = await Clase.find({
+      estado: "programada",
       horarios: {
         $elemMatch: {
           dia: formattedDate,
@@ -212,6 +234,7 @@ async function getNextClases() {
     const formattedDate = `${dd}-${mm}-${yyyy}`;
 
     const clases = await Clase.find({
+      estado: "programada",
       horarios: {
         $elemMatch: {
           dia: { $gt: formattedDate },
@@ -252,6 +275,7 @@ async function getPreviousClases() {
     const yyyy = today.getFullYear();
     const formattedDate = `${dd}-${mm}-${yyyy}`;
     const clases = await Clase.find({
+      estado: "programada",
       horarios: {
         $elemMatch: {
           dia: { $lt: formattedDate },
@@ -529,4 +553,5 @@ export default {
   getHorarioDia,
   getHorarioSemana,
   getHorarioMes,
+  getAllProgrammedClases,
 };

@@ -20,6 +20,7 @@ import {
     getHorarioMes,
     getProfesores,
     getProfesorById,
+    getAllProgrammedClases
 } from "../controllers/clase.controller.js";
 
 const router = Router();
@@ -42,5 +43,6 @@ router.get("/horario/semana", authorizeRoles(["administrador", "asistente"]), ge
 router.get("/horario/mes", authorizeRoles(["administrador", "asistente"]), getHorarioMes);
 router.get("/profesores", authorizeRoles(["administrador", "asistente"]), getProfesores);
 router.get("/profesor/:id", authorizeRoles(["administrador", "asistente"]), getProfesorById);
+router.get("/programadas", authorizeRoles(["administrador", "asistente"]), getAllProgrammedClases);
 
 export default router;

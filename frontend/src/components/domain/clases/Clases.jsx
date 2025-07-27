@@ -12,16 +12,15 @@ import {
     DialogActions,
     MenuItem
   } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import CancelIcon from "@mui/icons-material/Cancel";
 import EditIcon from "@mui/icons-material/Edit";
+import CancelIcon from "@mui/icons-material/Cancel";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { es } from "date-fns/locale";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/clases`;
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/clases`;
 
 export default function Clases({ setActiveModule }) {
   const [mensajeExito, setMensajeExito] = useState("");
@@ -49,8 +48,8 @@ export default function Clases({ setActiveModule }) {
       const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
       if (response.ok) {
         const data = await response.json();
-        setNombresProfesores(prev => ({ ...prev, [id]: data.data.username }));
-        return data.data.username;
+        setNombresProfesores(prev => ({ ...prev, [id]: data.data.nombreCompleto }));
+        return data.data.nombreCompleto;
       }
     } catch (error) {
       console.error("Error al obtener nombre del profesor:", error);
@@ -60,14 +59,23 @@ export default function Clases({ setActiveModule }) {
 
   const fetchAutenticado = async (url, options = {}) => {
     const token = localStorage.getItem("token");
+
+    const csrfRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/csrf-token`, {
+      credentials: "include"
+    });
+    const csrfData = await csrfRes.json();
+    const csrfToken = csrfData.csrfToken;
+
     const headers = {
       "Authorization": `Bearer ${token}`,
+      "x-csrf-token": csrfToken,
       ...options.headers
     };
 
     const response = await fetch(url, {
       ...options,
-      headers
+      headers,
+      credentials: "include"
     });
 
     return response;
@@ -113,7 +121,7 @@ export default function Clases({ setActiveModule }) {
 
   const fetchAllClases = async () => {
     try {
-      const response = await fetchAutenticado(`${API_URL}/all`);
+      const response = await fetchAutenticado(`${API_URL}/programadas`);
       if (response.status === 403) {
         setAutorizado(false);
         return;
@@ -196,6 +204,9 @@ export default function Clases({ setActiveModule }) {
     try {
       let response;
       if (editarClase) {
+        console.log("Enviando datos al backend para actualizar:", nuevaClase);
+        console.log("ID de la clase:", editarClase._id);
+
         response = await fetchAutenticado(`${API_URL}/update/${editarClase._id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -301,88 +312,72 @@ export default function Clases({ setActiveModule }) {
 
   return (
     <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
-      <Typography variant="h4" component="h1" sx={{ marginBottom: 2 }}>
-        Gestión de las clases
-      </Typography>
+      <Box display={"flex"} justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h4" component="h1" sx={{ marginBottom: 2 }}>
+          Gestión de las clases
+        </Typography>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-start", gap: 2, marginBottom: 2 }}>
+        <Box display="flex" gap={1}>
           <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setActiveModule("clasesCrear")}
-            sx={{ backgroundColor: "#4CAF50" }}
-          >
-            Crear nueva clase
-          </Button>
-          
-          <Button
-            onClick={() => setActiveModule("clasesCanceladas")}
             variant="outlined"
-            startIcon={<CancelIcon />}
-            sx={{ borderColor: "#F75C03", color: "#ffffff" }}
-            >
-            Clases canceladas
+            onClick={() => {
+              setFiltroActivo("anteriores");
+              fetchPreviousClases();
+            }}
+            sx={{ color:"#ffffff", borderColor: "#ffffff", height: "fit-content", width: '125px' }}
+            disabled={filtroActivo === "anteriores"}
+          >
+            Anteriores
+          </Button>
+
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setFiltroActivo("hoy");
+              fetchTodayClases();
+            }}
+            disabled={filtroActivo === "hoy"}
+            sx={{ color:"#ffffff", borderColor: "#ffffff", height: "fit-content", width: '125px' }}
+          >
+            Hoy
+          </Button>
+
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setFiltroActivo("proximas");
+              fetchNextClases();
+            }}
+            disabled={filtroActivo === "proximas"}
+            sx={{ color:"#ffffff", borderColor: "#ffffff", height: "fit-content", width: '125px' }}
+          >
+            Próximas
+          </Button>
+
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setFiltroActivo("todas");
+              fetchAllClases();
+            }}
+            disabled={filtroActivo === "todas"}
+            sx={{ color:"#ffffff", borderColor: "#ffffff", height: "fit-content", width: '125px' }}
+          >
+            Todas
           </Button>
         </Box>
+      </Box>
+      
 
-        <Box display={"flex"} justifyContent="space-between" alignItems="center" sx={{ marginBottom: 2 }}>
-          <Typography variant="h5" gutterBottom>
-            {filtroActivo === "hoy" && "Listado de clases de hoy"}
-            {filtroActivo === "proximas" && "Listado de próximas clases"}
-            {filtroActivo === "todas" && "Listado de todas las clases"}
-            {filtroActivo === "anteriores" && "Listado de clases anteriores"}
-          </Typography>
-          <Box display="flex" gap={1}>
-
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setFiltroActivo("anteriores");
-                fetchPreviousClases();
-              }}
-              sx={{ color:"#ffffff", borderColor: "#ffffff", height: "fit-content", width: '125px' }}
-              disabled={filtroActivo === "anteriores"}
-            >
-              Anteriores
-            </Button>
-
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setFiltroActivo("hoy");
-                fetchTodayClases();
-              }}
-              disabled={filtroActivo === "hoy"}
-              sx={{ color:"#ffffff", borderColor: "#ffffff", height: "fit-content", width: '125px' }}
-            >
-              Hoy
-            </Button>
-
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setFiltroActivo("proximas");
-                fetchNextClases();
-              }}
-              disabled={filtroActivo === "proximas"}
-              sx={{ color:"#ffffff", borderColor: "#ffffff", height: "fit-content", width: '125px' }}
-            >
-              Próximas
-            </Button>
-
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setFiltroActivo("todas");
-                fetchAllClases();
-              }}
-              disabled={filtroActivo === "todas"}
-              sx={{ color:"#ffffff", borderColor: "#ffffff", height: "fit-content", width: '125px' }}
-            >
-              Todas
-            </Button>
-          </Box>
-        </Box>
+      <Box display={"flex"} justifyContent="space-between" alignItems="center" sx={{ marginBottom: 2 }}>
+        <Typography variant="h5" gutterBottom>
+          {filtroActivo === "hoy" && "Clases de hoy"}
+          {filtroActivo === "proximas" && "Próximas clases"}
+          {filtroActivo === "todas" && "Todas las clases"}
+          {filtroActivo === "anteriores" && "Clases anteriores"}
+        </Typography>
+        
+      </Box>
 
       <Box>
         {clases.length === 0 ? (
@@ -505,7 +500,7 @@ export default function Clases({ setActiveModule }) {
                   <MenuItem disabled value="" sx={{ color: "white" }}>Escoger profesor</MenuItem>
                   {listaProfesores.map((prof) => (
                     <MenuItem key={prof._id} value={prof._id}>
-                      {prof.username}
+                      {prof.nombreCompleto}
                     </MenuItem>
                   ))}
                 </TextField>

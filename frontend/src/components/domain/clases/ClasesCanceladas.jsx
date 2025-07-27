@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button, Box, Typography } from '@mui/material';
 import { ArrowCircleLeftOutlined } from '@mui/icons-material';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/clases`;
+const API_URL = `${import.meta.env.VITE_API_URL}/api/clases`;
 
 const ClasesCanceladas = ({ setActiveModule }) => {
   const [canceledClases, setCanceledClases] = useState([]);
@@ -30,7 +30,7 @@ const ClasesCanceladas = ({ setActiveModule }) => {
       const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
       if (response.ok) {
         const data = await response.json();
-        setNombresProfesores(prev => ({ ...prev, [id]: data.data.username }));
+        setNombresProfesores(prev => ({ ...prev, [id]: data.data.nombreCompleto }));
       }
     } catch (error) {
       console.error("Error al obtener nombre del profesor:", error);
@@ -115,16 +115,7 @@ const ClasesCanceladas = ({ setActiveModule }) => {
 
   return (
     <Box sx={{ color: "white" }}>
-      <Button
-        variant="outlined"
-        sx={{ borderColor: "#ffffff", color: "#ffffff" }}
-        startIcon={<ArrowCircleLeftOutlined />}
-        onClick={() => setActiveModule("clases")}
-      >
-        Volver a Clases
-      </Button>
-
-      <Typography variant="h4" gutterBottom marginTop={2}>
+      <Typography variant="h4" gutterBottom>
         Clases Canceladas
       </Typography>
 

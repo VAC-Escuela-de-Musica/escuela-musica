@@ -7,7 +7,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { es } from "date-fns/locale";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/clases`;
+const API_URL = `${import.meta.env.VITE_API_URL}/api/clases`;
 
 const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 
@@ -167,8 +167,9 @@ export default function HorarioSemana() {
             variant: "filled",
             InputProps: { style: { backgroundColor: "#333", color: "white" } },
             InputLabelProps: { style: { color: "white" } },
-            sx: { "& .MuiSvgIcon-root": { color: "white" } },
-            style: { width: "180px" }
+            sx: { 
+              width: "200px !important",
+              "& .MuiSvgIcon-root": { color: "white" } }
           }
         }}
       />
@@ -182,8 +183,9 @@ export default function HorarioSemana() {
             variant: "filled",
             InputProps: { style: { backgroundColor: "#333", color: "white" } },
             InputLabelProps: { style: { color: "white" } },
-            sx: { "& .MuiSvgIcon-root": { color: "white" } },
-            style: { width: "160px" }
+            sx: { 
+              width: "160px !important",
+              "& .MuiSvgIcon-root": { color: "white" } }
           }
         }}
       />
@@ -197,7 +199,9 @@ export default function HorarioSemana() {
             variant: "filled",
             InputProps: { style: { backgroundColor: "#333", color: "white" } },
             InputLabelProps: { style: { color: "white" } },
-            sx: { "& .MuiSvgIcon-root": { color: "white" } },
+            sx: { 
+              width: "160px !important",
+              "& .MuiSvgIcon-root": { color: "white" } },
             style: { width: "160px" }
           }
         }}

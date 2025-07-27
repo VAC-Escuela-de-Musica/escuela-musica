@@ -6,7 +6,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { es } from "date-fns/locale";
 import { parse } from "date-fns";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/clases`;
+const API_URL = `${import.meta.env.VITE_API_URL}/api/clases`;
 
 export default function HorarioMes() {
     const [fecha, setFecha] = useState(new Date());
@@ -237,7 +237,9 @@ export default function HorarioMes() {
                       variant: "filled",
                       InputProps: { style: { backgroundColor: "#333", color: "white" } },
                       InputLabelProps: { style: { color: "white" } },
-                      sx: { "& .MuiSvgIcon-root": { color: "white" } },
+                      sx: { 
+                        width: "160px !important",
+                        "& .MuiSvgIcon-root": { color: "white" } },
                       style: { width: "160px" }
                     }
                   }}
@@ -252,7 +254,9 @@ export default function HorarioMes() {
                       variant: "filled",
                       InputProps: { style: { backgroundColor: "#333", color: "white" } },
                       InputLabelProps: { style: { color: "white" } },
-                      sx: { "& .MuiSvgIcon-root": { color: "white" } },
+                      sx: { 
+                        width: "160px !important",
+                        "& .MuiSvgIcon-root": { color: "white" } },
                       style: { width: "160px" }
                     }
                   }}

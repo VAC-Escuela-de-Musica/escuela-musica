@@ -112,7 +112,7 @@ router.use('/carousel', carouselRoutes)
 router.use('/testimonios', testimonioRoutes)
 
 // Rutas para clases - autenticación manejada en clase.routes.js
-router.use('/clases', ClasesRoutes)
+router.use("/clases", ClasesRoutes);
 
 // ============= COMPATIBILIDAD CON RUTAS OBSOLETAS =============
 router.use('/materiales', (req, res) => {
