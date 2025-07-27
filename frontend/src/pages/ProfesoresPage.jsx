@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Alert } from '@mui/material';
 import ProfesoresList from '../components/domain/profesores/ProfesoresList';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
 import SchoolIcon from '@mui/icons-material/School';
 
 const ProfesoresPage = () => {
