@@ -17,7 +17,6 @@ import {
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PersonIcon from '@mui/icons-material/Person';
 import Person3Icon from '@mui/icons-material/Person3';
-import SchoolIcon from '@mui/icons-material/School';
 import CropOriginalIcon from '@mui/icons-material/CropOriginal';
 import ViewAgendaIcon from '@mui/icons-material/ViewAgenda';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
@@ -25,8 +24,6 @@ import BackupIcon from '@mui/icons-material/Backup';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import MessageIcon from '@mui/icons-material/Message';
 import LogoutIcon from "@mui/icons-material/Logout";
-import AddIcon from '@mui/icons-material/Add';
-import ClearIcon from '@mui/icons-material/Clear';
 import coverImage from "../assets/cover.png";
 import { Link } from "react-router-dom";
 
@@ -40,10 +37,7 @@ const MensajeriaManager = React.lazy(() => import("./domain/messaging/Mensajeria
 const AlumnosList = React.lazy(() => import("./domain/alumnos/AlumnosList"));
 const TestimoniosManager = React.lazy(() => import("./domain/testimonios/TestimoniosManager"));
 const GaleriaManager = React.lazy(() => import("./domain/galeria/GaleriaManager"));
-const Clases = React.lazy(() => import("./domain/clases/Clases"));
-const ClasesCanceladas = React.lazy(() => import("./domain/clases/ClasesCanceladas"));
-const ClasesCrear = React.lazy(() => import("./domain/clases/ClasesCrear"));
-const Horario = React.lazy(() => import("./domain/horario/Horario"));
+const HorarioConClases = React.lazy(() => import("./domain/horario/HorarioConClases"));
 const drawerWidth = 240;
 
 // Professional loading component
@@ -140,22 +134,16 @@ export default function ClippedDrawer() {
           <List>
 
             {[
-              { text: "Horario", icon: <CalendarMonthIcon />, module: "horario" },
+              { text: "Horario y Clases", icon: <CalendarMonthIcon />, module: "horario" },
               { text: "Estudiantes", icon: <PersonIcon />, module: "alumnos" },
-              { text: "Profesores", icon: <Person3Icon />, module: "profesores" },
-              { text: "Gestionar Clases", icon: <SchoolIcon />, module: "clases" },
-              { text: "Nueva Clase", icon: <AddIcon />, module: "nueva_clase" },
-              { text: "Clases Canceladas", icon: <ClearIcon />, module: "clasesCanceladas" }
+              { text: "Profesores", icon: <Person3Icon />, module: "profesores" }
             ].map((item) => (
               <ListItem key={item.text} disablePadding>
                 <ListItemButton
                   onClick={() => {
-                    if (item.text === "Horario") setActiveModule("horario");
+                    if (item.text === "Horario y Clases") setActiveModule("horario");
                     if (item.text === "Estudiantes") setActiveModule("alumnos");
                     if (item.text === "Profesores") setActiveModule("profesores");
-                    if (item.text === "Gestionar Clases") setActiveModule("clases");
-                    if (item.text === "Nueva Clase") setActiveModule("clasesCrear");
-                    if (item.text === "Clases Canceladas") setActiveModule("clasesCanceladas");
                   }}
                 >
                   <ListItemIcon sx={{ color: "#FFFFFF" }}>
@@ -316,24 +304,9 @@ export default function ClippedDrawer() {
             <ProfesoresList />
           </Suspense>
         )}
-        {activeModule === "clases" && (
-          <Suspense fallback={<LoadingFallback message="Cargando Clases..." />}>
-            <Clases />
-          </Suspense>
-        )}
-        {activeModule === "clasesCanceladas" && (
-          <Suspense fallback={<LoadingFallback message="Cargando Clases Canceladas..." />}>
-            <ClasesCanceladas />
-          </Suspense>
-        )}
-        {activeModule === "clasesCrear" && (
-          <Suspense fallback={<LoadingFallback message="Creando Nueva Clase..." />}>
-            <ClasesCrear />
-          </Suspense>
-        )}
         {activeModule === "horario" && (
-          <Suspense fallback={<LoadingFallback message="Cargando Horario..." />}>
-            <Horario />
+          <Suspense fallback={<LoadingFallback message="Cargando Horario y Clases..." />}>
+            <HorarioConClases />
           </Suspense>
         )}
         

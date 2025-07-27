@@ -10,34 +10,35 @@ import ProfesorForm from "./ProfesorForm/ProfesorForm";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import {
-  Card,
-  CardContent,
-  CardActions,
   Typography,
   Button,
-  Grid,
   TextField,
   Box,
-  Divider,
-  Collapse,
   IconButton,
   Chip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Fab,
-  Tooltip,
+
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import SchoolIcon from "@mui/icons-material/School";
+import EmailIcon from "@mui/icons-material/Email";
+import PhoneIcon from "@mui/icons-material/Phone";
+import BadgeIcon from "@mui/icons-material/Badge";
 
 function ProfesoresList() {
   const [profesores, setProfesores] = useState([]);
@@ -50,7 +51,6 @@ function ProfesoresList() {
     return saved === "true";
   });
   const [search, setSearch] = useState("");
-  const [expandedId, setExpandedId] = useState(null);
   const [successMsg, setSuccessMsg] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -162,18 +162,12 @@ function ProfesoresList() {
     profesor.rut?.includes(search)
   );
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP'
-    }).format(amount);
-  };
-
   const formatDate = (dateString) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString('es-CL', {
       year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+      month: '2-digit',
+      day: '2-digit'
     });
   };
 
@@ -191,136 +185,189 @@ function ProfesoresList() {
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Typography variant="h4" component="h1">
+        <Typography 
+          variant="h4" 
+          component="h1"
+          sx={{ color: "#1976d2", fontWeight: "bold" }}
+        >
           <SchoolIcon sx={{ mr: 1, verticalAlign: "middle" }} />
           Gestión de Profesores
         </Typography>
-        <Tooltip title="Agregar nuevo profesor">
-          <Fab
-            color="primary"
-            aria-label="add"
-            onClick={handleCreate}
-            disabled={loading}
-          >
-            <AddIcon />
-          </Fab>
-        </Tooltip>
       </Box>
 
-      <TextField
-        fullWidth
-        label="Buscar profesores..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        sx={{ mb: 3 }}
-        InputProps={{
-          startAdornment: <PersonIcon sx={{ mr: 1, color: "text.secondary" }} />,
-        }}
-      />
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+        <TextField
+          label="Buscar profesor por nombre, apellido, email o RUT..."
+          variant="outlined"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{
+            flex: 1,
+            "& .MuiOutlinedInput-root": {
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "#1976d2",
+              },
+            },
+            "& .MuiInputLabel-root.Mui-focused": {
+              color: "#1976d2",
+            },
+          }}
+          InputProps={{
+            startAdornment: <PersonIcon sx={{ mr: 1, color: "#1976d2" }} />,
+          }}
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          sx={{
+            textTransform: "uppercase",
+            fontWeight: "bold",
+            fontSize: 16,
+            px: 3,
+            py: 1.5,
+            borderRadius: 1,
+          }}
+          onClick={handleCreate}
+          disabled={loading}
+        >
+          Agregar Profesor
+        </Button>
+      </Box>
 
-      <Grid container spacing={3}>
-        {filteredProfesores.map((profesor) => (
-          <Grid item xs={12} md={6} lg={4} key={profesor._id}>
-            <Card
-              sx={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                opacity: profesor.activo ? 1 : 0.7,
-              }}
-            >
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
-                  <Typography variant="h6" component="h2" noWrap>
+      <TableContainer 
+        component={Paper} 
+        sx={{ 
+          borderRadius: 2,
+          boxShadow: 2,
+          "& .MuiTableCell-root": {
+            borderColor: "#e3f2fd"
+          }
+        }}
+      >
+        <Table sx={{ minWidth: 650 }}>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+              <TableCell sx={{ color: "#1976d2", fontWeight: "bold" }}>
+                <Box display="flex" alignItems="center">
+                  <PersonIcon sx={{ mr: 1 }} />
+                  Profesor
+                </Box>
+              </TableCell>
+              <TableCell sx={{ color: "#1976d2", fontWeight: "bold" }}>
+                <Box display="flex" alignItems="center">
+                  <BadgeIcon sx={{ mr: 1 }} />
+                  RUT
+                </Box>
+              </TableCell>
+              <TableCell sx={{ color: "#1976d2", fontWeight: "bold" }}>
+                <Box display="flex" alignItems="center">
+                  <EmailIcon sx={{ mr: 1 }} />
+                  Email
+                </Box>
+              </TableCell>
+              <TableCell sx={{ color: "#1976d2", fontWeight: "bold" }}>
+                <Box display="flex" alignItems="center">
+                  <PhoneIcon sx={{ mr: 1 }} />
+                  Teléfono
+                </Box>
+              </TableCell>
+              <TableCell sx={{ color: "#1976d2", fontWeight: "bold" }}>
+                Fecha Contrato
+              </TableCell>
+              <TableCell sx={{ color: "#1976d2", fontWeight: "bold" }}>
+                Estado
+              </TableCell>
+              <TableCell sx={{ color: "#1976d2", fontWeight: "bold" }} align="center">
+                Acciones
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredProfesores.map((profesor) => (
+              <TableRow
+                key={profesor._id}
+                sx={{ 
+                  "&:hover": { backgroundColor: "#f5f5f5" },
+                  opacity: profesor.activo ? 1 : 0.7,
+                }}
+              >
+                <TableCell>
+                  <Typography variant="body1" fontWeight="medium">
                     {profesor.nombre} {profesor.apellidos}
                   </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">
+                    {profesor.rut}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" color="text.secondary">
+                    {profesor.email}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">
+                    {profesor.numero}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">
+                    {formatDate(profesor.fechaContrato)}
+                  </Typography>
+                </TableCell>
+                <TableCell>
                   <Chip
                     label={profesor.activo ? "Activo" : "Inactivo"}
-                    color={profesor.activo ? "success" : "default"}
+                    color={profesor.activo ? "primary" : "default"}
                     size="small"
                   />
-                </Box>
-
-                <Typography color="text.secondary" gutterBottom>
-                  <strong>RUT:</strong> {profesor.rut}
-                </Typography>
-                <Typography color="text.secondary" gutterBottom>
-                  <strong>Email:</strong> {profesor.email}
-                </Typography>
-                <Typography color="text.secondary" gutterBottom>
-                  <strong>Teléfono:</strong> {profesor.numero}
-                </Typography>
-                <Typography color="text.secondary" gutterBottom>
-                  <strong>Sueldo:</strong> {formatCurrency(profesor.sueldo)}
-                </Typography>
-                <Typography color="text.secondary" gutterBottom>
-                  <strong>Fecha de contrato:</strong> {formatDate(profesor.fechaContrato)}
-                </Typography>
-
-                <Button
-                  size="small"
-                  onClick={() => setExpandedId(expandedId === profesor._id ? null : profesor._id)}
-                  endIcon={expandedId === profesor._id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  sx={{ mt: 1 }}
-                >
-                  {expandedId === profesor._id ? "Menos detalles" : "Más detalles"}
-                </Button>
-
-                <Collapse in={expandedId === profesor._id} timeout="auto" unmountOnExit>
-                  <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: "divider" }}>
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>ID:</strong> {profesor._id}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Creado:</strong> {formatDate(profesor.createdAt)}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Última actualización:</strong> {formatDate(profesor.updatedAt)}
-                    </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Box display="flex" justifyContent="center" gap={1}>
+                    <IconButton
+                      onClick={() => handleEdit(profesor)}
+                      disabled={loading}
+                      sx={{ color: "#1976d2" }}
+                      title="Editar profesor"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleToggleStatus(profesor)}
+                      disabled={loading}
+                      sx={{ color: profesor.activo ? "#ed6c02" : "#2e7d32" }}
+                      title={profesor.activo ? "Desactivar" : "Activar"}
+                    >
+                      {profesor.activo ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleDelete(profesor)}
+                      disabled={loading}
+                      sx={{ color: "#d32f2f" }}
+                      title="Eliminar profesor"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
                   </Box>
-                </Collapse>
-              </CardContent>
-
-              <CardActions sx={{ justifyContent: "space-between", p: 2 }}>
-                <Box>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleEdit(profesor)}
-                    disabled={loading}
-                    color="primary"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleToggleStatus(profesor)}
-                    disabled={loading}
-                    color={profesor.activo ? "warning" : "success"}
-                  >
-                    {profesor.activo ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDelete(profesor)}
-                    disabled={loading}
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      {filteredProfesores.length === 0 && (
-        <Box sx={{ textAlign: "center", py: 4 }}>
-          <Typography variant="h6" color="text.secondary">
-            {search ? "No se encontraron profesores que coincidan con la búsqueda" : "No hay profesores registrados"}
-          </Typography>
-        </Box>
-      )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        
+        {filteredProfesores.length === 0 && (
+          <Box p={4} textAlign="center">
+            <Typography variant="body1" color="text.secondary">
+              {search ? "No se encontraron profesores que coincidan con la búsqueda" : "No hay profesores registrados"}
+            </Typography>
+          </Box>
+        )}
+             </TableContainer>
 
       {/* Snackbar para mensajes de éxito/error */}
       <Snackbar

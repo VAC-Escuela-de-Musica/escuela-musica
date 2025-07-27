@@ -4,7 +4,7 @@ import { ArrowCircleLeftOutlined } from '@mui/icons-material';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/clases`;
 
-const ClasesCanceladas = ({ setActiveModule }) => {
+const ClasesCanceladas = ({ setActiveModule = null }) => {
   const [canceledClases, setCanceledClases] = useState([]);
   const [filtroActivo, setFiltroActivo] = useState("todas");
   const [nombresProfesores, setNombresProfesores] = useState({});

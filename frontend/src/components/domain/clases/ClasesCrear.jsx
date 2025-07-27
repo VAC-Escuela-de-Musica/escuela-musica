@@ -44,7 +44,7 @@ const fetchAutenticado = async (url, options = {}) => {
   return response;
 };
 
-export default function ClasesCrear({ setActiveModule }) {
+export default function ClasesCrear({ setActiveModule = null }) {
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [sala, setSala] = useState("");
