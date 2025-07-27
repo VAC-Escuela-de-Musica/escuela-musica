@@ -90,6 +90,8 @@ const ListaMateriales = () => {
 
   // Función para determinar si el usuario puede eliminar un material
   const canDeleteMaterial = (material) => {
+    if (!material) return false;
+    
     // Admin puede eliminar todo
     if (isAdmin()) return true;
     
@@ -123,6 +125,8 @@ const ListaMateriales = () => {
 
   // Manejar vista previa de imagen
   const handleImagePreview = (material) => {
+    if (!material) return;
+    
     // Verificar si es una imagen usando ambos campos (compatibilidad)
     const mimeType = material.mimeType || material.tipoContenido;
     const imageUrl = material.viewUrl;
