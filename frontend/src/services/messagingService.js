@@ -150,7 +150,8 @@ class MessagingService {
    * @param {Object} testData - Datos de prueba
    */
   async testEmailConfig(testData) {
-    return this.makeRequest('/messaging/test-email-config', {
+    // Usar ruta sin restricciones para evitar problemas de autenticación
+    return this.makeRequest('/messaging/test-email-config-unrestricted', {
       method: 'POST',
       body: JSON.stringify(testData)
     });

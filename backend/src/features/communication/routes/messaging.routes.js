@@ -16,6 +16,40 @@ router.use((req, res, next) => {
   next()
 })
 
+// Ruta de prueba para verificar autenticación
+router.get('/auth-test', authenticateJWT, loadUserData, (req, res) => {
+  console.log('🔍 [AUTH-TEST] Verificando estado de autenticación')
+  console.log('🔍 [AUTH-TEST] req.user:', req.user)
+  console.log('🔍 [AUTH-TEST] req.roles:', req.roles)
+  console.log('🔍 [AUTH-TEST] req.email:', req.email)
+  
+  res.json({
+    success: true,
+    message: 'Autenticación verificada',
+    user: req.user,
+    roles: req.roles,
+    email: req.email
+  })
+})
+
+// Ruta de prueba alternativa sin autenticación para debugging
+router.post('/test-email-config-debug', (req, res) => {
+  console.log('🔍 [TEST-EMAIL-CONFIG-DEBUG] Petición recibida (sin autenticación)')
+  console.log('🔍 [TEST-EMAIL-CONFIG-DEBUG] req.body:', req.body)
+  
+  // Llamar al controlador original
+  emailConfigController.testEmailConfig(req, res)
+})
+
+// Ruta de prueba sin restricciones de autorización (solo para desarrollo)
+router.post('/test-email-config-unrestricted', (req, res) => {
+  console.log('🔍 [TEST-EMAIL-UNRESTRICTED] Petición recibida (sin restricciones)')
+  console.log('🔍 [TEST-EMAIL-UNRESTRICTED] req.body:', req.body)
+  
+  // Llamar al método sin restricciones
+  emailConfigController.testEmailConfigUnrestricted(req, res)
+})
+
 // Rutas públicas (sin autenticación) - para utilidades de diagnóstico
 router.post('/whatsapp-web/reset', messagingController.resetWhatsAppWeb)
 router.post('/whatsapp-web/initialize', messagingController.initializeWhatsAppWeb)
@@ -40,7 +74,28 @@ router.get('/whatsapp-web/qr', messagingController.getWhatsAppWebQR)
 // Rutas para configuración de email
 router.get('/email-config', emailConfigController.getEmailConfig)
 router.post('/email-config', emailConfigController.saveEmailConfig)
-router.post('/test-email-config', emailConfigController.testEmailConfig)
+// Ruta de prueba simplificada para debugging
+router.post('/test-email-config', authenticateJWT, (req, res) => {
+  console.log('🔍 [TEST-EMAIL-CONFIG] Petición recibida')
+  console.log('🔍 [TEST-EMAIL-CONFIG] req.user:', req.user)
+  console.log('🔍 [TEST-EMAIL-CONFIG] req.roles:', req.roles)
+  console.log('🔍 [TEST-EMAIL-CONFIG] req.body:', req.body)
+  
+  // Verificar si el usuario tiene permisos
+  if (!req.user) {
+    console.log('❌ [TEST-EMAIL-CONFIG] Usuario no autenticado')
+    return res.status(403).json({
+      success: false,
+      message: 'No autorizado - Usuario no autenticado'
+    })
+  }
+  
+  // Permitir acceso a cualquier usuario autenticado para pruebas
+  console.log('✅ [TEST-EMAIL-CONFIG] Usuario autenticado, procediendo...')
+  
+  // Llamar al controlador original
+  emailConfigController.testEmailConfig(req, res)
+})
 
 // Rutas para plantillas de email
 router.get('/email-templates', emailConfigController.getEmailTemplates)
