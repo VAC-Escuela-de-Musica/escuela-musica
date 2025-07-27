@@ -14,11 +14,13 @@ import {
   } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import CancelIcon from "@mui/icons-material/Cancel";
+import GroupIcon from "@mui/icons-material/Group";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { es } from "date-fns/locale";
+import AsignarEstudiantes from "./AsignarEstudiantes.jsx";
 
 const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/clases`;
 
@@ -41,6 +43,8 @@ export default function Clases({ setActiveModule }) {
   const [autorizado, setAutorizado] = useState(true);
   const [listaProfesores, setListaProfesores] = useState([]);
   const [nombresProfesores, setNombresProfesores] = useState({});
+  const [openAsignarEstudiantes, setOpenAsignarEstudiantes] = useState(false);
+  const [claseSeleccionadaParaAsignar, setClaseSeleccionadaParaAsignar] = useState(null);
 
   const obtenerNombreProfesor = async (id) => {
     if (nombresProfesores[id]) return nombresProfesores[id];
@@ -409,6 +413,18 @@ export default function Clases({ setActiveModule }) {
                   <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mb: 1 }}>
                     <Button
                       variant="outlined"
+                      startIcon={<GroupIcon />}
+                      sx={{ color:"#2196F3", borderColor: "#2196F3", height: "fit-content" }}
+                      onClick={() => {
+                        setClaseSeleccionadaParaAsignar(clase);
+                        setOpenAsignarEstudiantes(true);
+                      }}
+                    >
+                      Estudiantes
+                    </Button>
+                    
+                    <Button
+                      variant="outlined"
                       startIcon={<EditIcon />}
                       sx={{ color:"#4CAF50", borderColor: "#4CAF50", height: "fit-content" }}
                       onClick={() => handleEditar(clase)}
@@ -670,6 +686,23 @@ export default function Clases({ setActiveModule }) {
           {mensajeError}
         </Alert>
       </Snackbar>
+
+      {/* Componente para asignar estudiantes */}
+      <AsignarEstudiantes
+        clase={claseSeleccionadaParaAsignar}
+        open={openAsignarEstudiantes}
+        onClose={() => {
+          setOpenAsignarEstudiantes(false);
+          setClaseSeleccionadaParaAsignar(null);
+        }}
+        onSuccess={() => {
+          // Recargar las clases para mostrar los cambios
+          if (filtroActivo === "hoy") fetchTodayClases();
+          else if (filtroActivo === "proximas") fetchNextClases();
+          else if (filtroActivo === "todas") fetchAllClases();
+          else if (filtroActivo === "anteriores") fetchPreviousClases();
+        }}
+      />
     </Box>
   );
 }

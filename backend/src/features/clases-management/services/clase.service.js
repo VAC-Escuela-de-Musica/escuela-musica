@@ -17,6 +17,7 @@ async function createClase(clase) {
 
       const claseExistente = await Clase.findOne({
         sala,
+        estado: { $ne: "cancelada" }, // Excluir clases canceladas
         horarios: {
           $elemMatch: {
             dia,
@@ -536,6 +537,221 @@ async function getHorarioMes({ mes, year, sala, horaInicio, horaFin, profesor })
   }
 }
 
+/**
+ * Asigna un estudiante a una clase
+ * @param {string} claseId - ID de la clase
+ * @param {Object} estudianteData - Datos del estudiante a asignar
+ * @returns {Promise} Promesa con el resultado de la asignación
+ */
+async function asignarEstudianteAClase(claseId, estudianteData) {
+  try {
+    const { alumnoId, estado = "activo", notas = "" } = estudianteData;
+
+    // Verificar que la clase existe
+    const clase = await Clase.findById(claseId);
+    if (!clase) {
+      return [null, "Clase no encontrada"];
+    }
+
+    // Verificar que el estudiante no esté ya asignado
+    const estudianteYaAsignado = clase.estudiantes.find(
+      est => est.alumno.toString() === alumnoId
+    );
+
+    if (estudianteYaAsignado) {
+      return [null, "El estudiante ya está asignado a esta clase"];
+    }
+
+    // Agregar el estudiante a la clase
+    clase.estudiantes.push({
+      alumno: alumnoId,
+      estado,
+      notas,
+      fechaAsignacion: new Date()
+    });
+
+    await clase.save();
+
+    // Populate para devolver datos completos
+    const claseActualizada = await Clase.findById(claseId)
+      .populate('estudiantes.alumno', 'nombreAlumno rutAlumno email')
+      .populate('profesor', 'nombreCompleto email');
+
+    return [claseActualizada, null];
+  } catch (error) {
+    handleError(error, "clase.service -> asignarEstudianteAClase");
+    return [null, "Error al asignar estudiante a la clase"];
+  }
+}
+
+/**
+ * Desasigna un estudiante de una clase
+ * @param {string} claseId - ID de la clase
+ * @param {string} alumnoId - ID del alumno
+ * @returns {Promise} Promesa con el resultado de la desasignación
+ */
+async function desasignarEstudianteDeClase(claseId, alumnoId) {
+  try {
+    const clase = await Clase.findById(claseId);
+    if (!clase) {
+      return [null, "Clase no encontrada"];
+    }
+
+    // Encontrar y remover el estudiante
+    const index = clase.estudiantes.findIndex(
+      est => est.alumno.toString() === alumnoId
+    );
+
+    if (index === -1) {
+      return [null, "El estudiante no está asignado a esta clase"];
+    }
+
+    clase.estudiantes.splice(index, 1);
+    await clase.save();
+
+    return [clase, null];
+  } catch (error) {
+    handleError(error, "clase.service -> desasignarEstudianteDeClase");
+    return [null, "Error al desasignar estudiante de la clase"];
+  }
+}
+
+/**
+ * Actualiza el estado de un estudiante en una clase
+ * @param {string} claseId - ID de la clase
+ * @param {string} alumnoId - ID del alumno
+ * @param {Object} datosActualizacion - Datos a actualizar
+ * @returns {Promise} Promesa con el resultado de la actualización
+ */
+async function actualizarEstadoEstudiante(claseId, alumnoId, datosActualizacion) {
+  try {
+    const { estado, notas } = datosActualizacion;
+
+    const clase = await Clase.findById(claseId);
+    if (!clase) {
+      return [null, "Clase no encontrada"];
+    }
+
+    const estudiante = clase.estudiantes.find(
+      est => est.alumno.toString() === alumnoId
+    );
+
+    if (!estudiante) {
+      return [null, "El estudiante no está asignado a esta clase"];
+    }
+
+    // Actualizar datos
+    if (estado) estudiante.estado = estado;
+    if (notas !== undefined) estudiante.notas = notas;
+
+    await clase.save();
+
+    // Populate para devolver datos completos
+    const claseActualizada = await Clase.findById(claseId)
+      .populate('estudiantes.alumno', 'nombreAlumno rutAlumno email')
+      .populate('profesor', 'nombreCompleto email');
+
+    return [claseActualizada, null];
+  } catch (error) {
+    handleError(error, "clase.service -> actualizarEstadoEstudiante");
+    return [null, "Error al actualizar estado del estudiante"];
+  }
+}
+
+/**
+ * Registra la asistencia de un estudiante
+ * @param {string} claseId - ID de la clase
+ * @param {string} alumnoId - ID del alumno
+ * @param {Object} datosAsistencia - Datos de asistencia
+ * @returns {Promise} Promesa con el resultado del registro
+ */
+async function registrarAsistencia(claseId, alumnoId, datosAsistencia) {
+  try {
+    const { fecha, presente, observaciones = "" } = datosAsistencia;
+
+    const clase = await Clase.findById(claseId);
+    if (!clase) {
+      return [null, "Clase no encontrada"];
+    }
+
+    const estudiante = clase.estudiantes.find(
+      est => est.alumno.toString() === alumnoId
+    );
+
+    if (!estudiante) {
+      return [null, "El estudiante no está asignado a esta clase"];
+    }
+
+    // Verificar si ya existe un registro para esa fecha
+    const asistenciaExistente = estudiante.asistencia.find(
+      a => a.fecha.toDateString() === new Date(fecha).toDateString()
+    );
+
+    if (asistenciaExistente) {
+      // Actualizar registro existente
+      asistenciaExistente.presente = presente;
+      asistenciaExistente.observaciones = observaciones;
+    } else {
+      // Crear nuevo registro
+      estudiante.asistencia.push({
+        fecha: new Date(fecha),
+        presente,
+        observaciones
+      });
+    }
+
+    await clase.save();
+
+    return [clase, null];
+  } catch (error) {
+    handleError(error, "clase.service -> registrarAsistencia");
+    return [null, "Error al registrar asistencia"];
+  }
+}
+
+/**
+ * Obtiene las clases de un estudiante específico
+ * @param {string} alumnoId - ID del alumno
+ * @returns {Promise} Promesa con las clases del estudiante
+ */
+async function getClasesDeEstudiante(alumnoId) {
+  try {
+    const clases = await Clase.find({
+      'estudiantes.alumno': alumnoId
+    })
+    .populate('estudiantes.alumno', 'nombreAlumno rutAlumno email')
+    .populate('profesor', 'nombreCompleto email')
+    .sort({ 'horarios.dia': 1, 'horarios.horaInicio': 1 });
+
+    return [clases, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getClasesDeEstudiante");
+    return [null, "Error al obtener clases del estudiante"];
+  }
+}
+
+/**
+ * Obtiene los estudiantes de una clase específica
+ * @param {string} claseId - ID de la clase
+ * @returns {Promise} Promesa con los estudiantes de la clase
+ */
+async function getEstudiantesDeClase(claseId) {
+  try {
+    const clase = await Clase.findById(claseId)
+      .populate('estudiantes.alumno', 'nombreAlumno rutAlumno email edadAlumno telefonoAlumno')
+      .populate('profesor', 'nombreCompleto email');
+
+    if (!clase) {
+      return [null, "Clase no encontrada"];
+    }
+
+    return [clase.estudiantes, null];
+  } catch (error) {
+    handleError(error, "clase.service -> getEstudiantesDeClase");
+    return [null, "Error al obtener estudiantes de la clase"];
+  }
+}
+
 export default {
   createClase,
   getAllClases,
@@ -552,5 +768,10 @@ export default {
   getHorarioDia,
   getHorarioSemana,
   getHorarioMes,
-  getAllProgrammedClases,
+  asignarEstudianteAClase,
+  desasignarEstudianteDeClase,
+  actualizarEstadoEstudiante,
+  registrarAsistencia,
+  getClasesDeEstudiante,
+  getEstudiantesDeClase
 };
