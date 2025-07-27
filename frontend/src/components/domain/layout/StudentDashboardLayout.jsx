@@ -20,7 +20,6 @@ import {
 } from '@mui/material';
 import {
   Home as HomeIcon,
-  PhotoLibrary as PhotoLibraryIcon,
   Person as PersonIcon,
   Message as MessageIcon,
   Logout as LogoutIcon,
@@ -49,12 +48,6 @@ const StudentDashboardLayout = () => {
       text: 'Inicio',
       icon: <HomeIcon />,
       path: '/estudiante',
-      badge: null
-    },
-    {
-      text: 'Galería',
-      icon: <PhotoLibraryIcon />,
-      path: '/estudiante/galeria',
       badge: null
     },
     {
