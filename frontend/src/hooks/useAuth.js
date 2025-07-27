@@ -305,3 +305,6 @@ export const useAuthState = () => {
 
 // Exportar por defecto el hook
 export default useAuthState;
+
+// Exportación nombrada para compatibilidad
+export const useAuth = useAuthState;
