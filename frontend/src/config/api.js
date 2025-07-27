@@ -65,7 +65,8 @@ export const API_ENDPOINTS = {
     delete: (id) => `${API_BASE_URL}/api/alumnos/${id}`,
     update: (id) => `${API_BASE_URL}/api/alumnos/${id}`,
     getById: (id) => `${API_BASE_URL}/api/alumnos/${id}`,
-    getByUserId: (userId) => `${API_BASE_URL}/api/alumnos/user/${userId}`
+    getByUserId: (userId) => `${API_BASE_URL}/api/alumnos/user/${userId}`,
+    changePassword: `${API_BASE_URL}/api/alumnos/change-password`
   },
 
   // Mensajes Internos
