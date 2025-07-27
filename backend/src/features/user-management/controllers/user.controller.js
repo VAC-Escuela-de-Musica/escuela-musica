@@ -14,20 +14,45 @@ class UserController {
    */
   async listUsers (req, res) {
     try {
-      // Importar el modelo aquí para evitar problemas de importación circular
+      // Importar los modelos aquí para evitar problemas de importación circular
       const User = (await import('../../../core/models/user.model.js')).default
-      // Buscar todos los usuarios y popular los roles
-      const users = await User.find({}).populate('roles')
-      return respondSuccess(req, res, 200, {
-        users,
-        totalCount: users.length,
-        pagination: {
-          currentPage: 1,
-          totalPages: 1,
-          pageSize: users.length,
-          totalCount: users.length
+      const Role = (await import('../../../core/models/role.model.js')).default
+      
+      // Buscar todos los usuarios sin populate primero
+      const users = await User.find({}).lean()
+      
+      // Procesar roles manualmente para manejar inconsistencias
+      const processedUsers = await Promise.all(users.map(async (user) => {
+        const processedRoles = []
+        
+        for (const roleRef of user.roles) {
+          if (typeof roleRef === 'string' && !roleRef.match(/^[0-9a-fA-F]{24}$/)) {
+            // Es un string directo (como "asistente")
+            processedRoles.push({ name: roleRef })
+          } else {
+            // Es un ObjectId, hacer populate manual
+            try {
+              const role = await Role.findById(roleRef)
+              if (role) {
+                processedRoles.push(role)
+              } else {
+                processedRoles.push({ name: 'Unknown' })
+              }
+            } catch (e) {
+              processedRoles.push({ name: roleRef })
+            }
+          }
         }
-      })
+        
+        return {
+          ...user,
+          roles: processedRoles
+        }
+      }))
+      
+      console.log('[USERS] Found', processedUsers.length, 'users')
+      
+      return respondSuccess(req, res, 200, processedUsers)
     } catch (error) {
       console.error('❌ Error en UserController.listUsers:', error)
       handleError(error, 'UserController -> listUsers')
@@ -36,12 +61,56 @@ class UserController {
   }
 
   /**
-   * Crea un nuevo usuario - versión básica
+   * Crea un nuevo usuario
    */
   async createUser (req, res) {
     try {
-      return respondSuccess(req, res, 201, { message: 'Usuario creado (mock)' })
+      const User = (await import('../../../core/models/user.model.js')).default
+      const Role = (await import('../../../core/models/role.model.js')).default
+      
+      const { username, email, rut, password, roles = [] } = req.body
+      
+      console.log('[USERS] Creating user:', username)
+      
+      // Verificar si el usuario ya existe
+      const existingUser = await User.findOne({ $or: [{ email }, { rut }] })
+      if (existingUser) {
+        return respondError(req, res, 400, 'Usuario ya existe con ese email o RUT')
+      }
+      
+      // Buscar IDs de roles
+      const roleObjects = await Role.find({ name: { $in: roles } })
+      const roleIds = roleObjects.map(role => role._id)
+      
+      // Encriptar contraseña
+      const hashedPassword = await User.encryptPassword(password)
+      
+      // Crear usuario
+      const newUser = new User({
+        username,
+        email,
+        rut,
+        password: hashedPassword,
+        roles: roleIds
+      })
+      
+      await newUser.save()
+      await newUser.populate('roles')
+      
+      console.log('[USERS] User created successfully:', newUser.username)
+      
+      // No enviar la contraseña en la respuesta
+      const userResponse = {
+        _id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        rut: newUser.rut,
+        roles: newUser.roles
+      }
+      
+      return respondSuccess(req, res, 201, userResponse)
     } catch (error) {
+      console.error('❌ Error en UserController.createUser:', error)
       handleError(error, 'UserController -> createUser')
       return respondError(req, res, 500, 'Error interno del servidor')
     }
@@ -66,32 +135,118 @@ class UserController {
   }
 
   /**
-   * Actualiza un usuario - versión básica
+   * Actualiza un usuario
    */
   async updateUser (req, res) {
     try {
+      const User = (await import('../../../core/models/user.model.js')).default
+      const Role = (await import('../../../core/models/role.model.js')).default
+      
       const { id } = req.params
-      return respondSuccess(req, res, 200, {
-        id,
-        message: 'Usuario actualizado (mock)'
+      const { username, email, rut, password, roles = [] } = req.body
+      
+      console.log('[USERS] Updating user:', id)
+      
+      // Buscar usuario existente
+      const existingUser = await User.findById(id)
+      if (!existingUser) {
+        return respondError(req, res, 404, 'Usuario no encontrado')
+      }
+      
+      // Verificar duplicados (excepto el usuario actual)
+      const duplicateUser = await User.findOne({ 
+        $and: [
+          { _id: { $ne: id } },
+          { $or: [{ email }, { rut }] }
+        ]
       })
+      if (duplicateUser) {
+        return respondError(req, res, 400, 'Ya existe otro usuario con ese email o RUT')
+      }
+      
+      // Buscar IDs de roles si se proporcionaron
+      let roleIds = existingUser.roles
+      if (roles.length > 0) {
+        const roleObjects = await Role.find({ name: { $in: roles } })
+        roleIds = roleObjects.map(role => role._id)
+      }
+      
+      // Preparar datos de actualización
+      const updateData = {
+        username: username || existingUser.username,
+        email: email || existingUser.email,
+        rut: rut || existingUser.rut,
+        roles: roleIds
+      }
+      
+      // Solo actualizar contraseña si se proporciona
+      if (password && password.trim() !== '') {
+        updateData.password = await User.encryptPassword(password)
+      }
+      
+      // Actualizar usuario
+      const updatedUser = await User.findByIdAndUpdate(
+        id, 
+        updateData, 
+        { new: true }
+      ).populate('roles')
+      
+      console.log('[USERS] User updated successfully:', updatedUser.username)
+      
+      // No enviar la contraseña en la respuesta
+      const userResponse = {
+        _id: updatedUser._id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        rut: updatedUser.rut,
+        roles: updatedUser.roles
+      }
+      
+      return respondSuccess(req, res, 200, userResponse)
     } catch (error) {
+      console.error('❌ Error en UserController.updateUser:', error)
       handleError(error, 'UserController -> updateUser')
       return respondError(req, res, 500, 'Error interno del servidor')
     }
   }
 
   /**
-   * Elimina un usuario - versión básica
+   * Elimina un usuario
    */
   async deleteUser (req, res) {
     try {
+      const User = (await import('../../../core/models/user.model.js')).default
+      
       const { id } = req.params
+      
+      console.log('[USERS] Deleting user:', id)
+      
+      // Buscar usuario existente
+      const existingUser = await User.findById(id).populate('roles')
+      if (!existingUser) {
+        return respondError(req, res, 404, 'Usuario no encontrado')
+      }
+      
+      // No permitir eliminar al usuario actual
+      if (req.user?.id === id) {
+        return respondError(req, res, 400, 'No puedes eliminar tu propio usuario')
+      }
+      
+      // Eliminar usuario
+      await User.findByIdAndDelete(id)
+      
+      console.log('[USERS] User deleted successfully:', existingUser.username)
+      
       return respondSuccess(req, res, 200, {
-        id,
-        message: 'Usuario eliminado (mock)'
+        message: 'Usuario eliminado exitosamente',
+        deletedUser: {
+          _id: existingUser._id,
+          username: existingUser.username,
+          email: existingUser.email
+        }
       })
     } catch (error) {
+      console.error('❌ Error en UserController.deleteUser:', error)
       handleError(error, 'UserController -> deleteUser')
       return respondError(req, res, 500, 'Error interno del servidor')
     }

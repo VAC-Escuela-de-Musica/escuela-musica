@@ -1,8 +1,19 @@
 import { Router } from 'express'
 import roleController from '../controllers/role.controller.js'
-import { extractJWT } from '../../authentication/middlewares/jwt.middleware.js'
+import { 
+  authenticateJWT,
+  loadUserData,
+  requireAdmin,
+  asyncHandler,
+  sanitizeInput
+} from '../../../middlewares/index.js'
 
 const router = Router()
+
+// Aplicar middlewares base a todas las rutas
+router.use(sanitizeInput)
+router.use(authenticateJWT)
+router.use(loadUserData)
 
 // Middleware de debug para todas las rutas de este router
 router.use((req, res, next) => {
@@ -10,9 +21,6 @@ router.use((req, res, next) => {
   next()
 })
 
-// Todas las rutas requieren autenticación
-router.use(extractJWT)
-
-router.get('/', roleController.getRoles)
+router.get('/', requireAdmin, asyncHandler(roleController.getRoles))
 
 export default router
