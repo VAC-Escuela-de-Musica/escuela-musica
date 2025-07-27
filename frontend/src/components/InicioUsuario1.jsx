@@ -150,6 +150,7 @@ export default function ClippedDrawer() {
                   onClick={() => {
                     if (item.text === "Horario") setActiveModule("horario");
                     if (item.text === "Estudiantes") setActiveModule("alumnos");
+                    if (item.text === "Profesores") setActiveModule("profesores");
                     if (item.text === "Gestionar Clases") setActiveModule("clases");
                     if (item.text === "Nueva Clase") setActiveModule("clasesCrear");
                     if (item.text === "Clases Canceladas") setActiveModule("clasesCanceladas");
