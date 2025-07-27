@@ -399,7 +399,7 @@ export default function Clases({ setActiveModule }) {
                     <Typography><strong>Profesor:</strong> {nombresProfesores[clase.profesor]}</Typography>
                     {Array.isArray(clase.horarios) && clase.horarios.map((h, i) => (
                       <Box key={i} sx={{ pl: 1, borderLeft: '2px solid white' }}>
-                        <Typography><strong>Horario :</strong></Typography>
+                        <Typography><strong>Horario</strong></Typography>
                         <Typography><strong>Fecha:</strong> {h.dia}</Typography>
                         <Typography><strong>Hora Inicio:</strong> {h.horaInicio}</Typography>
                         <Typography><strong>Hora Fin:</strong> {h.horaFin}</Typography>
