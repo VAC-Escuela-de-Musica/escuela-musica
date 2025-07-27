@@ -27,8 +27,25 @@ import {
   VisibilityOff as VisibilityOffIcon
 } from '@mui/icons-material';
 import { API_ENDPOINTS, API_HEADERS } from '../../../config/api.js';
+import { useAuth } from '../../../context/AuthContext.jsx';
+import UnauthorizedAccess from '../../common/UnauthorizedAccess.jsx';
 
 const GmailConfig = () => {
+  const { isAdmin, isAssistant } = useAuth();
+
+  // Verificar permisos de acceso (solo admin y asistente pueden configurar Gmail)
+  if (!isAdmin() && !isAssistant()) {
+    return (
+      <UnauthorizedAccess 
+        title="Configuración de Gmail"
+        message="Solo administradores y asistentes pueden configurar Gmail."
+        suggestion="Contacta al administrador para cambios de configuración."
+        icon={<EmailIcon fontSize="large" />}
+        color="error"
+      />
+    );
+  }
+
   const [config, setConfig] = useState({
     enabled: false,
     user: '',

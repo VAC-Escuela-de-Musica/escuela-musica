@@ -12,6 +12,8 @@ import {
   Email as EmailIcon,
   WhatsApp as WhatsAppIcon
 } from '@mui/icons-material';
+import { useAuth } from '../../../context/AuthContext.jsx';
+import UnauthorizedAccess from '../../common/UnauthorizedAccess.jsx';
 
 const InternalMessageManager = React.lazy(() => import("../../../pages/InternalMessageManager"));
 const GmailConfig = React.lazy(() => import("./GmailConfig"));
@@ -40,7 +42,21 @@ const MessagingLoadingFallback = ({ message }) => (
 );
 
 const MensajeriaManager = () => {
+  const { isAdmin, isAssistant } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
+
+  // Verificar permisos de acceso (solo admin y asistente pueden acceder a mensajería)
+  if (!isAdmin() && !isAssistant()) {
+    return (
+      <UnauthorizedAccess 
+        title="Sistema de Mensajería"
+        message="Solo administradores y asistentes pueden acceder al sistema de mensajería."
+        suggestion="Contacta al administrador si necesitas enviar comunicaciones."
+        icon={<MessageIcon fontSize="large" />}
+        color="error"
+      />
+    );
+  }
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);

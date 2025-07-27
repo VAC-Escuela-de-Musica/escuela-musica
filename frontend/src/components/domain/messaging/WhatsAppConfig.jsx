@@ -30,8 +30,25 @@ import {
 } from '@mui/icons-material';
 import { API_ENDPOINTS, API_HEADERS } from '../../../config/api.js';
 import QRCode from 'qrcode';
+import { useAuth } from '../../../context/AuthContext.jsx';
+import UnauthorizedAccess from '../../common/UnauthorizedAccess.jsx';
 
 const WhatsAppConfig = () => {
+  const { isAdmin, isAssistant } = useAuth();
+
+  // Verificar permisos de acceso (solo admin y asistente pueden configurar WhatsApp)
+  if (!isAdmin() && !isAssistant()) {
+    return (
+      <UnauthorizedAccess 
+        title="Configuración Restringida"
+        message="Solo administradores y asistentes pueden configurar WhatsApp."
+        suggestion="Contacta al administrador para cambios de configuración."
+        icon={<WhatsAppIcon fontSize="large" />}
+        color="error"
+      />
+    );
+  }
+
   const [status, setStatus] = useState('not_initialized');
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);

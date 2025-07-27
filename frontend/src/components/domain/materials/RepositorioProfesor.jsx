@@ -4,6 +4,7 @@ import { useAuth } from '../../../context/AuthContext.jsx';
 import { formatDate, formatFileSize, getFileTypeFromExtension, getFileTypeIcon } from '../../../utils/helpers.js';
 import ImageViewer from './ImageViewer.jsx';
 import SubirArchivos from './SubirArchivos.jsx';
+import UnauthorizedAccess from '../../common/UnauthorizedAccess.jsx';
 
 // Material-UI Imports
 import {
@@ -328,22 +329,10 @@ const RepositorioProfesor = () => {
   // Verificar que el usuario no sea estudiante
   if (isStudent()) {
     return (
-      <Box sx={{ p: 3, minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Paper elevation={3} sx={{ p: 6, textAlign: 'center', maxWidth: 500 }}>
-          <Avatar sx={{ bgcolor: 'warning.main', mx: 'auto', mb: 2, width: 56, height: 56 }}>
-            <LockIcon fontSize="large" />
-          </Avatar>
-          <Typography variant="h5" color="warning.main" gutterBottom fontWeight="bold">
-            Acceso No Autorizado
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Solo profesores y administradores pueden acceder al repositorio de materiales.
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Si necesitas acceso a materiales, contacta a tu profesor.
-          </Typography>
-        </Paper>
-      </Box>
+      <UnauthorizedAccess 
+        message="Solo profesores y administradores pueden acceder al repositorio de materiales."
+        suggestion="Si necesitas acceso a materiales, contacta a tu profesor."
+      />
     );
   }
 

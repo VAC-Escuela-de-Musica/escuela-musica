@@ -45,8 +45,25 @@ import {
   Security as SecurityIcon
 } from '@mui/icons-material';
 import messagingService from '../../../services/messagingService.js';
+import { useAuth } from '../../../context/AuthContext.jsx';
+import UnauthorizedAccess from '../../common/UnauthorizedAccess.jsx';
 
 const EmailConfig = () => {
+  const { isAdmin, isAssistant } = useAuth();
+
+  // Verificar permisos de acceso (solo admin y asistente pueden configurar email)
+  if (!isAdmin() && !isAssistant()) {
+    return (
+      <UnauthorizedAccess 
+        title="Configuración Restringida"
+        message="Solo administradores y asistentes pueden configurar el sistema de email."
+        suggestion="Contacta al administrador para cambios de configuración."
+        icon={<SecurityIcon fontSize="large" />}
+        color="error"
+      />
+    );
+  }
+
   const [emailConfig, setEmailConfig] = useState({
     enabled: false,
     provider: 'gmail',
