@@ -248,6 +248,7 @@ async function getAllProgrammedClases() {
     return [clases, null];
   } catch (error) {
     handleError(error, "clase.service -> getAllProgrammedClases");
+    return [null, "Error al obtener las clases programadas"];
   }
 }
 
@@ -808,12 +809,44 @@ async function getEstudiantesDeClase(claseId) {
   }
 }
 
+/**
+ * Elimina permanentemente una clase de la base de datos
+ * @param {String} id - ID de la clase a eliminar
+ * @returns {Promise} Promesa con resultado de la eliminación
+ */
+async function deleteClase(id) {
+  try {
+    const clase = await Clase.findById(id);
+    if (!clase) {
+      return [null, "Clase no encontrada"];
+    }
+
+    // Verificar si la clase tiene estudiantes asignados
+    if (clase.estudiantes && clase.estudiantes.length > 0) {
+      return [null, "No se puede eliminar una clase que tiene estudiantes asignados. Primero desasigne todos los estudiantes."];
+    }
+
+    const deletedClase = await Clase.findByIdAndDelete(id);
+    
+    if (!deletedClase) {
+      return [null, "Error al eliminar la clase"];
+    }
+
+    return [{ message: "Clase eliminada exitosamente", deletedId: id }, null];
+  } catch (error) {
+    handleError(error, "clase.service -> deleteClase");
+    return [null, "Error al eliminar la clase"];
+  }
+}
+
 export default {
   createClase,
   getAllClases,
   getClaseById,
   updateClase,
   cancelClase,
+  deleteClase,
+  getAllProgrammedClases,
   getTodayClases,
   getNextClases,
   getCanceledClases,

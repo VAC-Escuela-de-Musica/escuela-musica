@@ -146,8 +146,10 @@ export default function ClasesCrear({ setActiveModule = null }) {
     ];
 
     try {
-      console.log("Clases a enviar:", JSON.stringify(clasesParaEnviar, null, 2));
-      console.log("Enviando al backend:", clasesParaEnviar);
+      console.log("[CREAR-DEBUG] Clases a enviar:", JSON.stringify(clasesParaEnviar, null, 2));
+      console.log("[CREAR-DEBUG] URL del endpoint:", `${API_URL}/batch`);
+      console.log("[CREAR-DEBUG] Datos enviados:", clasesParaEnviar);
+      
       const response = await fetchAutenticado(`${API_URL}/batch`, {
         method: "POST",
         headers: {
@@ -155,6 +157,9 @@ export default function ClasesCrear({ setActiveModule = null }) {
         },
         body: JSON.stringify(clasesParaEnviar)
       });
+      
+      console.log("[CREAR-DEBUG] Response status:", response.status);
+      console.log("[CREAR-DEBUG] Response ok:", response.ok);
 
       if (response.status === 403) {
         setAutorizado(false);
@@ -169,6 +174,9 @@ export default function ClasesCrear({ setActiveModule = null }) {
         return;
       }
 
+      const responseData = await response.json();
+      console.log("[CREAR-DEBUG] Clases creadas exitosamente:", responseData);
+      
       setMensajeExito("Clase creada con éxito");
       setTitulo("");
       setDescripcion("");

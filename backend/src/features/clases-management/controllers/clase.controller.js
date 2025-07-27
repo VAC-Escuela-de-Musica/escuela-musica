@@ -613,6 +613,28 @@ async function getEstudiantesDeClase(req, res) {
     }
 }
 
+/**
+ * Elimina permanentemente una clase
+ * @param {Object} req 
+ * @param {Object} res 
+ */
+async function deleteClase(req, res) {
+    try {
+        const { params } = req;
+        const { error: paramsError } = claseIdSchema.validate(params);
+        if (paramsError) return respondError(req, res, 400, paramsError.message);
+
+        const [result, error] = await claseService.deleteClase(params.id);
+        
+        if (error) return respondError(req, res, 400, error);
+
+        respondSuccess(req, res, 200, result);
+    } catch (error) {
+        handleError(error, "clase.controller -> deleteClase");
+        respondError(req, res, 500, "No se pudo eliminar la clase");
+    }
+}
+
 export {
     createClases,
     createClase,
@@ -620,6 +642,7 @@ export {
     getClaseById,
     updateClase,
     cancelClase,
+    deleteClase,
     getTodayClases,
     getNextClases,
     getPreviousClases,

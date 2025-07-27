@@ -14,6 +14,7 @@ import {
   } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import CancelIcon from "@mui/icons-material/Cancel";
+import DeleteIcon from "@mui/icons-material/Delete";
 import GroupIcon from "@mui/icons-material/Group";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -38,7 +39,9 @@ export default function Clases({ setActiveModule }) {
   const [horaFin, setHoraFin] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [claseSeleccionada, setClaseSeleccionada] = useState(null);
+  const [claseAEliminar, setClaseAEliminar] = useState(null);
   const [motivoCancelacion, setMotivoCancelacion] = useState("");
   const [filtroActivo, setFiltroActivo] = useState("hoy");
   const [autorizado, setAutorizado] = useState(true);
@@ -303,6 +306,43 @@ export default function Clases({ setActiveModule }) {
     setOpenDialog(true);
   };
 
+  const handleEliminarClase = async (id) => {
+    try {
+      const response = await fetchAutenticado(`${API_URL}/${id}`, {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        try {
+          const parsedError = JSON.parse(errorText);
+          setMensajeError(parsedError.message || "Error al eliminar la clase");
+        } catch {
+          setMensajeError("Error al eliminar la clase");
+        }
+        return;
+      }
+      
+      setMensajeExito("Clase eliminada permanentemente");
+      setOpenDeleteDialog(false);
+      setClaseAEliminar(null);
+      
+      // Refrescar la lista según el filtro activo
+      if (filtroActivo === "hoy") {
+        fetchTodayClases();
+      } else if (filtroActivo === "proximas") {
+        fetchNextClases();
+      } else if (filtroActivo === "todas") {
+        fetchAllClases();
+      } else {
+        fetchPreviousClases();
+      }
+    } catch (error) {
+      console.error(error);
+      setMensajeError("Error al eliminar la clase");
+    }
+  };
+
   const currentYear = new Date().getFullYear();
   const minDate = new Date(currentYear, 0, 1); 
   const maxDate = new Date(currentYear + 1, 11, 31); 
@@ -448,6 +488,18 @@ export default function Clases({ setActiveModule }) {
                       }}
                     >
                       Cancelar
+                    </Button>
+                    
+                    <Button
+                      variant="contained"
+                      startIcon={<DeleteIcon />}
+                      sx={{ backgroundColor: "#d32f2f", color: "#ffffff"}}
+                      onClick={() => {
+                        setClaseAEliminar(clase);
+                        setOpenDeleteDialog(true);
+                      }}
+                    >
+                      Eliminar
                     </Button>
                   </Box>
             </Box>
@@ -714,6 +766,56 @@ export default function Clases({ setActiveModule }) {
               sx={{ backgroundColor: "#F75C03" }}
             >
               Sí, cancelar clase
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Diálogo de confirmación para eliminar */}
+        <Dialog
+          open={openDeleteDialog}
+          onClose={() => {
+            setOpenDeleteDialog(false);
+            setClaseAEliminar(null);
+          }}
+          PaperProps={{
+            sx: {
+              backgroundColor: "#333333",
+              color: "white",
+              minWidth: "400px"
+            }
+          }}
+        >
+          <DialogTitle sx={{ color: "white" }}>
+            🗑️ Eliminar Clase Permanentemente
+          </DialogTitle>
+          <DialogContent>
+            <Typography sx={{ color: "white", mb: 2 }}>
+              ¿Está seguro de eliminar permanentemente la clase "{claseAEliminar?.titulo}"?
+            </Typography>
+            <Typography sx={{ color: "#ffeb3b", mb: 2, fontSize: "0.9rem", fontWeight: "bold" }}>
+              ⚠️ ADVERTENCIA: Esta acción no se puede deshacer.
+            </Typography>
+            <Typography sx={{ color: "#cccccc", fontSize: "0.9rem" }}>
+              La clase será eliminada completamente del sistema. Si solo desea cancelar temporalmente, use el botón "Cancelar" en su lugar.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={() => {
+                setOpenDeleteDialog(false);
+                setClaseAEliminar(null);
+              }} 
+              sx={{ color: "#cccccc" }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => handleEliminarClase(claseAEliminar._id)}
+              color="error"
+              variant="contained"
+              sx={{ backgroundColor: "#d32f2f" }}
+            >
+              Sí, eliminar permanentemente
             </Button>
           </DialogActions>
         </Dialog>
