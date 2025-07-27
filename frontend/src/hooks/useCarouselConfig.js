@@ -4,23 +4,65 @@ const CAROUSEL_CONFIG_KEY = 'carouselConfig';
 
 export const useCarouselConfig = () => {
   const [selectedImages, setSelectedImages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Cargar configuración al inicializar
   useEffect(() => {
     loadConfig();
   }, []);
 
-  const loadConfig = () => {
+  const loadConfig = async () => {
     try {
+      setLoading(true);
+      
+      // Primero intentar obtener desde el backend
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230'}/api/carousel/active-with-urls`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Hook - Datos del carrusel desde backend:', data);
+        
+        // Usar datos del backend como fuente principal
+        const backendImages = Array.isArray(data) ? data : 
+                             Array.isArray(data.data) ? data.data : [];
+        
+        if (backendImages.length > 0) {
+          setSelectedImages(backendImages);
+          setError(null);
+          return;
+        }
+      }
+      
+      // Fallback a localStorage si no hay datos en el backend
       const savedConfig = localStorage.getItem(CAROUSEL_CONFIG_KEY);
-      console.log('Hook - Configuración guardada:', savedConfig);
+      console.log('Hook - Fallback a localStorage:', savedConfig);
       if (savedConfig) {
         const config = JSON.parse(savedConfig);
-        console.log('Hook - Configuración parseada:', config);
+        console.log('Hook - Configuración localStorage parseada:', config);
         setSelectedImages(config.selectedImages || []);
+      } else {
+        // Si no hay nada, array vacío
+        setSelectedImages([]);
       }
+      
     } catch (error) {
       console.error('Error al cargar la configuración del carrusel:', error);
+      setError(error.message);
+      
+      // Fallback a localStorage en caso de error de red
+      try {
+        const savedConfig = localStorage.getItem(CAROUSEL_CONFIG_KEY);
+        if (savedConfig) {
+          const config = JSON.parse(savedConfig);
+          setSelectedImages(config.selectedImages || []);
+        }
+      } catch (localError) {
+        console.error('Error al cargar localStorage:', localError);
+        setSelectedImages([]);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,13 +119,20 @@ export const useCarouselConfig = () => {
     return selectedImages.some(img => img._id === imageId);
   };
 
+  const refreshFromBackend = () => {
+    loadConfig();
+  };
+
   return {
     selectedImages,
+    loading,
+    error,
     addImage,
     removeImage,
     reorderImages,
     clearConfig,
     isImageSelected,
-    loadConfig
+    loadConfig,
+    refreshFromBackend
   };
 }; 

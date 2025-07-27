@@ -155,7 +155,7 @@ async function deleteAlumnos (id) {
 // Buscar alumno por email
 async function getAlumnoByEmail (email) {
   try {
-    const alumno = await Alumno.findOne({ email }).exec()
+    const alumno = await Alumno.findOne({ email }).select('+password').exec()
     if (!alumno) return [null, 'Alumno no encontrado']
     return [alumno, null]
   } catch (error) {

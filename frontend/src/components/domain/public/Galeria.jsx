@@ -1,71 +1,276 @@
 import React, { useState, useEffect } from 'react';
-import { API_ENDPOINTS, API_HEADERS } from '../../../config/api';
+import ImageList from '@mui/material/ImageList';
+import ImageListItem from '@mui/material/ImageListItem';
+import ImageListItemBar from '@mui/material/ImageListItemBar';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
 
-function Galeria() {
-  const [images, setImages] = useState([]);
+function srcset(image, size, rows = 1, cols = 1) {
+  return {
+    src: `${image}?w=${size * cols}&h=${size * rows}&fit=crop&auto=format`,
+    srcSet: `${image}?w=${size * cols}&h=${
+      size * rows
+    }&fit=crop&auto=format&dpr=2 2x`,
+  };
+}
+
+const Galeria = () => {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [galeria, setGaleria] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const API_URL = import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230';
+
+  // Fetch galería from backend
   useEffect(() => {
-    const fetchImages = async () => {
+    const fetchGaleria = async () => {
       try {
-        setLoading(true);
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230'}/api/carousel/active-with-urls`, {
-          headers: API_HEADERS.basic
-        });
+        const response = await fetch(`${API_URL}/api/galeria/active`);
         
-        if (!response.ok) {
-          throw new Error('Error al cargar las imágenes');
+        if (response.ok) {
+          const data = await response.json();
+          console.log('🔍 [GALERIA] Galería cargada:', data.data ? data.data.length : 0, 'imágenes');
+          setGaleria(data.data || []);
+        } else {
+          console.error('❌ [GALERIA] Error al cargar galería:', response.status, response.statusText);
+          setError('Error al cargar la galería');
         }
-        
-        const data = await response.json();
-        // Handle nested data structure from API response
-        const imageArray = Array.isArray(data) ? data : 
-                          Array.isArray(data.data) ? data.data :
-                          Array.isArray(data.data?.data) ? data.data.data : [];
-        setImages(imageArray);
-      } catch (err) {
-        console.error('Error fetching gallery images:', err);
-        setError(err.message);
-        // Fallback a imágenes estáticas si hay error
-        setImages([
-          { id: 1, url: '/galeria/1.jpg', alt: 'Imagen 1' },
-          { id: 2, url: '/galeria/2.jpg', alt: 'Imagen 2' },
-          // ... resto de imágenes estáticas como fallback
-        ]);
+      } catch (error) {
+        console.error('❌ [GALERIA] Error de conexión:', error);
+        setError('Error de conexión');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchImages();
-  }, []);
+    fetchGaleria();
+  }, [API_URL]);
+
+  const handleImageClick = (item) => {
+    setSelectedImage(item);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setSelectedImage(null);
+  };
 
   if (loading) {
-    return <div className="text-center">Cargando galería...</div>;
+    return (
+      <Box id="galeria" sx={{ py: 8, px: { xs: 1, md: 3 }, bgcolor: '#222222', textAlign: 'center' }}>
+        <CircularProgress sx={{ color: 'white' }} />
+        <Typography variant="h6" sx={{ color: 'white', mt: 2 }}>
+          Cargando galería...
+        </Typography>
+      </Box>
+    );
   }
 
   if (error) {
-    console.warn('Error en galería, usando imágenes por defecto:', error);
+    return (
+      <Box id="galeria" sx={{ py: 8, px: { xs: 1, md: 3 }, bgcolor: '#222222', textAlign: 'center' }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Typography variant="h6" sx={{ color: 'white' }}>
+          No se pudo cargar la galería
+        </Typography>
+      </Box>
+    );
   }
 
+  if (galeria.length === 0) {
+    return (
+      <Box id="galeria" sx={{ py: 8, px: { xs: 1, md: 3 }, bgcolor: '#222222', textAlign: 'center' }}>
+        <Typography variant="h6" sx={{ color: 'white' }}>
+          No hay imágenes disponibles en la galería
+        </Typography>
+      </Box>
+    );
+  }
+  
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-[#222222]">
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 w-11/12 max-w-6xl">
-        {images.map((img, i) => (
-          <img 
-            key={i} 
-            src={typeof img === 'string' ? img : img.imagen || img.url} 
-            alt={typeof img === 'object' ? img.titulo : `galeria-${i}`} 
-            className="w-full h-24 md:h-40 object-cover rounded-md"
-            onError={(e) => {
-              // Fallback si la imagen no carga
-              e.target.src = `/galeria/${i + 1}.jpg`;
+    <Box id="galeria" sx={{ py: 8, px: { xs: 1, md: 3 }, bgcolor: '#222222', position: 'relative', zIndex: 6 }}>
+      <Typography 
+        variant="h2" 
+        component="h1" 
+        align="left"
+        sx={{ 
+          mb: 6, 
+          color: '#FFFFFF',
+          fontSize: { xs: '2.5rem', md: '3.5rem' }
+        }}
+      >
+        Galería de Nuestros Eventos
+      </Typography>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', maxWidth: '100vw' }}>
+        <ImageList
+          sx={{ 
+            width: { xs: '100%', md: '90%', lg: '95%' }, 
+            height: 650,
+            bgcolor: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: 2,
+            p: 2
+          }}
+          variant="quilted"
+          cols={4}
+          rowHeight={160}
+        >
+          {galeria.map((item, index) => (
+            <ImageListItem 
+              key={item._id} 
+              cols={item.cols || 1} 
+              rows={item.rows || 1}
+              sx={{ 
+                position: 'relative',
+                cursor: 'pointer',
+                '& img': {
+                  transition: 'transform 0.2s',
+                },
+                '&:hover img': {
+                  transform: 'scale(1.02)'
+                }
+              }}
+              onClick={() => handleImageClick(item)}
+            >
+              <img
+                {...srcset(item.imagen, 160, item.rows, item.cols)}
+                alt={item.titulo || ''}
+                loading="lazy"
+                style={{ 
+                  borderRadius: 8,
+                  objectFit: 'cover',
+                  width: '100%',
+                  height: '100%'
+                }}
+                onError={(e) => {
+                  console.error(`❌ [GALERIA] Error al cargar imagen:`, {
+                    src: e.target.src,
+                    originalUrl: item.imagen,
+                    titulo: item.titulo,
+                    id: item._id
+                  });
+                  // Mostrar imagen de placeholder en caso de error
+                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg==';
+                }}
+              />
+              {(item.titulo || item.descripcion) && (
+                <ImageListItemBar
+                  title={item.titulo}
+                  subtitle={item.descripcion}
+                  sx={{
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%)',
+                    borderBottomLeftRadius: 8,
+                    borderBottomRightRadius: 8
+                  }}
+                />
+              )}
+            </ImageListItem>
+          ))}
+        </ImageList>
+      </Box>
+
+      {/* Dialog para ver imagen */}
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog} 
+        maxWidth={(!selectedImage || selectedImage.titulo || selectedImage.descripcion) ? "md" : "md"} 
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#2a2a2a',
+            maxHeight: '90vh'
+          }
+        }}
+      >
+        <Box sx={{ position: 'relative' }}>
+          <IconButton
+            onClick={handleCloseDialog}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              zIndex: 1,
+              bgcolor: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              '&:hover': {
+                bgcolor: 'rgba(0,0,0,0.7)'
+              }
             }}
-          />
-        ))}
-      </div>
-    </div>
+          >
+            <CloseIcon />
+          </IconButton>
+          <DialogContent sx={{ p: 0 }}>
+            {(!selectedImage || selectedImage.titulo || selectedImage.descripcion) ? (
+              <Box sx={{ width: '100%' }}>
+                <Box sx={{ 
+                  width: '100%',
+                  height: '60vh',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  bgcolor: 'rgba(0, 0, 0, 0.2)',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}>
+                  <img
+                    src={selectedImage?.imagen}
+                    alt={selectedImage?.titulo || ''}
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      objectFit: 'contain'
+                    }}
+                  />
+                </Box>
+                <Box sx={{ p: 3 }}>
+                  {selectedImage?.titulo && (
+                    <Typography variant="h5" sx={{ color: 'white', mb: 2 }}>
+                      {selectedImage.titulo}
+                    </Typography>
+                  )}
+                  {selectedImage?.descripcion && (
+                    <Typography sx={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '1.1rem', lineHeight: 1.6 }}>
+                      {selectedImage.descripcion}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            ) : (
+              <Box sx={{ 
+                width: '100%',
+                minHeight: '60vh',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+                <img
+                  src={selectedImage?.imagen}
+                  alt=""
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '80vh',
+                    objectFit: 'contain'
+                  }}
+                />
+              </Box>
+            )}
+          </DialogContent>
+        </Box>
+      </Dialog>
+    </Box>
   );
 };
 

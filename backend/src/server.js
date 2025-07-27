@@ -60,22 +60,20 @@ async function setupServer () {
         '/api/galeria/upload-url',
         '/api/galeria/confirm-upload',
         /^\/api\/galeria.*$/, // Excluir todas las rutas de galería
+        /^\/api\/cards-profesores.*$/, // Excluir todas las rutas de cards-profesores
+        /^\/api\/testimonios.*$/, // Excluir todas las rutas de testimonios
         /^\/api\/carousel\/upload$/,
         /^\/api\/files\/upload$/,
         /^\/api\/alumnos.*$/, // Excluir todas las rutas de alumnos
+        /^\/api\/profesores.*$/, // Excluir todas las rutas de profesores
         /^\/api\/messaging\/whatsapp-web\/(reset|initialize)$/, // Excluir rutas públicas de WhatsApp Web
-        /^\/api\/messaging\/(send-whatsapp|send-email|send-message|test-message)$/, // Excluir rutas de envío de mensajes
+        /^\/api\/messaging\/(send-whatsapp|send-email|send-message|test-message|test-email-config-unrestricted)$/, // Excluir rutas de envío de mensajes
         /^\/api\/internal-messages.*$/ // Excluir todas las rutas de mensajes internos
       ]
       const isExcluded = csrfExcluded.some(pattern => {
         if (pattern instanceof RegExp) return pattern.test(req.path)
         return req.path === pattern
       })
-
-      // Debug logging para CSRF
-      if (req.method === 'POST' && (req.path.includes('galeria') || req.path.includes('upload') || req.path.includes('internal-messages'))) {
-        console.log(`[CSRF DEBUG] ${req.method} ${req.path} | excluded: ${isExcluded} | patterns checked:`, csrfExcluded.map(p => p instanceof RegExp ? p.toString() : p))
-      }
 
       if (isExcluded) {
         return next()

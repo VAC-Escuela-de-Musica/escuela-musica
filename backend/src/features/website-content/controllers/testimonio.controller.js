@@ -75,9 +75,51 @@ async function createTestimonio (req, res) {
   }
 }
 
+/**
+ * Actualiza un testimonio existente
+ */
+async function updateTestimonio (req, res) {
+  try {
+    const { params, body } = req
+    const [updatedTestimonio, testimonioError] = await testimonioService.updateTestimonio(params.id, body)
+
+    if (testimonioError) return respondError(req, res, 400, testimonioError)
+    if (!updatedTestimonio) {
+      return respondError(req, res, 404, 'Testimonio no encontrado')
+    }
+
+    respondSuccess(req, res, 200, updatedTestimonio)
+  } catch (error) {
+    handleError(error, 'testimonio.controller -> updateTestimonio')
+    respondError(req, res, 500, 'Error al actualizar el testimonio')
+  }
+}
+
+/**
+ * Elimina un testimonio
+ */
+async function deleteTestimonio (req, res) {
+  try {
+    const { params } = req
+    const [deletedTestimonio, testimonioError] = await testimonioService.deleteTestimonio(params.id)
+
+    if (testimonioError) return respondError(req, res, 400, testimonioError)
+    if (!deletedTestimonio) {
+      return respondError(req, res, 404, 'Testimonio no encontrado')
+    }
+
+    respondSuccess(req, res, 200, { message: 'Testimonio eliminado exitosamente' })
+  } catch (error) {
+    handleError(error, 'testimonio.controller -> deleteTestimonio')
+    respondError(req, res, 500, 'Error al eliminar el testimonio')
+  }
+}
+
 export default {
   getActiveTestimonios,
   getAllTestimonios,
   getTestimonioById,
-  createTestimonio
+  createTestimonio,
+  updateTestimonio,
+  deleteTestimonio
 }

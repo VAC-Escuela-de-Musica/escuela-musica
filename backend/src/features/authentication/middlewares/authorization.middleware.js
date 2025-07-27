@@ -14,13 +14,24 @@ const ROLE_MAPPING = {
 
 /**
  * Convierte roles de ObjectId a string si es necesario
- * @param {Array} roles - Array de roles (pueden ser ObjectIds o strings)
+ * @param {Array} roles - Array de roles (pueden ser ObjectIds, objetos con _id/name, o strings)
  * @returns {Array} Array de roles como strings
  */
 function normalizeRoles (roles) {
   if (!Array.isArray(roles)) return []
 
   return roles.map((role) => {
+    // Si es un objeto con propiedades _id y name (desde JWT)
+    if (typeof role === 'object' && role !== null) {
+      if (role.name) {
+        return role.name // Usar directamente el nombre del rol
+      }
+      if (role._id) {
+        const roleId = role._id.toString()
+        return ROLE_MAPPING[roleId] || 'estudiante'
+      }
+    }
+    
     const roleStr = role.toString()
     // Si es un ObjectId (24 caracteres hexadecimales), usar el mapeo
     if (roleStr.length === 24 && /^[0-9a-fA-F]{24}$/.test(roleStr)) {
@@ -37,13 +48,20 @@ function normalizeRoles (roles) {
  * @param {Function} next - Función para continuar con la siguiente función
  */
 export function isAdmin (req, res, next) {
+  console.log('🔍 [IS-ADMIN] Verificando si el usuario es administrador')
+  console.log('🔍 [IS-ADMIN] req.roles:', req.roles)
+  console.log('🔍 [IS-ADMIN] req.user:', req.user)
+  
   const normalizedRoles = normalizeRoles(req.roles)
+  console.log('🔍 [IS-ADMIN] Roles normalizados:', normalizedRoles)
 
   // Verificar si el usuario tiene el rol "administrador"
   if (normalizedRoles.includes('administrador')) {
+    console.log('✅ [IS-ADMIN] Usuario es administrador - Acceso permitido')
     return next()
   }
 
+  console.log('❌ [IS-ADMIN] Usuario NO es administrador - Acceso denegado')
   return res.status(403).json({ message: 'No autorizado' })
 }
 

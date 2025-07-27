@@ -1,5 +1,21 @@
 // Configuración centralizada de la API
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230';
+const rawApiUrl = import.meta.env.VITE_API_URL;
+
+// Verificar que la variable de entorno esté configurada
+if (!rawApiUrl) {
+  throw new Error('VITE_API_URL no está configurada en las variables de entorno');
+}
+
+// Función para normalizar la URL base y evitar duplicación de /api
+function normalizeApiUrl(url) {
+  // Remover /api del final si existe para evitar duplicación
+  let cleanUrl = url.replace(/\/api\/?$/, '');
+  // Remover barra final para evitar dobles barras
+  cleanUrl = cleanUrl.replace(/\/$/, '');
+  return cleanUrl;
+}
+
+export const API_BASE_URL = normalizeApiUrl(rawApiUrl);
 
 // Endpoints de la API organizados por funcionalidad
 export const API_ENDPOINTS = {
@@ -49,7 +65,8 @@ export const API_ENDPOINTS = {
     delete: (id) => `${API_BASE_URL}/api/alumnos/${id}`,
     update: (id) => `${API_BASE_URL}/api/alumnos/${id}`,
     getById: (id) => `${API_BASE_URL}/api/alumnos/${id}`,
-    getByUserId: (userId) => `${API_BASE_URL}/api/alumnos/user/${userId}`
+    getByUserId: (userId) => `${API_BASE_URL}/api/alumnos/user/${userId}`,
+    changePassword: `${API_BASE_URL}/api/alumnos/change-password`
   },
 
   // Mensajes Internos

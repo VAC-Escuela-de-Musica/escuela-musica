@@ -2,7 +2,10 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiService from "../services/api.service.js";
 import authService from "../services/auth.service.js";
-import { setCsrfToken as setGlobalCsrfToken } from "../config/api.js";
+import {
+  setCsrfToken as setGlobalCsrfToken,
+  API_BASE_URL,
+} from "../config/api.js";
 
 const AuthContext = createContext();
 
@@ -43,7 +46,10 @@ export function AuthProvider({ children }) {
         }
 
         // Initialize CSRF token
-        const data = await apiService.get("/csrf-token");
+        const csrfResponse = await fetch(`${API_BASE_URL}/api/csrf-token`, {
+          credentials: "include",
+        });
+        const data = await csrfResponse.json();
         setCsrfToken(data.csrfToken);
         setGlobalCsrfToken(data.csrfToken);
 

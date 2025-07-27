@@ -22,7 +22,7 @@ const FormDialog = ({
   onInputChange,
   isEditing = false,
   loading = false,
-  maxWidth = 'sm',
+  maxWidth = 'md',
   fullWidth = true
 }) => {
   // Manejador de envío del formulario

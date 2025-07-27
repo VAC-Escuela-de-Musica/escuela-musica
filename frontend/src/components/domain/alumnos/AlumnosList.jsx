@@ -108,8 +108,7 @@ function AlumnosList() {
         setEditingAlumno(null);
         localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
         localStorage.setItem("alumnos_showForm", "false");
-        setSuccessMsg("Alumno actualizado exitosamente");
-        setShowSuccess(true);
+        showNotification("Alumno actualizado exitosamente", "success");
       } catch (err) {
         alert("Error al actualizar alumno");
       }
@@ -121,8 +120,7 @@ function AlumnosList() {
         setEditingAlumno(null);
         localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
         localStorage.setItem("alumnos_showForm", "false");
-        setSuccessMsg("Alumno creado exitosamente");
-        setShowSuccess(true);
+        showNotification("Alumno creado exitosamente", "success");
       } catch (err) {
         alert("Error al crear alumno");
       }

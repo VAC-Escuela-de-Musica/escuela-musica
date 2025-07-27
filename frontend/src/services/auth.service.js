@@ -141,11 +141,32 @@ class AuthService {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 
-    // Cancelar timer de renovaci贸n
+    // Cancelar timer de renovación
+
     if (this.refreshTimer) {
       clearTimeout(this.refreshTimer);
       this.refreshTimer = null;
     }
+  }
+
+  /**
+   * Cierra sesión del usuario
+   */
+  async logout() {
+    try {
+      // Intentar llamar al endpoint de logout
+      if (this.token) {
+        await fetch(API_ENDPOINTS.auth.logout, {
+          method: "POST",
+          headers: API_HEADERS.withAuth(),
+        });
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+
+    // Limpiar datos locales
+    this.clearLocalData();
   }
 
   /**

@@ -27,7 +27,7 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
   } = options;
 
   // Hooks base para API y manejo de errores
-  const api = useApiCall([]); // ✅ Cambiar de null a array vacío
+  const api = useApiCall([]); // ✅ Array vacío para evitar objetos como React children
   const errorHandler = useErrorHandler({
     enableRetry: true,
     maxRetries: 3,
@@ -79,7 +79,7 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
       api.updateData([]);
       throw error;
     }
-  }, [endpoint, service]); // ✅ Remover api y errorHandler de dependencias
+  }, [endpoint, service, api.execute, api.updateData, errorHandler.captureError]); // ✅ Dependencias específicas
 
   /**
    * Crear nuevo item - CORREGIDO
@@ -366,8 +366,8 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
   }, []);
 
   return {
-    // Datos
-    items: api.data,
+    // Datos - asegurar que items siempre sea un array
+    items: Array.isArray(api.data) ? api.data : [],
     loading: api.loading,
     error: api.error || errorHandler.error,
     
@@ -408,7 +408,7 @@ export const useCrudManager = (endpoint, itemName = 'item', options = {}) => {
     },
     
     // Estados computados
-    hasItems: api.data.length > 0,
+    hasItems: Array.isArray(api.data) && api.data.length > 0,
     hasSelection: selectedItems.size > 0,
     isDialogOpen: dialogState.open,
     isEditing: !!dialogState.editing,

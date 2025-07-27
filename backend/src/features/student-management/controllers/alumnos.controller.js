@@ -163,12 +163,12 @@ async function updateStudentProfile (req, res) {
   console.log('[PUT] /api/alumnos/profile/update - Actualizar perfil de estudiante', req.body)
   try {
     // Verificar que el usuario autenticado es un estudiante
-    if (!req.user || !req.user.id) {
+    if (!req.user || !req.user.email) {
       return respondError(req, res, 401, 'Usuario no autenticado')
     }
 
-    // Buscar el estudiante por el ID del usuario autenticado
-    const [alumno, errorAlumno] = await AlumnoService.getAlumnoByUserId(req.user.id)
+    // Buscar el estudiante por el email del usuario autenticado
+    const [alumno, errorAlumno] = await AlumnoService.getAlumnoByEmail(req.user.email)
     if (errorAlumno || !alumno) {
       return respondError(req, res, 404, 'Estudiante no encontrado')
     }
@@ -226,6 +226,65 @@ async function updateStudentProfile (req, res) {
   }
 }
 
+// Controlador para que los estudiantes cambien su contraseña
+async function changeStudentPassword (req, res) {
+  console.log('[PUT] /api/alumnos/change-password - Cambiar contraseña de estudiante', req.body)
+  try {
+    // Verificar que el usuario autenticado es un estudiante
+    if (!req.user || !req.user.email) {
+      return respondError(req, res, 401, 'Usuario no autenticado')
+    }
+
+    const { currentPassword, newPassword } = req.body
+
+    // Validar que se proporcionen ambas contraseñas
+    if (!currentPassword || !newPassword) {
+      return respondError(req, res, 400, 'Se requiere la contraseña actual y la nueva contraseña')
+    }
+
+    // Validar que la nueva contraseña tenga al menos 6 caracteres
+    if (newPassword.length < 6) {
+      return respondError(req, res, 400, 'La nueva contraseña debe tener al menos 6 caracteres')
+    }
+
+    // Buscar el estudiante por el email del usuario autenticado
+    const [alumno, errorAlumno] = await AlumnoService.getAlumnoByEmail(req.user.email)
+    if (errorAlumno || !alumno) {
+      return respondError(req, res, 404, 'Estudiante no encontrado')
+    }
+
+    // Verificar que la contraseña actual sea correcta
+    const isCurrentPasswordValid = await Alumno.comparePassword(currentPassword, alumno.password)
+    if (!isCurrentPasswordValid) {
+      return respondError(req, res, 400, 'La contraseña actual es incorrecta')
+    }
+
+    // Verificar que la nueva contraseña sea diferente a la actual
+    if (currentPassword === newPassword) {
+      return respondError(req, res, 400, 'La nueva contraseña debe ser diferente a la actual')
+    }
+
+    // Hashear la nueva contraseña
+    const hashedNewPassword = await Alumno.encryptPassword(newPassword)
+
+    // Actualizar la contraseña
+    const [updatedAlumno, updateError] = await AlumnoService.updateAlumnos(alumno._id, {
+      password: hashedNewPassword
+    })
+
+    if (updateError) {
+      return respondError(req, res, 500, 'Error al actualizar la contraseña')
+    }
+
+    return respondSuccess(req, res, 200, {
+      message: 'Contraseña actualizada correctamente'
+    })
+  } catch (error) {
+    handleError(error, 'alumnos.controller -> changeStudentPassword')
+    return respondError(req, res, 500, 'Error interno del servidor')
+  }
+}
+
 // Exportar las funciones individualmente
 export {
   getAllAlumnos,
@@ -235,7 +294,8 @@ export {
   deleteAlumnos,
   getAlumnoByEmail,
   getAlumnoByUserId,
-  updateStudentProfile
+  updateStudentProfile,
+  changeStudentPassword
 }
 
 // Exportar los controladores como default también
@@ -247,5 +307,6 @@ export default {
   deleteAlumnos,
   getAlumnoByEmail,
   getAlumnoByUserId,
-  updateStudentProfile
+  updateStudentProfile,
+  changeStudentPassword
 }
