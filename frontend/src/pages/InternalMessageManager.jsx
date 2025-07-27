@@ -54,7 +54,8 @@ import {
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
   Group as GroupIcon,
-  Class as ClassIcon
+  Class as ClassIcon,
+  Email as EmailIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext.jsx';
 import { API_ENDPOINTS, API_HEADERS, fetchCsrfToken } from '../config/api.js';
@@ -70,6 +71,7 @@ const InternalMessageManager = () => {
   const [editingMessage, setEditingMessage] = useState(null);
   const [stats, setStats] = useState({});
   const [csrfToken, setCsrfToken] = useState(null);
+  const [emailConfigured, setEmailConfigured] = useState(false);
 
   // Formulario de mensaje simplificado
   const [formData, setFormData] = useState({
@@ -85,7 +87,8 @@ const InternalMessageManager = () => {
     subject: '',
     content: '',
     recipientType: 'all_students',
-    recipient: ''
+    recipient: '',
+    sendEmail: false
   });
   const [quickLoading, setQuickLoading] = useState(false);
   const [quickSuccess, setQuickSuccess] = useState(null);
@@ -157,6 +160,17 @@ const InternalMessageManager = () => {
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setStats(statsData.data || {});
+      }
+
+      // Verificar configuración de email
+      const emailConfigResponse = await fetch(API_ENDPOINTS.emailConfig.get, {
+        headers: API_HEADERS.withAuth(),
+        credentials: 'include'
+      });
+
+      if (emailConfigResponse.ok) {
+        const emailConfigData = await emailConfigResponse.json();
+        setEmailConfigured(emailConfigData.data?.enabled || false);
       }
 
     } catch (error) {
@@ -318,7 +332,12 @@ const InternalMessageManager = () => {
         body: JSON.stringify({
           ...quickMessage,
           type: 'notification',
-          priority: 'medium'
+          priority: 'medium',
+          delivery: {
+            sendInternal: true,
+            sendEmail: quickMessage.sendEmail,
+            sendWhatsApp: false
+          }
         })
       });
 
@@ -364,6 +383,15 @@ const InternalMessageManager = () => {
         <Typography variant="h5" sx={{ mb: 3, fontWeight: 600, color: '#ffffff', textAlign: 'center' }}>
           📨 Enviar Mensaje Interno
         </Typography>
+        
+        {!emailConfigured && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <Typography variant="body2">
+              💡 <strong>Consejo:</strong> Para enviar mensajes por email, configura el servicio de correo en 
+              <strong> Credenciales → Configuración de Email</strong>
+            </Typography>
+          </Alert>
+        )}
         
         <Grid container spacing={3} alignItems="center">
           <Grid item xs={12} md={3}>
@@ -488,7 +516,27 @@ const InternalMessageManager = () => {
           </Grid>
           
           <Grid item xs={12} md={12}>
-            <Box display="flex" justifyContent="center" mt={2}>
+            <Box display="flex" justifyContent="center" alignItems="center" gap={2} mt={2}>
+              {emailConfigured && (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={quickMessage.sendEmail}
+                      onChange={(e) => setQuickMessage({ ...quickMessage, sendEmail: e.target.checked })}
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <EmailIcon sx={{ fontSize: 20 }} />
+                      <Typography variant="body2" sx={{ color: '#ffffff' }}>
+                        Enviar también por email
+                      </Typography>
+                    </Box>
+                  }
+                  sx={{ color: '#ffffff' }}
+                />
+              )}
               <Button
                 variant="contained"
                 color="primary"
