@@ -3,6 +3,7 @@ import {
   authenticateJWT,
   loadUserData,
   requireAdmin,
+  requireAdminOrProfesor,
   validateMongoId,
   asyncHandler,
   sanitizeInput
@@ -38,7 +39,7 @@ router.get('/:id', validateMongoId('id'), requireAdmin, asyncHandler(ProfesoresC
 
 // Rutas adicionales
 router.get('/email/:email', requireAdmin, asyncHandler(ProfesoresController.getProfesorByEmail))
-router.get('/activos/lista', requireAdmin, asyncHandler(ProfesoresController.getProfesoresActivos))
+router.get('/activos/lista', requireAdminOrProfesor, asyncHandler(ProfesoresController.getProfesoresActivos))
 router.put('/:id/toggle-status', validateMongoId('id'), requireAdmin, asyncHandler(ProfesoresController.toggleProfesorStatus))
 
 export default router 

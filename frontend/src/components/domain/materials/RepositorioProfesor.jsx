@@ -121,7 +121,7 @@ const darkTheme = {
 const RepositorioProfesor = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { user, isAdmin, isTeacher } = useAuth();
+  const { user, isAdmin, isTeacher, isStudent } = useAuth();
   const { materials, loading, error, pagination, fetchMaterials, deleteMaterial, prevPage, nextPage } = useMaterials();
 
   // Estados principales
@@ -176,6 +176,7 @@ const RepositorioProfesor = () => {
   };
 
   const canDeleteMaterial = (material) => {
+    if (!material) return false;
     if (isAdmin()) return true;
     if (material.usuario === user?.email) return true;
     return false;
@@ -259,6 +260,8 @@ const RepositorioProfesor = () => {
   };
 
   const handleImagePreview = (material) => {
+    if (!material) return;
+    
     const mimeType = material.mimeType || material.tipoContenido;
     const imageUrl = material.viewUrl;
     
@@ -317,6 +320,28 @@ const RepositorioProfesor = () => {
           <Button variant="contained" color="primary" size="large">
             Iniciar Sesión
           </Button>
+        </Paper>
+      </Box>
+    );
+  }
+
+  // Verificar que el usuario no sea estudiante
+  if (isStudent()) {
+    return (
+      <Box sx={{ p: 3, minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Paper elevation={3} sx={{ p: 6, textAlign: 'center', maxWidth: 500 }}>
+          <Avatar sx={{ bgcolor: 'warning.main', mx: 'auto', mb: 2, width: 56, height: 56 }}>
+            <LockIcon fontSize="large" />
+          </Avatar>
+          <Typography variant="h5" color="warning.main" gutterBottom fontWeight="bold">
+            Acceso No Autorizado
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            Solo profesores y administradores pueden acceder al repositorio de materiales.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Si necesitas acceso a materiales, contacta a tu profesor.
+          </Typography>
         </Paper>
       </Box>
     );
