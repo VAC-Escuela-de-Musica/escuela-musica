@@ -2,10 +2,19 @@ import express from 'express'
 import messagingController from '../controllers/messaging.controller.js'
 import emailConfigController from '../controllers/emailConfig.controller.js'
 import {
+  initializeWhatsApp,
+  getWhatsAppStatus,
+  getWhatsAppQR,
+  sendWhatsAppMessage,
+  sendTestWhatsAppMessage,
+  disconnectWhatsApp
+} from '../controllers/whatsapp.controller.js'
+import {
   authenticateJWT,
   loadUserData,
   requireAdmin,
   requireAdminOrAsistente,
+  requireRole,
   asyncHandler
 } from '../../../middlewares/index.js'
 
@@ -105,5 +114,13 @@ router.post('/email-templates', emailConfigController.addEmailTemplate)
 router.get('/email-templates/:id', emailConfigController.getEmailTemplate)
 router.put('/email-templates/:id', emailConfigController.updateEmailTemplate)
 router.delete('/email-templates/:id', emailConfigController.deleteEmailTemplate)
+
+// Rutas para WhatsApp (administradores y asistentes)
+router.post('/whatsapp/initialize', requireRole(['administrador', 'asistente']), asyncHandler(initializeWhatsApp))
+router.get('/whatsapp/status', requireRole(['administrador', 'asistente']), asyncHandler(getWhatsAppStatus))
+router.get('/whatsapp/qr', requireRole(['administrador', 'asistente']), asyncHandler(getWhatsAppQR))
+router.post('/whatsapp/send', requireRole(['administrador', 'asistente']), asyncHandler(sendWhatsAppMessage))
+router.post('/whatsapp/test', requireRole(['administrador', 'asistente']), asyncHandler(sendTestWhatsAppMessage))
+router.post('/whatsapp/disconnect', requireRole(['administrador', 'asistente']), asyncHandler(disconnectWhatsApp))
 
 export default router

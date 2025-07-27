@@ -106,6 +106,16 @@ export const API_ENDPOINTS = {
     save: `${API_BASE_URL}/api/messaging/email-config`,
     test: `${API_BASE_URL}/api/messaging/email-config/test`
   },
+
+  // WhatsApp
+  whatsapp: {
+    initialize: `${API_BASE_URL}/api/messaging/whatsapp/initialize`,
+    status: `${API_BASE_URL}/api/messaging/whatsapp/status`,
+    qr: `${API_BASE_URL}/api/messaging/whatsapp/qr`,
+    send: `${API_BASE_URL}/api/messaging/whatsapp/send`,
+    test: `${API_BASE_URL}/api/messaging/whatsapp/test`,
+    disconnect: `${API_BASE_URL}/api/messaging/whatsapp/disconnect`
+  },
   
   // Galería
   galeria: {

@@ -36,7 +36,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 
 function AlumnosList() {
   const [alumnos, setAlumnos] = useState([]);
