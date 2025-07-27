@@ -22,6 +22,12 @@ import {
     getProfesorById,
     getAllProgrammedClases,
     createClases,
+    asignarEstudianteAClase,
+    desasignarEstudianteDeClase,
+    actualizarEstadoEstudiante,
+    registrarAsistencia,
+    getClasesDeEstudiante,
+    getEstudiantesDeClase
 } from "../controllers/clase.controller.js";
 
 const router = Router();
@@ -46,5 +52,13 @@ router.get("/profesores", authorizeRoles(["administrador", "asistente"]), getPro
 router.get("/profesor/:id", authorizeRoles(["administrador", "asistente"]), getProfesorById);
 router.get("/programadas", authorizeRoles(["administrador", "asistente"]), getAllProgrammedClases);
 router.post("/batch", authorizeRoles(["administrador", "asistente"]), createClases);
+
+// Rutas para gestión de estudiantes en clases
+router.post("/:id/estudiantes", authorizeRoles(["administrador", "asistente"]), asignarEstudianteAClase);
+router.delete("/:id/estudiantes/:alumnoId", authorizeRoles(["administrador", "asistente"]), desasignarEstudianteDeClase);
+router.put("/:id/estudiantes/:alumnoId", authorizeRoles(["administrador", "asistente"]), actualizarEstadoEstudiante);
+router.post("/:id/estudiantes/:alumnoId/asistencia", authorizeRoles(["administrador", "asistente"]), registrarAsistencia);
+router.get("/estudiante/:alumnoId", authorizeRoles(["administrador", "asistente", "estudiante"]), getClasesDeEstudiante);
+router.get("/:id/estudiantes", authorizeRoles(["administrador", "asistente"]), getEstudiantesDeClase);
 
 export default router;

@@ -6,7 +6,9 @@ import { respondError, respondSuccess } from "../../../core/utils/responseHandle
 import { 
     claseBodySchema, 
     claseIdSchema, 
-    claseCancelSchema } from "../../../core/schemas/clase.schema.js";
+    claseCancelSchema,
+    asignarEstudianteSchema,
+    asistenciaSchema } from "../../../core/schemas/clase.schema.js";
 import User from "../../../core/models/user.model.js";
 import Profesor from "../../../core/models/profesores.model.js";
 
@@ -421,6 +423,190 @@ async function createClases(req, res) {
     }
 }
 
+/**
+ * Asigna un estudiante a una clase
+ * @param {Object} req 
+ * @param {Object} res 
+ */
+async function asignarEstudianteAClase(req, res) {
+    try {
+        const { params, body } = req;
+        
+        // Validar ID de la clase
+        const { error: paramsError } = claseIdSchema.validate(params);
+        if (paramsError) return respondError(req, res, 400, paramsError.message);
+
+        // Validar datos del estudiante
+        const { error: bodyError } = asignarEstudianteSchema.validate(body);
+        if (bodyError) return respondError(req, res, 400, bodyError.message);
+
+        const [clase, error] = await claseService.asignarEstudianteAClase(params.id, body);
+        
+        if (error) return respondError(req, res, 400, error);
+        if (!clase) {
+            return respondError(req, res, 400, "No se pudo asignar el estudiante a la clase");
+        }   
+
+        respondSuccess(req, res, 200, clase);
+    } catch (error) {
+        handleError(error, "clase.controller -> asignarEstudianteAClase");
+        respondError(req, res, 500, "No se pudo asignar el estudiante a la clase");
+    }
+}
+
+/**
+ * Desasigna un estudiante de una clase
+ * @param {Object} req 
+ * @param {Object} res 
+ */
+async function desasignarEstudianteDeClase(req, res) {
+    try {
+        const { params } = req;
+        const { alumnoId } = params;
+        
+        // Validar ID de la clase
+        const { error: paramsError } = claseIdSchema.validate(params);
+        if (paramsError) return respondError(req, res, 400, paramsError.message);
+
+        if (!alumnoId) {
+            return respondError(req, res, 400, "El ID del alumno es requerido");
+        }
+
+        const [clase, error] = await claseService.desasignarEstudianteDeClase(params.id, alumnoId);
+        
+        if (error) return respondError(req, res, 400, error);
+        if (!clase) {
+            return respondError(req, res, 400, "No se pudo desasignar el estudiante de la clase");
+        }   
+
+        respondSuccess(req, res, 200, clase);
+    } catch (error) {
+        handleError(error, "clase.controller -> desasignarEstudianteDeClase");
+        respondError(req, res, 500, "No se pudo desasignar el estudiante de la clase");
+    }
+}
+
+/**
+ * Actualiza el estado de un estudiante en una clase
+ * @param {Object} req 
+ * @param {Object} res 
+ */
+async function actualizarEstadoEstudiante(req, res) {
+    try {
+        const { params, body } = req;
+        const { alumnoId } = params;
+        
+        // Validar ID de la clase
+        const { error: paramsError } = claseIdSchema.validate(params);
+        if (paramsError) return respondError(req, res, 400, paramsError.message);
+
+        if (!alumnoId) {
+            return respondError(req, res, 400, "El ID del alumno es requerido");
+        }
+
+        const [clase, error] = await claseService.actualizarEstadoEstudiante(params.id, alumnoId, body);
+        
+        if (error) return respondError(req, res, 400, error);
+        if (!clase) {
+            return respondError(req, res, 400, "No se pudo actualizar el estado del estudiante");
+        }   
+
+        respondSuccess(req, res, 200, clase);
+    } catch (error) {
+        handleError(error, "clase.controller -> actualizarEstadoEstudiante");
+        respondError(req, res, 500, "No se pudo actualizar el estado del estudiante");
+    }
+}
+
+/**
+ * Registra la asistencia de un estudiante
+ * @param {Object} req 
+ * @param {Object} res 
+ */
+async function registrarAsistencia(req, res) {
+    try {
+        const { params, body } = req;
+        const { alumnoId } = params;
+        
+        // Validar ID de la clase
+        const { error: paramsError } = claseIdSchema.validate(params);
+        if (paramsError) return respondError(req, res, 400, paramsError.message);
+
+        if (!alumnoId) {
+            return respondError(req, res, 400, "El ID del alumno es requerido");
+        }
+
+        // Validar datos de asistencia
+        const { error: bodyError } = asistenciaSchema.validate(body);
+        if (bodyError) return respondError(req, res, 400, bodyError.message);
+
+        const [clase, error] = await claseService.registrarAsistencia(params.id, alumnoId, body);
+        
+        if (error) return respondError(req, res, 400, error);
+        if (!clase) {
+            return respondError(req, res, 400, "No se pudo registrar la asistencia");
+        }   
+
+        respondSuccess(req, res, 200, clase);
+    } catch (error) {
+        handleError(error, "clase.controller -> registrarAsistencia");
+        respondError(req, res, 500, "No se pudo registrar la asistencia");
+    }
+}
+
+/**
+ * Obtiene las clases de un estudiante específico
+ * @param {Object} req 
+ * @param {Object} res 
+ */
+async function getClasesDeEstudiante(req, res) {
+    try {
+        const { params } = req;
+        const { alumnoId } = params;
+
+        if (!alumnoId) {
+            return respondError(req, res, 400, "El ID del alumno es requerido");
+        }
+
+        const [clases, error] = await claseService.getClasesDeEstudiante(alumnoId);
+        
+        if (error) return respondError(req, res, 400, error);
+
+        clases.length === 0
+            ? respondSuccess(req, res, 204)
+            : respondSuccess(req, res, 200, clases);
+    } catch (error) {
+        handleError(error, "clase.controller -> getClasesDeEstudiante");
+        respondError(req, res, 500, "No se pudieron obtener las clases del estudiante");
+    }
+}
+
+/**
+ * Obtiene los estudiantes de una clase específica
+ * @param {Object} req 
+ * @param {Object} res 
+ */
+async function getEstudiantesDeClase(req, res) {
+    try {
+        const { params } = req;
+        
+        // Validar ID de la clase
+        const { error: paramsError } = claseIdSchema.validate(params);
+        if (paramsError) return respondError(req, res, 400, paramsError.message);
+
+        const [estudiantes, error] = await claseService.getEstudiantesDeClase(params.id);
+        
+        if (error) return respondError(req, res, 400, error);
+
+        estudiantes.length === 0
+            ? respondSuccess(req, res, 204)
+            : respondSuccess(req, res, 200, estudiantes);
+    } catch (error) {
+        handleError(error, "clase.controller -> getEstudiantesDeClase");
+        respondError(req, res, 500, "No se pudieron obtener los estudiantes de la clase");
+    }
+}
+
 export {
     createClases,
     createClase,
@@ -441,4 +627,10 @@ export {
     getProfesores,
     getProfesorById,
     getAllProgrammedClases,
+    asignarEstudianteAClase,
+    desasignarEstudianteDeClase,
+    actualizarEstadoEstudiante,
+    registrarAsistencia,
+    getClasesDeEstudiante,
+    getEstudiantesDeClase
 };

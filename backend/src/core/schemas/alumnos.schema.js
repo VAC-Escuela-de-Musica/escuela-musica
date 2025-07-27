@@ -238,6 +238,19 @@ const alumnoSchema = new Schema(
       minlength: [6, 'La contraseña debe tener al menos 6 caracteres'],
       select: false // No devolver por defecto
     },
+    // Nuevo campo: clases asignadas al estudiante
+    clases: [
+      {
+        clase: { type: Schema.Types.ObjectId, ref: 'Clase' },
+        fechaAsignacion: { type: Date, default: Date.now },
+        estado: { 
+          type: String, 
+          enum: ['activo', 'inactivo', 'suspendido'], 
+          default: 'activo' 
+        },
+        notas: String // Notas adicionales sobre la clase para este estudiante
+      }
+    ],
     roles: {
       type: [String],
       default: ['student'],

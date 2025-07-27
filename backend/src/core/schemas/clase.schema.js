@@ -67,6 +67,45 @@ const claseBodySchema = Joi.object({
   visible: Joi.boolean().default(true).messages({
     "boolean.base": "La visibilidad debe ser de tipo booleano.",
   }),
+  // Nuevo campo: estudiantes asignados
+  estudiantes: Joi.array().items(
+    Joi.object({
+      alumno: Joi.string().required().messages({
+        "string.empty": "El ID del alumno no puede estar vacío.",
+        "any.required": "El ID del alumno es obligatorio.",
+        "string.base": "El ID del alumno debe ser de tipo string.",
+      }),
+      estado: Joi.string()
+        .valid("activo", "inactivo", "suspendido")
+        .default("activo")
+        .messages({
+          "any.only": "El estado debe ser 'activo', 'inactivo' o 'suspendido'.",
+          "string.base": "El estado debe ser de tipo string.",
+        }),
+      notas: Joi.string().optional().allow("").messages({
+        "string.base": "Las notas deben ser de tipo string.",
+      }),
+      asistencia: Joi.array().items(
+        Joi.object({
+          fecha: Joi.date().required().messages({
+            "date.base": "La fecha debe ser válida.",
+            "any.required": "La fecha es obligatoria.",
+          }),
+          presente: Joi.boolean().required().messages({
+            "boolean.base": "El campo presente debe ser de tipo booleano.",
+            "any.required": "El campo presente es obligatorio.",
+          }),
+          observaciones: Joi.string().optional().allow("").messages({
+            "string.base": "Las observaciones deben ser de tipo string.",
+          }),
+        })
+      ).optional().messages({
+        "array.base": "La asistencia debe ser un arreglo.",
+      }),
+    })
+  ).optional().messages({
+    "array.base": "Los estudiantes deben ser un arreglo.",
+  }),
 }).messages({
   "object.unknown": "No se permiten propiedades adicionales.",
 });
@@ -103,3 +142,54 @@ const claseCancelSchema = Joi.object({
 });
 
 export { claseBodySchema, claseIdSchema, claseCancelSchema };
+
+/**
+ * Esquema de validación para asignar estudiantes a una clase.
+ * @constant {Object}
+ */
+const asignarEstudianteSchema = Joi.object({
+  alumnoId: Joi.string().required().messages({
+    "string.empty": "El ID del alumno no puede estar vacío.",
+    "any.required": "El ID del alumno es obligatorio.",
+    "string.base": "El ID del alumno debe ser de tipo string.",
+  }),
+  estado: Joi.string()
+    .valid("activo", "inactivo", "suspendido")
+    .default("activo")
+    .messages({
+      "any.only": "El estado debe ser 'activo', 'inactivo' o 'suspendido'.",
+      "string.base": "El estado debe ser de tipo string.",
+    }),
+  notas: Joi.string().optional().allow("").messages({
+    "string.base": "Las notas deben ser de tipo string.",
+  }),
+}).messages({
+  "object.unknown": "No se permiten propiedades adicionales.",
+});
+
+/**
+ * Esquema de validación para registrar asistencia.
+ * @constant {Object}
+ */
+const asistenciaSchema = Joi.object({
+  alumnoId: Joi.string().required().messages({
+    "string.empty": "El ID del alumno no puede estar vacío.",
+    "any.required": "El ID del alumno es obligatorio.",
+    "string.base": "El ID del alumno debe ser de tipo string.",
+  }),
+  fecha: Joi.date().required().messages({
+    "date.base": "La fecha debe ser válida.",
+    "any.required": "La fecha es obligatoria.",
+  }),
+  presente: Joi.boolean().required().messages({
+    "boolean.base": "El campo presente debe ser de tipo booleano.",
+    "any.required": "El campo presente es obligatorio.",
+  }),
+  observaciones: Joi.string().optional().allow("").messages({
+    "string.base": "Las observaciones deben ser de tipo string.",
+  }),
+}).messages({
+  "object.unknown": "No se permiten propiedades adicionales.",
+});
+
+export { asignarEstudianteSchema, asistenciaSchema };
