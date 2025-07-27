@@ -1,4 +1,4 @@
-import { API_ENDPOINTS, API_HEADERS } from '../config/api.js';
+import { API_ENDPOINTS, API_HEADERS } from "../config/api.js";
 
 class AuthService {
   constructor() {
@@ -11,14 +11,14 @@ class AuthService {
    * Inicializa el servicio de autenticaci贸n
    */
   init() {
-    this.token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
+    this.token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+
     if (userData) {
       try {
         this.user = JSON.parse(userData);
       } catch (error) {
-        console.error('Error parsing user data:', error);
+        console.error("Error parsing user data:", error);
         this.logout();
       }
     }
@@ -37,9 +37,9 @@ class AuthService {
   async login(email, password) {
     try {
       const response = await fetch(API_ENDPOINTS.auth.login, {
-        method: 'POST',
+        method: "POST",
         headers: API_HEADERS.basic,
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
@@ -47,7 +47,7 @@ class AuthService {
       if (!response.ok) {
         return {
           success: false,
-          error: data.error || data.message || 'Error en el inicio de sesi贸n'
+          error: data.error || data.message || "Error en el inicio de sesi贸n",
         };
       }
 
@@ -58,27 +58,27 @@ class AuthService {
       if (!token) {
         return {
           success: false,
-          error: 'Token no recibido del servidor'
+          error: "Token no recibido del servidor",
         };
       }
 
       // Guardar datos de autenticaci贸n
       this.token = token;
       this.user = user;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
 
       // Programar renovaci贸n del token
       this.scheduleTokenRefresh();
 
       return {
         success: true,
-        data: { token, user }
+        data: { token, user },
       };
     } catch (error) {
       return {
         success: false,
-        error: 'Error de red o servidor no disponible'
+        error: "Error de red o servidor no disponible",
       };
     }
   }
@@ -89,19 +89,19 @@ class AuthService {
    */
   async verifyToken() {
     try {
-      const token = localStorage.getItem('token');
-      
+      const token = localStorage.getItem("token");
+
       if (!token) {
         return {
           success: false,
-          error: 'No token found'
+          error: "No token found",
         };
       }
 
       const response = await fetch(API_ENDPOINTS.auth.verify, {
-        method: 'GET',
-        credentials: 'include',
-        headers: API_HEADERS.withAuth()
+        method: "GET",
+        credentials: "include",
+        headers: API_HEADERS.withAuth(),
       });
 
       const data = await response.json();
@@ -109,25 +109,25 @@ class AuthService {
       if (!response.ok) {
         return {
           success: false,
-          error: data.error || data.message || 'Token inv谩lido'
+          error: data.error || data.message || "Token inv谩lido",
         };
       }
 
       // Actualizar datos del usuario si el token es v谩lido
       if (data.data?.user) {
         this.user = data.data.user;
-        localStorage.setItem('user', JSON.stringify(this.user));
+        localStorage.setItem("user", JSON.stringify(this.user));
       }
 
       return {
         success: true,
-        data: { user: data.data?.user || this.user }
+        data: { user: data.data?.user || this.user },
       };
     } catch (error) {
-      console.error('馃挜 Error en verifyToken:', error);
+      console.error("馃挜 Error en verifyToken:", error);
       return {
         success: false,
-        error: 'Error de red o servidor no disponible'
+        error: "Error de red o servidor no disponible",
       };
     }
   }
@@ -138,9 +138,8 @@ class AuthService {
   clearLocalData() {
     this.token = null;
     this.user = null;
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
     // Cancelar timer de renovación
 
@@ -158,12 +157,32 @@ class AuthService {
       // Intentar llamar al endpoint de logout
       if (this.token) {
         await fetch(API_ENDPOINTS.auth.logout, {
-          method: 'POST',
-          headers: API_HEADERS.withAuth()
+          method: "POST",
+          headers: API_HEADERS.withAuth(),
         });
       }
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error("Error during logout:", error);
+    }
+
+    // Limpiar datos locales
+    this.clearLocalData();
+  }
+
+  /**
+   * Cierra sesi贸n del usuario
+   */
+  async logout() {
+    try {
+      // Intentar llamar al endpoint de logout
+      if (this.token) {
+        await fetch(API_ENDPOINTS.auth.logout, {
+          method: "POST",
+          headers: API_HEADERS.withAuth(),
+        });
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
     }
 
     // Limpiar datos locales
@@ -176,29 +195,29 @@ class AuthService {
   async refreshToken() {
     try {
       const response = await fetch(API_ENDPOINTS.auth.refresh, {
-        method: 'GET',
+        method: "GET",
         headers: API_HEADERS.withAuth(),
-        credentials: 'include' // Para incluir cookies httpOnly
+        credentials: "include", // Para incluir cookies httpOnly
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Error renovando token');
+        throw new Error(data.error || "Error renovando token");
       }
 
       const newToken = data.data?.accessToken || data.accessToken;
-      
+
       if (newToken) {
         this.token = newToken;
-        localStorage.setItem('token', newToken);
+        localStorage.setItem("token", newToken);
         this.scheduleTokenRefresh();
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error('Error refreshing token:', error);
+      console.error("Error refreshing token:", error);
       this.logout();
       return false;
     }
@@ -249,15 +268,15 @@ class AuthService {
    */
   hasRole(role) {
     if (!this.user?.roles) return false;
-    
+
     if (Array.isArray(this.user.roles)) {
-      return this.user.roles.some(r => 
-        typeof r === 'string' ? r === role : r.name === role
+      return this.user.roles.some((r) =>
+        typeof r === "string" ? r === role : r.name === role
       );
     }
-    
-    return typeof this.user.roles === 'string' 
-      ? this.user.roles === role 
+
+    return typeof this.user.roles === "string"
+      ? this.user.roles === role
       : this.user.roles.name === role;
   }
 
@@ -266,24 +285,26 @@ class AuthService {
    */
   createAuthInterceptor() {
     const originalFetch = window.fetch;
-    
+
     // Preservar referencia al fetch original para casos especiales
     if (!window.fetch.__originalFetch) {
       window.fetch.__originalFetch = originalFetch;
     }
-    
+
     window.fetch = async (url, options = {}) => {
       // Si es una URL pre-firmada de MinIO, no agregar Authorization
-      if (url.includes('X-Amz-Algorithm') && url.includes('X-Amz-Credential')) {
-        console.log('馃敀 Detectada URL pre-firmada, omitiendo Authorization header');
+      if (url.includes("X-Amz-Algorithm") && url.includes("X-Amz-Credential")) {
+        console.log(
+          "馃敀 Detectada URL pre-firmada, omitiendo Authorization header"
+        );
         return originalFetch(url, options);
       }
-      
+
       // Agregar token a headers si est谩 disponible
       if (this.token && !options.headers?.Authorization) {
         options.headers = {
           ...options.headers,
-          Authorization: `Bearer ${this.token}`
+          Authorization: `Bearer ${this.token}`,
         };
       }
 
@@ -292,7 +313,7 @@ class AuthService {
       // Si recibimos 401, intentar renovar token
       if (response.status === 401 && this.token) {
         const refreshed = await this.refreshToken();
-        
+
         if (refreshed) {
           // Reintentar la petici贸n original con el nuevo token
           options.headers.Authorization = `Bearer ${this.token}`;

@@ -37,16 +37,29 @@ function OtrosDatos({ values, errors, onChange }) {
         margin="normal"
         variant="outlined"
       />
+      <TextField
+        label="Instrumentos (separados por comas)"
+        name="instrumentos"
+        value={
+          Array.isArray(values.instrumentos)
+            ? values.instrumentos.join(", ")
+            : values.instrumentos || ""
+        }
+        onChange={onChange}
+        fullWidth
+        margin="normal"
+        helperText={errors.instrumentos}
+      />
       <Box
         sx={{
-          display: 'flex',
-          flexDirection: { xs: 'row', sm: 'row' },
+          display: "flex",
+          flexDirection: { xs: "row", sm: "row" },
           gap: { xs: 1, sm: 2 },
-          justifyContent: { xs: 'space-between', sm: 'center' },
-          alignItems: 'center',
+          justifyContent: { xs: "space-between", sm: "center" },
+          alignItems: "center",
           mb: 2,
-          flexWrap: { xs: 'wrap', sm: 'nowrap' },
-          width: '100%',
+          flexWrap: { xs: "wrap", sm: "nowrap" },
+          width: "100%",
         }}
       >
         <FormControlLabel
