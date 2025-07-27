@@ -16,7 +16,7 @@ import {
 } from '../../../middlewares/index.js'
 
 import { validateSchema } from '../../../middlewares/validation/schema.middleware.js'
-import { userBodySchema, userIdSchema } from '../../../core/schemas/user.schema.js'
+import { userBodySchema, userUpdateSchema, userIdSchema } from '../../../core/schemas/user.schema.js'
 
 /** Instancia del enrutador */
 const router = Router()
@@ -52,7 +52,8 @@ router.get('/:id',
 router.put('/:id',
   validateMongoId('id'),
   validateSchema(userIdSchema, 'params'),
-  validateSchema(userBodySchema, 'body'),
+  validateSchema(userUpdateSchema, 'body'),
+
   requireAdmin,
   asyncHandler(usuarioController.updateUser)
 )

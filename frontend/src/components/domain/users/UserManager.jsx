@@ -1,183 +1,528 @@
-import React from 'react';
-import DomainManager from '../../base/DomainManager.jsx';
-import { useSearchFilter } from '../../../hooks/configurable/useSearchFilter.js';
-import UserForm from './UserForm.jsx';
-import UserTable from './UserTable.jsx';
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Button,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  IconButton,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
+  Alert,
+} from "@mui/material";
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Person as PersonIcon,
+  Email as EmailIcon,
+  Badge as BadgeIcon,
+} from "@mui/icons-material";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from "@mui/material";
 
 /**
- * Gestor de Usuarios refactorizado usando arquitectura 4-capas
- * ANTES: 490 líneas de código duplicado
- * DESPUÉS: 120 líneas (75% reducción, 100% funcionalidad preservada)
+ * Gestor de Usuarios - Versión simplificada y funcional (basada en backup)
  */
 const UserManager = () => {
-  // Capa 2: Funcionalidades configurables
-  const search = useSearchFilter([], ['username', 'email', 'rut'], {
-    debounceMs: 300,
-    caseSensitive: false,
-    minSearchLength: 2
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    rut: "",
+    password: "",
+    roles: [],
   });
+  const [roles, setRoles] = useState([]);
+  const [search, setSearch] = useState("");
 
-  // Capa 3: Lógica específica del dominio
-  const userLogic = {
-    // Validaciones específicas para usuarios
-    validateRut: (rut) => {
-      if (!rut) return false;
-      // Validación básica de RUT chileno
-      const rutRegex = /^\d{7,8}-[\dKk]$/;
-      return rutRegex.test(rut);
-    },
+  const API_URL = `${import.meta.env.VITE_API_URL}/api/users`;
 
-    validateEmail: (email) => {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emailRegex.test(email);
-    },
+  // cargar usuarios al montar el componente
+  useEffect(() => {
+    fetchUsers();
+    fetchRoles();
+  }, []);
 
-    validateRole: (role) => {
-      const validRoles = ['administrador', 'profesor', 'asistente'];
-      return validRoles.includes(role);
-    },
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-    // Callback después de guardar
-    onAfterSave: (savedUser) => {
-      console.log('✅ Usuario guardado:', savedUser.username);
-      // Limpiar caché específico de usuarios si existe
-      localStorage.removeItem('users_cache');
-    },
-
-    // Callback después de eliminar
-    onAfterDelete: (deletedUser) => {
-      console.log('🗑️ Usuario eliminado:', deletedUser.username);
-      // Limpiar caché específico de usuarios si existe
-      localStorage.removeItem('users_cache');
-    },
-
-    // Manejo personalizado de guardado con validaciones específicas
-    handleSave: async (formData, crud) => {
-      // Validaciones específicas de usuarios
-      if (!userLogic.validateEmail(formData.email)) {
-        crud.setError('Email no válido');
-        return { success: false };
+      if (!response.ok) {
+        throw new Error("No posee el rol de administrador");
       }
 
-      if (formData.rut && !userLogic.validateRut(formData.rut)) {
-        crud.setError('RUT no válido. Formato: 12345678-9');
-        return { success: false };
+      const data = await response.json();
+      setUsers(Array.isArray(data.data) ? data.data : []);
+      console.log("Usuarios cargados:", data.data);
+      if (data.data && data.data.length > 0) {
+        console.log("Roles del primer usuario:", data.data[0].roles);
       }
-
-      if (!userLogic.validateRole(formData.role)) {
-        crud.setError('Rol no válido');
-        return { success: false };
-      }
-
-      // Usar la lógica por defecto del CRUD
-      return await crud.saveItem(formData);
-    },
-
-    // Props específicas para la tabla
-    tableProps: {
-      enableRoleColors: true,
-      enableStatusBadges: true,
-      theme: 'dark' // Preserva el tema oscuro específico
-    },
-
-    // Mensaje específico del dominio
-    message: {
-      type: 'info',
-      text: 'Los usuarios con rol "administrador" tienen acceso completo al sistema.'
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: "Error al cargar los usuarios: " + err.message,
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Definición de columnas específicas para usuarios
-  const userColumns = [
-    {
-      field: 'username',
-      headerName: 'Usuario',
-      width: 150,
-      sortable: true
-    },
-    {
-      field: 'email',
-      headerName: 'Email',
-      width: 200,
-      sortable: true
-    },
-    {
-      field: 'rut',
-      headerName: 'RUT',
-      width: 120,
-      sortable: false
-    },
-    {
-      field: 'role',
-      headerName: 'Rol',
-      width: 130,
-      renderCell: (params) => {
-        const roleColors = {
-          'administrador': '#f44336',
-          'profesor': '#2196f3',
-          'asistente': '#4caf50'
-        };
-        return (
-          <span style={{ 
-            color: roleColors[params.value] || '#666',
-            fontWeight: 'bold'
-          }}>
-            {params.value}
-          </span>
-        );
+  const fetchRoles = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/roles`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        let rolesArray = [];
+        if (Array.isArray(data)) {
+          rolesArray = data;
+        } else if (Array.isArray(data.data)) {
+          rolesArray = data.data;
+        } else if (data.data && Array.isArray(data.data.data)) {
+          rolesArray = data.data.data;
+        }
+        // Asegurar que todos los roles estén en minúscula
+        rolesArray = rolesArray.map(role => role.toLowerCase());
+        setRoles(rolesArray);
+        console.log("Roles cargados:", rolesArray);
       }
-    },
-    {
-      field: 'activo',
-      headerName: 'Estado',
-      width: 100,
-      renderCell: (params) => params.value ? '✅ Activo' : '❌ Inactivo'
+    } catch (err) {
+      console.error("Error al cargar roles:", err);
     }
-  ];
-
-  // Permisos específicos
-  const permissions = {
-    canEdit: true,
-    canDelete: true,
-    canCreate: true
   };
 
-  // Acciones adicionales específicas del dominio
-  const actions = [
-    {
-      label: 'Exportar',
-      icon: '📊',
-      variant: 'outlined',
-      onClick: (crud, items) => {
-        console.log('Exportando usuarios:', items.length);
-        // Lógica de exportación específica
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    
+    try {
+      // Asegurar que los roles se envíen en minúscula
+      const formDataToSend = {
+        ...formData,
+        roles: formData.roles.map(role => role.toLowerCase())
+      };
+      
+      console.log("Datos enviados:", formDataToSend);
+      const url = editingUser 
+        ? `${API_URL}/${editingUser._id}`
+        : `${API_URL}`;
+
+      const method = editingUser ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(formDataToSend),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error del backend:", errorData);
+        throw new Error(errorData.message || "Error al guardar el usuario");
       }
-    },
-    {
-      label: 'Importar',
-      icon: '📥',
-      variant: 'outlined',
-      onClick: (crud) => {
-        console.log('Importar usuarios');
-        // Lógica de importación específica
-      }
+
+      setOpenDialog(false);
+      setEditingUser(null);
+      setFormData({ username: "", email: "", rut: "", password: "", roles: [] });
+      setNotification({
+        open: true,
+        message: editingUser ? "Usuario actualizado correctamente" : "Usuario creado correctamente",
+        severity: 'success'
+      });
+      fetchUsers();
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: "Error al guardar el usuario: " + err.message,
+        severity: 'error'
+      });
     }
-  ];
+  };
+
+  const handleDelete = async (userId) => {
+    if (!window.confirm("¿Estás seguro de que quieres eliminar este usuario?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al eliminar el usuario");
+      }
+
+      setNotification({
+        open: true,
+        message: "Usuario eliminado correctamente",
+        severity: 'success'
+      });
+      fetchUsers();
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: "Error al eliminar el usuario: " + err.message,
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleEdit = (user) => {
+    setEditingUser(user);
+    
+    // Extraer nombres de roles correctamente (manejar objetos y strings)
+    const userRoles = user.roles ? user.roles.map(role => {
+      if (typeof role === 'string') {
+        return role;
+      } else if (role && role.name) {
+        return role.name;
+      }
+      return '';
+    }).filter(Boolean) : [];
+    
+    console.log('🔧 Editando usuario:', user.username);
+    console.log('🏷️ Roles originales:', user.roles);
+    console.log('🏷️ Roles procesados:', userRoles);
+    
+    setFormData({
+      username: user.username || "",
+      email: user.email || "",
+      rut: user.rut || "",
+      password: "",
+      roles: userRoles,
+    });
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setEditingUser(null);
+    setFormData({ username: "", email: "", rut: "", password: "", roles: [] });
+  };
+
+  const getRoleName = (role) => {
+    // Manejar tanto objetos role como strings directos
+    let roleName = '';
+    
+    if (typeof role === 'string') {
+      roleName = role;
+    } else if (role && role.name) {
+      roleName = role.name;
+    } else {
+      return "Rol desconocido";
+    }
+    
+    return roleName.charAt(0).toUpperCase() + roleName.slice(1);
+  };
+
+  // Filtrar usuarios
+  const filteredUsers = users.filter(user =>
+    (user.username || '').toLowerCase().includes(search.toLowerCase()) ||
+    (user.email || '').toLowerCase().includes(search.toLowerCase()) ||
+    (user.rut || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleOpenDialog = () => {
+    fetchRoles();
+    setOpenDialog(true);
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
-    <DomainManager
-      title="Gestión de Usuarios"
-      endpoint="/users"
-      itemName="usuario"
-      FormComponent={UserForm}
-      TableComponent={UserTable}
-      columns={userColumns}
-      search={search}
-      specificLogic={userLogic}
-      permissions={permissions}
-      actions={actions}
-      theme="dark" // Preserva tema oscuro específico original
-    />
+    <Box sx={{ p: 3, backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4" component="h1">
+          Gestión de Usuarios
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleOpenDialog}
+          sx={{ backgroundColor: "#4CAF50" }}
+        >
+          Agregar Usuario
+        </Button>
+      </Box>
+      <TextField
+        fullWidth
+        placeholder="Buscar usuario por nombre, email o RUT..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        sx={{ mb: 3, input: { color: "white" }, label: { color: "gray" } }}
+        InputProps={{ sx: { color: "white" } }}
+      />
+
+      <TableContainer 
+        component={Paper} 
+        sx={{ 
+          backgroundColor: "#333333", 
+          borderRadius: 2,
+          "& .MuiTableCell-root": {
+            borderColor: "#555555"
+          }
+        }}
+      >
+        <Table sx={{ minWidth: 650 }}>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "#444444" }}>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                <Box display="flex" alignItems="center">
+                  <PersonIcon sx={{ mr: 1 }} />
+                  Usuario
+                </Box>
+              </TableCell>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                <Box display="flex" alignItems="center">
+                  <EmailIcon sx={{ mr: 1 }} />
+                  Email
+                </Box>
+              </TableCell>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                <Box display="flex" alignItems="center">
+                  <BadgeIcon sx={{ mr: 1 }} />
+                  RUT
+                </Box>
+              </TableCell>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                Roles
+              </TableCell>
+              <TableCell sx={{ color: "white", fontWeight: "bold" }} align="center">
+                Acciones
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {Array.isArray(filteredUsers) && filteredUsers.map((user) => (
+              <TableRow
+                key={user._id}
+                sx={{ 
+                  "&:hover": { backgroundColor: "#444444" },
+                  "& td": { color: "white" }
+                }}
+              >
+                <TableCell sx={{ color: "white" }}>
+                  <Typography variant="body1" fontWeight="medium">
+                    {user.username}
+                  </Typography>
+                </TableCell>
+                <TableCell sx={{ color: "white" }}>
+                  <Typography variant="body2" color="lightgray">
+                    {user.email}
+                  </Typography>
+                </TableCell>
+                <TableCell sx={{ color: "white" }}>
+                  <Typography variant="body2">
+                    {user.rut}
+                  </Typography>
+                </TableCell>
+                <TableCell sx={{ color: "white" }}>
+                  <Box display="flex" flexWrap="wrap" gap={0.5}>
+                    {user.roles && user.roles.map((role, index) => (
+                      <Chip
+                        key={index}
+                        label={getRoleName(role)}
+                        size="small"
+                        sx={{ 
+                          backgroundColor: "#4CAF50", 
+                          color: "white",
+                          fontSize: "0.75rem"
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </TableCell>
+                <TableCell align="center">
+                  <Box display="flex" justifyContent="center" gap={1}>
+                    <IconButton
+                      onClick={() => handleEdit(user)}
+                      sx={{ color: "#4CAF50" }}
+                      title="Editar usuario"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleDelete(user._id)}
+                      sx={{ color: "#f44336" }}
+                      title="Eliminar usuario"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        
+        {(!Array.isArray(filteredUsers) || filteredUsers.length === 0) && (
+          <Box p={4} textAlign="center">
+            <Typography variant="body1" color="gray">
+              {search ? "No se encontraron usuarios que coincidan con la búsqueda" : "No hay usuarios registrados"}
+            </Typography>
+          </Box>
+        )}
+      </TableContainer>
+
+      {/* Dialog para agregar/editar usuario */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ backgroundColor: "#333333", color: "white" }}>
+          {editingUser ? "Editar Usuario" : "Agregar Nuevo Usuario"}
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: "#333333", color: "white" }}>
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              label="Nombre de usuario"
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              required
+              sx={{ mb: 2 }}
+              InputProps={{ sx: { color: "white" } }}
+              InputLabelProps={{ sx: { color: "gray" } }}
+            />
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+              sx={{ mb: 2 }}
+              InputProps={{ sx: { color: "white" } }}
+              InputLabelProps={{ sx: { color: "gray" } }}
+            />
+            <TextField
+              fullWidth
+              label="RUT"
+              value={formData.rut}
+              onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+              required
+              sx={{ mb: 2 }}
+              InputProps={{ sx: { color: "white" } }}
+              InputLabelProps={{ sx: { color: "gray" } }}
+            />
+            <TextField
+              fullWidth
+              label={editingUser ? "Nueva contraseña (dejar vacío para mantener)" : "Contraseña"}
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              required={!editingUser}
+              sx={{ mb: 2 }}
+              InputProps={{ sx: { color: "white" } }}
+              InputLabelProps={{ sx: { color: "gray" } }}
+            />
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel sx={{ color: "gray" }}>Roles</InputLabel>
+              <Select
+                multiple
+                value={formData.roles}
+                onChange={(e) => setFormData({ ...formData, roles: e.target.value })}
+                sx={{ color: "white" }}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => {
+                      // Asegurar que value es un string
+                      const roleName = typeof value === 'string' ? value : (value?.name || 'Unknown');
+                      return (
+                        <Chip 
+                          key={roleName} 
+                          label={roleName.charAt(0).toUpperCase() + roleName.slice(1)} 
+                          size="small"
+                          sx={{ backgroundColor: "#4CAF50", color: "white" }}
+                        />
+                      );
+                    })}
+                  </Box>
+                )}
+              >
+                {roles.length === 0 && (
+                  <MenuItem disabled value="">
+                    No hay roles disponibles
+                  </MenuItem>
+                )}
+                {roles.map((role) => (
+                  <MenuItem key={role} value={role}>
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: "#333333" }}>
+          <Button onClick={handleCloseDialog} sx={{ color: "white" }}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSubmit} variant="contained" sx={{ backgroundColor: "#4CAF50" }}>
+            {editingUser ? "Actualizar" : "Agregar"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Notification */}
+      {notification.open && (
+        <Alert 
+          severity={notification.severity} 
+          onClose={handleCloseNotification}
+          sx={{ 
+            position: 'fixed', 
+            bottom: 20, 
+            right: 20, 
+            zIndex: 9999,
+            backgroundColor: notification.severity === 'error' ? '#f44336' : '#4caf50',
+            color: 'white'
+          }}
+        >
+          {notification.message}
+        </Alert>
+      )}
+    </Box>
   );
 };
 

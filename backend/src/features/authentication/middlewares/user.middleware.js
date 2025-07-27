@@ -2,7 +2,7 @@
 
 import User from '../../../core/models/user.model.js'
 import Alumno from '../../../core/models/alumnos.model.js'
-import Role from '../../../core/models/role.model.js'
+import Role from '../../../core/models/role.model.js' // ✅ IMPORTAR Role para populate
 import { respondError } from '../../../core/utils/responseHandler.util.js'
 import { handleError } from '../../../core/utils/errorHandler.util.js'
 
@@ -19,14 +19,14 @@ const loadUserData = async (req, res, next) => {
     }
 
     const email = req.user.email
+    
+    // Importar Role dinámicamente para asegurar que esté registrado
+    const Role = (await import('../../../core/models/role.model.js')).default
+    
     let user = await User.findOne({ email }).populate('roles')
-    if (user) {
-      // Usuario encontrado en User
-    } else {
+    
+    if (!user) {
       user = await Alumno.findOne({ email })
-      if (user) {
-        // Alumno encontrado
-      }
     }
 
     if (!user) {

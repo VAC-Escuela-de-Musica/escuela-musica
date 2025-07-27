@@ -10,23 +10,18 @@ import { minioService } from '../features/file-system/services/minio.service.js'
  */
 export async function initializeServices () {
   try {
-    console.log('🚀 Inicializando servicios...')
-
-    // Inicializar buckets de MinIO
     await minioService.initializeBuckets()
 
-    // Verificar salud de MinIO
     const health = await minioService.healthCheck()
     if (health.status === 'healthy') {
-      console.log('✅ MinIO está operativo')
+      console.log('[SERVICES] MinIO initialized successfully')
     } else {
-      console.warn('⚠️ MinIO no está disponible:', health.error)
+      console.warn('[SERVICES] MinIO not available:', health.error)
     }
 
-    console.log('✅ Servicios inicializados correctamente')
     return true
   } catch (error) {
-    console.error('❌ Error inicializando servicios:', error)
+    console.error('[SERVICES] Error initializing services:', error)
     return false
   }
 }

@@ -9,7 +9,13 @@ import ROLES from '../../../core/constants/roles.constants.js'
  * Devuelve los roles predefinidos
  */
 async function getRoles (req, res) {
-  respondSuccess(req, res, 200, { data: ROLES })
+  try {
+    respondSuccess(req, res, 200, ROLES)
+  } catch (error) {
+    console.error('[ROLES] Error getting roles:', error)
+    handleError(error, 'role.controller -> getRoles')
+    respondError(req, res, 500, 'Error al obtener roles')
+  }
 }
 
 /**

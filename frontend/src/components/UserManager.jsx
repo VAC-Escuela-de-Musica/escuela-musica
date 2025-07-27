@@ -68,10 +68,16 @@ const UserManager = () => {
       }
 
       const data = await response.json();
-      setUsers(Array.isArray(data.data) ? data.data : []);
-      console.log("Usuarios cargados:", data.data);
-      if (data.data && data.data.length > 0) {
-        console.log("Roles del primer usuario:", data.data[0].roles);
+      console.log("Respuesta completa:", data);
+      
+      // El backend ahora devuelve usuarios directamente en data
+      const usuariosRecibidos = data.data || data || [];
+      setUsers(Array.isArray(usuariosRecibidos) ? usuariosRecibidos : []);
+      
+      console.log("Usuarios cargados:", usuariosRecibidos);
+      if (usuariosRecibidos && usuariosRecibidos.length > 0) {
+        console.log("Primer usuario:", usuariosRecibidos[0]);
+        console.log("Roles del primer usuario:", usuariosRecibidos[0].roles);
       }
     } catch (err) {
       setNotification({
@@ -207,16 +213,26 @@ const UserManager = () => {
     setFormData({ username: "", email: "", rut: "", password: "", roles: [] });
   };
 
-  const getRoleName = (roleString) => {
-    // Los roles ahora son strings directos, no necesitamos buscar por ID
-    return roleString ? roleString.charAt(0).toUpperCase() + roleString.slice(1) : "Rol desconocido";
+  const getRoleName = (role) => {
+    // Manejar tanto objetos role como strings directos
+    let roleName = '';
+    
+    if (typeof role === 'string') {
+      roleName = role;
+    } else if (role && role.name) {
+      roleName = role.name;
+    } else {
+      return "Rol desconocido";
+    }
+    
+    return roleName.charAt(0).toUpperCase() + roleName.slice(1);
   };
 
-  // Filtrar usuarios
+  // Filtrar usuarios (con verificación de propiedades)
   const filteredUsers = users.filter(user =>
-    user.username.toLowerCase().includes(search.toLowerCase()) ||
-    user.email.toLowerCase().includes(search.toLowerCase()) ||
-    user.rut.toLowerCase().includes(search.toLowerCase())
+    (user.username || '').toLowerCase().includes(search.toLowerCase()) ||
+    (user.email || '').toLowerCase().includes(search.toLowerCase()) ||
+    (user.rut || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const handleOpenDialog = () => {

@@ -66,6 +66,8 @@ async function setupServer () {
         /^\/api\/files\/upload$/,
         /^\/api\/alumnos.*$/, // Excluir todas las rutas de alumnos
         /^\/api\/profesores.*$/, // Excluir todas las rutas de profesores
+        /^\/api\/users.*$/, // Excluir todas las rutas de usuarios (gestión de usuarios)
+        /^\/api\/roles.*$/, // Excluir todas las rutas de roles
         /^\/api\/messaging\/whatsapp-web\/(reset|initialize)$/, // Excluir rutas públicas de WhatsApp Web
         /^\/api\/messaging\/(send-whatsapp|send-email|send-message|test-message|test-email-config-unrestricted|email-config.*|whatsapp.*)$/, // Excluir rutas de envío de mensajes, configuración de email y WhatsApp
         /^\/api\/internal-messages.*$/ // Excluir todas las rutas de mensajes internos
@@ -113,32 +115,20 @@ async function setupServer () {
  */
 async function setupAPI () {
   try {
-    console.log('🚀 Iniciando API de Escuela de Música...')
+    console.log('[API] Iniciando servidor...')
 
-    // Inicia la conexión a la base de datos
-    console.log('📊 Conectando a la base de datos...')
     await setupDB()
-
-    // Inicializa todos los servicios (MinIO, buckets, etc.)
-    console.log('⚙️ Inicializando servicios...')
+    
     const servicesInitialized = await initializeServices()
     if (!servicesInitialized) {
-      console.warn('⚠️ Algunos servicios no se inicializaron correctamente, pero continuando...')
+      console.warn('[API] Algunos servicios no se inicializaron correctamente')
     }
 
-    // Inicia el servidor web
-    console.log('🌐 Iniciando servidor web...')
     await setupServer()
-
-    // Inicia la creación de los roles
-    console.log('👤 Configurando roles...')
     await createRoles()
-
-    // Inicia la creación del usuario admin y user
-    console.log('👥 Configurando usuarios iniciales...')
     await createUsers()
 
-    console.log('✅ API iniciada exitosamente')
+    console.log('[API] Servidor iniciado exitosamente')
   } catch (err) {
     console.error('[API] Error en setupAPI:', err)
     handleFatalError(err, '/server.js -> setupAPI')
@@ -146,5 +136,5 @@ async function setupAPI () {
 }
 // Inicia la API
 setupAPI()
-  .then(() => console.log('🎉 => API de Escuela de Música lista para usar'))
+  .then(() => console.log('[SERVER] Server listening on http://localhost:' + PORT))
   .catch((err) => handleFatalError(err, '/server.js -> setupAPI'))
