@@ -8,6 +8,7 @@ import {
 import AlumnoForm from "./AlumnoForm/AlumnoForm";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
+
 import {
   Table,
   TableBody,
@@ -28,6 +29,8 @@ import {
   DialogActions,
   Divider,
   Grid,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import EditIcon from "@mui/icons-material/Edit";
@@ -56,6 +59,9 @@ function AlumnosList() {
   // Ordenamiento
   const [sortBy, setSortBy] = useState("nombreAlumno");
   const [sortOrder, setSortOrder] = useState("asc");
+
+  // Estado para Tabs
+  const [tabIndex, setTabIndex] = useState(0);
 
   const fetchAlumnos = () => {
     getAlumnos().then((res) => setAlumnos(res.data.data || res.data));
@@ -297,7 +303,7 @@ function AlumnosList() {
                   cursor: "pointer",
                   fontWeight: "bold",
                   fontSize: "0.92rem",
-                  display: { xs: "none", sm: "table-cell" }, // Oculta en xs
+                  display: { xs: "none", sm: "table-cell" },
                 }}
                 onClick={() => handleSort("tipoCurso")}
               >
@@ -313,7 +319,7 @@ function AlumnosList() {
                   cursor: "pointer",
                   fontWeight: "bold",
                   fontSize: "0.92rem",
-                  display: { xs: "none", sm: "table-cell" }, // Oculta en xs
+                  display: { xs: "none", sm: "table-cell" },
                 }}
                 onClick={() => handleSort("modalidadClase")}
               >
@@ -329,7 +335,7 @@ function AlumnosList() {
                   cursor: "pointer",
                   fontWeight: "bold",
                   fontSize: "0.92rem",
-                  display: { xs: "none", sm: "table-cell" }, // Oculta en xs
+                  display: { xs: "none", sm: "table-cell" },
                 }}
                 onClick={() => handleSort("fechaIngreso")}
               >
@@ -361,6 +367,7 @@ function AlumnosList() {
                   onClick={() => {
                     setSelectedAlumno(alumno);
                     setOpenFicha(true);
+                    setTabIndex(0);
                   }}
                 >
                   <TableCell align="center">{idx + 1}</TableCell>
@@ -437,6 +444,7 @@ function AlumnosList() {
                           e.stopPropagation();
                           setSelectedAlumno(alumno);
                           setOpenFicha(true);
+                          setTabIndex(0);
                         }}
                         sx={{ p: 1 }}
                       >
@@ -516,16 +524,17 @@ function AlumnosList() {
             px: { xs: 2, md: 6 },
             py: { xs: 2, md: 4 },
             maxHeight: "65vh",
+            minHeight: "500px",
             overflowY: "auto",
             borderRadius: 4,
-            // Scrollbar clara y fina
+            boxShadow: "0 4px 24px rgba(67,160,71,0.10)",
             "&::-webkit-scrollbar": {
               width: "8px",
-              background: "#f5f5f5",
+              background: "#d5ccccff",
               borderRadius: "8px",
             },
             "&::-webkit-scrollbar-thumb": {
-              background: "#e0e0e0",
+              background: "#fefdfdff",
               borderRadius: "8px",
             },
           }}
@@ -566,163 +575,149 @@ function AlumnosList() {
                 </Box>
               </Box>
 
-              {/* Datos personales */}
-              <Box
-                sx={{
-                  background: "#f8f8f8",
-                  borderRadius: 3,
-                  p: 2,
-                  mb: 3,
-                  boxShadow: 1,
-                }}
+              {/* Tabs */}
+              <Tabs
+                value={tabIndex}
+                onChange={(e, newValue) => setTabIndex(newValue)}
+                textColor="primary"
+                indicatorColor="primary"
+                sx={{ mb: 2 }}
+                variant="scrollable"
+                scrollButtons="auto"
               >
-                <Typography
-                  variant="subtitle1"
-                  sx={{ color: "#43a047", fontWeight: "bold", mb: 2 }}
-                >
-                  Datos Personales
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Typography>
-                      <strong>RUT:</strong> {selectedAlumno.rutAlumno || "-"}
-                    </Typography>
-                    <Typography>
-                      <strong>Dirección:</strong>{" "}
-                      {selectedAlumno.direccion || "-"}
-                    </Typography>
-                    <Typography>
-                      <strong>Teléfono:</strong>{" "}
-                      {selectedAlumno.telefonoAlumno || "-"}
-                    </Typography>
-                    <Typography>
-                      <strong>Email:</strong> {selectedAlumno.email || "-"}
-                    </Typography>
-                    <Typography>
-                      <strong>RRSS:</strong> {selectedAlumno.rrss || "-"}
-                    </Typography>
-                    <Typography>
-                      <strong>Fecha de ingreso:</strong>{" "}
-                      {formatFecha(selectedAlumno.fechaIngreso)}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Typography>
-                      <strong>Modalidad Clase:</strong>{" "}
-                      {selectedAlumno.modalidadClase || "-"}
-                    </Typography>
-                    <Typography>
-                      <strong>Clase:</strong> {selectedAlumno.clase || "-"}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Box>
+                <Tab label="Datos Personales" />
+                <Tab label="Otros Datos" />
+                <Tab label="Apoderado" />
+              </Tabs>
 
-              {/* Otros datos */}
-              <Box
-                sx={{
-                  background: "#f8f8f8",
-                  borderRadius: 3,
-                  p: 2,
-                  mb: 3,
-                  boxShadow: 1,
-                }}
-              >
-                <Typography
-                  variant="subtitle1"
-                  sx={{ color: "#43a047", fontWeight: "bold", mb: 2 }}
-                >
-                  Otros Datos
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Typography>
+              {tabIndex === 0 && (
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ color: "#43a047", fontWeight: "bold", mb: 2 }}
+                  >
+                    Datos Personales
+                  </Typography>
+                  <Grid container spacing={4}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography sx={{ mb: 2 }}>
+                        <strong>RUT:</strong> {selectedAlumno.rutAlumno || "-"}
+                      </Typography>
+                      <Typography sx={{ mb: 2 }}>
+                        <strong>Dirección:</strong>{" "}
+                        {selectedAlumno.direccion || "-"}
+                      </Typography>
+                      <Typography sx={{ mb: 2 }}>
+                        <strong>Teléfono:</strong>{" "}
+                        {selectedAlumno.telefonoAlumno || "-"}
+                      </Typography>
+                      <Typography sx={{ mb: 2 }}>
+                        <strong>Email:</strong> {selectedAlumno.email || "-"}
+                      </Typography>
+                      <Typography sx={{ mb: 2 }}>
+                        <strong>RRSS:</strong> {selectedAlumno.rrss || "-"}
+                      </Typography>
+                      <Typography sx={{ mb: 2 }}>
+                        <strong>Fecha de ingreso:</strong>{" "}
+                        {formatFecha(selectedAlumno.fechaIngreso)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography sx={{ mb: 2 }}>
+                        <strong>Modalidad Clase:</strong>{" "}
+                        {selectedAlumno.modalidadClase || "-"}
+                      </Typography>
+                      <Typography sx={{ mb: 2 }}>
+                        <strong>Clase:</strong> {selectedAlumno.clase || "-"}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Box>
+              )}
+
+              {tabIndex === 1 && (
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ color: "#43a047", fontWeight: "bold", mb: 2 }}
+                  >
+                    Otros Datos
+                  </Typography>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography sx={{ mb: 1 }}>
                       <strong>Conocimientos Previos:</strong>{" "}
                       {selectedAlumno.conocimientosPrevios ? "Sí" : "No"}
                     </Typography>
-                    <Typography>
+                    <Typography sx={{ mb: 1 }}>
                       <strong>Instrumentos:</strong>{" "}
                       {Array.isArray(selectedAlumno.instrumentos)
                         ? selectedAlumno.instrumentos.join(", ")
                         : selectedAlumno.instrumentos || "-"}
                     </Typography>
-                    <Typography>
+                    <Typography sx={{ mb: 1 }}>
                       <strong>Estilos Musicales:</strong>{" "}
                       {Array.isArray(selectedAlumno.estilosMusicales)
                         ? selectedAlumno.estilosMusicales.join(", ")
                         : selectedAlumno.estilosMusicales || "-"}
                     </Typography>
-                    <Typography>
+                    <Typography sx={{ mb: 1 }}>
                       <strong>Otro Estilo:</strong>{" "}
                       {selectedAlumno.otroEstilo || "-"}
                     </Typography>
-                    <Typography>
+                    <Typography sx={{ mb: 1 }}>
                       <strong>Referente Musical:</strong>{" "}
                       {selectedAlumno.referenteMusical || "-"}
                     </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Typography>
+                    <Typography sx={{ mb: 1 }}>
                       <strong>Condición de Aprendizaje:</strong>{" "}
                       {selectedAlumno.condicionAprendizaje ? "Sí" : "No"}
                     </Typography>
-                    {selectedAlumno.condicionAprendizaje && (
-                      <Typography>
-                        <strong>Detalle:</strong>{" "}
-                        {selectedAlumno.detalleCondicionAprendizaje || "-"}
-                      </Typography>
-                    )}
-                    <Typography>
+                    <Typography sx={{ mb: 1 }}>
                       <strong>Condición Médica:</strong>{" "}
                       {selectedAlumno.condicionMedica ? "Sí" : "No"}
                     </Typography>
                     {selectedAlumno.condicionMedica && (
-                      <Typography>
+                      <Typography sx={{ mb: 1 }}>
                         <strong>Detalle:</strong>{" "}
                         {selectedAlumno.detalleCondicionMedica || "-"}
                       </Typography>
                     )}
-                    <Typography>
+                    <Typography sx={{ mb: 1 }}>
                       <strong>Observaciones:</strong>{" "}
                       {selectedAlumno.observaciones || "-"}
                     </Typography>
-                  </Grid>
-                </Grid>
-              </Box>
+                  </Box>
+                </Box>
+              )}
 
-              {/* Apoderado */}
-              <Box
-                sx={{
-                  background: "#f8f8f8",
-                  borderRadius: 3,
-                  p: 2,
-                  mb: 1,
-                  boxShadow: 1,
-                }}
-              >
-                <Typography
-                  variant="subtitle1"
-                  sx={{ color: "#43a047", fontWeight: "bold", mb: 2 }}
-                >
-                  Datos de Apoderado
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Typography>
-                      <strong>Nombre Apoderado:</strong>{" "}
-                      {selectedAlumno.nombreApoderado || "-"}
-                    </Typography>
-                    <Typography>
-                      <strong>RUT Apoderado:</strong>{" "}
-                      {selectedAlumno.rutApoderado || "-"}
-                    </Typography>
-                    <Typography>
-                      <strong>Teléfono Apoderado:</strong>{" "}
-                      {selectedAlumno.telefonoApoderado || "-"}
-                    </Typography>
+              {tabIndex === 2 && (
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ color: "#43a047", fontWeight: "bold", mb: 2 }}
+                  >
+                    Datos de Apoderado
+                  </Typography>
+                  <Grid container spacing={0}>
+                    <Grid item xs={12} sm={6}>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography sx={{ mb: 1 }}>
+                          <strong>Nombre Apoderado:</strong>{" "}
+                          {selectedAlumno.nombreApoderado || "-"}
+                        </Typography>
+                        <Typography sx={{ mb: 1 }}>
+                          <strong>RUT Apoderado:</strong>{" "}
+                          {selectedAlumno.rutApoderado || "-"}
+                        </Typography>
+                        <Typography sx={{ mb: 1 }}>
+                          <strong>Teléfono Apoderado:</strong>{" "}
+                          {selectedAlumno.telefonoApoderado || "-"}
+                        </Typography>
+                      </Box>
+                    </Grid>
                   </Grid>
-                </Grid>
-              </Box>
+                </Box>
+              )}
             </Box>
           )}
         </DialogContent>
@@ -776,7 +771,7 @@ function AlumnosList() {
                 `Teléfono: ${selectedAlumno?.telefonoAlumno || "-"}`,
                 12,
                 48
-              ); // Teléfono debajo del RUT
+              );
               doc.text(
                 `Dirección: ${selectedAlumno?.direccion || "-"}`,
                 12,

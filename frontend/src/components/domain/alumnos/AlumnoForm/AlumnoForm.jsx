@@ -11,7 +11,12 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  TextField,
 } from "@mui/material";
+import { es } from "date-fns/locale";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AlumnoDatos from "./AlumnoDatos";
 import ApoderadoDatos from "./ApoderadoDatos";
@@ -39,7 +44,6 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     hora = extraidos.hora;
   }
 
-  // Estado para mostrar el campo de cambiar contraseña al editar
   const [showPasswordField, setShowPasswordField] = useState(false);
 
   const [form, setForm] = useState({
@@ -54,7 +58,9 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
       9
     ),
     email: safeInitialData.email || "",
-    fechaIngreso: safeInitialData.fechaIngreso || "",
+    fechaIngreso: safeInitialData.fechaIngreso
+      ? new Date(safeInitialData.fechaIngreso)
+      : null,
     nombreApoderado: safeInitialData.nombreApoderado || "",
     rutApoderado: safeInitialData.rutApoderado || "",
     codigoPaisApoderado: safeInitialData.codigoPaisApoderado || "+56",
@@ -81,7 +87,6 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     modalidadClase: safeInitialData.modalidadClase || "",
     dia,
     hora,
-    // Contraseña censurada al editar, vacía al crear
     password: safeInitialData._id ? "********" : "",
   });
 
@@ -97,13 +102,11 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     if (name === "instrumentos" || name === "estilosMusicales") {
       val = value.split(",").map((i) => i.trim());
     }
-    // Si el usuario empieza a escribir en el campo de contraseña, borra la censura
     if (name === "password" && value !== "********") {
       newForm.password = value;
     } else {
       newForm[name] = val;
     }
-    // Limpiar detalles si se desmarcan los checks
     if (name === "condicionMedica" && !checked) {
       newForm.detalleCondicionMedica = "";
     }
@@ -130,6 +133,17 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     }
   };
 
+  // Cambia la fecha desde el DatePicker
+  const handleFechaIngresoChange = (date) => {
+    setForm({ ...form, fechaIngreso: date });
+    if (fieldValidators["fechaIngreso"]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        fechaIngreso: fieldValidators["fechaIngreso"](date),
+      }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -139,7 +153,6 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
       newFieldErrors[key] = fn(form[key]);
     });
 
-    // Validación de contraseña solo al crear o si el usuario la está cambiando
     if (
       !safeInitialData._id ||
       (safeInitialData._id && showPasswordField && form.password !== "********")
@@ -163,7 +176,6 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     const telefonoApoderado =
       (form.codigoPaisApoderado || "") + (form.telefonoApoderado || "");
 
-    // Solo enviar password si se está creando o si el usuario la escribió al editar
     const dataToSend = {
       ...form,
       clase,
@@ -260,12 +272,27 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
                   onChange={handleChange}
                   gridField="email"
                 />
-                <AlumnoDatos
-                  values={form}
-                  errors={fieldErrors}
-                  onChange={handleChange}
-                  gridField="fechaIngreso"
-                />
+                {/* CAMPO FECHA EN ESPAÑOL */}
+                <LocalizationProvider
+                  dateAdapter={AdapterDateFns}
+                  adapterLocale={es}
+                >
+                  <DatePicker
+                    label="Fecha de Ingreso"
+                    value={form.fechaIngreso}
+                    onChange={handleFechaIngresoChange}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        name="fechaIngreso"
+                        error={!!fieldErrors.fechaIngreso}
+                        helperText={fieldErrors.fechaIngreso}
+                        fullWidth
+                      />
+                    )}
+                  />
+                </LocalizationProvider>
+                {/* FIN CAMPO FECHA */}
                 <AlumnoDatos
                   values={form}
                   errors={fieldErrors}
@@ -278,7 +305,6 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
                   onChange={handleChange}
                   gridField="direccion"
                 />
-                {/* Campo de contraseña solo al crear */}
                 {!safeInitialData._id && (
                   <AlumnoDatos
                     values={form}
@@ -287,7 +313,6 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
                     gridField="password"
                   />
                 )}
-                {/* Al editar, mostrar botón y campo censurado */}
                 {safeInitialData._id && !showPasswordField && (
                   <Button
                     variant="outlined"
