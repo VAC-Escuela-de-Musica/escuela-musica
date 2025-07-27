@@ -69,6 +69,22 @@ export const API_ENDPOINTS = {
     changePassword: `${API_BASE_URL}/api/alumnos/change-password`
   },
 
+  // Clases
+  clases: {
+    base: `${API_BASE_URL}/api/clases`,
+    list: `${API_BASE_URL}/api/clases`,
+    all: `${API_BASE_URL}/api/clases/all`,
+    create: `${API_BASE_URL}/api/clases`,
+    delete: (id) => `${API_BASE_URL}/api/clases/${id}`,
+    update: (id) => `${API_BASE_URL}/api/clases/${id}`,
+    getById: (id) => `${API_BASE_URL}/api/clases/${id}`,
+    cancel: (id) => `${API_BASE_URL}/api/clases/${id}/cancel`,
+    asignarEstudiante: (id) => `${API_BASE_URL}/api/clases/${id}/estudiantes`,
+    desasignarEstudiante: (id, alumnoId) => `${API_BASE_URL}/api/clases/${id}/estudiantes/${alumnoId}`,
+    getEstudiantes: (id) => `${API_BASE_URL}/api/clases/${id}/estudiantes`,
+    getClasesDeEstudiante: (alumnoId) => `${API_BASE_URL}/api/clases/estudiante/${alumnoId}`
+  },
+
   // Mensajes Internos
   internalMessages: {
     base: `${API_BASE_URL}/api/internal-messages`,
