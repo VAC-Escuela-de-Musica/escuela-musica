@@ -19,33 +19,28 @@ class InternalMessageController {
       }
 
       // Validar tipo de destinatario
-      if (!['individual', 'all_students', 'by_instrument', 'by_level'].includes(recipientType)) {
+      if (!['all_students', 'specific_student', 'specific_class'].includes(recipientType)) {
         return respondError(req, res, 400, 'Tipo de destinatario inválido')
       }
 
-      // Validar destinatario individual
-      if (recipientType === 'individual' && !recipient) {
-        return respondError(req, res, 400, 'Destinatario es requerido para mensajes individuales')
+      // Validar destinatario específico
+      if (recipientType === 'specific_student' && !recipient) {
+        return respondError(req, res, 400, 'Estudiante es requerido para mensajes a estudiantes específicos')
       }
 
-      // Validar filtros para mensajes masivos
-      if (recipientType === 'by_instrument' && !filters?.instrument) {
-        return respondError(req, res, 400, 'Instrumento es requerido para mensajes por instrumento')
-      }
-
-      if (recipientType === 'by_level' && !filters?.level) {
-        return respondError(req, res, 400, 'Nivel es requerido para mensajes por nivel')
+      // Validar clase específica
+      if (recipientType === 'specific_class' && !recipient) {
+        return respondError(req, res, 400, 'Clase es requerida para mensajes a clases específicas')
       }
 
       const messageData = {
         subject,
         content,
         recipientType,
-        recipient: recipientType === 'individual' ? recipient : null,
-        filters: filters || {},
+        recipient: recipientType === 'all_students' ? null : recipient,
         type: type || 'notification',
         priority: priority || 'medium',
-        delivery: delivery || { sendInternal: true, sendEmail: false, sendWhatsApp: false },
+        delivery: { sendInternal: true, sendEmail: false, sendWhatsApp: false },
         scheduledFor: scheduledFor || null
       }
 

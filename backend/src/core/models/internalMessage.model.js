@@ -18,8 +18,8 @@ const internalMessageSchema = new mongoose.Schema({
   // Tipo de destinatario
   recipientType: {
     type: String,
-    enum: ['individual', 'all_students', 'by_instrument', 'by_level'],
-    default: 'individual',
+    enum: ['all_students', 'specific_student', 'specific_class'],
+    default: 'all_students',
     required: true
   },
 
@@ -243,12 +243,8 @@ internalMessageSchema.statics.getStudentMessages = function (studentId, options 
       { recipient: studentId },
       { recipientType: 'all_students' },
       {
-        recipientType: 'by_instrument',
-        'filters.instrument': { $exists: true }
-      },
-      {
-        recipientType: 'by_level',
-        'filters.level': { $exists: true }
+        recipientType: 'specific_class',
+        recipient: { $exists: true }
       }
     ],
     status: 'sent'
