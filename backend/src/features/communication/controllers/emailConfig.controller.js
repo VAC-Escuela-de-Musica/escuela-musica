@@ -163,6 +163,105 @@ class EmailConfigController {
   }
 
   /**
+   * Prueba la configuración de email sin restricciones de autorización (solo para desarrollo)
+   */
+  async testEmailConfigUnrestricted (req, res) {
+    try {
+      console.log('🔍 [TEST-EMAIL-UNRESTRICTED] Iniciando prueba sin restricciones')
+      
+      const { to, subject, content } = req.body
+
+      if (!to || !subject || !content) {
+        return respondError(req, res, 400, 'Destinatario, asunto y contenido son requeridos')
+      }
+
+      // Cargar configuración
+      const configPath = path.join(process.cwd(), 'email-config.json')
+      if (!fs.existsSync(configPath)) {
+        return respondError(req, res, 400, 'Configuración de email no encontrada')
+      }
+
+      const configData = fs.readFileSync(configPath, 'utf8')
+      const config = JSON.parse(configData)
+
+      if (!config.enabled) {
+        return respondError(req, res, 400, 'Email no está habilitado')
+      }
+
+      console.log('📋 Configuración cargada:', {
+        enabled: config.enabled,
+        user: config.user,
+        host: config.host,
+        port: config.port
+      })
+
+      // Crear transportador temporal con la nueva configuración
+      const nodemailer = (await import('nodemailer')).default
+
+      let transporterConfig = {
+        host: config.host,
+        port: parseInt(config.port),
+        secure: config.secure,
+        auth: {
+          user: config.user,
+          pass: config.password
+        }
+      }
+
+      // Configuración específica para Gmail
+      if (config.host.includes('gmail.com')) {
+        transporterConfig = {
+          service: 'gmail',
+          auth: {
+            user: config.user,
+            pass: config.password
+          }
+        }
+      } else {
+        // Para otros proveedores, agregar configuración TLS
+        if (config.requireTLS) {
+          transporterConfig.requireTLS = true
+        }
+        transporterConfig.tls = {
+          rejectUnauthorized: false,
+          minVersion: 'TLSv1.2'
+        }
+      }
+
+      console.log('🔧 Configuración del transportador:', transporterConfig)
+
+      const testTransporter = nodemailer.createTransport(transporterConfig)
+
+      // Verificar conexión
+      console.log('🔍 Verificando conexión...')
+      await testTransporter.verify()
+      console.log('✅ Conexión verificada correctamente')
+
+      // Enviar email de prueba
+      console.log('📧 Enviando email de prueba a:', to)
+      
+      const result = await testTransporter.sendMail({
+        from: `"${config.fromName}" <${config.fromEmail || config.user}>`,
+        to,
+        subject,
+        html: `<h1>${subject}</h1><p>${content}</p>`,
+        text: content
+      })
+
+      console.log('✅ Email enviado correctamente')
+      console.log('📧 Message ID:', result.messageId)
+
+      return respondSuccess(req, res, 200, {
+        message: 'Email de prueba enviado correctamente',
+        messageId: result.messageId
+      })
+    } catch (error) {
+      console.error('❌ Error testing email config:', error)
+      return respondError(req, res, 500, `Error enviando email de prueba: ${error.message}`)
+    }
+  }
+
+  /**
    * Obtiene todas las plantillas de email
    */
   async getEmailTemplates (req, res) {
