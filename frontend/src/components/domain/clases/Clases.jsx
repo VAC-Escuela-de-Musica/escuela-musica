@@ -23,7 +23,7 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { es } from "date-fns/locale";
 import AsignarEstudiantes from "./AsignarEstudiantes.jsx";
 
-const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/clases`;
+const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 export default function Clases({ setActiveModule }) {
   const [mensajeExito, setMensajeExito] = useState("");
@@ -53,7 +53,7 @@ export default function Clases({ setActiveModule }) {
   const obtenerNombreProfesor = async (id) => {
     if (nombresProfesores[id]) return nombresProfesores[id];
     try {
-      const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
+      const response = await fetchAutenticado(`${API_URL}/clases/profesor/${id}`);
       if (response.ok) {
         const data = await response.json();
         setNombresProfesores(prev => ({ ...prev, [id]: data.data.nombreCompleto }));
@@ -68,7 +68,7 @@ export default function Clases({ setActiveModule }) {
   const fetchAutenticado = async (url, options = {}) => {
     const token = localStorage.getItem("token");
 
-    const csrfRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/csrf-token`, {
+    const csrfRes = await fetch(`${API_URL}/csrf-token`, {
       credentials: "include"
     });
     const csrfData = await csrfRes.json();
@@ -91,7 +91,7 @@ export default function Clases({ setActiveModule }) {
 
   const fetchTodayClases = async () => {
     try {
-      const response = await fetchAutenticado(`${API_URL}/today`);
+      const response = await fetchAutenticado(`${API_URL}/clases/today`);
       if (response.status === 403) {
         setAutorizado(false);
         return;
@@ -110,7 +110,7 @@ export default function Clases({ setActiveModule }) {
 
   const fetchNextClases = async () => {
     try {
-      const response = await fetchAutenticado(`${API_URL}/next`);
+      const response = await fetchAutenticado(`${API_URL}/clases/next`);
       if (response.status === 403) {
         setAutorizado(false);
         return;
@@ -130,7 +130,7 @@ export default function Clases({ setActiveModule }) {
 
   const fetchAllClases = async () => {
     try {
-      const response = await fetchAutenticado(`${API_URL}/programadas`);
+      const response = await fetchAutenticado(`${API_URL}/clases/programadas`);
       if (response.status === 403) {
         setAutorizado(false);
         return;
@@ -149,7 +149,7 @@ export default function Clases({ setActiveModule }) {
 
   const fetchPreviousClases = async () => {
     try {
-      const response = await fetchAutenticado(`${API_URL}/previous`);
+      const response = await fetchAutenticado(`${API_URL}/clases/previous`);
       if (response.status === 403) {
         setAutorizado(false);
         return;
@@ -169,7 +169,7 @@ export default function Clases({ setActiveModule }) {
   useEffect(() => {
     const fetchProfesores = async () => {
       try {
-        const response = await fetchAutenticado(`${API_URL}/profesores`);
+        const response = await fetchAutenticado(`${API_URL}/clases/profesores`);
         if (response.ok) {
           const data = await response.json();
           setListaProfesores(data.data);
@@ -216,7 +216,7 @@ export default function Clases({ setActiveModule }) {
         console.log("Enviando datos al backend para actualizar:", nuevaClase);
         console.log("ID de la clase:", editarClase._id);
 
-        response = await fetchAutenticado(`${API_URL}/update/${editarClase._id}`, {
+        response = await fetchAutenticado(`${API_URL}/clases/update/${editarClase._id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(nuevaClase)
@@ -261,7 +261,7 @@ export default function Clases({ setActiveModule }) {
 
   const handleCancelarClase = async (id, motivo = "") => {
     try {
-      const response = await fetchAutenticado(`${API_URL}/cancel/${id}`, {
+      const response = await fetchAutenticado(`${API_URL}/clases/cancel/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -308,7 +308,7 @@ export default function Clases({ setActiveModule }) {
 
   const handleEliminarClase = async (id) => {
     try {
-      const response = await fetchAutenticado(`${API_URL}/${id}`, {
+      const response = await fetchAutenticado(`${API_URL}/clases/${id}`, {
         method: "DELETE",
       });
       
@@ -349,7 +349,7 @@ export default function Clases({ setActiveModule }) {
 
   if (!autorizado) {
     return (
-      <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white", p: 4 }}>
+      <Box sx={{ color: "white", marginLeft: 3, marginRight: 3 }}>
         <Typography variant="h5" gutterBottom>
           No tienes permisos para acceder a esta sección.
         </Typography>
@@ -361,13 +361,13 @@ export default function Clases({ setActiveModule }) {
   }
 
   return (
-    <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
+    <Box sx={{ color: "white", marginLeft: 3, marginRight: 3 }}>
       <Box display={"flex"} justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h4" component="h1" sx={{ marginBottom: 2 }}>
+        <Typography variant="h4" component="h1">
           Gestión de las clases
         </Typography>
 
-        <Box display="flex" gap={1}>
+        <Box display="flex" gap={1} marginRight={3}>
           <Button
             variant="outlined"
             onClick={() => {
@@ -419,7 +419,7 @@ export default function Clases({ setActiveModule }) {
       </Box>
       
 
-      <Box display={"flex"} justifyContent="space-between" alignItems="center" sx={{ marginBottom: 2 }}>
+      <Box display={"flex"} justifyContent="space-between" alignItems="center">
         <Typography variant="h5" gutterBottom>
           {filtroActivo === "hoy" && "Clases de hoy"}
           {filtroActivo === "proximas" && "Próximas clases"}

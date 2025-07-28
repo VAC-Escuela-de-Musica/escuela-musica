@@ -24,9 +24,11 @@ const loadUserData = async (req, res, next) => {
     const Role = (await import('../../../core/models/role.model.js')).default
     
     let user = await User.findOne({ email }).populate('roles')
+    let isAlumno = false
     
     if (!user) {
       user = await Alumno.findOne({ email })
+      isAlumno = true
     }
 
     if (!user) {
@@ -35,17 +37,39 @@ const loadUserData = async (req, res, next) => {
 
     // Establecer datos completos del usuario
     req.user.fullData = user
-    req.user.roleNames = Array.isArray(user.roles)
-      ? user.roles.map(r => (typeof r === 'string' ? r : r.name || r))
-      : []
     req.user.id = user._id
     req.user.email = user.email
+    
+    // Manejar roles según el tipo de usuario
+    if (isAlumno) {
+      // Para alumnos (Alumno model)
+      req.user.roleNames = user.roles || ['estudiante']
+    } else {
+      // Para usuarios normales (User model)
+      req.user.roleNames = Array.isArray(user.roles)
+        ? user.roles.map(r => {
+            if (typeof r === 'object' && r.name) {
+              return r.name; // Extraer el nombre del rol del objeto
+            }
+            return typeof r === 'string' ? r : r.name || r;
+          })
+        : []
+    }
+    
     // Si es alumno, poner nombreAlumno como username
     if (user.nombreAlumno) req.user.username = user.nombreAlumno
 
     // Asegurar compatibilidad con legacy code
     req.email = req.user.email
     req.roles = req.user.roleNames
+
+    console.log('🔍 [LOAD-USER-DATA] Usuario cargado:', {
+      id: req.user.id,
+      email: req.user.email,
+      roles: req.roles,
+      username: req.user.username,
+      isAlumno
+    })
 
     next()
   } catch (error) {

@@ -63,6 +63,7 @@ const LoadingFallback = ({ message }) => (
 export default function ClippedDrawer() {
   const [activeModule, setActiveModule] = React.useState("inicio");
   const [userName, setUserName] = React.useState('');
+  const [userRole, setUserRole] = React.useState('');
 
   React.useEffect(() => {
     const token = localStorage.getItem("token");
@@ -70,11 +71,32 @@ export default function ClippedDrawer() {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         setUserName(payload.email);
+        
+        // Extraer el rol del array de roles
+        if (payload.roles && Array.isArray(payload.roles)) {
+          // Buscar el primer rol que sea "profesor" o "profesores"
+          const profesorRole = payload.roles.find(role => 
+            role.name === "profesor" || role.name === "profesores"
+          );
+          if (profesorRole) {
+            setUserRole(profesorRole.name);
+          } else {
+            // Si no es profesor, usar el primer rol disponible
+            setUserRole(payload.roles[0]?.name || '');
+          }
+        } else {
+          setUserRole(payload.role || '');
+        }
       } catch (error) {
         console.error("Error al decodificar el token:", error);
       }
     }
   }, []);
+
+  // Función para determinar si el usuario es profesor
+  const isProfesor = () => {
+    return userRole === "profesor" || userRole === "profesores";
+  };
 
   const handleLogout = () => {
     // Limpiar el token del localStorage
@@ -131,75 +153,91 @@ export default function ClippedDrawer() {
         />
         <Divider sx={{ borderColor: "#3F4147" }} />
         <Box sx={{ overflow: "auto" }}>
-          <List>
-
-            {[
-              { text: "Horario y Clases", icon: <CalendarMonthIcon />, module: "horario" },
-              { text: "Estudiantes", icon: <PersonIcon />, module: "alumnos" },
-              { text: "Profesores", icon: <Person3Icon />, module: "profesores" }
-            ].map((item) => (
-              <ListItem key={item.text} disablePadding>
-                <ListItemButton
-                  onClick={() => {
-                    if (item.text === "Horario y Clases") setActiveModule("horario");
-                    if (item.text === "Estudiantes") setActiveModule("alumnos");
-                    if (item.text === "Profesores") setActiveModule("profesores");
-                  }}
-                >
-                  <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-
-          </List>
+          {/* Solo mostrar estas opciones si NO es profesor */}
+          {!isProfesor() && (
+            <>
+              <List>
+                {[
+                  { text: "Horario y Clases", icon: <CalendarMonthIcon />, module: "horario" },
+                  { text: "Estudiantes", icon: <PersonIcon />, module: "alumnos" },
+                  { text: "Profesores", icon: <Person3Icon />, module: "profesores" }
+                ].map((item) => (
+                  <ListItem key={item.text} disablePadding>
+                    <ListItemButton
+                      onClick={() => {
+                        if (item.text === "Horario y Clases") setActiveModule("horario");
+                        if (item.text === "Estudiantes") setActiveModule("alumnos");
+                        if (item.text === "Profesores") setActiveModule("profesores");
+                      }}
+                    >
+                      <ListItemIcon sx={{ color: "#FFFFFF" }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText primary={item.text} />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+              <Divider sx={{ borderColor: "#3F4147" }} />
+              <List>
+                {[
+                  { text: "Imágenes Galería", icon: <CropOriginalIcon />, module: "galeria" },
+                  { text: "Presentación Prof.", icon: <ViewAgendaIcon />, module: "presentacion" },
+                  { text: "Gestionar Reseñas", icon: <StarBorderIcon />, module: "resenas" }
+                ].map((item) => (
+                  <ListItem key={item.text} disablePadding>
+                    <ListItemButton
+                      onClick={() => {
+                        if (item.text === "Imágenes Galería") setActiveModule("galeria");
+                        if (item.text === "Presentación Prof.") setActiveModule("presentacion");
+                        if (item.text === "Gestionar Reseñas") setActiveModule("resenas");
+                      }}
+                    >
+                      <ListItemIcon sx={{ color: "#FFFFFF" }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText primary={item.text} />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+              <Divider sx={{ borderColor: "#3F4147" }} />
+              <List>
+                {[
+                  { text: "Credenciales", icon: <AccountCircleIcon />, module: "credenciales" },
+                  { text: "Mensajería", icon: <MessageIcon />, module: "mensajeria" }
+                ].map((item) => (
+                  <ListItem key={item.text} disablePadding>
+                    <ListItemButton
+                      onClick={() => {
+                        if (item.text === "Credenciales") setActiveModule("credenciales");
+                        if (item.text === "Mensajería") setActiveModule("mensajeria");
+                      }}
+                    >
+                      <ListItemIcon sx={{ color: "#FFFFFF" }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText primary={item.text} />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+            </>
+          )}
+          
+          {/* Repositorio Prof. - visible para todos */}
           <Divider sx={{ borderColor: "#3F4147" }} />
           <List>
-            {[
-              { text: "Imágenes Galería", icon: <CropOriginalIcon />, module: "galeria" },
-              { text: "Presentación Prof.", icon: <ViewAgendaIcon />, module: "presentacion" },
-              { text: "Gestionar Reseñas", icon: <StarBorderIcon />, module: "resenas" }
-            ].map((item) => (
-              <ListItem key={item.text} disablePadding>
-                <ListItemButton
-                  onClick={() => {
-                    if (item.text === "Imágenes Galería") setActiveModule("galeria");
-                    if (item.text === "Presentación Prof.") setActiveModule("presentacion");
-                    if (item.text === "Gestionar Reseñas") setActiveModule("resenas");
-                  }}
-                >
-                  <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-          <Divider sx={{ borderColor: "#3F4147" }} />
-          <List>
-            {[
-              { text: "Repositorio Prof.", icon: <BackupIcon />, module: "repositorio" },
-              { text: "Credenciales", icon: <AccountCircleIcon />, module: "credenciales" },
-              { text: "Mensajería", icon: <MessageIcon />, module: "mensajeria" }
-            ].map((item) => (
-              <ListItem key={item.text} disablePadding>
-                <ListItemButton
-                  onClick={() => {
-                    if (item.text === "Repositorio Prof.") setActiveModule("repositorio");
-                    if (item.text === "Credenciales") setActiveModule("credenciales");
-                    if (item.text === "Mensajería") setActiveModule("mensajeria");
-                  }}
-                >
-                  <ListItemIcon sx={{ color: "#FFFFFF" }}>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={() => setActiveModule("repositorio")}
+              >
+                <ListItemIcon sx={{ color: "#FFFFFF" }}>
+                  <BackupIcon />
+                </ListItemIcon>
+                <ListItemText primary="Repositorio Prof." />
+              </ListItemButton>
+            </ListItem>
           </List>
         </Box>
         <Link
@@ -264,22 +302,22 @@ export default function ClippedDrawer() {
             </Typography>
           </>
         )}
-        {activeModule === "galeria" && (
+        {activeModule === "galeria" && !isProfesor() && (
           <Suspense fallback={<LoadingFallback message="Cargando Galería..." />}>
             <GaleriaManager />
           </Suspense>
         )}
-        {activeModule === "credenciales" && (
+        {activeModule === "credenciales" && !isProfesor() && (
           <Suspense fallback={<LoadingFallback message="Cargando Credenciales..." />}>
             <UserManager />
           </Suspense>
         )}
-        {activeModule === "presentacion" && (
+        {activeModule === "presentacion" && !isProfesor() && (
           <Suspense fallback={<LoadingFallback message="Cargando Presentación..." />}>
             <CardsProfesoresManager />
           </Suspense>
         )}
-        {activeModule === "resenas" && (
+        {activeModule === "resenas" && !isProfesor() && (
           <Suspense fallback={<LoadingFallback message="Cargando Reseñas..." />}>
             <TestimoniosManager />
           </Suspense>
@@ -289,22 +327,22 @@ export default function ClippedDrawer() {
             <RepositorioProfesor />
           </Suspense>
         )}
-        {activeModule === "mensajeria" && (
+        {activeModule === "mensajeria" && !isProfesor() && (
           <Suspense fallback={<LoadingFallback message="Cargando Mensajería..." />}>
             <MensajeriaManager />
           </Suspense>
         )}
-        {activeModule === "alumnos" && (
+        {activeModule === "alumnos" && !isProfesor() && (
           <Suspense fallback={<LoadingFallback message="Cargando Estudiantes..." />}>
             <AlumnosList />
           </Suspense>
         )}
-        {activeModule === "profesores" && (
+        {activeModule === "profesores" && !isProfesor() && (
           <Suspense fallback={<LoadingFallback message="Cargando Profesores..." />}>
             <ProfesoresList />
           </Suspense>
         )}
-        {activeModule === "horario" && (
+        {activeModule === "horario" && !isProfesor() && (
           <Suspense fallback={<LoadingFallback message="Cargando Horario y Clases..." />}>
             <HorarioConClases />
           </Suspense>

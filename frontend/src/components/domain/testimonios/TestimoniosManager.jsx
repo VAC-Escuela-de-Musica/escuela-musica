@@ -5,7 +5,11 @@ import {
   Button,
   Tooltip,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -29,21 +33,21 @@ const TestimoniosManager = () => {
   const [editingTestimonio, setEditingTestimonio] = useState(null);
   const [formData, setFormData] = useState({});
 
-  // Cargar testimonios
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    testimonioId: null,
+    testimonioAutor: null
+  });
+
   const fetchTestimonios = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Debug headers
-      const headers = API_HEADERS.withAuth();
-      console.log('🔍 [TESTIMONIOS] Headers para GET:', headers);
-      
       const response = await TestimoniosService.getTestimonios();
       const items = Array.isArray(response.data) ? response.data : [];
       setTestimonios(items);
     } catch (err) {
-      // Asegurar que error siempre sea un string
       const errorMessage = typeof err === 'string' ? err : 
                           err?.message || 
                           err?.error || 
@@ -59,7 +63,6 @@ const TestimoniosManager = () => {
     fetchTestimonios();
   }, []);
 
-  // Abrir diálogo
   const openDialog = (testimonio = null) => {
     setEditingTestimonio(testimonio);
     setFormData(testimonio || {
@@ -74,22 +77,14 @@ const TestimoniosManager = () => {
     setDialogOpen(true);
   };
 
-  // Cerrar diálogo
   const closeDialog = () => {
     setDialogOpen(false);
     setEditingTestimonio(null);
     setFormData({});
   };
 
-  // Guardar testimonio
   const handleSave = async (data) => {
     try {
-      // Debug headers y datos
-      const headers = API_HEADERS.withAuth();
-      console.log('🔍 [TESTIMONIOS] Headers para UPDATE/CREATE:', headers);
-      console.log('🔍 [TESTIMONIOS] Data a enviar:', data);
-      console.log('🔍 [TESTIMONIOS] Es edición?:', !!editingTestimonio);
-      
       if (editingTestimonio) {
         await TestimoniosService.updateTestimonio(editingTestimonio._id, data);
       } else {
@@ -99,7 +94,6 @@ const TestimoniosManager = () => {
       fetchTestimonios();
     } catch (err) {
       console.error('🚨 [TESTIMONIOS] Error completo:', err);
-      // Asegurar que error siempre sea un string
       const errorMessage = typeof err === 'string' ? err : 
                           err?.message || 
                           err?.error || 
@@ -108,26 +102,33 @@ const TestimoniosManager = () => {
     }
   };
 
-  // Eliminar testimonio
   const handleDelete = async (id) => {
-    if (!window.confirm('¿Estás seguro de que quieres eliminar este testimonio?')) {
-      return;
-    }
+    const testimonio = testimonios.find(t => t._id === id);
+    
+    setDeleteDialog({
+      open: true,
+      testimonioId: id,
+      testimonioAutor: testimonio?.autor || 'este testimonio'
+    });
+  };
+
+  const confirmDelete = async () => {
+    const { testimonioId } = deleteDialog;
     
     try {
-      await TestimoniosService.deleteTestimonio(id);
+      await TestimoniosService.deleteTestimonio(testimonioId);
       fetchTestimonios();
     } catch (err) {
-      // Asegurar que error siempre sea un string
       const errorMessage = typeof err === 'string' ? err : 
                           err?.message || 
                           err?.error || 
                           'Error al eliminar testimonio';
       setError(errorMessage);
+    } finally {
+      setDeleteDialog({ open: false, testimonioId: null, testimonioAutor: null });
     }
   };
 
-  // Actualizar datos del formulario
   const updateFormData = (newData) => {
     setFormData({ ...formData, ...newData });
   };
@@ -213,6 +214,30 @@ const TestimoniosManager = () => {
         isEditing={!!editingTestimonio}
         loading={loading}
       />
+
+      {/* Diálogo de confirmación de eliminación */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ ...deleteDialog, open: false })}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirmar eliminación</DialogTitle>
+        <DialogContent>
+          <Typography id="delete-dialog-description">
+            ¿Estás seguro de que quieres eliminar el testimonio de {deleteDialog.testimonioAutor}?
+            Esta acción no se puede deshacer.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog({ ...deleteDialog, open: false })} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={confirmDelete} color="error" variant="contained">
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

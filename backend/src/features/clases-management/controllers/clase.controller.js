@@ -386,11 +386,23 @@ async function getProfesores(req, res) {
 async function getProfesorById(req, res) {
     try {
         const { id } = req.params;
+        
+        if (!id || id === 'null' || id === 'undefined') {
+            return respondError(req, res, 400, "ID de profesor no válido");
+        }
+        
         const profesor = await Profesor.findById(id).select("nombre apellidos");
         if (!profesor) {
             return respondError(req, res, 404, "Profesor no encontrado");
         }
-        respondSuccess(req, res, 200, profesor);
+        
+        const nombreCompleto = profesor.nombreCompleto || `${profesor.nombre} ${profesor.apellidos}`;
+        const profesorResponse = {
+            ...profesor.toObject(),
+            nombreCompleto
+        };
+        
+        respondSuccess(req, res, 200, profesorResponse);
     } catch (error) {
         handleError(error, "clase.controller -> getProfesorById");
         respondError(req, res, 500, "Error al obtener el profesor");

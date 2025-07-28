@@ -1182,6 +1182,7 @@ function AlumnosList() {
           {successMsg}
         </MuiAlert>
       </Snackbar>
+      {/* ...existing code... */}
     </Box>
   );
 }

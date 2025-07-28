@@ -1,28 +1,16 @@
-// Importa el archivo 'configEnv.js' para cargar las variables de entorno
 import { PORT, HOST, SESSION_SECRET } from './core/config/configEnv.js'
 import path from 'node:path'
-// Importa el módulo 'cors' para agregar los cors
 import cors from 'cors'
-// Importa el módulo 'express' para crear la aplicacion web
 import express, { urlencoded, json } from 'express'
-// Importamos morgan para ver las peticiones que se hacen al servidor
 import morgan from 'morgan'
-// Importa el módulo 'cookie-parser' para manejar las cookies
 import cookieParser from 'cookie-parser'
-// Importa el módulo 'lusca' para manejar la seguridad de la aplicación
 import lusca from 'lusca'
-/** El enrutador principal */
 import indexRoutes from './routes/index.routes.js'
-// Importa el archivo 'configDB.js' para crear la conexión a la base de datos
 import { setupDB } from './core/config/configDB.js'
-// Importa la configuración de MinIO
 import { setupMinIO } from './core/config/minio.config.js'
-// Importa el handler de errores
 import { handleFatalError, handleError } from './core/utils/errorHandler.util.js'
 import { createRoles, createUsers } from './core/config/initialSetup.js'
-// Importa la función para inicializar servicios
 import { initializeServices } from './services/index.js'
-// Importa el módulo 'express-session' para manejar sesiones
 import session from 'express-session'
 const { csrf } = lusca
 
@@ -34,43 +22,71 @@ async function setupServer () {
     /** Instancia de la aplicacion */
     const app = express()
     app.disable('x-powered-by')
+    
+    // Configuración de CORS para credenciales
+    const corsOptions = {
+      credentials: true,
+      origin: function (origin, callback) {
+        // Permitir requests sin origin (mobile apps, postman, etc.)
+        if (!origin) return callback(null, true)
+        
+        // Lista de orígenes permitidos
+        const allowedOrigins = [
+          'http://146.83.198.35:1230',
+          'http://146.83.198.35',
+          'https://146.83.198.35:1230',
+          'https://146.83.198.35',
+          'http://localhost:3000',
+          'http://localhost:5173',
+          'http://localhost:1230'
+        ]
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+          callback(null, true)
+        } else {
+          console.warn('CORS blocked origin:', origin)
+          callback(new Error('Not allowed by CORS'))
+        }
+      },
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token', '_csrf']
+    }
+    
     // Agregamos los cors
-    app.use(cors({ credentials: true, origin: true }))
+    app.use(cors(corsOptions))
     // Agrega el middleware para el manejo de datos en formato URL
     app.use(urlencoded({ extended: true }))
     // Agrega el middleware para el manejo de datos en formato JSON
     app.use(json())
-    // Agregamos el middleware para el manejo de cookies
     app.use(cookieParser())
-    // Agregamos el middleware de sesión requerido por lusca
     app.use(session({
       secret: SESSION_SECRET,
       resave: false,
       saveUninitialized: true,
       cookie: { secure: false }
     }))
-    // Aplica CSRF solo a rutas protegidas (excepto /api/auth/*, /api/csrf-token y rutas de upload)
+    // CSRF exclusions
     app.use((req, res, next) => {
       const csrfExcluded = [
         /^\/api\/auth\//,
         '/api/csrf-token',
         '/api/materials/upload-url',
         '/api/materials/confirm-upload',
-        /^\/api\/materials\/.+$/, // Excluir todas las rutas de materiales con ID
+        /^\/api\/materials\/.+$/,
         '/api/galeria/upload-url',
         '/api/galeria/confirm-upload',
-        /^\/api\/galeria.*$/, // Excluir todas las rutas de galería
-        /^\/api\/cards-profesores.*$/, // Excluir todas las rutas de cards-profesores
-        /^\/api\/testimonios.*$/, // Excluir todas las rutas de testimonios
+        /^\/api\/galeria.*$/,
+        /^\/api\/cards-profesores.*$/,
+        /^\/api\/testimonios.*$/,
         /^\/api\/carousel\/upload$/,
         /^\/api\/files\/upload$/,
-        /^\/api\/alumnos.*$/, // Excluir todas las rutas de alumnos
-        /^\/api\/profesores.*$/, // Excluir todas las rutas de profesores
-        /^\/api\/users.*$/, // Excluir todas las rutas de usuarios (gestión de usuarios)
-        /^\/api\/roles.*$/, // Excluir todas las rutas de roles
-        /^\/api\/messaging\/whatsapp-web\/(reset|initialize)$/, // Excluir rutas públicas de WhatsApp Web
-        /^\/api\/messaging\/(send-whatsapp|send-email|send-message|test-message|test-email-config-unrestricted|email-config.*|whatsapp.*)$/, // Excluir rutas de envío de mensajes, configuración de email y WhatsApp
-        /^\/api\/internal-messages.*$/ // Excluir todas las rutas de mensajes internos
+        /^\/api\/alumnos.*$/,
+        /^\/api\/profesores.*$/,
+        /^\/api\/users.*$/,
+        /^\/api\/roles.*$/,
+        /^\/api\/messaging\/whatsapp-web\/(reset|initialize)$/,
+        /^\/api\/messaging\/(send-whatsapp|send-email|send-message|test-message|test-email-config-unrestricted|email-config.*|whatsapp.*)$/,
+        /^\/api\/internal-messages.*$/
       ]
       const isExcluded = csrfExcluded.some(pattern => {
         if (pattern instanceof RegExp) return pattern.test(req.path)
@@ -82,14 +98,10 @@ async function setupServer () {
       }
       return csrf()(req, res, next)
     })
-    // Agregamos morgan para ver las peticiones que se hacen al servidor
     app.use(morgan('dev'))
-    // Agrega el enrutador principal al servidor
     app.use('/api', indexRoutes)
 
-    // ...existing code...
-
-    // === Servir archivos estáticos del frontend (dist) ===
+    // Frontend static
     const distPath = path.resolve(process.cwd(), '../frontend/dist')
     app.use(express.static(distPath))
 

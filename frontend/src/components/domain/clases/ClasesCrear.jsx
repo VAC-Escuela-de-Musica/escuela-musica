@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import ListaEstudiantes from "./ListaEstudiantes";
 import {
   Box,
   Typography,
@@ -16,14 +17,14 @@ import { es } from "date-fns/locale";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { ArrowCircleLeftOutlined } from "@mui/icons-material";
+import { FixedSizeList } from "react-window";
 
-
-const API_URL = `${import.meta.env.VITE_API_URL}/api/clases`;
+const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 const fetchAutenticado = async (url, options = {}) => {
   const token = localStorage.getItem("token");
 
-  const csrfRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/csrf-token`, {
+  const csrfRes = await fetch(`${API_URL}/csrf-token`, {
     credentials: "include"
   });
   const csrfData = await csrfRes.json();
@@ -60,7 +61,9 @@ export default function ClasesCrear({ setActiveModule = null }) {
   const [repeticiones, setRepeticiones] = useState([]);
   const [mismaHora, setMismaHora] = useState(false);
   const [mismaSala, setMismaSala] = useState(false);
-
+  const [listaEstudiantes, setListaEstudiantes] = useState([]);
+  const [alumnosSeleccionados, setAlumnosSeleccionados] = useState([]);
+  
   const currentYear = new Date().getFullYear();
   const maxDate = new Date(currentYear +1, 11, 31);
   const minDate = new Date(currentYear, 0, 1);
@@ -69,11 +72,15 @@ export default function ClasesCrear({ setActiveModule = null }) {
     const cargarProfesores = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${API_URL}/profesores`, {
+        const response = await fetch(`${API_URL}/clases/profesores`, {
           headers: {
             "Authorization": `Bearer ${token}`
           }
         });
+        if (response.status === 403) {
+          setAutorizado(false);
+          return;
+        }
         if (!response.ok) {
           throw new Error("Error al obtener profesores");
         }
@@ -84,11 +91,48 @@ export default function ClasesCrear({ setActiveModule = null }) {
         setMensajeError("No se pudieron cargar los profesores.");
       }
     };
-
+    
     cargarProfesores();
+  }, []);
+  useEffect(() => {
+
+  const cargarEstudiantes = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_URL}/alumnos/`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (!response.ok) {
+          throw new Error("Error al obtener alumnos");
+        }
+        const data = await response.json();
+        setListaEstudiantes(
+          data.data.map(est => ({
+            _id: est._id,
+            nombreAlumno: est.nombreAlumno,
+            rutAlumno: est.rutAlumno
+          }))
+        );
+        console.log("Estudiantes filtrados:", data.data.map(est => ({
+          _id: est._id,
+          nombreAlumno: est.nombreAlumno,
+          rutAlumno: est.rutAlumno
+        })));
+      } catch (error) {
+        console.error("Error al cargar alumnos:", error);
+        setMensajeError("No se pudieron cargar los alumnos.");
+      }
+    };
+    cargarEstudiantes();
   }, []);
 
   const handleGuardarClase = async () => {
+    if (alumnosSeleccionados.length === 0) {
+      setMensajeError("Debe haber al menos un alumno seleccionado.");
+      return;
+    }
     if (!titulo || !descripcion || !sala || !selectedDate || !horaInicio || !horaFin) {
       setMensajeError("Complete todos los campos.");
       return;
@@ -98,7 +142,6 @@ export default function ClasesCrear({ setActiveModule = null }) {
       return;
     }
 
-    // Si hay repeticiones y mismaHora está activado, actualiza las horas de todas las repeticiones
     let repeticionesFinal = repeticiones;
     if (repeticiones.length > 0 && mismaHora) {
       repeticionesFinal = repeticiones.map(r => ({
@@ -114,6 +157,9 @@ export default function ClasesCrear({ setActiveModule = null }) {
         descripcion,
         sala,
         profesor,
+        estudiantes: alumnosSeleccionados.map(e => ({
+          alumno: e._id
+        })),
         horarios: [{
           dia: selectedDate
             ? `${selectedDate.getDate().toString().padStart(2, '0')}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getFullYear()}`
@@ -131,6 +177,9 @@ export default function ClasesCrear({ setActiveModule = null }) {
         descripcion,
         sala,
         profesor,
+        estudiantes: alumnosSeleccionados.map(e => ({
+          alumno: e._id
+        })),
         horarios: [{
           dia: r.fecha
             ? `${r.fecha.getDate().toString().padStart(2, '0')}-${(r.fecha.getMonth() + 1).toString().padStart(2, '0')}-${r.fecha.getFullYear()}`
@@ -147,10 +196,10 @@ export default function ClasesCrear({ setActiveModule = null }) {
 
     try {
       console.log("[CREAR-DEBUG] Clases a enviar:", JSON.stringify(clasesParaEnviar, null, 2));
-      console.log("[CREAR-DEBUG] URL del endpoint:", `${API_URL}/batch`);
+      console.log("[CREAR-DEBUG] URL del endpoint:", `${API_URL}/clases/batch`);
       console.log("[CREAR-DEBUG] Datos enviados:", clasesParaEnviar);
-      
-      const response = await fetchAutenticado(`${API_URL}/batch`, {
+
+      const response = await fetchAutenticado(`${API_URL}/clases/batch`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -168,9 +217,21 @@ export default function ClasesCrear({ setActiveModule = null }) {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Detalles del error:", errorText);
-        const parsedError = JSON.parse(errorText);
-        setMensajeError(parsedError.message || "Error al guardar la clase.");
+
+        console.log("[CREAR-DEBUG] Detalles del error:", errorText);
+        
+        try {
+          const parsedError = JSON.parse(errorText);
+          // Mejorar el mensaje de error para conflictos de horario
+          if (parsedError.error && parsedError.error.includes("Ya existe una clase programada")) {
+            setMensajeError(`⚠️ Conflicto de horario: ${parsedError.error}\n\nPor favor revisa que no haya clases que se superpongan en la misma sala.`);
+          } else {
+            setMensajeError(parsedError.error || parsedError.message || "Error al guardar la clase.");
+          }
+        } catch (e) {
+          setMensajeError("Error al procesar la respuesta del servidor.");
+        }
+
         return;
       }
 
@@ -187,6 +248,7 @@ export default function ClasesCrear({ setActiveModule = null }) {
       setHoraFin(null);
       setRepeticiones([]);
       setRepetirClase("");
+      setAlumnosSeleccionados([]);
     } catch (error) {
       console.error("Error al guardar la clase:", error);
     }
@@ -219,7 +281,7 @@ export default function ClasesCrear({ setActiveModule = null }) {
 
   if (!autorizado) {
     return (
-      <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white", p: 4 }}>
+      <Box sx={{ color: "white", marginLeft: 3, marginRight: 3 }}>
         <Typography variant="h5" gutterBottom>
           No tienes permisos para acceder a esta sección.
         </Typography>
@@ -231,16 +293,14 @@ export default function ClasesCrear({ setActiveModule = null }) {
   }
 
   return (
-    <Box sx={{backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
+    <Box sx={{color: "white", marginLeft: 3, marginRight: 3 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h4">Crear Nueva Clase</Typography>
         <Button variant="contained" onClick={handleGuardarClase} sx={{ backgroundColor: "#4CAF50", mr: 3 }}>
           Guardar Clase
         </Button>
       </Box>
-      
-
-      <Box sx={{ backgroundColor: "#222222", p: 3, borderRadius: 2 }}>
+      <Box padding={1}>
         <TextField
           label="Título"
           required
@@ -300,8 +360,6 @@ export default function ClasesCrear({ setActiveModule = null }) {
             </MenuItem>
           ))}
         </TextField>
-        
-
         <TextField
           label="¿Repetir clase semanalmente?"
           select
@@ -342,12 +400,11 @@ export default function ClasesCrear({ setActiveModule = null }) {
           <MenuItem value="2">Repetir dos veces</MenuItem>
           <MenuItem value="3">Repetir tres veces</MenuItem>
           <MenuItem value="4">Repetir cuatro veces</MenuItem>
-        </TextField>
-        
+        </TextField> 
         <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
           <Box marginTop={1} display="flex" gap={1} alignItems="center">
             <DatePicker
-              label="¿Qué día empezará la clase?"
+              label="Seleccione el día"
               value={selectedDate}
               onChange={setSelectedDate}
               minDate={minDate}
@@ -374,7 +431,6 @@ export default function ClasesCrear({ setActiveModule = null }) {
                 }
               }}
             />
-
             <TimePicker
               label="Hora Inicio"
               value={horaInicio}
@@ -402,7 +458,6 @@ export default function ClasesCrear({ setActiveModule = null }) {
                 }
               }}
             />
-
             <TimePicker
               label="Hora Fin"
               value={horaFin}
@@ -430,7 +485,6 @@ export default function ClasesCrear({ setActiveModule = null }) {
                 }
               }}
             />
-
             <TextField
               label="Sala"
               select
@@ -467,7 +521,6 @@ export default function ClasesCrear({ setActiveModule = null }) {
               <MenuItem value="Sala 3">Sala 3</MenuItem>
             </TextField>
           </Box>
-          {/* Switch para misma hora en repeticiones */}
           {parseInt(repetirClase) > 0 && (
             <FormControlLabel
               control={
@@ -481,7 +534,6 @@ export default function ClasesCrear({ setActiveModule = null }) {
               sx={{ mt: 2 }}
             />
           )}
-          {/* Switch para misma sala en repeticiones */}
           {parseInt(repetirClase) > 0 && (
             <FormControlLabel
               control={
@@ -625,25 +677,25 @@ export default function ClasesCrear({ setActiveModule = null }) {
                   }
                 }}
                 InputProps={{
-  style: { backgroundColor: "#333", color: "white" },
-  sx: {
-    color: "white",
-    "&.Mui-disabled": {
-      color: "white"
-    },
-    "& .MuiSelect-icon": {
-      color: "white"
-    }
-  }
-}}
-InputLabelProps={{
-  style: { color: "white" },
-  sx: {
-    "&.Mui-disabled": {
-      color: "white"
-    }
-  }
-}}
+                  style: { backgroundColor: "#333", color: "white" },
+                  sx: {
+                    color: "white",
+                    "&.Mui-disabled": {
+                      color: "white"
+                    },
+                    "& .MuiSelect-icon": {
+                      color: "white"
+                    }
+                  }
+                }}
+                InputLabelProps={{
+                  style: { color: "white" },
+                  sx: {
+                    "&.Mui-disabled": {
+                      color: "white"
+                    }
+                  }
+                }}
                 SelectProps={{
                   native: false,
                   sx: {
@@ -670,10 +722,29 @@ InputLabelProps={{
             </Box>
           ))}
         </LocalizationProvider>
-
-        
+        <Box mt={3} px={3} display="flex" gap={3} mb={1}>
+          <ListaEstudiantes
+            lista={listaEstudiantes}
+            titulo="Lista de todos los estudiantes"
+            textoBoton="Agregar"
+            colorBoton="#4caf50"
+            onItemClick={(est) => {
+              setAlumnosSeleccionados(prev => [...prev, est]);
+              setListaEstudiantes(prev => prev.filter(e => e._id !== est._id));
+            }}
+          />
+          <ListaEstudiantes
+            lista={alumnosSeleccionados}
+            titulo="Estudiantes a registrar en esta clase"
+            textoBoton="Quitar"
+            colorBoton="#F75C03"
+            onItemClick={(est) => {
+              setListaEstudiantes(prev => [...prev, est]);
+              setAlumnosSeleccionados(prev => prev.filter(e => e._id !== est._id));
+            }}
+          />
+        </Box>       
       </Box>
-
       <Snackbar 
         open={!!mensajeExito} 
         autoHideDuration={3000} 
@@ -684,18 +755,16 @@ InputLabelProps={{
           {mensajeExito}
         </Alert>
       </Snackbar>
-
       <Snackbar
-              open={!!mensajeError}
-              autoHideDuration={3000}
-              onClose={() => setMensajeError("")}
-              anchorOrigin={{ vertical: "top", horizontal: "center" }}
-            >
-              <Alert severity="error" onClose={() => setMensajeError("")} sx={{ width: "100%" }}>
-                {mensajeError}
-              </Alert>
-            </Snackbar>
+        open={!!mensajeError}
+        autoHideDuration={3000}
+        onClose={() => setMensajeError("")}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert severity="error" onClose={() => setMensajeError("")} sx={{ width: "100%" }}>
+          {mensajeError}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
-  

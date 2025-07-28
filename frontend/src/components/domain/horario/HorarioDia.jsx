@@ -209,7 +209,7 @@ export default function HorarioDia() {
   }
 
   return (
-    <>
+    
       <Box sx={{ padding: 2, backgroundColor: "#333", color: "white" }}>
         
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
@@ -423,7 +423,5 @@ export default function HorarioDia() {
         </Alert>
       </Snackbar>
       </Box>
-      
-    </>
   )
 }

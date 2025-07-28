@@ -52,7 +52,12 @@ const GaleriaManager = () => {
   const [editingFile, setEditingFile] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Form state
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    imageId: null,
+    imageTitle: null
+  });
+
   const [formData, setFormData] = useState({
     titulo: '',
     descripcion: ''
@@ -60,7 +65,6 @@ const GaleriaManager = () => {
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230';
 
-  // Hook para la configuración del carrusel
   const { 
     selectedImages, 
     addImage, 
@@ -69,7 +73,6 @@ const GaleriaManager = () => {
     isImageSelected 
   } = useCarouselConfig();
 
-  // Verificar autenticación al cargar
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -161,13 +164,24 @@ const GaleriaManager = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('¿Estás seguro de que quieres eliminar esta imagen?')) {
-      return;
-    }
+    // Buscar la imagen para obtener su título
+    const image = galeria.find(img => img._id === id);
+    
+    // Abrir diálogo de confirmación
+    setDeleteDialog({
+      open: true,
+      imageId: id,
+      imageTitle: image?.titulo || 'esta imagen'
+    });
+  };
 
+  // Función para confirmar la eliminación
+  const confirmDelete = async () => {
+    const { imageId } = deleteDialog;
+    
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/galeria/${id}`, {
+      const response = await fetch(`${API_URL}/api/galeria/${imageId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -184,6 +198,9 @@ const GaleriaManager = () => {
     } catch (error) {
       console.error('Error:', error);
       showSnackbar('Error al eliminar imagen', 'error');
+    } finally {
+      // Cerrar diálogo
+      setDeleteDialog({ open: false, imageId: null, imageTitle: null });
     }
   };
 
@@ -1116,6 +1133,29 @@ const GaleriaManager = () => {
           </Button>
           <Button onClick={handleSubmit} variant="contained">
             {editingImage ? 'Actualizar' : 'Crear'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de confirmación de eliminación */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ ...deleteDialog, open: false })}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirmar Eliminación</DialogTitle>
+        <DialogContent>
+          <Typography id="delete-dialog-description">
+            ¿Estás seguro de que quieres eliminar {deleteDialog.imageTitle}? Esta acción no se puede deshacer.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog({ ...deleteDialog, open: false })} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={confirmDelete} color="error" variant="contained">
+            Eliminar
           </Button>
         </DialogActions>
       </Dialog>

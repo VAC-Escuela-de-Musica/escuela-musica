@@ -1,0 +1,374 @@
+/* Estilos responsivos específicos para el área estudiantil */
+
+/* Selector específico para el layout de estudiantes */
+.student-dashboard-layout {
+  /* Estilos base del layout de estudiantes */
+}
+
+/* Mejoras para dispositivos móviles - SOLO para estudiantes */
+@media (max-width: 768px) {
+  /* Ajustes del drawer móvil - específico para estudiantes */
+  .student-dashboard-layout .MuiDrawer-paper {
+    width: 280px !important;
+  }
+  
+  /* Mejoras en el AppBar - específico para estudiantes */
+  .student-dashboard-layout .MuiAppBar-root {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+  }
+  
+  /* Ajustes del contenido principal - específico para estudiantes */
+  .student-dashboard-layout .MuiBox-root[component="main"] {
+    padding: 8px !important;
+  }
+  
+  /* Mejoras en las cards - específico para estudiantes */
+  .student-dashboard-layout .MuiCard-root {
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  }
+  
+  /* Ajustes en los botones - específico para estudiantes */
+  .student-dashboard-layout .MuiButton-root {
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+  }
+  
+  /* Mejoras en los chips - específico para estudiantes */
+  .student-dashboard-layout .MuiChip-root {
+    border-radius: 16px !important;
+  }
+  
+  /* Ajustes en las listas - específico para estudiantes */
+  .student-dashboard-layout .MuiListItem-root {
+    border-radius: 8px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  /* Mejoras en los avatares - específico para estudiantes */
+  .student-dashboard-layout .MuiAvatar-root {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+  }
+  
+  /* Ajustes en los breadcrumbs - específico para estudiantes */
+  .student-dashboard-layout .MuiBreadcrumbs-root {
+    justify-content: center !important;
+  }
+  
+  /* Mejoras en los títulos - específico para estudiantes */
+  .student-dashboard-layout .MuiTypography-h4,
+  .student-dashboard-layout .MuiTypography-h5,
+  .student-dashboard-layout .MuiTypography-h6 {
+    text-align: center !important;
+    line-height: 1.2 !important;
+  }
+  
+  /* Ajustes en los grids - específico para estudiantes */
+  .student-dashboard-layout .MuiGrid-container {
+    margin: 0 !important;
+  }
+  
+  .student-dashboard-layout .MuiGrid-item {
+    padding: 8px !important;
+  }
+}
+
+/* Mejoras para tablets - SOLO para estudiantes */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Ajustes del drawer - específico para estudiantes */
+  .student-dashboard-layout .MuiDrawer-paper {
+    width: 260px !important;
+  }
+  
+  /* Mejoras en el contenido - específico para estudiantes */
+  .student-dashboard-layout .MuiBox-root[component="main"] {
+    padding: 16px !important;
+  }
+  
+  /* Ajustes en las cards - específico para estudiantes */
+  .student-dashboard-layout .MuiCard-root {
+    border-radius: 10px !important;
+  }
+}
+
+/* Mejoras para pantallas grandes - SOLO para estudiantes */
+@media (min-width: 1025px) {
+  /* Ajustes del drawer - específico para estudiantes */
+  .student-dashboard-layout .MuiDrawer-paper {
+    width: 280px !important;
+  }
+  
+  /* Mejoras en el contenido - específico para estudiantes */
+  .student-dashboard-layout .MuiBox-root[component="main"] {
+    padding: 24px !important;
+  }
+}
+
+/* Animaciones suaves - SOLO para estudiantes */
+.student-dashboard-layout .MuiCard-root,
+.student-dashboard-layout .MuiButton-root,
+.student-dashboard-layout .MuiListItem-root,
+.student-dashboard-layout .MuiChip-root {
+  transition: all 0.3s ease !important;
+}
+
+/* Efectos hover mejorados - SOLO para estudiantes */
+.student-dashboard-layout .MuiCard-root:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
+}
+
+.student-dashboard-layout .MuiButton-root:hover {
+  transform: translateY(-1px) !important;
+}
+
+.student-dashboard-layout .MuiListItem-root:hover {
+  background-color: rgba(102, 126, 234, 0.05) !important;
+}
+
+/* Mejoras en el FAB móvil - SOLO para estudiantes */
+.student-dashboard-layout .MuiFab-root {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.student-dashboard-layout .MuiFab-root:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4) !important;
+}
+
+/* Mejoras en el calendario responsivo - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .calendar-container .fc {
+    font-size: 0.85rem !important;
+  }
+  
+  .student-dashboard-layout .calendar-container .fc-event {
+    font-size: 0.75rem !important;
+    padding: 2px 4px !important;
+  }
+  
+  .student-dashboard-layout .calendar-container .fc-toolbar-title {
+    font-size: 1.1rem !important;
+  }
+  
+  .student-dashboard-layout .calendar-container .fc-button {
+    padding: 4px 8px !important;
+    font-size: 0.8rem !important;
+  }
+}
+
+/* Mejoras en los diálogos responsivos - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiDialog-paper {
+    margin: 16px !important;
+    max-width: calc(100% - 32px) !important;
+    max-height: calc(100% - 32px) !important;
+  }
+  
+  .student-dashboard-layout .MuiDialogTitle-root {
+    padding: 16px 20px !important;
+    font-size: 1.1rem !important;
+  }
+  
+  .student-dashboard-layout .MuiDialogContent-root {
+    padding: 16px 20px !important;
+  }
+  
+  .student-dashboard-layout .MuiDialogActions-root {
+    padding: 12px 20px !important;
+  }
+}
+
+/* Mejoras en los snackbars - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiSnackbar-root {
+    bottom: 16px !important;
+    left: 16px !important;
+    right: 16px !important;
+  }
+  
+  .student-dashboard-layout .MuiAlert-root {
+    border-radius: 8px !important;
+  }
+}
+
+/* Mejoras en los tooltips - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiTooltip-tooltip {
+    font-size: 0.8rem !important;
+    padding: 6px 10px !important;
+  }
+}
+
+/* Mejoras en los badges - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiBadge-badge {
+    font-size: 0.7rem !important;
+    min-width: 16px !important;
+    height: 16px !important;
+  }
+}
+
+/* Mejoras en los iconos - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiSvgIcon-root {
+    font-size: 1.1em !important;
+  }
+}
+
+/* Mejoras en los inputs y formularios - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiTextField-root {
+    margin-bottom: 16px !important;
+  }
+  
+  .student-dashboard-layout .MuiFormControl-root {
+    width: 100% !important;
+  }
+  
+  .student-dashboard-layout .MuiInputBase-root {
+    font-size: 16px !important; /* Evita zoom en iOS */
+  }
+}
+
+/* Mejoras en las tablas responsivas - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiTable-root {
+    font-size: 0.8rem !important;
+  }
+  
+  .student-dashboard-layout .MuiTableCell-root {
+    padding: 8px 4px !important;
+  }
+}
+
+/* Mejoras en los sliders y controles - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiSlider-root {
+    margin: 8px 0 !important;
+  }
+  
+  .student-dashboard-layout .MuiToggleButtonGroup-root {
+    width: 100% !important;
+  }
+  
+  .student-dashboard-layout .MuiToggleButton-root {
+    flex: 1 !important;
+    min-height: 40px !important;
+  }
+}
+
+/* Mejoras en los menús desplegables - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiMenu-paper {
+    max-width: calc(100vw - 32px) !important;
+    max-height: calc(100vh - 32px) !important;
+  }
+  
+  .student-dashboard-layout .MuiMenuItem-root {
+    min-height: 48px !important;
+    font-size: 1rem !important;
+  }
+}
+
+/* Mejoras en los tabs responsivos - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiTabs-root {
+    min-height: 48px !important;
+  }
+  
+  .student-dashboard-layout .MuiTab-root {
+    min-height: 48px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Mejoras en los steppers - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiStepLabel-root {
+    font-size: 0.8rem !important;
+  }
+  
+  .student-dashboard-layout .MuiStepIcon-root {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+/* Mejoras en los accordions - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiAccordionSummary-root {
+    min-height: 48px !important;
+  }
+  
+  .student-dashboard-layout .MuiAccordionDetails-root {
+    padding: 12px 16px !important;
+  }
+}
+
+/* Mejoras en los dividers - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiDivider-root {
+    margin: 8px 0 !important;
+  }
+}
+
+/* Mejoras en los spacings - SOLO para estudiantes */
+@media (max-width: 768px) {
+  .student-dashboard-layout .MuiBox-root {
+    margin: 8px 0 !important;
+  }
+  
+  .student-dashboard-layout .MuiGrid-container {
+    margin: -4px !important;
+  }
+  
+  .student-dashboard-layout .MuiGrid-item {
+    padding: 4px !important;
+  }
+}
+
+/* Mejoras en los colores y temas - SOLO para estudiantes */
+@media (prefers-color-scheme: dark) {
+  .student-dashboard-layout .MuiCard-root {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+  
+  .student-dashboard-layout .MuiDrawer-paper {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+  }
+}
+
+/* Mejoras en la accesibilidad - SOLO para estudiantes */
+@media (prefers-reduced-motion: reduce) {
+  .student-dashboard-layout .MuiCard-root,
+  .student-dashboard-layout .MuiButton-root,
+  .student-dashboard-layout .MuiListItem-root,
+  .student-dashboard-layout .MuiChip-root,
+  .student-dashboard-layout .MuiFab-root {
+    transition: none !important;
+  }
+}
+
+/* Mejoras en el contraste - SOLO para estudiantes */
+@media (prefers-contrast: high) {
+  .student-dashboard-layout .MuiCard-root {
+    border: 2px solid !important;
+  }
+  
+  .student-dashboard-layout .MuiButton-root {
+    border: 2px solid !important;
+  }
+}
+
+/* Mejoras en el modo de alto contraste - SOLO para estudiantes */
+@media (prefers-contrast: high) {
+  .student-dashboard-layout .MuiTypography-root {
+    font-weight: bold !important;
+  }
+  
+  .student-dashboard-layout .MuiIcon-root {
+    filter: contrast(200%) !important;
+  }
+} 
