@@ -48,6 +48,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import { jsPDF } from "jspdf";
 import { useAuth } from "../../../context/AuthContext.jsx";
 import UnauthorizedAccess from "../../common/UnauthorizedAccess.jsx";
+import ConfirmDialog from "../../common/ConfirmDialog";
 
 function AlumnosList() {
   const { isAdmin } = useAuth();
@@ -88,6 +89,10 @@ function AlumnosList() {
   // Estado para Tabs
   const [tabIndex, setTabIndex] = useState(0);
 
+  // Confirmación de eliminación
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [alumnoAEliminar, setAlumnoAEliminar] = useState(null);
+
   const fetchAlumnos = () => {
     getAlumnos().then((res) => setAlumnos(res.data.data || res.data));
   };
@@ -108,15 +113,25 @@ function AlumnosList() {
     localStorage.setItem("alumnos_editingAlumno", JSON.stringify(alumno));
     localStorage.setItem("alumnos_showForm", "true");
   };
-  const handleDelete = async (alumno) => {
-    if (window.confirm(`¿Eliminar a ${alumno.nombreAlumno}?`)) {
+  const handleDeleteClick = (alumno) => {
+    setAlumnoAEliminar(alumno);
+    setConfirmOpen(true);
+  };
+  const handleConfirmDelete = async () => {
+    if (alumnoAEliminar) {
       try {
-        await deleteAlumno(alumno._id);
+        await deleteAlumno(alumnoAEliminar._id);
         fetchAlumnos();
       } catch (err) {
         alert("Error al eliminar alumno");
       }
+      setConfirmOpen(false);
+      setAlumnoAEliminar(null);
     }
+  };
+  const handleCancelDelete = () => {
+    setConfirmOpen(false);
+    setAlumnoAEliminar(null);
   };
   const handleCloseForm = () => {
     setShowForm(false);
@@ -657,17 +672,10 @@ function AlumnosList() {
                       <IconButton
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDelete(alumno);
-                        }}
-                        sx={{
-                          p: 1,
-                          color: "#f44336",
-                          "&:hover": {
-                            backgroundColor: "rgba(244, 67, 54, 0.1)",
-                          },
+                          handleDeleteClick(alumno);
                         }}
                       >
-                        <DeleteIcon />
+                        <DeleteIcon sx={{ color: "#f44336" }} />
                       </IconButton>
                     </Box>
                   </TableCell>
@@ -787,7 +795,7 @@ function AlumnosList() {
                 onChange={(e, newValue) => setTabIndex(newValue)}
                 textColor="primary"
                 indicatorColor="primary"
-                sx={{ 
+                sx={{
                   mb: 2,
                   "& .MuiTab-root": {
                     color: "#aaaaaa",
@@ -938,7 +946,14 @@ function AlumnosList() {
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ background: "#3a3a3a", px: 6, py: 3, borderTop: "1px solid #444444" }}>
+        <DialogActions
+          sx={{
+            background: "#3a3a3a",
+            px: 6,
+            py: 3,
+            borderTop: "1px solid #444444",
+          }}
+        >
           <Button
             variant="contained"
             color="primary"
@@ -1126,6 +1141,19 @@ function AlumnosList() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* ConfirmDialog para eliminar alumno */}
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        message={
+          alumnoAEliminar ? `¿Eliminar a ${alumnoAEliminar.nombreAlumno}?` : ""
+        }
+        title="Eliminar alumno"
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+      />
 
       {/* Notificación de éxito */}
       <Snackbar
