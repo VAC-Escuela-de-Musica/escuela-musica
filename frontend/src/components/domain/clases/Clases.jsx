@@ -23,7 +23,7 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { es } from "date-fns/locale";
 import AsignarEstudiantes from "./AsignarEstudiantes.jsx";
 
-const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
+const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 export default function Clases({ setActiveModule }) {
   const [mensajeExito, setMensajeExito] = useState("");
