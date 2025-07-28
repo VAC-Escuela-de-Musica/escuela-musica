@@ -43,18 +43,7 @@ import UnauthorizedAccess from '../../common/UnauthorizedAccess.jsx';
 function AlumnosList() {
   const { isAdmin } = useAuth();
 
-  // Verificar permisos de acceso (solo admin puede gestionar estudiantes)
-  if (!isAdmin()) {
-    return (
-      <UnauthorizedAccess 
-        title="Gestión de Estudiantes"
-        message="Solo administradores pueden gestionar la información de estudiantes."
-        suggestion="Contacta al administrador si necesitas consultar o modificar datos de estudiantes."
-        icon={<PersonIcon fontSize="large" />}
-        color="error"
-      />
-    );
-  }
+  // Hooks deben ir antes de cualquier return condicional
   const [alumnos, setAlumnos] = useState([]);
   const [editingAlumno, setEditingAlumno] = useState(() => {
     const saved = localStorage.getItem("alumnos_editingAlumno");
@@ -79,6 +68,25 @@ function AlumnosList() {
   // Estado para Tabs
   const [tabIndex, setTabIndex] = useState(0);
 
+  // Estado para diálogo de confirmación de eliminación
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    alumno: null
+  });
+
+  // Verificar permisos de acceso (solo admin puede gestionar estudiantes)
+  if (!isAdmin()) {
+    return (
+      <UnauthorizedAccess 
+        title="Gestión de Estudiantes"
+        message="Solo administradores pueden gestionar la información de estudiantes."
+        suggestion="Contacta al administrador si necesitas consultar o modificar datos de estudiantes."
+        icon={<PersonIcon fontSize="large" />}
+        color="error"
+      />
+    );
+  }
+
   const fetchAlumnos = () => {
     getAlumnos().then((res) => setAlumnos(res.data.data || res.data));
   };
@@ -100,13 +108,24 @@ function AlumnosList() {
     localStorage.setItem("alumnos_showForm", "true");
   };
   const handleDelete = async (alumno) => {
-    if (window.confirm(`¿Eliminar a ${alumno.nombreAlumno}?`)) {
-      try {
-        await deleteAlumno(alumno._id);
-        fetchAlumnos();
-      } catch (err) {
-        alert("Error al eliminar alumno");
-      }
+    setDeleteDialog({
+      open: true,
+      alumno: alumno
+    });
+  };
+
+  const confirmDelete = async () => {
+    const { alumno } = deleteDialog;
+    try {
+      await deleteAlumno(alumno._id);
+      fetchAlumnos();
+      setSuccessMsg("Alumno eliminado exitosamente");
+      setShowSuccess(true);
+    } catch (err) {
+      setSuccessMsg("Error al eliminar alumno");
+      setShowSuccess(true);
+    } finally {
+      setDeleteDialog({ open: false, alumno: null });
     }
   };
   const handleCloseForm = () => {
@@ -931,6 +950,28 @@ function AlumnosList() {
           {successMsg}
         </MuiAlert>
       </Snackbar>
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, alumno: null })}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirmar Eliminación</DialogTitle>
+        <DialogContent>
+          <Typography id="delete-dialog-description">
+            ¿Estás seguro de que deseas eliminar al alumno "{deleteDialog.alumno?.nombreAlumno}"?
+            Esta acción no se puede deshacer.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog({ open: false, alumno: null })} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={confirmDelete} color="error" variant="contained">
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -45,6 +45,21 @@ const CardsProfesoresManager = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [uploading, setUploading] = useState(false);
+
+  // Estado para diálogo de confirmación de eliminación
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    cardId: null,
+    cardName: null
+  });
+
+  // Estado para diálogo de confirmación de cambio de visibilidad
+  const [toggleDialog, setToggleDialog] = useState({
+    open: false,
+    card: null,
+    action: null
+  });
+
   const [formData, setFormData] = useState({
     nombre: "",
     especialidad: "",
@@ -75,8 +90,6 @@ const CardsProfesoresManager = () => {
     fetchCards();
   }, []);
 
-  // Funciones para manejar notificaciones
-  // Subir imagen a MinIO
   const handleImageUpload = async (file) => {
     try {
       const token = localStorage.getItem("token");
@@ -85,7 +98,6 @@ const CardsProfesoresManager = () => {
         return null;
       }
 
-      // Obtener URL pre-firmada para subida
       const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://146.83.198.35:1230'}/api/galeria/upload-url`, {
         method: 'POST',
         headers: {
@@ -100,13 +112,29 @@ const CardsProfesoresManager = () => {
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('Error al obtener URL de subida');
+        const errorText = await uploadResponse.text();
+        
+        if (uploadResponse.status === 401) {
+          throw new Error('No tienes permisos para subir imágenes. Verifica tu sesión.');
+        } else if (uploadResponse.status === 403) {
+          throw new Error('Solo administradores y asistentes pueden subir imágenes.');
+        } else if (uploadResponse.status === 500) {
+          throw new Error('Error del servidor. Verifica que MinIO esté funcionando.');
+        } else {
+          throw new Error(`Error al obtener URL de subida: ${uploadResponse.status} - ${errorText}`);
+        }
       }
 
       const uploadData = await uploadResponse.json();
       
-      // Subir archivo directamente a MinIO usando la URL pre-firmada
-      const uploadToMinIO = await fetch(uploadData.data.uploadUrl, {
+      const uploadUrl = uploadData.data?.data?.uploadUrl || uploadData.data?.uploadUrl;
+      const publicUrl = uploadData.data?.data?.publicUrl || uploadData.data?.publicUrl;
+      
+      if (!uploadUrl) {
+        throw new Error('No se pudo obtener la URL de subida del servidor');
+      }
+
+      const uploadToMinIO = await fetch(uploadUrl, {
         method: 'PUT',
         body: file,
         headers: {
@@ -115,10 +143,13 @@ const CardsProfesoresManager = () => {
       });
 
       if (!uploadToMinIO.ok) {
-        throw new Error('Error al subir imagen');
+        const errorText = await uploadToMinIO.text().catch(() => 'Sin respuesta');
+        throw new Error(`Error al subir imagen a MinIO: ${uploadToMinIO.status} - ${uploadToMinIO.statusText}`);
       }
 
-      return uploadData.data.publicUrl;
+      showNotification("Imagen subida exitosamente", "success");
+      return publicUrl;
+      
     } catch (error) {
       console.error('Error al subir imagen:', error);
       showNotification("Error al subir la imagen: " + error.message, "error");
@@ -160,7 +191,6 @@ const CardsProfesoresManager = () => {
     setOpenDialog(true);
   };
 
-  // Cerrar diálogo
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingCard(null);
@@ -170,25 +200,22 @@ const CardsProfesoresManager = () => {
       descripcion: "",
       imagen: "",
     });
-    setSelectedImage(null); // Limpiar imagen seleccionada al cerrar
+    setSelectedImage(null);
     setImagePreview('');
   };
 
-  // Manejar cambios en el formulario
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    setSelectedImage(null); // Limpiar imagen seleccionada al escribir en el campo de imagen
+    setSelectedImage(null);
     setImagePreview('');
   };
 
-  // Crear nueva tarjeta
   const handleCreate = async () => {
     try {
-      // Validar que todos los campos estén llenos
       if (!formData.nombre || !formData.especialidad || !formData.descripcion) {
         showNotification("Todos los campos son requeridos", "error");
         return;
@@ -201,7 +228,6 @@ const CardsProfesoresManager = () => {
 
       setUploading(true);
 
-      // Si hay una imagen seleccionada, subirla primero
       let imageUrl = formData.imagen;
       if (selectedImage) {
         imageUrl = await handleImageUpload(selectedImage);
@@ -243,7 +269,6 @@ const CardsProfesoresManager = () => {
     }
   };
 
-  // Actualizar tarjeta
   const handleUpdate = async () => {
     try {
       // Validar que todos los campos estén llenos
@@ -303,12 +328,23 @@ const CardsProfesoresManager = () => {
 
   // Eliminar tarjeta
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de que quieres eliminar esta tarjeta?")) {
-      return;
-    }
+    // Buscar la tarjeta para obtener su nombre
+    const card = cards.find(c => c._id === id);
+    
+    // Abrir diálogo de confirmación
+    setDeleteDialog({
+      open: true,
+      cardId: id,
+      cardName: card?.nombre || 'esta tarjeta'
+    });
+  };
+
+  // Función para confirmar la eliminación
+  const confirmDelete = async () => {
+    const { cardId } = deleteDialog;
 
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await fetch(`${API_URL}/${cardId}`, {
         method: "DELETE",
         headers: API_HEADERS.withAuth(),
         credentials: 'include'
@@ -322,19 +358,29 @@ const CardsProfesoresManager = () => {
       showNotification("Tarjeta eliminada exitosamente", "success");
     } catch (err) {
       showNotification(err.message, "error");
+    } finally {
+      // Cerrar diálogo
+      setDeleteDialog({ open: false, cardId: null, cardName: null });
     }
   };
 
   // Cambiar visibilidad de la tarjeta
   const handleToggleVisibility = async (card) => {
     const action = card.activo ? "ocultar" : "mostrar";
-    if (!window.confirm(`¿Estás seguro de que quieres ${action} esta tarjeta?`)) {
-      return;
-    }
+    
+    // Abrir diálogo de confirmación
+    setToggleDialog({
+      open: true,
+      card: card,
+      action: action
+    });
+  };
+
+  // Función para confirmar el cambio de visibilidad
+  const confirmToggleVisibility = async () => {
+    const { card, action } = toggleDialog;
 
     try {
-
-
       const response = await fetch(`${API_URL}/${card._id}`, {
         method: "PUT",
         headers: {
@@ -344,20 +390,21 @@ const CardsProfesoresManager = () => {
         credentials: 'include',
         body: JSON.stringify({
           ...card,
-          activo: !card.activo,
+          activo: !card.activo
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+        throw new Error("Error al cambiar visibilidad");
       }
 
       fetchCards();
-      showNotification(`Tarjeta ${card.activo ? "ocultada" : "mostrada"} exitosamente`, "success");
+      showNotification(`Tarjeta ${action === "ocultar" ? "ocultada" : "mostrada"} exitosamente`, "success");
     } catch (err) {
-      console.error("Error completo:", err);
       showNotification(err.message, "error");
+    } finally {
+      // Cerrar diálogo
+      setToggleDialog({ open: false, card: null, action: null });
     }
   };
 
@@ -402,10 +449,7 @@ const CardsProfesoresManager = () => {
       // Crear array con el orden actual de las tarjetas
       const cardsOrder = cards.map(card => card._id);
       
-      console.log("Enviando orden:", cardsOrder); // Debug
-
       const requestBody = { cardsOrder };
-      console.log("Request body:", JSON.stringify(requestBody)); // Debug
       
       const response = await fetch(`${API_URL}/order`, {
         method: "PUT",
@@ -417,16 +461,12 @@ const CardsProfesoresManager = () => {
         body: JSON.stringify(requestBody),
       });
 
-      console.log("Respuesta del servidor:", response.status); // Debug
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.log("Error data:", errorData); // Debug
         throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log("Resultado exitoso:", result); // Debug
 
       // Actualizar el orden en el estado local inmediatamente
       const updatedCards = cards.map((card, index) => ({
@@ -440,7 +480,6 @@ const CardsProfesoresManager = () => {
       // Mostrar mensaje de éxito
       showNotification("Orden guardado exitosamente", "success");
     } catch (error) {
-      console.error("Error completo:", error); // Debug
       showNotification(error.message || "Error al guardar el orden", "error");
     }
   };
@@ -712,41 +751,59 @@ const CardsProfesoresManager = () => {
           <Box sx={{ pt: 2 }}>
             <TextField
               fullWidth
-              label="Nombre"
+              label="Nombre *"
               name="nombre"
               value={formData.nombre}
               onChange={handleInputChange}
               margin="normal"
-              required
-              inputProps={{ maxLength: 25 }}
-              helperText={`${formData.nombre.length}/25 caracteres`}
-              error={formData.nombre.length > 25}
+              error={formData.nombre.length > 0 && (formData.nombre.length > 25 || formData.nombre.length < 2)}
+              helperText={
+                formData.nombre.length === 0 
+                  ? "Ingresa el nombre del profesor"
+                  : formData.nombre.length > 25 
+                  ? `Nombre demasiado largo (${formData.nombre.length}/25)` 
+                  : formData.nombre.length < 2
+                  ? `Mínimo 2 caracteres (${formData.nombre.length}/25)`
+                  : `${formData.nombre.length}/25 caracteres`
+              }
             />
             <TextField
               fullWidth
-              label="Especialidad"
+              label="Especialidad *"
               name="especialidad"
               value={formData.especialidad}
               onChange={handleInputChange}
               margin="normal"
-              required
-              inputProps={{ maxLength: 50 }}
-              helperText={`${formData.especialidad.length}/50 caracteres`}
-              error={formData.especialidad.length > 50}
+              error={formData.especialidad.length > 0 && (formData.especialidad.length > 50 || formData.especialidad.length < 2)}
+              helperText={
+                formData.especialidad.length === 0
+                  ? "Ingresa la especialidad del profesor"
+                  : formData.especialidad.length > 50 
+                  ? `Especialidad demasiado larga (${formData.especialidad.length}/50)` 
+                  : formData.especialidad.length < 2
+                  ? `Mínimo 2 caracteres (${formData.especialidad.length}/50)`
+                  : `${formData.especialidad.length}/50 caracteres`
+              }
             />
             <TextField
               fullWidth
-              label="Descripción"
+              label="Descripción *"
               name="descripcion"
               value={formData.descripcion}
               onChange={handleInputChange}
               margin="normal"
               multiline
               rows={4}
-              required
-              inputProps={{ maxLength: 500 }}
-              helperText={`${formData.descripcion.length}/500 caracteres`}
-              error={formData.descripcion.length > 500}
+              error={formData.descripcion.length > 0 && (formData.descripcion.length > 500 || formData.descripcion.length < 10)}
+              helperText={
+                formData.descripcion.length === 0
+                  ? "Describe al profesor (mínimo 10 caracteres)"
+                  : formData.descripcion.length > 500 
+                  ? `Descripción demasiado larga (${formData.descripcion.length}/500)` 
+                  : formData.descripcion.length < 10
+                  ? `Mínimo 10 caracteres (${formData.descripcion.length}/500)`
+                  : `${formData.descripcion.length}/500 caracteres`
+              }
             />
             
             {/* Sección de imagen */}
@@ -864,6 +921,28 @@ const CardsProfesoresManager = () => {
           </Box>
         </DialogContent>
         <DialogActions>
+          {/* Mensaje de ayuda si el botón está deshabilitado */}
+          {(uploading ||
+            (formData.nombre.length > 0 && formData.nombre.length < 2) ||
+            (formData.especialidad.length > 0 && formData.especialidad.length < 2) ||
+            (formData.descripcion.length > 0 && formData.descripcion.length < 10) ||
+            formData.nombre.length > 25 ||
+            formData.especialidad.length > 50 ||
+            formData.descripcion.length > 500) && (
+            <Box sx={{ width: '100%', mb: 2 }}>
+              <Typography variant="caption" color="error" sx={{ display: 'block' }}>
+                {uploading ? '⏳ Subiendo imagen...' :
+                 formData.nombre.length > 0 && formData.nombre.length < 2 ? '❌ El nombre debe tener al menos 2 caracteres' :
+                 formData.especialidad.length > 0 && formData.especialidad.length < 2 ? '❌ La especialidad debe tener al menos 2 caracteres' :
+                 formData.descripcion.length > 0 && formData.descripcion.length < 10 ? '❌ La descripción debe tener al menos 10 caracteres' :
+                 formData.nombre.length > 25 ? '❌ El nombre no puede superar 25 caracteres' :
+                 formData.especialidad.length > 50 ? '❌ La especialidad no puede superar 50 caracteres' :
+                 formData.descripcion.length > 500 ? '❌ La descripción no puede superar 500 caracteres' :
+                 '❌ Hay errores en el formulario'}
+              </Typography>
+            </Box>
+          )}
+          
           <Button onClick={handleCloseDialog} disabled={uploading}>
             Cancelar
           </Button>
@@ -883,6 +962,53 @@ const CardsProfesoresManager = () => {
             startIcon={uploading && <CircularProgress size={20} />}
           >
             {uploading ? 'Subiendo...' : (editingCard ? "Actualizar" : "Crear")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo de confirmación de eliminación */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ ...deleteDialog, open: false })}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirmar Eliminación</DialogTitle>
+        <DialogContent>
+          <Typography id="delete-dialog-description">
+            ¿Estás seguro de que quieres eliminar la tarjeta de {deleteDialog.cardName}? 
+            Esta acción no se puede deshacer.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog({ ...deleteDialog, open: false })} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={confirmDelete} color="error" variant="contained">
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo de confirmación de cambio de visibilidad */}
+      <Dialog
+        open={toggleDialog.open}
+        onClose={() => setToggleDialog({ ...toggleDialog, open: false })}
+        aria-labelledby="toggle-dialog-title"
+        aria-describedby="toggle-dialog-description"
+      >
+        <DialogTitle id="toggle-dialog-title">Confirmar Cambio</DialogTitle>
+        <DialogContent>
+          <Typography id="toggle-dialog-description">
+            ¿Estás seguro de que quieres {toggleDialog.action} la tarjeta de {toggleDialog.card?.nombre}?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setToggleDialog({ ...toggleDialog, open: false })} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={confirmToggleVisibility} color="primary" variant="contained">
+            {toggleDialog.action === "ocultar" ? "Ocultar" : "Mostrar"}
           </Button>
         </DialogActions>
       </Dialog>

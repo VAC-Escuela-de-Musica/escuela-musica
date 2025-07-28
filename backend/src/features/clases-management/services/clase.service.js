@@ -38,7 +38,9 @@ async function createClase(clase) {
       });
 
       if (claseExistente) {
-        return [null, "Ya existe una clase programada en la sala y horario seleccionado"];
+        const conflictoDetalle = `Ya existe una clase programada en la sala "${sala}" el día ${dia} ` +
+                               `(${horaInicio} - ${horaFin}). Clase existente: "${claseExistente.titulo}" (${claseExistente.estado})`;
+        return [null, conflictoDetalle];
       }
     }
 

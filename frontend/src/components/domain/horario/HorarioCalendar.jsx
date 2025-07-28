@@ -36,8 +36,7 @@ import {
   VisibilityOff as HideIcon,
 } from '@mui/icons-material';
 import './HorarioCalendar.css';
-import { useAuth } from '../../../context/AuthContext.jsx';
-import { API_ENDPOINTS, API_HEADERS } from '../../../config/api.js';
+
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/clases`;
 
@@ -67,7 +66,26 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
   const [isCollapsed, setIsCollapsed] = useState(false);
   const calendarRef = useRef(null);
 
-  // Cargar clases según el contexto (todas o del estudiante)
+  const obtenerNombreProfesor = async (id) => {
+    if (!id || id === null || id === undefined) {
+      return "Sin profesor asignado";
+    }
+    
+    if (nombresProfesores[id]) return nombresProfesores[id];
+    try {
+      const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        const nombreCompleto = data.data.nombreCompleto || `${data.data.nombre} ${data.data.apellidos}`;
+        setNombresProfesores(prev => ({ ...prev, [id]: nombreCompleto }));
+        return nombreCompleto;
+      }
+    } catch (error) {
+      console.error("Error al obtener nombre del profesor:", error);
+    }
+    return "Profesor desconocido";
+  };
+
   const cargarClases = async () => {
     setLoading(true);
     setError(null);
@@ -92,24 +110,17 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
       console.log('[CALENDAR-DEBUG] Clases recibidas:', data);
       
       const clases = data.data || [];
-      
-      // Convertir clases a eventos de FullCalendar
       const eventosCalendario = [];
       
       for (const clase of clases) {
-        // Filtrar clases canceladas - no mostrarlas en el calendario
-        if (clase.estado === 'cancelada') {
-          continue;
-        }
+
+        await obtenerNombreProfesor(clase.profesor);
         
-        // Procesar cada horario de la clase
         if (clase.horarios && clase.horarios.length > 0) {
           for (const horario of clase.horarios) {
-            // Convertir fecha DD-MM-YYYY a formato Date
             const [dia, mes, año] = horario.dia.split('-');
             const fechaClase = new Date(año, mes - 1, dia);
             
-            // Convertir horas HH:MM a formato Date
             const [horaI, minI] = horario.horaInicio.split(':');
             const [horaF, minF] = horario.horaFin.split(':');
             
@@ -119,12 +130,17 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
             const fechaFin = new Date(fechaClase);
             fechaFin.setHours(parseInt(horaF), parseInt(minF));
             
-            // Determinar color según estado
+            // color estado
+
             let backgroundColor = '#2196F3';
             let borderColor = '#1976D2';
             let textColor = '#ffffff';
             
-            if (clase.estado === 'completada') {
+            if (clase.estado === 'cancelada') {
+              backgroundColor = '#f44336';
+              borderColor = '#d32f2f';
+            } else if (clase.estado === 'completada') {
+
               backgroundColor = '#4caf50';
               borderColor = '#388e3c';
             }
@@ -160,19 +176,16 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     }
   };
 
-  // Cargar clases al montar el componente
   useEffect(() => {
     cargarClases();
   }, [alumnoId]);
 
-  // Manejar clic en evento
   const handleEventClick = (clickInfo) => {
     console.log('[CALENDAR-DEBUG] Evento clickeado:', clickInfo.event);
     setSelectedEvent(clickInfo.event);
     setDialogOpen(true);
   };
 
-  // Actualizar título del calendario
   const updateCalendarTitle = () => {
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
@@ -181,7 +194,6 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     }
   };
 
-  // Manejar navegación del calendario
   const handleNavigation = (action) => {
     const calendarApi = calendarRef.current.getApi();
     
@@ -200,10 +212,10 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     setTimeout(updateCalendarTitle, 50);
   };
 
-  // Manejar cambio de vista
   const handleViewChange = (view) => {
     const calendarApi = calendarRef.current.getApi();
     calendarApi.changeView(view);
+
     setTimeout(updateCalendarTitle, 50);
   };
 
@@ -222,7 +234,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     nowIndicator: true,
     editable: false,
     selectable: false,
-    weekends: true,
+    weekends: true, //Mostrar domingos
     locale: 'es',
     buttonText: {
       today: 'Hoy',
@@ -245,28 +257,32 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
   };
 
   return (
-    <Card 
-      elevation={3}
-      sx={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        borderRadius: 3,
-        overflow: 'hidden',
-        mb: 3
-      }}
-    >
-      {/* Header con funcionalidad de colapsar */}
-      <Box
-        sx={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)',
-          p: 3,
-          borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
-        }}
-      >
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box display="flex" alignItems="center" gap={2}>
-            <Typography 
-              variant="h4" 
+
+    <Box sx={{ p: 1 }}>
+      {/* Header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h4" sx={{ color: '#2196F3', fontWeight: 'bold' }}>
+            Calendario de Clases
+        </Typography>
+        
+        <Tooltip title="Actualizar">
+          <IconButton 
+            onClick={cargarClases}
+            disabled={loading}
+            sx={{ color: '#2196F3' }}
+          >
+            <RefreshIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      {/* Título período y controles principales */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        {/* Navegación y título */}
+        <Box display="flex" alignItems="center" gap={2}>
+          <Box display="flex" gap={1}>
+            <IconButton 
+              onClick={() => handleNavigation('prev')} 
               sx={{ 
                 color: '#ffffff', 
                 fontWeight: 'bold',
@@ -286,46 +302,64 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
             />
           </Box>
           
-          <Box display="flex" alignItems="center" gap={1}>
-            <Tooltip title="Actualizar">
-              <IconButton 
-                onClick={cargarClases}
-                disabled={loading}
-                sx={{ 
-                  color: '#ffffff',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
-                }}
-              >
-                <RefreshIcon />
-              </IconButton>
-            </Tooltip>
-            
-            <Tooltip title={isCollapsed ? "Mostrar calendario" : "Ocultar calendario"}>
-              <IconButton 
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                sx={{ 
-                  color: '#ffffff',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
-                }}
-              >
-                {isCollapsed ? <ShowIcon /> : <HideIcon />}
-              </IconButton>
-            </Tooltip>
+          {/* Título mes/período */}
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              color: '#ffffff', 
+              fontWeight: 'bold',
+              minWidth: '200px',
+              textAlign: 'center',
+              backgroundColor: 'rgba(33, 150, 243, 0.1)',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: '1px solid rgba(33, 150, 243, 0.3)'
+            }}
+          >
+            {currentTitle || 'Cargando...'}
+          </Typography>
+
+          <Button
+            variant="contained"
+            startIcon={<TodayIcon />}
+            onClick={() => handleNavigation('today')}
+            sx={{ 
+              backgroundColor: '#2196F3',
+              '&:hover': { backgroundColor: '#1976D2' }
+            }}
+          >
+            Hoy
+          </Button>
+
+          {/* Leyenda colores */}
+          <Box display="flex" gap={1} ml={3}>
+            <Chip 
+              label="Programada" 
+              size="small"
+              sx={{ backgroundColor: '#2196F3', color: 'white' }} 
+            />
+            <Chip 
+              label="Cancelada" 
+              size="small"
+              sx={{ backgroundColor: '#f44336', color: 'white' }} 
+            />
+            <Chip 
+              label="Completada" 
+              size="small"
+              sx={{ backgroundColor: '#4caf50', color: 'white' }} 
+            />
           </Box>
         </Box>
-      </Box>
-
-      {/* Contenido colapsable */}
-      <Collapse in={!isCollapsed}>
-        <CardContent sx={{ p: 3, background: 'rgba(255, 255, 255, 0.05)' }}>
-          {/* Controles de navegación */}
-          <Box 
-            display="flex" 
-            justifyContent="space-between" 
-            alignItems="center" 
-            mb={3}
+        
+        {/* Toggle y Controles */}
+        <Box display="flex" gap={2} alignItems="center">
+          {/* Toggle Calendario/Lista */}
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={handleViewModeChange}
+            aria-label="modo de vista"
+            size="small"
             sx={{
               background: 'rgba(255, 255, 255, 0.1)',
               borderRadius: 2,
@@ -372,54 +406,50 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
               </Typography>
             </Box>
 
-            {/* Controles de vista */}
-            <Box display="flex" alignItems="center" gap={2}>
-              <Button
-                variant="outlined"
-                startIcon={<TodayIcon />}
-                onClick={() => handleNavigation('today')}
-                sx={{ 
-                  color: '#ffffff',
-                  borderColor: 'rgba(255, 255, 255, 0.5)',
-                  '&:hover': { 
-                    borderColor: '#ffffff',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)' 
-                  }
-                }}
-              >
-                Hoy
-              </Button>
-
-              <ToggleButtonGroup
-                value={viewMode}
-                exclusive
-                onChange={handleViewModeChange}
-                size="small"
-                sx={{
-                  '& .MuiToggleButton-root': {
-                    color: '#ffffff',
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                    '&.Mui-selected': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      color: '#ffffff',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.3)'
-                      }
-                    },
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                    }
-                  }
-                }}
-              >
-                <ToggleButton value="calendar" aria-label="calendario">
-                  <CalendarMonth fontSize="small" />
-                </ToggleButton>
-                <ToggleButton value="list" aria-label="lista">
-                  <List fontSize="small" />
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </Box>
+          {/* Controles vista */}
+          <Box display="flex" gap={1} alignItems="center">
+          <Button
+            variant="outlined"
+            onClick={() => handleViewChange('timeGridDay')}
+            sx={{ 
+              color: '#ffffff', 
+              borderColor: '#2196F3',
+              '&:hover': { 
+                borderColor: '#1976D2',
+                backgroundColor: 'rgba(33, 150, 243, 0.1)'
+              }
+            }}
+          >
+            Día
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => handleViewChange('timeGridWeek')}
+            sx={{ 
+              color: '#ffffff', 
+              borderColor: '#2196F3',
+              '&:hover': { 
+                borderColor: '#1976D2',
+                backgroundColor: 'rgba(33, 150, 243, 0.1)'
+              }
+            }}
+          >
+            Semana
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => handleViewChange('dayGridMonth')}
+            sx={{ 
+              color: '#ffffff', 
+              borderColor: '#2196F3',
+              '&:hover': { 
+                borderColor: '#1976D2',
+                backgroundColor: 'rgba(33, 150, 243, 0.1)'
+              }
+            }}
+          >
+            Mes
+          </Button>
           </Box>
 
           {/* Controles de vista del calendario */}
@@ -469,35 +499,21 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
             </Box>
           )}
 
-          {/* Error */}
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          {/* Calendario */}
-          {!loading && !error && (
-            <Fade in={!loading} timeout={500}>
-              <Box 
-                className="calendar-container"
-                sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  borderRadius: 2,
-                  p: 2,
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                  minHeight: '600px'
-                }}
-              >
-                <FullCalendar
-                  ref={calendarRef}
-                  {...calendarOptions}
-                />
-              </Box>
-            </Fade>
-          )}
-        </CardContent>
-      </Collapse>
+      {/* Calendario */}
+      {!loading && !error && (
+        <Box 
+          className="calendar-container"
+          sx={{
+            mt: 1,
+            minHeight: '600px',
+          }}
+        >
+          <FullCalendar
+            ref={calendarRef}
+            {...calendarOptions}
+          />
+        </Box>
+      )}
 
       {/* Diálogo de detalles del evento */}
       <Dialog
