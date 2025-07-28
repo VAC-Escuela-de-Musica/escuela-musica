@@ -46,7 +46,7 @@ const fetchAutenticado = async (url, options = {}) => {
 };
 
 const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) => {
-  const { user } = useAuth();
+  const { user, isStudent, isAdmin } = useAuth();
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -54,6 +54,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nombresProfesores, setNombresProfesores] = useState({});
   const [currentTitle, setCurrentTitle] = useState('');
+  const [currentView, setCurrentView] = useState('timeGridWeek');
   const calendarRef = useRef(null);
 
   const obtenerNombreProfesor = async (id) => {
@@ -82,7 +83,11 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     
     try {
       let url;
-      if (alumnoId) {
+      // Si es administrador, usar endpoint general para ver todas las clases
+      if (isAdmin()) {
+        url = `${API_URL}/all`;
+      } else if (alumnoId) {
+        // Si es estudiante, usar endpoint específico del estudiante
         url = `${API_URL}/estudiante/${alumnoId}`;
       } else {
         url = `${API_URL}/programadas`;
@@ -100,6 +105,11 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
       const eventosCalendario = [];
       
       for (const clase of clases) {
+        // Filtrar clases canceladas solo para estudiantes
+        if (isStudent() && clase.estado === 'cancelada') {
+          continue; // Saltar esta clase si es estudiante y está cancelada
+        }
+        
         await obtenerNombreProfesor(clase.profesor);
         
         if (clase.horarios && clase.horarios.length > 0) {
@@ -159,7 +169,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
 
   useEffect(() => {
     cargarClases();
-  }, [alumnoId]);
+  }, [alumnoId, isStudent, isAdmin]);
 
   const handleEventClick = (clickInfo) => {
     setSelectedEvent(clickInfo.event);
@@ -195,6 +205,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
   const handleViewChange = (view) => {
     const calendarApi = calendarRef.current.getApi();
     calendarApi.changeView(view);
+    setCurrentView(view); // Update the state to reflect the new view
     setTimeout(updateCalendarTitle, 50);
   };
 
@@ -204,10 +215,13 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     headerToolbar: false,
     events: eventos,
     eventClick: handleEventClick,
-    height: 'auto',
-    aspectRatio: 1.35,
+    height: 750,
+    aspectRatio: 1.0,
     slotMinTime: '08:00:00',
     slotMaxTime: '22:00:00',
+    slotDuration: '01:00:00',
+    slotLabelInterval: '01:00:00',
+    slotHeight: 60,
     allDaySlot: false,
     nowIndicator: true,
     editable: false,
@@ -223,7 +237,8 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     slotLabelFormat: {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false,
+      omitZeroMinute: false
     },
     eventTimeFormat: {
       hour: '2-digit',
@@ -231,7 +246,12 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
       hour12: false
     },
     datesSet: updateCalendarTitle,
-    viewDidMount: updateCalendarTitle
+    viewDidMount: updateCalendarTitle,
+    dayHeaderFormat: { weekday: 'long', day: 'numeric', month: 'short' },
+    slotLabelClassNames: ['custom-time-label'],
+    dayMaxEvents: false,
+    moreLinkClick: 'popover',
+    expandRows: true
   };
 
   if (loading) {
@@ -256,7 +276,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Box display="flex" alignItems="center" gap={2}>
           <Typography variant="h4" sx={{ color: '#2196F3', fontWeight: 'bold' }}>
-            {alumnoId ? 'Mi Calendario de Clases' : 'Calendario de Clases'}
+            {isStudent() ? 'Mi Calendario de Clases' : 'Calendario de Clases'}
           </Typography>
           
           <Chip 
@@ -328,11 +348,32 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
           >
             Hoy
           </Button>
+
+          {/* Leyenda de colores al lado del botón HOY */}
+          <Box display="flex" gap={1} ml={2}>
+            <Chip 
+              label="Programada" 
+              size="small"
+              sx={{ backgroundColor: '#2196F3', color: 'white' }} 
+            />
+            {!isStudent() && (
+              <Chip 
+                label="Cancelada" 
+                size="small"
+                sx={{ backgroundColor: '#f44336', color: 'white' }} 
+              />
+            )}
+            <Chip 
+              label="Completada" 
+              size="small"
+              sx={{ backgroundColor: '#4caf50', color: 'white' }} 
+            />
+          </Box>
         </Box>
 
         {/* Vista toggles */}
         <ToggleButtonGroup
-          value="timeGridWeek"
+          value={currentView}
           exclusive
           onChange={(e, newValue) => {
             if (newValue) handleViewChange(newValue);
@@ -364,31 +405,21 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
         </ToggleButtonGroup>
       </Box>
 
-      {/* Leyenda de colores */}
-      <Box display="flex" gap={1} mb={2}>
-        <Chip 
-          label="Programada" 
-          size="small"
-          sx={{ backgroundColor: '#2196F3', color: 'white' }} 
-        />
-        <Chip 
-          label="Cancelada" 
-          size="small"
-          sx={{ backgroundColor: '#f44336', color: 'white' }} 
-        />
-        <Chip 
-          label="Completada" 
-          size="small"
-          sx={{ backgroundColor: '#4caf50', color: 'white' }} 
-        />
-      </Box>
+      {/* Información para estudiantes */}
+      {isStudent() && (
+        <Box mb={2}>
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+            💡 Solo se muestran tus clases activas. Las clases canceladas no aparecen en tu calendario.
+          </Typography>
+        </Box>
+      )}
 
       {/* Calendario */}
       <Box 
         className="calendar-container"
         sx={{
           mt: 2,
-          minHeight: '600px',
+          minHeight: '800px',
         }}
       >
         <FullCalendar

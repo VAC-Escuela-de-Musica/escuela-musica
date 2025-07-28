@@ -4,6 +4,15 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  min-height: 800px !important;
+}
+
+.calendar-container {
+  min-height: 850px !important;
+}
+
+.calendar-container .fc-view-harness {
+  min-height: 750px !important;
 }
 
 /* Header del calendario */
@@ -87,6 +96,8 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
   transition: all 0.3s ease !important;
   cursor: pointer !important;
+  min-height: 50px !important;
+  padding: 4px 6px !important;
 }
 
 .calendar-container .fc-event:hover {
@@ -96,23 +107,69 @@
 
 .calendar-container .fc-event-title {
   font-weight: 600 !important;
-  font-size: 0.9rem !important;
+  font-size: 0.95rem !important;
+  line-height: 1.3 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 .calendar-container .fc-event-time {
   font-weight: 500 !important;
-  font-size: 0.8rem !important;
+  font-size: 0.85rem !important;
+  margin-bottom: 2px !important;
+}
+
+.calendar-container .fc-event-main {
+  padding: 2px 4px !important;
+}
+
+.calendar-container .fc-event-main-frame {
+  min-height: 45px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
 }
 
 /* TimeGrid específico */
 .calendar-container .fc-timegrid-slot {
   border-color: #f0f0f0 !important;
+  height: 60px !important;
+  min-height: 60px !important;
 }
 
 .calendar-container .fc-timegrid-slot-label {
-  color: #666 !important;
-  font-weight: 500 !important;
-  font-size: 0.85rem !important;
+  color: #2c3e50 !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  background: rgba(245, 245, 245, 0.8) !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  margin: 2px !important;
+  text-align: center !important;
+  border: 1px solid rgba(200, 200, 200, 0.5) !important;
+}
+
+.calendar-container .fc-timegrid-slot-label-cushion {
+  color: #2c3e50 !important;
+  font-weight: 600 !important;
+}
+
+.calendar-container .fc-timegrid-axis {
+  background: rgba(248, 249, 250, 0.95) !important;
+}
+
+.calendar-container .fc-timegrid-slot-minor {
+  border-color: #f8f9fa !important;
+  height: 30px !important;
+  min-height: 30px !important;
+}
+
+.calendar-container .fc-timegrid-slot-major {
+  border-color: #e9ecef !important;
+  border-width: 1px !important;
+  height: 60px !important;
+  min-height: 60px !important;
 }
 
 .calendar-container .fc-timegrid-now-indicator-line {
@@ -142,6 +199,40 @@
 
 .calendar-container .fc-scroller::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+/* Mejorar contraste general */
+.calendar-container .fc-timegrid-col-frame {
+  background: #ffffff !important;
+}
+
+.calendar-container .fc-timegrid-body {
+  background: #ffffff !important;
+}
+
+.calendar-container .fc-scrollgrid-section-body table {
+  background: #ffffff !important;
+}
+
+/* Estilos específicos para las horas */
+.calendar-container .fc-timegrid-axis-frame {
+  background: rgba(248, 249, 250, 0.98) !important;
+  border-right: 2px solid #e9ecef !important;
+}
+
+.calendar-container .fc-timegrid-slot-label-frame {
+  background: rgba(248, 249, 250, 0.95) !important;
+}
+
+/* Hover effects para mejor interacción */
+.calendar-container .fc-timegrid-slot:hover {
+  background: rgba(33, 150, 243, 0.05) !important;
+}
+
+.calendar-container .fc-timegrid-slot-label:hover {
+  background: rgba(33, 150, 243, 0.1) !important;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
 }
 
 /* Responsive */
@@ -203,4 +294,24 @@
   white-space: nowrap;
   transform: translateX(-50%);
   margin-top: -40px;
+}
+
+/* Estilos específicos para etiquetas de tiempo personalizadas */
+.calendar-container .custom-time-label {
+  color: #1a202c !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8) !important;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  border: 1px solid #ced4da !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  margin: 3px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Asegurar visibilidad en todos los contextos */
+.calendar-container .fc-timegrid-slot-label * {
+  color: #1a202c !important;
+  font-weight: 700 !important;
 } 
