@@ -24,7 +24,8 @@ function normalizeRoles (roles) {
     // Si es un objeto con propiedades _id y name (desde JWT)
     if (typeof role === 'object' && role !== null) {
       if (role.name) {
-        return role.name // Usar directamente el nombre del rol
+        // Mapear 'student' a 'estudiante'
+        return role.name === 'student' ? 'estudiante' : role.name;
       }
       if (role._id) {
         const roleId = role._id.toString()
@@ -36,6 +37,10 @@ function normalizeRoles (roles) {
     // Si es un ObjectId (24 caracteres hexadecimales), usar el mapeo
     if (roleStr.length === 24 && /^[0-9a-fA-F]{24}$/.test(roleStr)) {
       return ROLE_MAPPING[roleStr] || 'estudiante'
+    }
+    // Si ya es un string, normalizar 'student' a 'estudiante'
+    if (roleStr === 'student') {
+      return 'estudiante'
     }
     // Si ya es un string, devolverlo tal como está
     return roleStr
@@ -72,17 +77,28 @@ export function isAdmin (req, res, next) {
  */
 export function authorizeRoles (allowedRoles) {
   return (req, res, next) => {
+    console.log('🔍 [AUTHORIZE-ROLES] Verificando autorización')
+    console.log('🔍 [AUTHORIZE-ROLES] Roles permitidos:', allowedRoles)
+    console.log('🔍 [AUTHORIZE-ROLES] req.roles:', req.roles)
+    console.log('🔍 [AUTHORIZE-ROLES] req.user:', req.user)
+    
     if (!req.roles || !Array.isArray(req.roles)) {
+      console.log('❌ [AUTHORIZE-ROLES] Roles no encontrados')
       return res.status(403).json({ message: 'No autorizado - Roles no encontrados' })
     }
 
     const normalizedRoles = normalizeRoles(req.roles)
+    console.log('🔍 [AUTHORIZE-ROLES] Roles normalizados:', normalizedRoles)
+    
     const hasPermission = normalizedRoles.some((role) => allowedRoles.includes(role))
+    console.log('🔍 [AUTHORIZE-ROLES] Tiene permiso:', hasPermission)
 
     if (hasPermission) {
+      console.log('✅ [AUTHORIZE-ROLES] Acceso permitido')
       return next()
     }
 
+    console.log('❌ [AUTHORIZE-ROLES] Acceso denegado - Rol insuficiente')
     return res.status(403).json({ message: 'No autorizado - Rol insuficiente' })
   }
 }

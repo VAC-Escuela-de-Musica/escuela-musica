@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext.jsx';
 import { API_ENDPOINTS, API_HEADERS } from '../config/api.js';
+import HorarioCalendar from '../components/domain/horario/HorarioCalendar.jsx';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -78,7 +79,7 @@ const StudentDashboard = () => {
           Bienvenido, {studentData?.nombreAlumno || user?.username || 'Estudiante'}
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-          Aquí puedes ver tu información personal y próximamente tu calendario de clases
+          Aquí puedes ver tu información personal y tu calendario de clases
         </Typography>
         
         {/* Breadcrumbs */}
@@ -159,34 +160,20 @@ const StudentDashboard = () => {
           </Card>
         </Grid>
 
-        {/* Espacio para el calendario de clases */}
+        {/* Calendario de clases */}
         <Grid item xs={12} md={8}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-                Calendario de Clases
+                Mi Calendario de Clases
               </Typography>
               
-              <Box 
-                sx={{ 
-                  minHeight: '400px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: 'grey.50',
-                  borderRadius: 1,
-                  border: '2px dashed',
-                  borderColor: 'grey.300'
-                }}
-              >
-                <Box textAlign="center">
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    📅 Calendario en Desarrollo
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Próximamente podrás ver aquí tu horario de clases
-                  </Typography>
-                </Box>
+              <Box sx={{ minHeight: '600px' }}>
+                <HorarioCalendar 
+                  viewMode="calendar"
+                  handleViewModeChange={() => {}}
+                  alumnoId={studentData?._id}
+                />
               </Box>
             </CardContent>
           </Card>

@@ -18,6 +18,10 @@ import {
   IconButton,
   ToggleButton,
   ToggleButtonGroup,
+  Card,
+  CardContent,
+  Collapse,
+  Fade,
 } from '@mui/material';
 import {
   Today as TodayIcon,
@@ -26,8 +30,14 @@ import {
   Refresh as RefreshIcon,
   CalendarMonth,
   List,
+  ExpandMore as ExpandIcon,
+  ExpandLess as CollapseIcon,
+  Visibility as ShowIcon,
+  VisibilityOff as HideIcon,
 } from '@mui/icons-material';
-import './HorarioCalendar.css'; // Archivo CSS personalizado
+import './HorarioCalendar.css';
+import { useAuth } from '../../../context/AuthContext.jsx';
+import { API_ENDPOINTS, API_HEADERS } from '../../../config/api.js';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/clases`;
 
@@ -46,40 +56,33 @@ const fetchAutenticado = async (url, options = {}) => {
   return response;
 };
 
-const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
+const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) => {
+  const { user } = useAuth();
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [nombresProfesores, setNombresProfesores] = useState({});
   const [currentTitle, setCurrentTitle] = useState('');
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const calendarRef = useRef(null);
 
-  // Obtener nombre del profesor
-  const obtenerNombreProfesor = async (id) => {
-    if (nombresProfesores[id]) return nombresProfesores[id];
-    try {
-      const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setNombresProfesores(prev => ({ ...prev, [id]: data.data.nombreCompleto }));
-        return data.data.nombreCompleto;
-      }
-    } catch (error) {
-      console.error("Error al obtener nombre del profesor:", error);
-    }
-    return "Profesor desconocido";
-  };
-
-  // Cargar todas las clases programadas
+  // Cargar clases según el contexto (todas o del estudiante)
   const cargarClases = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      console.log('[CALENDAR-DEBUG] Cargando todas las clases programadas...');
-      const response = await fetchAutenticado(`${API_URL}/programadas`);
+      let url;
+      if (alumnoId) {
+        console.log('[CALENDAR-DEBUG] Cargando clases del estudiante:', alumnoId);
+        url = `${API_URL}/estudiante/${alumnoId}`;
+      } else {
+        console.log('[CALENDAR-DEBUG] Cargando todas las clases programadas...');
+        url = `${API_URL}/programadas`;
+      }
+      
+      const response = await fetchAutenticado(url);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -94,8 +97,10 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
       const eventosCalendario = [];
       
       for (const clase of clases) {
-        // Obtener nombre del profesor
-        await obtenerNombreProfesor(clase.profesor);
+        // Filtrar clases canceladas - no mostrarlas en el calendario
+        if (clase.estado === 'cancelada') {
+          continue;
+        }
         
         // Procesar cada horario de la clase
         if (clase.horarios && clase.horarios.length > 0) {
@@ -115,15 +120,12 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
             fechaFin.setHours(parseInt(horaF), parseInt(minF));
             
             // Determinar color según estado
-            let backgroundColor = '#2196F3'; // Azul por defecto
+            let backgroundColor = '#2196F3';
             let borderColor = '#1976D2';
             let textColor = '#ffffff';
             
-            if (clase.estado === 'cancelada') {
-              backgroundColor = '#f44336'; // Rojo para canceladas
-              borderColor = '#d32f2f';
-            } else if (clase.estado === 'completada') {
-              backgroundColor = '#4caf50'; // Verde para completadas
+            if (clase.estado === 'completada') {
+              backgroundColor = '#4caf50';
               borderColor = '#388e3c';
             }
             
@@ -138,8 +140,6 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
               extendedProps: {
                 claseId: clase._id,
                 descripcion: clase.descripcion,
-                profesor: clase.profesor,
-                nombreProfesor: nombresProfesores[clase.profesor] || 'Cargando...',
                 sala: clase.sala,
                 estado: clase.estado,
                 horario: horario
@@ -163,7 +163,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
   // Cargar clases al montar el componente
   useEffect(() => {
     cargarClases();
-  }, []);
+  }, [alumnoId]);
 
   // Manejar clic en evento
   const handleEventClick = (clickInfo) => {
@@ -197,7 +197,6 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
         break;
     }
     
-    // Actualizar título después de la navegación
     setTimeout(updateCalendarTitle, 50);
   };
 
@@ -205,8 +204,6 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
   const handleViewChange = (view) => {
     const calendarApi = calendarRef.current.getApi();
     calendarApi.changeView(view);
-    
-    // Actualizar título después del cambio de vista
     setTimeout(updateCalendarTitle, 50);
   };
 
@@ -214,7 +211,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
   const calendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'timeGridWeek',
-    headerToolbar: false, // Usaremos nuestros propios controles
+    headerToolbar: false,
     events: eventos,
     eventClick: handleEventClick,
     height: 'auto',
@@ -225,7 +222,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
     nowIndicator: true,
     editable: false,
     selectable: false,
-    weekends: true, // ✅ Mostrar domingos
+    weekends: true,
     locale: 'es',
     buttonText: {
       today: 'Hoy',
@@ -243,221 +240,264 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
       minute: '2-digit',
       hour12: false
     },
-    // Callbacks para actualizar el título
     datesSet: updateCalendarTitle,
     viewDidMount: updateCalendarTitle
   };
 
   return (
-    <Box sx={{ p: 1 }}>
-      {/* Header compacto */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h4" sx={{ color: '#2196F3', fontWeight: 'bold' }}>
-            Calendario de Clases
-        </Typography>
-        
-        <Tooltip title="Actualizar">
-          <IconButton 
-            onClick={cargarClases}
-            disabled={loading}
-            sx={{ color: '#2196F3' }}
-          >
-            <RefreshIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
-
-      {/* Título dinámico del período y controles principales */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        {/* Navegación y título */}
-        <Box display="flex" alignItems="center" gap={2}>
-          <Box display="flex" gap={1}>
-            <IconButton 
-              onClick={() => handleNavigation('prev')} 
+    <Card 
+      elevation={3}
+      sx={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        borderRadius: 3,
+        overflow: 'hidden',
+        mb: 3
+      }}
+    >
+      {/* Header con funcionalidad de colapsar */}
+      <Box
+        sx={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+          p: 3,
+          borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
+        }}
+      >
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box display="flex" alignItems="center" gap={2}>
+            <Typography 
+              variant="h4" 
               sx={{ 
-                color: '#ffffff',
-                backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                '&:hover': { backgroundColor: 'rgba(33, 150, 243, 0.2)' }
+                color: '#ffffff', 
+                fontWeight: 'bold',
+                textShadow: '0 2px 4px rgba(0,0,0,0.3)'
               }}
             >
-              <PrevIcon />
-            </IconButton>
-            <IconButton 
-              onClick={() => handleNavigation('next')} 
+              {alumnoId ? 'Mi Calendario de Clases' : 'Calendario de Clases'}
+            </Typography>
+            
+            <Chip 
+              label={`${eventos.length} clases`}
               sx={{ 
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
                 color: '#ffffff',
-                backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                '&:hover': { backgroundColor: 'rgba(33, 150, 243, 0.2)' }
+                fontWeight: 'bold'
               }}
-            >
-              <NextIcon />
-            </IconButton>
+            />
           </Box>
           
-          {/* Título dinámico del mes/período */}
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              color: '#ffffff', 
-              fontWeight: 'bold',
-              minWidth: '200px',
-              textAlign: 'center',
-              backgroundColor: 'rgba(33, 150, 243, 0.1)',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              border: '1px solid rgba(33, 150, 243, 0.3)'
-            }}
-          >
-            {currentTitle || 'Cargando...'}
-          </Typography>
-
-          <Button
-            variant="contained"
-            startIcon={<TodayIcon />}
-            onClick={() => handleNavigation('today')}
-            sx={{ 
-              backgroundColor: '#2196F3',
-              '&:hover': { backgroundColor: '#1976D2' }
-            }}
-          >
-            Hoy
-          </Button>
-
-          {/* Leyenda de colores - Movida aquí para estar en la misma línea */}
-          <Box display="flex" gap={1} ml={3}>
-            <Chip 
-              label="📚 Programada" 
-              size="small"
-              sx={{ backgroundColor: '#2196F3', color: 'white' }} 
-            />
-            <Chip 
-              label="❌ Cancelada" 
-              size="small"
-              sx={{ backgroundColor: '#f44336', color: 'white' }} 
-            />
-            <Chip 
-              label="✅ Completada" 
-              size="small"
-              sx={{ backgroundColor: '#4caf50', color: 'white' }} 
-            />
-          </Box>
-        </Box>
-        
-        {/* Toggle y Controles de vista */}
-        <Box display="flex" gap={2} alignItems="center">
-          {/* Toggle Calendario/Lista */}
-          <ToggleButtonGroup
-            value={viewMode}
-            exclusive
-            onChange={handleViewModeChange}
-            aria-label="modo de vista"
-            size="small"
-            sx={{
-              backgroundColor: "rgba(68, 68, 68, 0.8)",
-              borderRadius: 2,
-              "& .MuiToggleButton-root": {
-                color: "#ffffff",
-                border: "1px solid rgba(102, 102, 102, 0.5)",
-                fontSize: "0.7rem",
-                padding: "4px 8px",
-                fontWeight: "500",
-                "&.Mui-selected": {
-                  backgroundColor: "#2196F3",
-                  color: "#ffffff",
-                  "&:hover": {
-                    backgroundColor: "#1976D2",
-                  }
-                },
-                "&:hover": {
-                  backgroundColor: "rgba(85, 85, 85, 0.8)",
-                }
-              }
-            }}
-          >
-            <ToggleButton value="calendar" aria-label="vista calendario">
-              <CalendarMonth sx={{ fontSize: "1rem" }} />
-            </ToggleButton>
-            <ToggleButton value="list" aria-label="vista lista">
-              <List sx={{ fontSize: "1rem" }} />
-            </ToggleButton>
-          </ToggleButtonGroup>
-
-          {/* Controles de vista */}
-          <Box display="flex" gap={1} alignItems="center">
-          <Button
-            variant="outlined"
-            onClick={() => handleViewChange('timeGridDay')}
-            sx={{ 
-              color: '#ffffff', 
-              borderColor: '#2196F3',
-              '&:hover': { 
-                borderColor: '#1976D2',
-                backgroundColor: 'rgba(33, 150, 243, 0.1)'
-              }
-            }}
-          >
-            Día
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={() => handleViewChange('timeGridWeek')}
-            sx={{ 
-              color: '#ffffff', 
-              borderColor: '#2196F3',
-              '&:hover': { 
-                borderColor: '#1976D2',
-                backgroundColor: 'rgba(33, 150, 243, 0.1)'
-              }
-            }}
-          >
-            Semana
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={() => handleViewChange('dayGridMonth')}
-            sx={{ 
-              color: '#ffffff', 
-              borderColor: '#2196F3',
-              '&:hover': { 
-                borderColor: '#1976D2',
-                backgroundColor: 'rgba(33, 150, 243, 0.1)'
-              }
-            }}
-          >
-            Mes
-          </Button>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Tooltip title="Actualizar">
+              <IconButton 
+                onClick={cargarClases}
+                disabled={loading}
+                sx={{ 
+                  color: '#ffffff',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+            
+            <Tooltip title={isCollapsed ? "Mostrar calendario" : "Ocultar calendario"}>
+              <IconButton 
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                sx={{ 
+                  color: '#ffffff',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
+                }}
+              >
+                {isCollapsed ? <ShowIcon /> : <HideIcon />}
+              </IconButton>
+            </Tooltip>
           </Box>
         </Box>
       </Box>
 
-      {/* Loading y Error */}
-      {loading && (
-        <Box display="flex" justifyContent="center" p={2}>
-          <CircularProgress sx={{ color: '#2196F3' }} />
-        </Box>
-      )}
+      {/* Contenido colapsable */}
+      <Collapse in={!isCollapsed}>
+        <CardContent sx={{ p: 3, background: 'rgba(255, 255, 255, 0.05)' }}>
+          {/* Controles de navegación */}
+          <Box 
+            display="flex" 
+            justifyContent="space-between" 
+            alignItems="center" 
+            mb={3}
+            sx={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 2,
+              p: 2,
+              backdropFilter: 'blur(10px)'
+            }}
+          >
+            {/* Navegación */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box display="flex" gap={1}>
+                <IconButton 
+                  onClick={() => handleNavigation('prev')} 
+                  sx={{ 
+                    color: '#ffffff',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
+                  }}
+                >
+                  <PrevIcon />
+                </IconButton>
+                <IconButton 
+                  onClick={() => handleNavigation('next')} 
+                  sx={{ 
+                    color: '#ffffff',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
+                  }}
+                >
+                  <NextIcon />
+                </IconButton>
+              </Box>
+              
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: '#ffffff', 
+                  fontWeight: 'bold',
+                  minWidth: '200px',
+                  textAlign: 'center',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                }}
+              >
+                {currentTitle}
+              </Typography>
+            </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Error al cargar las clases: {error}
-        </Alert>
-      )}
+            {/* Controles de vista */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Button
+                variant="outlined"
+                startIcon={<TodayIcon />}
+                onClick={() => handleNavigation('today')}
+                sx={{ 
+                  color: '#ffffff',
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                  '&:hover': { 
+                    borderColor: '#ffffff',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)' 
+                  }
+                }}
+              >
+                Hoy
+              </Button>
 
-      {/* Calendario - Ahora más prominente */}
-      {!loading && !error && (
-        <Box 
-          className="calendar-container"
-          sx={{
-            mt: 1, // Menos margen arriba
-            minHeight: '600px', // Altura mínima garantizada
-          }}
-        >
-          <FullCalendar
-            ref={calendarRef}
-            {...calendarOptions}
-          />
-        </Box>
-      )}
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={handleViewModeChange}
+                size="small"
+                sx={{
+                  '& .MuiToggleButton-root': {
+                    color: '#ffffff',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: '#ffffff',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.3)'
+                      }
+                    },
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    }
+                  }
+                }}
+              >
+                <ToggleButton value="calendar" aria-label="calendario">
+                  <CalendarMonth fontSize="small" />
+                </ToggleButton>
+                <ToggleButton value="list" aria-label="lista">
+                  <List fontSize="small" />
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+          </Box>
+
+          {/* Controles de vista del calendario */}
+          <Box display="flex" justifyContent="center" mb={3}>
+            <ToggleButtonGroup
+              value="timeGridWeek"
+              exclusive
+              onChange={(e, newValue) => {
+                if (newValue) handleViewChange(newValue);
+              }}
+              size="small"
+              sx={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 2,
+                '& .MuiToggleButton-root': {
+                  color: '#ffffff',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    color: '#ffffff',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.3)'
+                    }
+                  },
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }
+              }}
+            >
+              <ToggleButton value="dayGridMonth" aria-label="mes">
+                Mes
+              </ToggleButton>
+              <ToggleButton value="timeGridWeek" aria-label="semana">
+                Semana
+              </ToggleButton>
+              <ToggleButton value="timeGridDay" aria-label="día">
+                Día
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+
+          {/* Loading */}
+          {loading && (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+              <CircularProgress sx={{ color: '#ffffff' }} />
+            </Box>
+          )}
+
+          {/* Error */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          {/* Calendario */}
+          {!loading && !error && (
+            <Fade in={!loading} timeout={500}>
+              <Box 
+                className="calendar-container"
+                sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  borderRadius: 2,
+                  p: 2,
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                  minHeight: '600px'
+                }}
+              >
+                <FullCalendar
+                  ref={calendarRef}
+                  {...calendarOptions}
+                />
+              </Box>
+            </Fade>
+          )}
+        </CardContent>
+      </Collapse>
 
       {/* Diálogo de detalles del evento */}
       <Dialog
@@ -467,64 +507,79 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
         fullWidth
         PaperProps={{
           sx: {
-            backgroundColor: '#333333',
-            color: 'white'
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            borderRadius: 3
           }
         }}
       >
-        <DialogTitle sx={{ color: 'white', borderBottom: '1px solid #555' }}>
+        <DialogTitle sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
           📚 Detalles de la Clase
         </DialogTitle>
+        
         <DialogContent sx={{ pt: 2 }}>
           {selectedEvent && (
             <Box>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ color: '#ffffff', fontWeight: 'bold' }}>
                 {selectedEvent.title}
               </Typography>
               
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Descripción:</strong> {selectedEvent.extendedProps.descripcion}
-              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <strong>Descripción:</strong>
+                </Typography>
+                <Typography variant="body1" sx={{ mt: 1, color: '#ffffff' }}>
+                  {selectedEvent.extendedProps.descripcion || 'Sin descripción'}
+                </Typography>
+              </Box>
               
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Profesor:</strong> {selectedEvent.extendedProps.nombreProfesor}
-              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <strong>Sala:</strong>
+                </Typography>
+                <Typography variant="body1" sx={{ mt: 1, color: '#ffffff' }}>
+                  {selectedEvent.extendedProps.sala || 'No especificada'}
+                </Typography>
+              </Box>
               
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Sala:</strong> {selectedEvent.extendedProps.sala}
-              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <strong>Horario:</strong>
+                </Typography>
+                <Typography variant="body1" sx={{ mt: 1, color: '#ffffff' }}>
+                  {selectedEvent.extendedProps.horario?.horaInicio} - {selectedEvent.extendedProps.horario?.horaFin}
+                </Typography>
+              </Box>
               
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Fecha:</strong> {selectedEvent.extendedProps.horario.dia}
-              </Typography>
-              
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Horario:</strong> {selectedEvent.extendedProps.horario.horaInicio} - {selectedEvent.extendedProps.horario.horaFin}
-              </Typography>
-              
-              <Box mt={2}>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <strong>Estado:</strong>
+                </Typography>
                 <Chip 
-                  label={selectedEvent.extendedProps.estado.toUpperCase()}
-                  sx={{ 
-                    backgroundColor: selectedEvent.backgroundColor,
-                    color: 'white',
-                    fontWeight: 'bold'
-                  }}
+                  label={selectedEvent.extendedProps.estado} 
+                  color={
+                    selectedEvent.extendedProps.estado === 'completada' ? 'success' : 'primary'
+                  }
+                  sx={{ mt: 1 }}
                 />
               </Box>
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
+        
+        <DialogActions sx={{ borderTop: '1px solid rgba(255,255,255,0.2)', p: 2 }}>
           <Button 
             onClick={() => setDialogOpen(false)}
-            sx={{ color: '#2196F3' }}
+            sx={{ 
+              color: 'rgba(255,255,255,0.8)',
+              '&:hover': { color: '#ffffff' }
+            }}
           >
             Cerrar
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Card>
   );
 };
 
