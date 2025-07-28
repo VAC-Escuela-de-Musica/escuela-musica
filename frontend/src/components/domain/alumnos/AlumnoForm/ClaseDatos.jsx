@@ -11,84 +11,71 @@ import {
 } from "@mui/material";
 import { tipoCursoOpciones, modalidadOpciones, diasSemana } from "./constants";
 
+// Estilos oscuros para los TextField y Select
 const darkTextFieldStyles = {
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: "#333333",
+  "& .MuiOutlinedInput-root": {
+    backgroundColor: "#2a2a2a !important",
     color: "#ffffff",
-    '& fieldset': {
+    "& fieldset": {
       borderColor: "#555555",
     },
-    '&:hover fieldset': {
-      borderColor: "#777777",
-    },
-    '&.Mui-focused fieldset': {
+    "&:hover fieldset": {
       borderColor: "#2196f3",
     },
+    "&.Mui-focused fieldset": {
+      borderColor: "#2196f3",
+    },
+    "& input": {
+      backgroundColor: "transparent !important",
+      color: "#ffffff",
+    },
   },
-  '& .MuiInputLabel-root': {
+  "& .MuiInputLabel-root": {
     color: "#aaaaaa",
-    '&.Mui-focused': {
+    "&.Mui-focused": {
       color: "#2196f3",
     },
   },
-  '& .MuiFormHelperText-root': {
+  "& .MuiInputBase-input::placeholder": {
     color: "#aaaaaa",
+    opacity: 1,
+  },
+  "& .MuiFormHelperText-root": {
+    color: "#aaaaaa",
+    "&.Mui-error": {
+      color: "#f44336",
+    },
   },
 };
 
 const darkSelectStyles = {
-  backgroundColor: "#333333",
-  color: "#ffffff",
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: "#555555",
-  },
-  '&:hover .MuiOutlinedInput-notchedOutline': {
-    borderColor: "#777777",
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: "#2196f3",
-  },
-  '& .MuiSvgIcon-root': {
+  "& .MuiOutlinedInput-root": {
+    backgroundColor: "#2a2a2a !important",
     color: "#ffffff",
-  },
-};
-
-const darkInputLabelStyles = {
-  color: "#aaaaaa",
-  '&.Mui-focused': {
-    color: "#2196f3",
-  },
-};
-
-const darkMenuItemStyles = {
-  backgroundColor: "#333333",
-  color: "#ffffff",
-  '&:hover': {
-    backgroundColor: "#444444",
-  },
-  '&.Mui-selected': {
-    backgroundColor: "#2196f3",
-  },
-};
-
-const darkMenuProps = {
-  PaperProps: {
-    sx: {
-      backgroundColor: "#333333",
+    "& fieldset": {
+      borderColor: "#555555",
+    },
+    "&:hover fieldset": {
+      borderColor: "#2196f3",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#2196f3",
+    },
+    "& .MuiSelect-select": {
+      backgroundColor: "transparent !important",
       color: "#ffffff",
-      '& .MuiMenuItem-root': {
-        backgroundColor: "#333333",
-        color: "#ffffff",
-        '&:hover': {
-          backgroundColor: "#444444",
-        },
-        '&.Mui-selected': {
-          backgroundColor: "#2196f3",
-          '&:hover': {
-            backgroundColor: "#1976d2",
-          },
-        },
-      },
+    },
+  },
+  "& .MuiInputLabel-root": {
+    color: "#aaaaaa",
+    "&.Mui-focused": {
+      color: "#2196f3",
+    },
+  },
+  "& .MuiFormHelperText-root": {
+    color: "#aaaaaa",
+    "&.Mui-error": {
+      color: "#f44336",
     },
   },
 };
@@ -114,16 +101,16 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           required
           error={!!errors.curso}
           helperText={errors.curso}
-          sx={{ flex: 1, ...darkTextFieldStyles }}
+          sx={{ ...darkTextFieldStyles, flex: 1 }}
         />
         <FormControl
           fullWidth
           margin="normal"
           variant="outlined"
-          sx={{ flex: 1 }}
+          sx={{ ...darkSelectStyles, flex: 1 }}
           error={!!errors.tipoCurso}
         >
-          <InputLabel id="tipoCurso-label" sx={darkInputLabelStyles}>Tipo de Curso</InputLabel>
+          <InputLabel id="tipoCurso-label">Tipo de Curso</InputLabel>
           <Select
             labelId="tipoCurso-label"
             name="tipoCurso"
@@ -132,10 +119,33 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
             required
             label="Tipo de Curso"
             error={!!errors.tipoCurso}
-            sx={darkSelectStyles}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  backgroundColor: "#2a2a2a",
+                  color: "#ffffff",
+                },
+              },
+            }}
           >
             {tipoCursoOpciones.map((op) => (
-              <MenuItem key={op} value={op} sx={darkMenuItemStyles}>
+              <MenuItem
+                key={op}
+                value={op}
+                sx={{
+                  backgroundColor: "#2a2a2a",
+                  color: "#ffffff",
+                  "&:hover": {
+                    backgroundColor: "#444444",
+                  },
+                  "&.Mui-selected": {
+                    backgroundColor: "#2196f3",
+                    "&:hover": {
+                      backgroundColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
                 {op}
               </MenuItem>
             ))}
@@ -143,7 +153,7 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           {errors.tipoCurso && (
             <div
               style={{
-                color: "#d32f2f",
+                color: "#f44336",
                 fontSize: "0.75rem",
                 marginTop: "3px",
                 marginLeft: "14px",
@@ -165,10 +175,10 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           fullWidth
           margin="normal"
           variant="outlined"
-          sx={{ flex: 1 }}
+          sx={{ ...darkSelectStyles, flex: 1 }}
           error={!!errors.modalidadClase}
         >
-          <InputLabel id="modalidadClase-label" sx={darkInputLabelStyles}>Modalidad de Clase</InputLabel>
+          <InputLabel id="modalidadClase-label">Modalidad de Clase</InputLabel>
           <Select
             labelId="modalidadClase-label"
             name="modalidadClase"
@@ -177,10 +187,33 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
             required
             label="Modalidad de Clase"
             error={!!errors.modalidadClase}
-            sx={darkSelectStyles}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  backgroundColor: "#2a2a2a",
+                  color: "#ffffff",
+                },
+              },
+            }}
           >
             {modalidadOpciones.map((op) => (
-              <MenuItem key={op} value={op} sx={darkMenuItemStyles}>
+              <MenuItem
+                key={op}
+                value={op}
+                sx={{
+                  backgroundColor: "#2a2a2a",
+                  color: "#ffffff",
+                  "&:hover": {
+                    backgroundColor: "#444444",
+                  },
+                  "&.Mui-selected": {
+                    backgroundColor: "#2196f3",
+                    "&:hover": {
+                      backgroundColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
                 {op}
               </MenuItem>
             ))}
@@ -188,7 +221,7 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           {errors.modalidadClase && (
             <div
               style={{
-                color: "#d32f2f",
+                color: "#f44336",
                 fontSize: "0.75rem",
                 marginTop: "3px",
                 marginLeft: "14px",
@@ -202,10 +235,10 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           fullWidth
           margin="normal"
           variant="outlined"
-          sx={{ flex: 1 }}
+          sx={{ ...darkSelectStyles, flex: 1 }}
           error={!!errors.dia}
         >
-          <InputLabel id="dia-label" sx={darkInputLabelStyles}>Día</InputLabel>
+          <InputLabel id="dia-label">Día</InputLabel>
           <Select
             labelId="dia-label"
             name="dia"
@@ -214,10 +247,33 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
             required
             label="Día"
             error={!!errors.dia}
-            sx={darkSelectStyles}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  backgroundColor: "#2a2a2a",
+                  color: "#ffffff",
+                },
+              },
+            }}
           >
             {diasSemana.map((dia) => (
-              <MenuItem key={dia} value={dia} sx={darkMenuItemStyles}>
+              <MenuItem
+                key={dia}
+                value={dia}
+                sx={{
+                  backgroundColor: "#2a2a2a",
+                  color: "#ffffff",
+                  "&:hover": {
+                    backgroundColor: "#444444",
+                  },
+                  "&.Mui-selected": {
+                    backgroundColor: "#2196f3",
+                    "&:hover": {
+                      backgroundColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
                 {dia}
               </MenuItem>
             ))}
@@ -225,7 +281,7 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           {errors.dia && (
             <div
               style={{
-                color: "#d32f2f",
+                color: "#f44336",
                 fontSize: "0.75rem",
                 marginTop: "3px",
                 marginLeft: "14px",
@@ -256,7 +312,7 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           required
           error={!!errors.hora}
           helperText={errors.hora}
-          sx={{ flex: 1, ...darkTextFieldStyles }}
+          sx={{ ...darkTextFieldStyles, flex: 1 }}
         />
       </Box>
     </Box>

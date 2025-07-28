@@ -315,6 +315,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
               display: "grid",
               gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
               gap: 2,
+              minHeight: "400px", // Mantener altura mínima consistente
             }}
           >
             <AlumnoDatos
@@ -512,6 +513,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
               display: "grid",
               gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
               gap: 2,
+              minHeight: "400px", // Mantener altura mínima consistente
             }}
           >
             <ApoderadoDatos
@@ -544,11 +546,15 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
               onChange={handleChange}
               gridField="emailApoderado"
             />
+            {/* Espacios vacíos para mantener la estructura del grid */}
+            <Box></Box>
+            <Box></Box>
+            <Box></Box>
           </Box>
         );
       case 2:
         return (
-          <Box>
+          <Box sx={{ minHeight: "400px" }}>
             <OtrosDatos
               values={form}
               errors={fieldErrors}
@@ -558,7 +564,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
         );
       case 3:
         return (
-          <Box>
+          <Box sx={{ minHeight: "400px" }}>
             <ClaseDatos
               values={form}
               errors={fieldErrors}

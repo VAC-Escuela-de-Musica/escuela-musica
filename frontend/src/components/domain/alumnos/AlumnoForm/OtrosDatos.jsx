@@ -3,6 +3,47 @@ import React from "react";
 import { TextField, Box, Checkbox, FormControlLabel } from "@mui/material";
 import styles from "./AlumnoForm.module.css";
 
+// Estilos oscuros para los TextField
+const darkTextFieldStyles = {
+  "& .MuiOutlinedInput-root": {
+    backgroundColor: "#2a2a2a !important",
+    color: "#ffffff",
+    "& fieldset": {
+      borderColor: "#555555",
+    },
+    "&:hover fieldset": {
+      borderColor: "#2196f3",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#2196f3",
+    },
+    "& input": {
+      backgroundColor: "transparent !important",
+      color: "#ffffff",
+    },
+    "& textarea": {
+      backgroundColor: "transparent !important",
+      color: "#ffffff",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    color: "#aaaaaa",
+    "&.Mui-focused": {
+      color: "#2196f3",
+    },
+  },
+  "& .MuiInputBase-input::placeholder": {
+    color: "#aaaaaa",
+    opacity: 1,
+  },
+  "& .MuiFormHelperText-root": {
+    color: "#aaaaaa",
+    "&.Mui-error": {
+      color: "#f44336",
+    },
+  },
+};
+
 function OtrosDatos({ values, errors, onChange }) {
   return (
     <Box>
@@ -17,6 +58,7 @@ function OtrosDatos({ values, errors, onChange }) {
         variant="outlined"
         error={!!errors.estilosMusicales}
         helperText={errors.estilosMusicales}
+        sx={darkTextFieldStyles}
       />
       <TextField
         label="Otro Estilo"
@@ -27,6 +69,7 @@ function OtrosDatos({ values, errors, onChange }) {
         margin="normal"
         variant="outlined"
         placeholder="Ejemplo: Bolero, Metal, Salsa, Punk, etc."
+        sx={darkTextFieldStyles}
       />
       <TextField
         label="Referente Musical"
@@ -36,6 +79,7 @@ function OtrosDatos({ values, errors, onChange }) {
         fullWidth
         margin="normal"
         variant="outlined"
+        sx={darkTextFieldStyles}
       />
       <TextField
         label="Instrumentos (separados por comas)"
@@ -49,6 +93,7 @@ function OtrosDatos({ values, errors, onChange }) {
         fullWidth
         margin="normal"
         helperText={errors.instrumentos}
+        sx={darkTextFieldStyles}
       />
       <Box
         sx={{
@@ -60,6 +105,14 @@ function OtrosDatos({ values, errors, onChange }) {
           mb: 2,
           flexWrap: { xs: "wrap", sm: "nowrap" },
           width: "100%",
+          "& .MuiFormControlLabel-root": {
+            "& .MuiFormControlLabel-label": {
+              color: "#ffffff !important",
+              fontSize: "1rem !important",
+              fontWeight: "400 !important",
+              opacity: "1 !important",
+            },
+          },
         }}
       >
         <FormControlLabel
@@ -68,6 +121,12 @@ function OtrosDatos({ values, errors, onChange }) {
               checked={values.conocimientosPrevios}
               onChange={onChange}
               name="conocimientosPrevios"
+              sx={{
+                color: "#aaaaaa",
+                "&.Mui-checked": {
+                  color: "#2196f3",
+                },
+              }}
             />
           }
           label="Conocimientos Previos"
@@ -78,6 +137,12 @@ function OtrosDatos({ values, errors, onChange }) {
               checked={values.condicionAprendizaje}
               onChange={onChange}
               name="condicionAprendizaje"
+              sx={{
+                color: "#aaaaaa",
+                "&.Mui-checked": {
+                  color: "#2196f3",
+                },
+              }}
             />
           }
           label="Condición de Aprendizaje"
@@ -88,6 +153,12 @@ function OtrosDatos({ values, errors, onChange }) {
               checked={values.condicionMedica}
               onChange={onChange}
               name="condicionMedica"
+              sx={{
+                color: "#aaaaaa",
+                "&.Mui-checked": {
+                  color: "#2196f3",
+                },
+              }}
             />
           }
           label="Condición Médica"
@@ -102,6 +173,7 @@ function OtrosDatos({ values, errors, onChange }) {
           fullWidth
           margin="normal"
           variant="outlined"
+          sx={darkTextFieldStyles}
         />
       )}
       {values.condicionMedica && (
@@ -113,6 +185,7 @@ function OtrosDatos({ values, errors, onChange }) {
           fullWidth
           margin="normal"
           variant="outlined"
+          sx={darkTextFieldStyles}
         />
       )}
       <TextField
@@ -125,6 +198,7 @@ function OtrosDatos({ values, errors, onChange }) {
         fullWidth
         margin="normal"
         variant="outlined"
+        sx={darkTextFieldStyles}
       />
     </Box>
   );

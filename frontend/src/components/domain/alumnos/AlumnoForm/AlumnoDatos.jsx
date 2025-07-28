@@ -9,7 +9,7 @@ import { TextField, Box, InputAdornment } from "@mui/material";
 // Estilos oscuros para los TextField
 const darkTextFieldStyles = {
   "& .MuiOutlinedInput-root": {
-    backgroundColor: "#333333",
+    backgroundColor: "#2a2a2a !important",
     color: "#ffffff",
     "& fieldset": {
       borderColor: "#555555",
@@ -19,6 +19,10 @@ const darkTextFieldStyles = {
     },
     "&.Mui-focused fieldset": {
       borderColor: "#2196f3",
+    },
+    "& input": {
+      backgroundColor: "transparent !important",
+      color: "#ffffff",
     },
   },
   "& .MuiInputLabel-root": {

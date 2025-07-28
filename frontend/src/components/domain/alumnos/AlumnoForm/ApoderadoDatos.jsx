@@ -6,7 +6,7 @@ import { TextField, Box } from "@mui/material";
 // Estilos oscuros para los TextField
 const darkTextFieldStyles = {
   "& .MuiOutlinedInput-root": {
-    backgroundColor: "#333333",
+    backgroundColor: "#2a2a2a !important",
     color: "#ffffff",
     "& fieldset": {
       borderColor: "#555555",
@@ -16,6 +16,10 @@ const darkTextFieldStyles = {
     },
     "&.Mui-focused fieldset": {
       borderColor: "#2196f3",
+    },
+    "& input": {
+      backgroundColor: "transparent !important",
+      color: "#ffffff",
     },
   },
   "& .MuiInputLabel-root": {
@@ -36,7 +40,7 @@ const darkTextFieldStyles = {
   },
 };
 
-function ApoderadoDatos({ values, errors, onChange, gridField }) {
+function ApoderadoDatos({ values, errors, onChange, gridField, sx }) {
   if (gridField === "nombreApoderado") {
     return (
       <TextField
@@ -50,7 +54,7 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
         variant="outlined"
         error={!!errors.nombreApoderado}
         helperText={errors.nombreApoderado}
-        sx={darkTextFieldStyles}
+        sx={{ ...darkTextFieldStyles, ...sx }}
       />
     );
   }
@@ -81,13 +85,13 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
             : ""
         }
         placeholder="Ejemplo: 12.345.678-9"
-        sx={darkTextFieldStyles}
+        sx={{ ...darkTextFieldStyles, ...sx }}
       />
     );
   }
   if (gridField === "telefonoApoderado") {
     return (
-      <Box sx={{ display: "flex", gap: 1 }}>
+      <Box sx={{ display: "flex", gap: 1, ...sx }}>
         <TextField
           label="Código País"
           name="codigoPaisApoderado"
@@ -128,7 +132,7 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
         margin="normal"
         variant="outlined"
         placeholder="Ejemplo: Av. Siempre Viva 123"
-        sx={darkTextFieldStyles}
+        sx={{ ...darkTextFieldStyles, ...sx }}
       />
     );
   }
@@ -145,19 +149,9 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
         error={!!errors.emailApoderado}
         helperText={errors.emailApoderado}
         placeholder="Ejemplo: apoderado@email.com"
-        sx={darkTextFieldStyles}
+        sx={{ ...darkTextFieldStyles, ...sx }}
       />
     );
-  }
-  if (
-    gridField === "rutAlumno" ||
-    gridField === "edadAlumno" ||
-    gridField === "telefonoAlumno" ||
-    gridField === "email" ||
-    gridField === "fechaIngreso"
-  ) {
-    // Para mantener la simetría, si la columna de apoderado no tiene campo equivalente, retorna un div vacío
-    return <div />;
   }
   return null;
 }
