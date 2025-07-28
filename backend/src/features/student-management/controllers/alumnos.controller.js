@@ -173,52 +173,10 @@ async function updateStudentProfile (req, res) {
       return respondError(req, res, 404, 'Estudiante no encontrado')
     }
 
-    // Campos permitidos para que los estudiantes editen (solo información de contacto)
-    const allowedFields = [
-      'email',
-      'telefono',
-      'direccion',
-      'instrumento'
-    ]
+    // Los estudiantes no pueden editar su información personal
+    // Solo pueden cambiar su contraseña a través del endpoint específico
+    return respondError(req, res, 403, 'Los estudiantes no pueden modificar su información personal. Solo pueden cambiar su contraseña.')
 
-    // Filtrar solo los campos permitidos
-    const updateData = Object.keys(req.body)
-      .filter((key) => allowedFields.includes(key))
-      .reduce((obj, key) => {
-        obj[key] = req.body[key]
-        return obj
-      }, {})
-
-    // Validar que hay al menos un campo para actualizar
-    if (Object.keys(updateData).length === 0) {
-      return respondError(req, res, 400, 'No se proporcionaron campos válidos para actualizar')
-    }
-
-    // Validar email si se está actualizando
-    if (updateData.email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(updateData.email)) {
-        return respondError(req, res, 400, 'Formato de email inválido')
-      }
-    }
-
-    // Validar teléfono si se está actualizando
-    if (updateData.telefono) {
-      const phoneRegex = /^\+?[\d\s\-\(\)]+$/
-      if (!phoneRegex.test(updateData.telefono)) {
-        return respondError(req, res, 400, 'Formato de teléfono inválido')
-      }
-    }
-
-    // Actualizar el estudiante
-    const [updatedAlumno, updateError] = await AlumnoService.updateAlumnos(alumno._id, updateData)
-
-    if (updateError) {
-      return respondError(req, res, 400, updateError)
-    }
-
-    console.log('[PUT] /api/alumnos/profile/update - Perfil actualizado exitosamente')
-    respondSuccess(req, res, 200, updatedAlumno, 'Perfil actualizado correctamente')
   } catch (error) {
     console.error('[PUT] /api/alumnos/profile/update - Error:', error)
     handleError(error, 'alumnos.controller -> updateStudentProfile')
