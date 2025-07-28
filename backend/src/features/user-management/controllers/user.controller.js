@@ -1,17 +1,11 @@
 import { respondSuccess, respondError } from '../../../core/utils/responseHandler.util.js'
 import { handleError } from '../../../core/utils/errorHandler.util.js'
 
-/**
- * Controlador de usuarios ultra simplificado para debugging
- */
+// User controller
 class UserController {
   constructor () {
-    // Inicialización básica
   }
 
-  /**
-   * Lista todos los usuarios - versión básica
-   */
   async listUsers (req, res) {
     try {
       // Importar los modelos aquí para evitar problemas de importación circular

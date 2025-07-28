@@ -168,9 +168,19 @@ export default function ClasesCrear({ setActiveModule = null }) {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Detalles del error:", errorText);
-        const parsedError = JSON.parse(errorText);
-        setMensajeError(parsedError.message || "Error al guardar la clase.");
+        console.log("[CREAR-DEBUG] Detalles del error:", errorText);
+        
+        try {
+          const parsedError = JSON.parse(errorText);
+          // Mejorar el mensaje de error para conflictos de horario
+          if (parsedError.error && parsedError.error.includes("Ya existe una clase programada")) {
+            setMensajeError(`⚠️ Conflicto de horario: ${parsedError.error}\n\nPor favor revisa que no haya clases que se superpongan en la misma sala.`);
+          } else {
+            setMensajeError(parsedError.error || parsedError.message || "Error al guardar la clase.");
+          }
+        } catch (e) {
+          setMensajeError("Error al procesar la respuesta del servidor.");
+        }
         return;
       }
 

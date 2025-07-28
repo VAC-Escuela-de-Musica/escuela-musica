@@ -1,22 +1,12 @@
-/**
- * Sistema de cache avanzado para optimizar rendimiento
- * Implementa estrategias de cache con TTL y invalidación inteligente
- */
+// Cache system
 export class CacheManager {
   constructor() {
     this.cache = new Map();
     this.ttlMap = new Map();
     this.keyPatterns = new Map();
-    this.defaultTTL = 5 * 60 * 1000; // 5 minutos
+    this.defaultTTL = 5 * 60 * 1000;
   }
 
-  /**
-   * Establece un valor en cache con TTL
-   * @param {string} key - Clave del cache
-   * @param {*} value - Valor a cachear
-   * @param {number} ttl - Tiempo de vida en milisegundos
-   * @param {string} pattern - Patrón de invalidación
-   */
   set(key, value, ttl = this.defaultTTL, pattern = null) {
     const expirationTime = Date.now() + ttl;
     
@@ -30,7 +20,7 @@ export class CacheManager {
       this.keyPatterns.get(pattern).add(key);
     }
 
-    // Programar limpieza automática
+    // Auto cleanup
     setTimeout(() => {
       this.delete(key);
     }, ttl);

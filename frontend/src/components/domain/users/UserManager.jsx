@@ -37,24 +37,9 @@ import {
 import { useAuth } from '../../../context/AuthContext.jsx';
 import UnauthorizedAccess from '../../common/UnauthorizedAccess.jsx';
 
-/**
- * Gestor de Usuarios - Versión simplificada y funcional (basada en backup)
- */
 const UserManager = () => {
   const { isAdmin } = useAuth();
 
-  // Verificar permisos de acceso (solo admin puede gestionar usuarios)
-  if (!isAdmin()) {
-    return (
-      <UnauthorizedAccess 
-        title="Gestión de Usuarios"
-        message="Solo administradores pueden gestionar usuarios del sistema."
-        suggestion="Contacta al administrador si necesitas realizar cambios de usuarios."
-        icon={<PersonIcon fontSize="large" />}
-        color="error"
-      />
-    );
-  }
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
@@ -68,15 +53,35 @@ const UserManager = () => {
     roles: [],
   });
   const [roles, setRoles] = useState([]);
+
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    userId: null,
+    userName: null
+  });
+
   const [search, setSearch] = useState("");
 
   const API_URL = `${import.meta.env.VITE_API_URL}/api/users`;
 
-  // cargar usuarios al montar el componente
   useEffect(() => {
-    fetchUsers();
-    fetchRoles();
-  }, []);
+    if (isAdmin()) {
+      fetchUsers();
+      fetchRoles();
+    }
+  }, [isAdmin]);
+
+  if (!isAdmin()) {
+    return (
+      <UnauthorizedAccess 
+        title="Gestión de Usuarios"
+        message="Solo administradores pueden gestionar usuarios del sistema."
+        suggestion="Contacta al administrador si necesitas realizar cambios de usuarios."
+        icon={<PersonIcon fontSize="large" />}
+        color="error"
+      />
+    );
+  }
 
   const fetchUsers = async () => {
     try {
@@ -93,10 +98,6 @@ const UserManager = () => {
 
       const data = await response.json();
       setUsers(Array.isArray(data.data) ? data.data : []);
-      console.log("Usuarios cargados:", data.data);
-      if (data.data && data.data.length > 0) {
-        console.log("Roles del primer usuario:", data.data[0].roles);
-      }
     } catch (err) {
       setNotification({
         open: true,
@@ -125,10 +126,8 @@ const UserManager = () => {
         } else if (data.data && Array.isArray(data.data.data)) {
           rolesArray = data.data.data;
         }
-        // Asegurar que todos los roles estén en minúscula
         rolesArray = rolesArray.map(role => role.toLowerCase());
         setRoles(rolesArray);
-        console.log("Roles cargados:", rolesArray);
       }
     } catch (err) {
       console.error("Error al cargar roles:", err);
@@ -139,13 +138,11 @@ const UserManager = () => {
     event.preventDefault();
     
     try {
-      // Asegurar que los roles se envíen en minúscula
       const formDataToSend = {
         ...formData,
         roles: formData.roles.map(role => role.toLowerCase())
       };
       
-      console.log("Datos enviados:", formDataToSend);
       const url = editingUser 
         ? `${API_URL}/${editingUser._id}`
         : `${API_URL}`;
@@ -186,9 +183,17 @@ const UserManager = () => {
   };
 
   const handleDelete = async (userId) => {
-    if (!window.confirm("¿Estás seguro de que quieres eliminar este usuario?")) {
-      return;
-    }
+    const user = users.find(u => u._id === userId);
+    
+    setDeleteDialog({
+      open: true,
+      userId: userId,
+      userName: user?.username || user?.email || 'este usuario'
+    });
+  };
+
+  const confirmDelete = async () => {
+    const { userId } = deleteDialog;
 
     try {
       const response = await fetch(`${API_URL}/${userId}`, {
@@ -202,25 +207,26 @@ const UserManager = () => {
         throw new Error("Error al eliminar el usuario");
       }
 
+      setUsers(users.filter(user => user._id !== userId));
       setNotification({
         open: true,
-        message: "Usuario eliminado correctamente",
+        message: "Usuario eliminado exitosamente",
         severity: 'success'
       });
-      fetchUsers();
     } catch (err) {
       setNotification({
         open: true,
         message: "Error al eliminar el usuario: " + err.message,
         severity: 'error'
       });
+    } finally {
+      setDeleteDialog({ open: false, userId: null, userName: null });
     }
   };
 
   const handleEdit = (user) => {
     setEditingUser(user);
     
-    // Extraer nombres de roles correctamente (manejar objetos y strings)
     const userRoles = user.roles ? user.roles.map(role => {
       if (typeof role === 'string') {
         return role;
@@ -229,10 +235,6 @@ const UserManager = () => {
       }
       return '';
     }).filter(Boolean) : [];
-    
-    console.log('🔧 Editando usuario:', user.username);
-    console.log('🏷️ Roles originales:', user.roles);
-    console.log('🏷️ Roles procesados:', userRoles);
     
     setFormData({
       username: user.username || "",
@@ -251,7 +253,6 @@ const UserManager = () => {
   };
 
   const getRoleName = (role) => {
-    // Manejar tanto objetos role como strings directos
     let roleName = '';
     
     if (typeof role === 'string') {
@@ -265,7 +266,6 @@ const UserManager = () => {
     return roleName.charAt(0).toUpperCase() + roleName.slice(1);
   };
 
-  // Filtrar usuarios
   const filteredUsers = users.filter(user =>
     (user.username || '').toLowerCase().includes(search.toLowerCase()) ||
     (user.email || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -483,7 +483,6 @@ const UserManager = () => {
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {selected.map((value) => {
-                      // Asegurar que value es un string
                       const roleName = typeof value === 'string' ? value : (value?.name || 'Unknown');
                       return (
                         <Chip 
@@ -521,7 +520,31 @@ const UserManager = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Notification */}
+      {/* Diálogo de confirmación de eliminación */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ ...deleteDialog, open: false })}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirmar eliminación</DialogTitle>
+        <DialogContent>
+          <Typography id="delete-dialog-description">
+            ¿Estás seguro de que quieres eliminar al usuario {deleteDialog.userName}?
+            Esta acción no se puede deshacer.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog({ ...deleteDialog, open: false })} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={confirmDelete} color="error" variant="contained">
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Notificación */}
       {notification.open && (
         <Alert 
           severity={notification.severity} 

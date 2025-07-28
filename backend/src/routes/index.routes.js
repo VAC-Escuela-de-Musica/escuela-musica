@@ -70,51 +70,25 @@ router.get('/health', (req, res) => {
   })
 })
 
-// ============= RUTAS DE AUTENTICACIÓN =============
-// Rutas públicas de autenticación
+// Auth routes
 router.use('/auth', authRoutes)
 
-// ============= RUTAS PROTEGIDAS =============
-// Rutas para usuarios - autenticación manejada en user.routes.js
+// Protected routes
 router.use('/users', userRoutes)
-
-// Rutas para roles - autenticación manejada en role.routes.js
 router.use('/roles', roleRoutes)
-
-// Rutas para archivos - autenticación manejada en file.routes.js
 router.use('/files', fileRoutes)
-
-// Rutas para materiales - autenticación manejada en material.routes.js
 router.use('/materials', materialRoutes)
-
-// Rutas para galería - autenticación manejada en galeria.routes.js
 router.use('/galeria', galeriaRoutes)
-
-// Rutas para alumnos - autenticación manejada en alumnos.routes.js
 router.use('/alumnos', alumnosRoutes)
-
-// Rutas para profesores - autenticación manejada en profesores.routes.js
 router.use('/profesores', profesoresRoutes)
-
-// Rutas para mensajería - autenticación manejada en messaging.routes.js
 router.use('/messaging', messagingRoutes)
-
-// Rutas para mensajes internos - autenticación manejada en internalMessage.routes.js
 router.use('/internal-messages', internalMessageRoutes)
-
-// Rutas para cards de profesores - autenticación manejada en cardsProfesores.routes.js
 router.use('/cards-profesores', cardsProfesoresRoutes)
-
-// Rutas para carousel - autenticación manejada en carousel.routes.js
 router.use('/carousel', carouselRoutes)
-
-// Rutas para testimonios - autenticación manejada en testimonio.routes.js
 router.use('/testimonios', testimonioRoutes)
-
-// Rutas para clases - autenticación manejada en clase.routes.js
 router.use("/clases", ClasesRoutes);
 
-// ============= COMPATIBILIDAD CON RUTAS OBSOLETAS =============
+// Legacy compatibility
 router.use('/materiales', (req, res) => {
   console.log(`⚠️ Acceso a ruta obsoleta: ${req.method} ${req.originalUrl}`)
   const targetUrl = req.originalUrl.replace('/materiales', '/materials')
