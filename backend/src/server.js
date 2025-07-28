@@ -22,8 +22,38 @@ async function setupServer () {
     /** Instancia de la aplicacion */
     const app = express()
     app.disable('x-powered-by')
+    
+    // Configuración de CORS para credenciales
+    const corsOptions = {
+      credentials: true,
+      origin: function (origin, callback) {
+        // Permitir requests sin origin (mobile apps, postman, etc.)
+        if (!origin) return callback(null, true)
+        
+        // Lista de orígenes permitidos
+        const allowedOrigins = [
+          'http://146.83.198.35:1230',
+          'http://146.83.198.35',
+          'https://146.83.198.35:1230',
+          'https://146.83.198.35',
+          'http://localhost:3000',
+          'http://localhost:5173',
+          'http://localhost:1230'
+        ]
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+          callback(null, true)
+        } else {
+          console.warn('CORS blocked origin:', origin)
+          callback(new Error('Not allowed by CORS'))
+        }
+      },
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token', '_csrf']
+    }
+    
     // Agregamos los cors
-    app.use(cors({ credentials: true, origin: true }))
+    app.use(cors(corsOptions))
     // Agrega el middleware para el manejo de datos en formato URL
     app.use(urlencoded({ extended: true }))
     // Agrega el middleware para el manejo de datos en formato JSON
