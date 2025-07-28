@@ -98,7 +98,6 @@ class NotificationService {
 📅 **Fecha:** ${fechaClase}
 📍 **Sala:** ${salaClase}
 ⏰ **Cambio:** ${horaAnterior} → ${horaNueva}
-${actualizadoPorInfo ? `👤 **Actualizado por:** ${actualizadoPorInfo.username || actualizadoPorInfo.email}` : ''}
 
 Por favor, toma nota del nuevo horario. Si tienes alguna pregunta, contacta a tu profesor o administración.`;
 
@@ -121,7 +120,6 @@ Por favor, toma nota del nuevo horario. Si tienes alguna pregunta, contacta a tu
           <p><strong>Fecha:</strong> ${fechaClase}</p>
           <p><strong>Sala:</strong> ${salaClase}</p>
           <p><strong>Cambio de horario:</strong> ${horaAnterior} → ${horaNueva}</p>
-          ${actualizadoPorInfo ? `<p><strong>Actualizado por:</strong> ${actualizadoPorInfo.username || actualizadoPorInfo.email}</p>` : ''}
           <p>Por favor, toma nota del nuevo horario. Si tienes alguna pregunta, contacta a tu profesor o administración.</p>
         `
       };
