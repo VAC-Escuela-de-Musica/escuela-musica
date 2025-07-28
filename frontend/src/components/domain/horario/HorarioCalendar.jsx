@@ -46,7 +46,7 @@ const fetchAutenticado = async (url, options = {}) => {
 };
 
 const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) => {
-  const { user } = useAuth();
+  const { user, isStudent, isAdmin } = useAuth();
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -82,7 +82,11 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     
     try {
       let url;
-      if (alumnoId) {
+      // Si es administrador, usar endpoint general para ver todas las clases
+      if (isAdmin()) {
+        url = `${API_URL}/all`;
+      } else if (alumnoId) {
+        // Si es estudiante, usar endpoint específico del estudiante
         url = `${API_URL}/estudiante/${alumnoId}`;
       } else {
         url = `${API_URL}/programadas`;
@@ -100,6 +104,11 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
       const eventosCalendario = [];
       
       for (const clase of clases) {
+        // Filtrar clases canceladas solo para estudiantes
+        if (isStudent() && clase.estado === 'cancelada') {
+          continue; // Saltar esta clase si es estudiante y está cancelada
+        }
+        
         await obtenerNombreProfesor(clase.profesor);
         
         if (clase.horarios && clase.horarios.length > 0) {
@@ -159,7 +168,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
 
   useEffect(() => {
     cargarClases();
-  }, [alumnoId]);
+  }, [alumnoId, isStudent, isAdmin]);
 
   const handleEventClick = (clickInfo) => {
     setSelectedEvent(clickInfo.event);
@@ -256,7 +265,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Box display="flex" alignItems="center" gap={2}>
           <Typography variant="h4" sx={{ color: '#2196F3', fontWeight: 'bold' }}>
-            {alumnoId ? 'Mi Calendario de Clases' : 'Calendario de Clases'}
+            {isStudent() ? 'Mi Calendario de Clases' : 'Calendario de Clases'}
           </Typography>
           
           <Chip 
@@ -364,6 +373,15 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
         </ToggleButtonGroup>
       </Box>
 
+      {/* Información para estudiantes */}
+      {isStudent() && (
+        <Box mb={2}>
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+            💡 Solo se muestran tus clases activas. Las clases canceladas no aparecen en tu calendario.
+          </Typography>
+        </Box>
+      )}
+
       {/* Leyenda de colores */}
       <Box display="flex" gap={1} mb={2}>
         <Chip 
@@ -371,11 +389,13 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
           size="small"
           sx={{ backgroundColor: '#2196F3', color: 'white' }} 
         />
-        <Chip 
-          label="Cancelada" 
-          size="small"
-          sx={{ backgroundColor: '#f44336', color: 'white' }} 
-        />
+        {!isStudent() && (
+          <Chip 
+            label="Cancelada" 
+            size="small"
+            sx={{ backgroundColor: '#f44336', color: 'white' }} 
+          />
+        )}
         <Chip 
           label="Completada" 
           size="small"
