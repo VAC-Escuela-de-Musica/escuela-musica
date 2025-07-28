@@ -18,25 +18,15 @@ import {
   IconButton,
   ToggleButton,
   ToggleButtonGroup,
-  Card,
-  CardContent,
-  Collapse,
-  Fade,
 } from '@mui/material';
 import {
   Today as TodayIcon,
   NavigateBefore as PrevIcon,
   NavigateNext as NextIcon,
   Refresh as RefreshIcon,
-  CalendarMonth,
-  List,
-  ExpandMore as ExpandIcon,
-  ExpandLess as CollapseIcon,
-  Visibility as ShowIcon,
-  VisibilityOff as HideIcon,
 } from '@mui/icons-material';
+import { useAuth } from '../../../context/AuthContext.jsx';
 import './HorarioCalendar.css';
-
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/clases`;
 
@@ -62,8 +52,8 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
   const [error, setError] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [nombresProfesores, setNombresProfesores] = useState({});
   const [currentTitle, setCurrentTitle] = useState('');
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const calendarRef = useRef(null);
 
   const obtenerNombreProfesor = async (id) => {
@@ -93,10 +83,8 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     try {
       let url;
       if (alumnoId) {
-        console.log('[CALENDAR-DEBUG] Cargando clases del estudiante:', alumnoId);
         url = `${API_URL}/estudiante/${alumnoId}`;
       } else {
-        console.log('[CALENDAR-DEBUG] Cargando todas las clases programadas...');
         url = `${API_URL}/programadas`;
       }
       
@@ -107,13 +95,11 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
       }
       
       const data = await response.json();
-      console.log('[CALENDAR-DEBUG] Clases recibidas:', data);
       
       const clases = data.data || [];
       const eventosCalendario = [];
       
       for (const clase of clases) {
-
         await obtenerNombreProfesor(clase.profesor);
         
         if (clase.horarios && clase.horarios.length > 0) {
@@ -129,8 +115,6 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
             
             const fechaFin = new Date(fechaClase);
             fechaFin.setHours(parseInt(horaF), parseInt(minF));
-            
-            // color estado
 
             let backgroundColor = '#2196F3';
             let borderColor = '#1976D2';
@@ -140,7 +124,6 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
               backgroundColor = '#f44336';
               borderColor = '#d32f2f';
             } else if (clase.estado === 'completada') {
-
               backgroundColor = '#4caf50';
               borderColor = '#388e3c';
             }
@@ -165,11 +148,9 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
         }
       }
       
-      console.log('[CALENDAR-DEBUG] Eventos del calendario:', eventosCalendario);
       setEventos(eventosCalendario);
       
     } catch (error) {
-      console.error('[CALENDAR-DEBUG] Error cargando clases:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -181,7 +162,6 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
   }, [alumnoId]);
 
   const handleEventClick = (clickInfo) => {
-    console.log('[CALENDAR-DEBUG] Evento clickeado:', clickInfo.event);
     setSelectedEvent(clickInfo.event);
     setDialogOpen(true);
   };
@@ -215,11 +195,9 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
   const handleViewChange = (view) => {
     const calendarApi = calendarRef.current.getApi();
     calendarApi.changeView(view);
-
     setTimeout(updateCalendarTitle, 50);
   };
 
-  // Configuración de FullCalendar
   const calendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'timeGridWeek',
@@ -234,7 +212,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     nowIndicator: true,
     editable: false,
     selectable: false,
-    weekends: true, //Mostrar domingos
+    weekends: true,
     locale: 'es',
     buttonText: {
       today: 'Hoy',
@@ -256,14 +234,40 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     viewDidMount: updateCalendarTitle
   };
 
-  return (
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress sx={{ color: '#2196F3' }} />
+      </Box>
+    );
+  }
 
-    <Box sx={{ p: 1 }}>
+  if (error) {
+    return (
+      <Box p={2}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ p: 2 }}>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h4" sx={{ color: '#2196F3', fontWeight: 'bold' }}>
-            Calendario de Clases
-        </Typography>
+        <Box display="flex" alignItems="center" gap={2}>
+          <Typography variant="h4" sx={{ color: '#2196F3', fontWeight: 'bold' }}>
+            {alumnoId ? 'Mi Calendario de Clases' : 'Calendario de Clases'}
+          </Typography>
+          
+          <Chip 
+            label={`${eventos.length} clases`}
+            sx={{ 
+              backgroundColor: '#2196F3',
+              color: '#ffffff',
+              fontWeight: 'bold'
+            }}
+          />
+        </Box>
         
         <Tooltip title="Actualizar">
           <IconButton 
@@ -276,44 +280,38 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
         </Tooltip>
       </Box>
 
-      {/* Título período y controles principales */}
+      {/* Controles de navegación */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        {/* Navegación y título */}
         <Box display="flex" alignItems="center" gap={2}>
-          <Box display="flex" gap={1}>
-            <IconButton 
-              onClick={() => handleNavigation('prev')} 
-              sx={{ 
-                color: '#ffffff', 
-                fontWeight: 'bold',
-                textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-              }}
-            >
-              {alumnoId ? 'Mi Calendario de Clases' : 'Calendario de Clases'}
-            </Typography>
-            
-            <Chip 
-              label={`${eventos.length} clases`}
-              sx={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                color: '#ffffff',
-                fontWeight: 'bold'
-              }}
-            />
-          </Box>
+          <IconButton 
+            onClick={() => handleNavigation('prev')} 
+            sx={{ 
+              color: '#2196F3',
+              backgroundColor: 'rgba(33, 150, 243, 0.1)',
+              '&:hover': { backgroundColor: 'rgba(33, 150, 243, 0.2)' }
+            }}
+          >
+            <PrevIcon />
+          </IconButton>
           
-          {/* Título mes/período */}
+          <IconButton 
+            onClick={() => handleNavigation('next')} 
+            sx={{ 
+              color: '#2196F3',
+              backgroundColor: 'rgba(33, 150, 243, 0.1)',
+              '&:hover': { backgroundColor: 'rgba(33, 150, 243, 0.2)' }
+            }}
+          >
+            <NextIcon />
+          </IconButton>
+          
           <Typography 
             variant="h6" 
             sx={{ 
-              color: '#ffffff', 
+              color: '#2196F3', 
               fontWeight: 'bold',
               minWidth: '200px',
-              textAlign: 'center',
-              backgroundColor: 'rgba(33, 150, 243, 0.1)',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              border: '1px solid rgba(33, 150, 243, 0.3)'
+              textAlign: 'center'
             }}
           >
             {currentTitle || 'Cargando...'}
@@ -330,190 +328,74 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
           >
             Hoy
           </Button>
-
-          {/* Leyenda colores */}
-          <Box display="flex" gap={1} ml={3}>
-            <Chip 
-              label="Programada" 
-              size="small"
-              sx={{ backgroundColor: '#2196F3', color: 'white' }} 
-            />
-            <Chip 
-              label="Cancelada" 
-              size="small"
-              sx={{ backgroundColor: '#f44336', color: 'white' }} 
-            />
-            <Chip 
-              label="Completada" 
-              size="small"
-              sx={{ backgroundColor: '#4caf50', color: 'white' }} 
-            />
-          </Box>
         </Box>
-        
-        {/* Toggle y Controles */}
-        <Box display="flex" gap={2} alignItems="center">
-          {/* Toggle Calendario/Lista */}
-          <ToggleButtonGroup
-            value={viewMode}
-            exclusive
-            onChange={handleViewModeChange}
-            aria-label="modo de vista"
-            size="small"
-            sx={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: 2,
-              p: 2,
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            {/* Navegación */}
-            <Box display="flex" alignItems="center" gap={2}>
-              <Box display="flex" gap={1}>
-                <IconButton 
-                  onClick={() => handleNavigation('prev')} 
-                  sx={{ 
-                    color: '#ffffff',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
-                  }}
-                >
-                  <PrevIcon />
-                </IconButton>
-                <IconButton 
-                  onClick={() => handleNavigation('next')} 
-                  sx={{ 
-                    color: '#ffffff',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
-                  }}
-                >
-                  <NextIcon />
-                </IconButton>
-              </Box>
-              
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  color: '#ffffff', 
-                  fontWeight: 'bold',
-                  minWidth: '200px',
-                  textAlign: 'center',
-                  textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-                }}
-              >
-                {currentTitle}
-              </Typography>
-            </Box>
 
-          {/* Controles vista */}
-          <Box display="flex" gap={1} alignItems="center">
-          <Button
-            variant="outlined"
-            onClick={() => handleViewChange('timeGridDay')}
-            sx={{ 
-              color: '#ffffff', 
-              borderColor: '#2196F3',
-              '&:hover': { 
-                borderColor: '#1976D2',
-                backgroundColor: 'rgba(33, 150, 243, 0.1)'
-              }
-            }}
-          >
-            Día
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={() => handleViewChange('timeGridWeek')}
-            sx={{ 
-              color: '#ffffff', 
-              borderColor: '#2196F3',
-              '&:hover': { 
-                borderColor: '#1976D2',
-                backgroundColor: 'rgba(33, 150, 243, 0.1)'
-              }
-            }}
-          >
-            Semana
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={() => handleViewChange('dayGridMonth')}
-            sx={{ 
-              color: '#ffffff', 
-              borderColor: '#2196F3',
-              '&:hover': { 
-                borderColor: '#1976D2',
-                backgroundColor: 'rgba(33, 150, 243, 0.1)'
-              }
-            }}
-          >
-            Mes
-          </Button>
-          </Box>
-
-          {/* Controles de vista del calendario */}
-          <Box display="flex" justifyContent="center" mb={3}>
-            <ToggleButtonGroup
-              value="timeGridWeek"
-              exclusive
-              onChange={(e, newValue) => {
-                if (newValue) handleViewChange(newValue);
-              }}
-              size="small"
-              sx={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: 2,
-                '& .MuiToggleButton-root': {
-                  color: '#ffffff',
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
-                  '&.Mui-selected': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    color: '#ffffff',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.3)'
-                    }
-                  },
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                  }
-                }
-              }}
-            >
-              <ToggleButton value="dayGridMonth" aria-label="mes">
-                Mes
-              </ToggleButton>
-              <ToggleButton value="timeGridWeek" aria-label="semana">
-                Semana
-              </ToggleButton>
-              <ToggleButton value="timeGridDay" aria-label="día">
-                Día
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-
-          {/* Loading */}
-          {loading && (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-              <CircularProgress sx={{ color: '#ffffff' }} />
-            </Box>
-          )}
-
-      {/* Calendario */}
-      {!loading && !error && (
-        <Box 
-          className="calendar-container"
+        {/* Vista toggles */}
+        <ToggleButtonGroup
+          value="timeGridWeek"
+          exclusive
+          onChange={(e, newValue) => {
+            if (newValue) handleViewChange(newValue);
+          }}
+          size="small"
           sx={{
-            mt: 1,
-            minHeight: '600px',
+            '& .MuiToggleButton-root': {
+              color: '#2196F3',
+              borderColor: '#2196F3',
+              '&.Mui-selected': {
+                backgroundColor: '#2196F3',
+                color: '#ffffff',
+                '&:hover': {
+                  backgroundColor: '#1976D2'
+                }
+              }
+            }
           }}
         >
-          <FullCalendar
-            ref={calendarRef}
-            {...calendarOptions}
-          />
-        </Box>
-      )}
+          <ToggleButton value="dayGridMonth">
+            Mes
+          </ToggleButton>
+          <ToggleButton value="timeGridWeek">
+            Semana
+          </ToggleButton>
+          <ToggleButton value="timeGridDay">
+            Día
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+
+      {/* Leyenda de colores */}
+      <Box display="flex" gap={1} mb={2}>
+        <Chip 
+          label="Programada" 
+          size="small"
+          sx={{ backgroundColor: '#2196F3', color: 'white' }} 
+        />
+        <Chip 
+          label="Cancelada" 
+          size="small"
+          sx={{ backgroundColor: '#f44336', color: 'white' }} 
+        />
+        <Chip 
+          label="Completada" 
+          size="small"
+          sx={{ backgroundColor: '#4caf50', color: 'white' }} 
+        />
+      </Box>
+
+      {/* Calendario */}
+      <Box 
+        className="calendar-container"
+        sx={{
+          mt: 2,
+          minHeight: '600px',
+        }}
+      >
+        <FullCalendar
+          ref={calendarRef}
+          {...calendarOptions}
+        />
+      </Box>
 
       {/* Diálogo de detalles del evento */}
       <Dialog
@@ -595,7 +477,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
           </Button>
         </DialogActions>
       </Dialog>
-    </Card>
+    </Box>
   );
 };
 
