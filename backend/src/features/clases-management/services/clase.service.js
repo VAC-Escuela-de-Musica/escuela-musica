@@ -10,8 +10,8 @@ import { handleError } from "../../../core/utils/errorHandler.util.js";
  */
 async function createClase(clase) {
   try {
-    const { titulo, descripcion, profesor, sala, horarios = [] } = clase;
-        
+    const { titulo, descripcion, profesor, sala, horarios = [], estudiantes } = clase;
+
     for (const horario of horarios) {
       const { dia, horaInicio, horaFin } = horario;
 
@@ -47,15 +47,16 @@ async function createClase(clase) {
     const newClase = new Clase({
       titulo,
       descripcion,
-      profesor,
       sala,
+      profesor,
       horarios,
-    }); 
+      estudiantes: estudiantes || [],
+    });
     await newClase.save();
 
     return [newClase, null];
   } catch (error) {
-      handleError(error, "clase.service -> createClase");
+    handleError(error, "clase.service -> createClase");
   }
 }
 /**
@@ -859,10 +860,11 @@ export default {
   getHorarioDia,
   getHorarioSemana,
   getHorarioMes,
+  getAllProgrammedClases,
   asignarEstudianteAClase,
   desasignarEstudianteDeClase,
   actualizarEstadoEstudiante,
   registrarAsistencia,
   getClasesDeEstudiante,
-  getEstudiantesDeClase
+  getEstudiantesDeClase,
 };

@@ -361,13 +361,13 @@ export default function Clases({ setActiveModule }) {
   }
 
   return (
-    <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white" }}>
+    <Box sx={{ color: "white", marginLeft: 3, marginRight: 3 }}>
       <Box display={"flex"} justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h4" component="h1" sx={{ marginBottom: 2 }}>
+        <Typography variant="h4" component="h1">
           Gestión de las clases
         </Typography>
 
-        <Box display="flex" gap={1}>
+        <Box display="flex" gap={1} marginRight={3}>
           <Button
             variant="outlined"
             onClick={() => {
@@ -419,7 +419,7 @@ export default function Clases({ setActiveModule }) {
       </Box>
       
 
-      <Box display={"flex"} justifyContent="space-between" alignItems="center" sx={{ marginBottom: 2 }}>
+      <Box display={"flex"} justifyContent="space-between" alignItems="center">
         <Typography variant="h5" gutterBottom>
           {filtroActivo === "hoy" && "Clases de hoy"}
           {filtroActivo === "proximas" && "Próximas clases"}

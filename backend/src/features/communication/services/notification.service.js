@@ -22,10 +22,10 @@ class NotificationService {
         return { success: false, error: 'No se pudo obtener información de la clase' }
       }
 
-      // Obtener información del profesor
-      const profesor = await User.findById(claseCompleta.profesor)
-      if (!profesor) {
-        return { success: false, error: 'No se pudo obtener información del profesor' }
+      // Obtener información del profesor (opcional, para registro interno)
+      let profesor = null
+      if (claseCompleta.profesor) {
+        profesor = await User.findById(claseCompleta.profesor)
       }
 
       // Obtener información de quién canceló la clase
@@ -34,20 +34,22 @@ class NotificationService {
         canceladoPorInfo = await User.findById(canceladoPor)
       }
 
-      // Preparar mensajes
-      const mensajes = this.prepareCancellationMessages(claseCompleta, profesor, motivo, canceladoPorInfo)
+      // Preparar mensajes (sin incluir información del profesor en los mensajes a estudiantes)
+      const mensajes = this.prepareCancellationMessages(claseCompleta, motivo, canceladoPorInfo)
       
       // Enviar notificaciones a cada estudiante
       const resultados = await this.sendNotificationsToStudents(claseCompleta.estudiantes, mensajes)
       
-      // Crear mensaje interno para registro
-      await this.createInternalMessage(claseCompleta, profesor, motivo, canceladoPorInfo, resultados)
+      // Crear mensaje interno para registro (solo si hay profesor)
+      if (profesor) {
+        await this.createInternalMessage(claseCompleta, profesor, motivo, canceladoPorInfo, resultados)
+      }
       
       console.log('✅ Notificaciones de cancelación completadas')
       return {
         success: true,
         message: 'Notificaciones enviadas correctamente',
-        results
+        results: resultados
       }
       
     } catch (error) {
@@ -84,14 +86,44 @@ class NotificationService {
         actualizadoPorInfo = await User.findById(actualizadoPor);
       }
       
-      // Mensaje personalizado
-      const mensaje = `Se le informa que su clase "${claseCompleta.titulo}" ha sido movida de ${horaAnterior} a ${horaNueva}.`;
-      // WhatsApp igual
-      const mensajeWhatsApp = `Se le informa que su clase "${claseCompleta.titulo}" ha sido movida de ${horaAnterior} a ${horaNueva}.`;
+      // Preparar información adicional
+      const fechaClase = this.formatClaseDate(claseCompleta.horarios[0]);
+      const salaClase = claseCompleta.sala || 'No especificada';
+      const profesorNombre = profesor ? profesor.username || profesor.email : 'No asignado';
+      
+      // Mensaje interno
+      const mensaje = `🕐 **CAMBIO DE HORARIO**
+
+📚 **Clase:** ${claseCompleta.titulo}
+📅 **Fecha:** ${fechaClase}
+📍 **Sala:** ${salaClase}
+⏰ **Cambio:** ${horaAnterior} → ${horaNueva}
+${actualizadoPorInfo ? `👤 **Actualizado por:** ${actualizadoPorInfo.username || actualizadoPorInfo.email}` : ''}
+
+Por favor, toma nota del nuevo horario. Si tienes alguna pregunta, contacta a tu profesor o administración.`;
+
+      // Mensaje WhatsApp
+      const mensajeWhatsApp = `🕐 *CAMBIO DE HORARIO*
+
+📚 *Clase:* ${claseCompleta.titulo}
+📅 *Fecha:* ${fechaClase}
+📍 *Sala:* ${salaClase}
+⏰ *Cambio:* ${horaAnterior} → ${horaNueva}
+
+Por favor, toma nota del nuevo horario. Si tienes alguna pregunta, contacta a tu profesor o administración.`;
+
       // Email
       const mensajeEmail = {
-        subject: `Cambio de horario en clase: ${claseCompleta.titulo}`,
-        content: `<p>Se le informa que su clase <strong>${claseCompleta.titulo}</strong> ha sido movida de <strong>${horaAnterior}</strong> a <strong>${horaNueva}</strong>.</p>`
+        subject: `Cambio de horario: ${claseCompleta.titulo}`,
+        content: `
+          <h2>🕐 Cambio de Horario</h2>
+          <p><strong>Clase:</strong> ${claseCompleta.titulo}</p>
+          <p><strong>Fecha:</strong> ${fechaClase}</p>
+          <p><strong>Sala:</strong> ${salaClase}</p>
+          <p><strong>Cambio de horario:</strong> ${horaAnterior} → ${horaNueva}</p>
+          ${actualizadoPorInfo ? `<p><strong>Actualizado por:</strong> ${actualizadoPorInfo.username || actualizadoPorInfo.email}</p>` : ''}
+          <p>Por favor, toma nota del nuevo horario. Si tienes alguna pregunta, contacta a tu profesor o administración.</p>
+        `
       };
       
       // Enviar notificaciones a cada estudiante
@@ -155,14 +187,13 @@ class NotificationService {
    * @param {Object} canceladoPor - Información de quién canceló
    * @returns {Object} - Mensajes preparados
    */
-  prepareCancellationMessages(clase, profesor, motivo, canceladoPor) {
+  prepareCancellationMessages(clase, motivo, canceladoPor) {
     const fechaClase = this.formatClaseDate(clase.horarios[0])
     const horaClase = this.formatClaseTime(clase.horarios[0])
     
     const mensajeInterno = `🚫 **CLASE CANCELADA**
 
 📚 **Clase:** ${clase.titulo}
-👨‍🏫 **Profesor:** ${profesor.username}
 📅 **Fecha:** ${fechaClase}
 🕐 **Hora:** ${horaClase}
 📍 **Sala:** ${clase.sala}
@@ -174,7 +205,6 @@ La clase ha sido cancelada. Te notificaremos cuando se reprograme.`
     const mensajeWhatsApp = `🚫 *CLASE CANCELADA*
 
 📚 *Clase:* ${clase.titulo}
-👨‍🏫 *Profesor:* ${profesor.username}
 📅 *Fecha:* ${fechaClase}
 🕐 *Hora:* ${horaClase}
 📍 *Sala:* ${clase.sala}
@@ -187,7 +217,6 @@ La clase ha sido cancelada. Te notificaremos cuando se reprograme.`
       content: `
         <h2>🚫 Clase Cancelada</h2>
         <p><strong>Clase:</strong> ${clase.titulo}</p>
-        <p><strong>Profesor:</strong> ${profesor.username}</p>
         <p><strong>Fecha:</strong> ${fechaClase}</p>
         <p><strong>Hora:</strong> ${horaClase}</p>
         <p><strong>Sala:</strong> ${clase.sala}</p>
@@ -241,9 +270,9 @@ La clase ha sido cancelada. Te notificaremos cuando se reprograme.`
       }
 
       // Enviar WhatsApp si tiene teléfono
-      if (estudiante.telefono) {
+      if (estudiante.telefonoAlumno) {
         try {
-          await this.sendWhatsAppMessage(estudiante.telefono, mensajes.whatsapp)
+          await this.sendWhatsAppMessage(estudiante.telefonoAlumno, mensajes.whatsapp)
           resultado.whatsapp = true
           resultados.whatsapp.enviados++
         } catch (error) {
@@ -279,7 +308,7 @@ La clase ha sido cancelada. Te notificaremos cuando se reprograme.`
   async sendInternalMessage(estudianteId, mensaje) {
     try {
       // Buscar un usuario administrador para usar como remitente del sistema
-      const adminUser = await User.findOne().populate('roles')
+      const adminUser = await User.findOne()
       const systemUserId = adminUser ? adminUser._id : null
       
       if (!systemUserId) {
@@ -288,9 +317,9 @@ La clase ha sido cancelada. Te notificaremos cuando se reprograme.`
       }
       
       const messageData = {
-        subject: 'Clase Cancelada',
+        subject: 'Cambio de Horario',
         content: mensaje,
-        recipientType: 'individual',
+        recipientType: 'specific_student',
         recipient: estudianteId,
         type: 'notification',
         priority: 'high',
@@ -318,9 +347,23 @@ La clase ha sido cancelada. Te notificaremos cuando se reprograme.`
    * @returns {Promise<void>}
    */
   async sendWhatsAppMessage(telefono, mensaje) {
-    const result = await messagingService.sendWhatsAppMessage(telefono, mensaje)
-    if (!result.success) {
-      throw new Error(result.error || 'Error enviando WhatsApp')
+    try {
+      // Intentar primero con WhatsApp Web
+      const result = await messagingService.sendWhatsAppWeb(telefono, mensaje)
+      if (result.success) {
+        console.log('✅ WhatsApp Web enviado correctamente a:', telefono)
+        return
+      }
+      
+      // Si WhatsApp Web no está disponible, usar el método alternativo
+      console.log('⚠️ WhatsApp Web no disponible, usando método alternativo')
+      const altResult = await messagingService.sendWhatsAppMessage(telefono, mensaje)
+      if (!altResult.success) {
+        throw new Error(altResult.error || 'Error enviando WhatsApp')
+      }
+    } catch (error) {
+      console.error('❌ Error enviando WhatsApp:', error.message)
+      throw new Error(`Error enviando WhatsApp: ${error.message}`)
     }
   }
 
@@ -360,16 +403,15 @@ La clase ha sido cancelada. Te notificaremos cuando se reprograme.`
       }
       
       const messageData = {
-        subject: `Registro: Clase Cancelada - ${clase.titulo}`,
+        subject: `Registro: Cancelación de Clase - ${clase.titulo}`,
         content: `
-📊 **RESUMEN DE NOTIFICACIONES ENVIADAS**
+📊 **RESUMEN DE NOTIFICACIONES DE CANCELACIÓN**
 
 📚 **Clase:** ${clase.titulo}
 👨‍🏫 **Profesor:** ${profesor.username || profesor.email || 'No especificado'}
 📅 **Fecha:** ${this.formatClaseDate(clase.horarios[0])}
-🕐 **Hora:** ${this.formatClaseTime(clase.horarios[0])}
 📍 **Sala:** ${clase.sala}
-${motivo ? `📝 **Motivo:** ${motivo}` : ''}
+📝 **Motivo:** ${motivo || 'No especificado'}
 ${canceladoPor ? `❌ **Cancelado por:** ${canceladoPor.username || canceladoPor.email || 'No especificado'}` : ''}
 
 📈 **Estadísticas de envío:**

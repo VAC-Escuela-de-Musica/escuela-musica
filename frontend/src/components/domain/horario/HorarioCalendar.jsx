@@ -18,6 +18,10 @@ import {
   IconButton,
   ToggleButton,
   ToggleButtonGroup,
+  Card,
+  CardContent,
+  Collapse,
+  Fade,
 } from '@mui/material';
 import {
   Today as TodayIcon,
@@ -26,8 +30,13 @@ import {
   Refresh as RefreshIcon,
   CalendarMonth,
   List,
+  ExpandMore as ExpandIcon,
+  ExpandLess as CollapseIcon,
+  Visibility as ShowIcon,
+  VisibilityOff as HideIcon,
 } from '@mui/icons-material';
 import './HorarioCalendar.css';
+
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/clases`;
 
@@ -46,14 +55,15 @@ const fetchAutenticado = async (url, options = {}) => {
   return response;
 };
 
-const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
+const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) => {
+  const { user } = useAuth();
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [nombresProfesores, setNombresProfesores] = useState({});
   const [currentTitle, setCurrentTitle] = useState('');
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const calendarRef = useRef(null);
 
   const obtenerNombreProfesor = async (id) => {
@@ -81,8 +91,16 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
     setError(null);
     
     try {
-      console.log('[CALENDAR-DEBUG] Cargando todas las clases programadas...');
-      const response = await fetchAutenticado(`${API_URL}/programadas`);
+      let url;
+      if (alumnoId) {
+        console.log('[CALENDAR-DEBUG] Cargando clases del estudiante:', alumnoId);
+        url = `${API_URL}/estudiante/${alumnoId}`;
+      } else {
+        console.log('[CALENDAR-DEBUG] Cargando todas las clases programadas...');
+        url = `${API_URL}/programadas`;
+      }
+      
+      const response = await fetchAutenticado(url);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -95,6 +113,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
       const eventosCalendario = [];
       
       for (const clase of clases) {
+
         await obtenerNombreProfesor(clase.profesor);
         
         if (clase.horarios && clase.horarios.length > 0) {
@@ -111,7 +130,8 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
             const fechaFin = new Date(fechaClase);
             fechaFin.setHours(parseInt(horaF), parseInt(minF));
             
-            // Status colors
+            // color estado
+
             let backgroundColor = '#2196F3';
             let borderColor = '#1976D2';
             let textColor = '#ffffff';
@@ -120,6 +140,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
               backgroundColor = '#f44336';
               borderColor = '#d32f2f';
             } else if (clase.estado === 'completada') {
+
               backgroundColor = '#4caf50';
               borderColor = '#388e3c';
             }
@@ -135,8 +156,6 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
               extendedProps: {
                 claseId: clase._id,
                 descripcion: clase.descripcion,
-                profesor: clase.profesor,
-                nombreProfesor: nombresProfesores[clase.profesor] || 'Cargando...',
                 sala: clase.sala,
                 estado: clase.estado,
                 horario: horario
@@ -159,7 +178,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
 
   useEffect(() => {
     cargarClases();
-  }, []);
+  }, [alumnoId]);
 
   const handleEventClick = (clickInfo) => {
     console.log('[CALENDAR-DEBUG] Evento clickeado:', clickInfo.event);
@@ -196,7 +215,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
   const handleViewChange = (view) => {
     const calendarApi = calendarRef.current.getApi();
     calendarApi.changeView(view);
-    
+
     setTimeout(updateCalendarTitle, 50);
   };
 
@@ -204,7 +223,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
   const calendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'timeGridWeek',
-    headerToolbar: false, // Usaremos nuestros propios controles
+    headerToolbar: false,
     events: eventos,
     eventClick: handleEventClick,
     height: 'auto',
@@ -233,12 +252,12 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
       minute: '2-digit',
       hour12: false
     },
-    // Callbacks para actualizar el título
     datesSet: updateCalendarTitle,
     viewDidMount: updateCalendarTitle
   };
 
   return (
+
     <Box sx={{ p: 1 }}>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
@@ -265,23 +284,22 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
             <IconButton 
               onClick={() => handleNavigation('prev')} 
               sx={{ 
-                color: '#ffffff',
-                backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                '&:hover': { backgroundColor: 'rgba(33, 150, 243, 0.2)' }
+                color: '#ffffff', 
+                fontWeight: 'bold',
+                textShadow: '0 2px 4px rgba(0,0,0,0.3)'
               }}
             >
-              <PrevIcon />
-            </IconButton>
-            <IconButton 
-              onClick={() => handleNavigation('next')} 
+              {alumnoId ? 'Mi Calendario de Clases' : 'Calendario de Clases'}
+            </Typography>
+            
+            <Chip 
+              label={`${eventos.length} clases`}
               sx={{ 
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
                 color: '#ffffff',
-                backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                '&:hover': { backgroundColor: 'rgba(33, 150, 243, 0.2)' }
+                fontWeight: 'bold'
               }}
-            >
-              <NextIcon />
-            </IconButton>
+            />
           </Box>
           
           {/* Título mes/período */}
@@ -343,34 +361,50 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
             aria-label="modo de vista"
             size="small"
             sx={{
-              backgroundColor: "rgba(68, 68, 68, 0.8)",
+              background: 'rgba(255, 255, 255, 0.1)',
               borderRadius: 2,
-              "& .MuiToggleButton-root": {
-                color: "#ffffff",
-                border: "1px solid rgba(102, 102, 102, 0.5)",
-                fontSize: "0.7rem",
-                padding: "4px 8px",
-                fontWeight: "500",
-                "&.Mui-selected": {
-                  backgroundColor: "#2196F3",
-                  color: "#ffffff",
-                  "&:hover": {
-                    backgroundColor: "#1976D2",
-                  }
-                },
-                "&:hover": {
-                  backgroundColor: "rgba(85, 85, 85, 0.8)",
-                }
-              }
+              p: 2,
+              backdropFilter: 'blur(10px)'
             }}
           >
-            <ToggleButton value="calendar" aria-label="vista calendario">
-              <CalendarMonth sx={{ fontSize: "1rem" }} />
-            </ToggleButton>
-            <ToggleButton value="list" aria-label="vista lista">
-              <List sx={{ fontSize: "1rem" }} />
-            </ToggleButton>
-          </ToggleButtonGroup>
+            {/* Navegación */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box display="flex" gap={1}>
+                <IconButton 
+                  onClick={() => handleNavigation('prev')} 
+                  sx={{ 
+                    color: '#ffffff',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
+                  }}
+                >
+                  <PrevIcon />
+                </IconButton>
+                <IconButton 
+                  onClick={() => handleNavigation('next')} 
+                  sx={{ 
+                    color: '#ffffff',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
+                  }}
+                >
+                  <NextIcon />
+                </IconButton>
+              </Box>
+              
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: '#ffffff', 
+                  fontWeight: 'bold',
+                  minWidth: '200px',
+                  textAlign: 'center',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                }}
+              >
+                {currentTitle}
+              </Typography>
+            </Box>
 
           {/* Controles vista */}
           <Box display="flex" gap={1} alignItems="center">
@@ -417,21 +451,53 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
             Mes
           </Button>
           </Box>
-        </Box>
-      </Box>
 
-      {/* Loading y Error */}
-      {loading && (
-        <Box display="flex" justifyContent="center" p={2}>
-          <CircularProgress sx={{ color: '#2196F3' }} />
-        </Box>
-      )}
+          {/* Controles de vista del calendario */}
+          <Box display="flex" justifyContent="center" mb={3}>
+            <ToggleButtonGroup
+              value="timeGridWeek"
+              exclusive
+              onChange={(e, newValue) => {
+                if (newValue) handleViewChange(newValue);
+              }}
+              size="small"
+              sx={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 2,
+                '& .MuiToggleButton-root': {
+                  color: '#ffffff',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    color: '#ffffff',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.3)'
+                    }
+                  },
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }
+              }}
+            >
+              <ToggleButton value="dayGridMonth" aria-label="mes">
+                Mes
+              </ToggleButton>
+              <ToggleButton value="timeGridWeek" aria-label="semana">
+                Semana
+              </ToggleButton>
+              <ToggleButton value="timeGridDay" aria-label="día">
+                Día
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Error al cargar las clases: {error}
-        </Alert>
-      )}
+          {/* Loading */}
+          {loading && (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+              <CircularProgress sx={{ color: '#ffffff' }} />
+            </Box>
+          )}
 
       {/* Calendario */}
       {!loading && !error && (
@@ -457,64 +523,79 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange }) => {
         fullWidth
         PaperProps={{
           sx: {
-            backgroundColor: '#333333',
-            color: 'white'
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            borderRadius: 3
           }
         }}
       >
-        <DialogTitle sx={{ color: 'white', borderBottom: '1px solid #555' }}>
+        <DialogTitle sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
           📚 Detalles de la Clase
         </DialogTitle>
+        
         <DialogContent sx={{ pt: 2 }}>
           {selectedEvent && (
             <Box>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ color: '#ffffff', fontWeight: 'bold' }}>
                 {selectedEvent.title}
               </Typography>
               
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Descripción:</strong> {selectedEvent.extendedProps.descripcion}
-              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <strong>Descripción:</strong>
+                </Typography>
+                <Typography variant="body1" sx={{ mt: 1, color: '#ffffff' }}>
+                  {selectedEvent.extendedProps.descripcion || 'Sin descripción'}
+                </Typography>
+              </Box>
               
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Profesor:</strong> {selectedEvent.extendedProps.nombreProfesor}
-              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <strong>Sala:</strong>
+                </Typography>
+                <Typography variant="body1" sx={{ mt: 1, color: '#ffffff' }}>
+                  {selectedEvent.extendedProps.sala || 'No especificada'}
+                </Typography>
+              </Box>
               
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Sala:</strong> {selectedEvent.extendedProps.sala}
-              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <strong>Horario:</strong>
+                </Typography>
+                <Typography variant="body1" sx={{ mt: 1, color: '#ffffff' }}>
+                  {selectedEvent.extendedProps.horario?.horaInicio} - {selectedEvent.extendedProps.horario?.horaFin}
+                </Typography>
+              </Box>
               
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Fecha:</strong> {selectedEvent.extendedProps.horario.dia}
-              </Typography>
-              
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Horario:</strong> {selectedEvent.extendedProps.horario.horaInicio} - {selectedEvent.extendedProps.horario.horaFin}
-              </Typography>
-              
-              <Box mt={2}>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <strong>Estado:</strong>
+                </Typography>
                 <Chip 
-                  label={selectedEvent.extendedProps.estado.toUpperCase()}
-                  sx={{ 
-                    backgroundColor: selectedEvent.backgroundColor,
-                    color: 'white',
-                    fontWeight: 'bold'
-                  }}
+                  label={selectedEvent.extendedProps.estado} 
+                  color={
+                    selectedEvent.extendedProps.estado === 'completada' ? 'success' : 'primary'
+                  }
+                  sx={{ mt: 1 }}
                 />
               </Box>
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
+        
+        <DialogActions sx={{ borderTop: '1px solid rgba(255,255,255,0.2)', p: 2 }}>
           <Button 
             onClick={() => setDialogOpen(false)}
-            sx={{ color: '#2196F3' }}
+            sx={{ 
+              color: 'rgba(255,255,255,0.8)',
+              '&:hover': { color: '#ffffff' }
+            }}
           >
             Cerrar
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Card>
   );
 };
 
