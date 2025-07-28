@@ -66,10 +66,25 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     try {
       const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
       if (response.ok) {
-        const data = await response.json();
-        const nombreCompleto = data.data.nombreCompleto || `${data.data.nombre} ${data.data.apellidos}`;
-        setNombresProfesores(prev => ({ ...prev, [id]: nombreCompleto }));
-        return nombreCompleto;
+        const responseText = await response.text();
+        if (!responseText || responseText.trim() === '') {
+          console.warn('⚠️ Respuesta vacía al obtener profesor');
+          return "Profesor desconocido";
+        }
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('❌ Error parseando JSON del profesor:', parseError);
+          return "Profesor desconocido";
+        }
+        
+        const nombreCompleto = data.data?.nombreCompleto || `${data.data?.nombre || ''} ${data.data?.apellidos || ''}`.trim();
+        if (nombreCompleto) {
+          setNombresProfesores(prev => ({ ...prev, [id]: nombreCompleto }));
+          return nombreCompleto;
+        }
       }
     } catch (error) {
       console.error("Error al obtener nombre del profesor:", error);
@@ -93,13 +108,40 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
         url = `${API_URL}/programadas`;
       }
       
+      console.log('🔍 Cargando clases desde:', url);
       const response = await fetchAutenticado(url);
       
+      console.log('📡 Respuesta del servidor:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+      
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+        // Intentar leer el texto de la respuesta para mejor debugging
+        const errorText = await response.text();
+        console.error('❌ Error en la respuesta:', errorText);
+        throw new Error(`Error ${response.status}: ${response.statusText} - ${errorText}`);
       }
       
-      const data = await response.json();
+      // Verificar si la respuesta tiene contenido
+      const responseText = await response.text();
+      console.log('📄 Respuesta completa:', responseText);
+      
+      if (!responseText || responseText.trim() === '') {
+        console.warn('⚠️ Respuesta vacía del servidor');
+        setEventos([]);
+        return;
+      }
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('❌ Error parseando JSON:', parseError);
+        console.error('📄 Contenido que causó el error:', responseText);
+        throw new Error('Respuesta del servidor no es un JSON válido');
+      }
       
       const clases = data.data || [];
       const eventosCalendario = [];
@@ -279,14 +321,16 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
             {isStudent() ? 'Mi Calendario de Clases' : 'Calendario de Clases'}
           </Typography>
           
-          <Chip 
-            label={`${eventos.length} clases`}
-            sx={{ 
-              backgroundColor: '#2196F3',
-              color: '#ffffff',
-              fontWeight: 'bold'
-            }}
-          />
+          {eventos.length > 0 && (
+            <Chip 
+              label={`${eventos.length} clases`}
+              sx={{ 
+                backgroundColor: '#2196F3',
+                color: '#ffffff',
+                fontWeight: 'bold'
+              }}
+            />
+          )}
         </Box>
         
         <Tooltip title="Actualizar">
@@ -414,19 +458,61 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
         </Box>
       )}
 
-      {/* Calendario */}
-      <Box 
-        className="calendar-container"
-        sx={{
-          mt: 2,
-          minHeight: '800px',
-        }}
-      >
-        <FullCalendar
-          ref={calendarRef}
-          {...calendarOptions}
-        />
-      </Box>
+      {/* Calendario o mensaje cuando no hay clases */}
+      {eventos.length === 0 ? (
+        <Box 
+          sx={{
+            mt: 2,
+            minHeight: '400px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(33, 150, 243, 0.05)',
+            borderRadius: 3,
+            border: '2px dashed rgba(33, 150, 243, 0.3)',
+            p: 4
+          }}
+        >
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              color: '#2196F3', 
+              fontWeight: 'bold',
+              mb: 2,
+              textAlign: 'center'
+            }}
+          >
+            📚 Sin clases asignadas
+          </Typography>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              color: 'text.secondary',
+              textAlign: 'center',
+              maxWidth: '400px'
+            }}
+          >
+            {isStudent() 
+              ? 'Actualmente no tienes clases asignadas. Contacta a tu administrador para que te asigne a las clases correspondientes.'
+              : 'No hay clases programadas para mostrar en el calendario.'
+            }
+          </Typography>
+        </Box>
+      ) : (
+        <Box 
+          className="calendar-container"
+          sx={{
+            mt: 2,
+            minHeight: '800px',
+          }}
+        >
+          <FullCalendar
+            ref={calendarRef}
+            {...calendarOptions}
+          />
+        </Box>
+      )}
 
       {/* Diálogo de detalles del evento */}
       <Dialog
