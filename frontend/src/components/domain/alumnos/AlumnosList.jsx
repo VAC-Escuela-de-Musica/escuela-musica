@@ -122,6 +122,8 @@ function AlumnosList() {
       try {
         await deleteAlumno(alumnoAEliminar._id);
         fetchAlumnos();
+        setSuccessMsg("Alumno eliminado exitosamente");
+        setShowSuccess(true);
       } catch (err) {
         alert("Error al eliminar alumno");
       }
@@ -158,7 +160,8 @@ function AlumnosList() {
         setEditingAlumno(null);
         localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
         localStorage.setItem("alumnos_showForm", "false");
-        showNotification("Alumno actualizado exitosamente", "success");
+        setSuccessMsg("Alumno modificado exitosamente");
+        setShowSuccess(true);
       } catch (err) {
         throw err; // lanza el error para que el formulario lo capture
       }
@@ -170,7 +173,8 @@ function AlumnosList() {
         setEditingAlumno(null);
         localStorage.setItem("alumnos_editingAlumno", JSON.stringify(null));
         localStorage.setItem("alumnos_showForm", "false");
-        showNotification("Alumno creado exitosamente", "success");
+        setSuccessMsg("Alumno agregado exitosamente");
+        setShowSuccess(true);
       } catch (err) {
         throw err; // Lanza el error para que el formulario lo capture
       }
@@ -261,7 +265,7 @@ function AlumnosList() {
         }}
       >
         <TextField
-          placeholder="Buscar alumno por nombre, email, RUT o curso..."
+          placeholder="Buscar alumno por nombre, RUT o curso..."
           variant="outlined"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -303,12 +307,13 @@ function AlumnosList() {
             fontSize: { xs: "0.8rem", md: "1rem" },
             minWidth: { xs: "100%", sm: "auto" },
             whiteSpace: "nowrap",
+            ml: { sm: "auto" }, // Esto lo empuja a la derecha en pantallas sm+
             "&:hover": {
               bgcolor: "#1976d2",
             },
           }}
         >
-          Agregar Alumno
+          Inscribir Alumno
         </Button>
       </Box>
       {/* Tabla de alumnos */}
