@@ -162,6 +162,111 @@
   .calendar-container .fc-event-time {
     font-size: 0.75rem !important;
   }
+
+  /* Optimizaciones para móviles */
+  .calendar-container .fc-daygrid-day-number {
+    font-size: 0.9rem !important;
+    padding: 4px !important;
+  }
+
+  .calendar-container .fc-col-header-cell {
+    padding: 8px 4px !important;
+  }
+
+  .calendar-container .fc-col-header-cell-cushion {
+    font-size: 0.85rem !important;
+  }
+
+  .calendar-container .fc-timegrid-slot-label {
+    font-size: 0.75rem !important;
+  }
+
+  /* Ajustar espaciado en vista de semana */
+  .calendar-container .fc-timegrid-slot {
+    height: 2.5em !important;
+  }
+
+  /* Hacer eventos más compactos */
+  .calendar-container .fc-event {
+    margin: 1px 0 !important;
+    padding: 2px 4px !important;
+  }
+}
+
+/* Tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .calendar-container .fc-toolbar-title {
+    font-size: 1.3rem !important;
+  }
+  
+  .calendar-container .fc-button {
+    padding: 8px 14px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .calendar-container .fc-event-title {
+    font-size: 0.85rem !important;
+  }
+  
+  .calendar-container .fc-event-time {
+    font-size: 0.8rem !important;
+  }
+
+  .calendar-container .fc-daygrid-day-number {
+    font-size: 0.95rem !important;
+  }
+
+  .calendar-container .fc-col-header-cell-cushion {
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .calendar-container .fc-toolbar-title {
+    font-size: 1rem !important;
+  }
+  
+  .calendar-container .fc-button {
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .calendar-container .fc-event-title {
+    font-size: 0.7rem !important;
+  }
+  
+  .calendar-container .fc-event-time {
+    font-size: 0.65rem !important;
+  }
+
+  .calendar-container .fc-daygrid-day-number {
+    font-size: 0.8rem !important;
+    padding: 2px !important;
+  }
+
+  .calendar-container .fc-col-header-cell {
+    padding: 6px 2px !important;
+  }
+
+  .calendar-container .fc-col-header-cell-cushion {
+    font-size: 0.75rem !important;
+  }
+
+  .calendar-container .fc-timegrid-slot-label {
+    font-size: 0.7rem !important;
+  }
+
+  /* Ajustar espaciado en vista de semana para móviles muy pequeños */
+  .calendar-container .fc-timegrid-slot {
+    height: 2em !important;
+  }
+
+  /* Hacer eventos aún más compactos */
+  .calendar-container .fc-event {
+    margin: 0.5px 0 !important;
+    padding: 1px 2px !important;
+  }
 }
 
 /* Animaciones */

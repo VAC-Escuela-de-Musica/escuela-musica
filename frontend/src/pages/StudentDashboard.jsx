@@ -124,7 +124,7 @@ const StudentDashboard = () => {
 
       <Grid container spacing={{ xs: 2, md: 3 }}>
         {/* Información del estudiante */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} lg={4} md={5}>
           <Card sx={{ height: 'fit-content' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               {/* Header con avatar */}
@@ -148,10 +148,24 @@ const StudentDashboard = () => {
                   {studentData?.nombreAlumno?.charAt(0)?.toUpperCase() || 'E'}
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  <Typography 
+                    variant={isMobile ? "h6" : "h5"} 
+                    sx={{ 
+                      fontWeight: 600, 
+                      mb: 0.5,
+                      fontSize: { xs: '1.1rem', sm: '1.25rem' }
+                    }}
+                  >
                     {studentData?.nombreAlumno || 'Estudiante'}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ 
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                      wordBreak: 'break-word'
+                    }}
+                  >
                     {user?.email || 'estudiante@email.com'}
                   </Typography>
                   <Chip 
@@ -174,8 +188,16 @@ const StudentDashboard = () => {
                   <ListItemText
                     primary="Email"
                     secondary={studentData?.email || user?.email || 'No disponible'}
-                    primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
-                    secondaryTypographyProps={{ variant: 'body2' }}
+                    primaryTypographyProps={{ 
+                      variant: 'body2', 
+                      fontWeight: 600,
+                      fontSize: { xs: '0.875rem', sm: '1rem' }
+                    }}
+                    secondaryTypographyProps={{ 
+                      variant: 'body2',
+                      fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                      wordBreak: 'break-word'
+                    }}
                   />
                 </ListItem>
                 
@@ -186,8 +208,15 @@ const StudentDashboard = () => {
                   <ListItemText
                     primary="Fecha de Ingreso"
                     secondary={new Date(studentData?.fechaCreacion || user?.createdAt || Date.now()).toLocaleDateString()}
-                    primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
-                    secondaryTypographyProps={{ variant: 'body2' }}
+                    primaryTypographyProps={{ 
+                      variant: 'body2', 
+                      fontWeight: 600,
+                      fontSize: { xs: '0.875rem', sm: '1rem' }
+                    }}
+                    secondaryTypographyProps={{ 
+                      variant: 'body2',
+                      fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                    }}
                   />
                 </ListItem>
               </List>
@@ -196,23 +225,24 @@ const StudentDashboard = () => {
         </Grid>
 
         {/* Calendario de clases */}
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12} lg={8} md={7}>
           <Card>
-            <CardContent sx={{ p: { xs: 1, md: 3 } }}>
+            <CardContent sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
               <Typography 
                 variant={isMobile ? "h6" : "h5"} 
                 gutterBottom 
                 sx={{ 
                   fontWeight: 600, 
                   mb: 3,
-                  textAlign: { xs: 'center', md: 'left' }
+                  textAlign: { xs: 'center', md: 'left' },
+                  fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
                 }}
               >
                 Mi Calendario de Clases
               </Typography>
               
               <Box sx={{ 
-                minHeight: { xs: '400px', md: '600px' },
+                minHeight: { xs: '350px', sm: '400px', md: '600px' },
                 '& .calendar-container': {
                   borderRadius: { xs: 1, md: 2 }
                 }
