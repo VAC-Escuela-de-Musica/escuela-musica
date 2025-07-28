@@ -28,22 +28,22 @@ const claseSchema = new mongoose.Schema({
       estado: { 
         type: String, 
         enum: ["activo", "inactivo", "suspendido"], 
-        default: "activo" 
+        default: "activo",
       },
       notas: String, // Notas adicionales sobre el estudiante en esta clase
       asistencia: [
         {
           fecha: { type: Date, required: true },
           presente: { type: Boolean, required: true },
-          observaciones: String
-        }
-      ]
-    }
+          observaciones: String,
+        },
+      ],
+    },
   ],
   visible: { type: Boolean, default: true },
 }, {
   timestamps: true,
-  versionKey: false
+  versionKey: false,
 });
 
 export default mongoose.model("Clase", claseSchema);
