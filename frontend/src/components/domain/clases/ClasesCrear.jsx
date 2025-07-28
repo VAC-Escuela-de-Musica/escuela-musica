@@ -19,13 +19,12 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { ArrowCircleLeftOutlined } from "@mui/icons-material";
 import { FixedSizeList } from "react-window";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/api/clases`;
-const API_BASE = import.meta.env.VITE_API_BASE_URL;
+const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 const fetchAutenticado = async (url, options = {}) => {
   const token = localStorage.getItem("token");
 
-  const csrfRes = await fetch(`${API_BASE}/api/csrf-token`, {
+  const csrfRes = await fetch(`${API_URL}/csrf-token`, {
     credentials: "include"
   });
   const csrfData = await csrfRes.json();
@@ -64,7 +63,7 @@ export default function ClasesCrear({ setActiveModule = null }) {
   const [mismaSala, setMismaSala] = useState(false);
   const [listaEstudiantes, setListaEstudiantes] = useState([]);
   const [alumnosSeleccionados, setAlumnosSeleccionados] = useState([]);
-
+  
   const currentYear = new Date().getFullYear();
   const maxDate = new Date(currentYear +1, 11, 31);
   const minDate = new Date(currentYear, 0, 1);
@@ -73,11 +72,15 @@ export default function ClasesCrear({ setActiveModule = null }) {
     const cargarProfesores = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${API_URL}/profesores`, {
+        const response = await fetch(`${API_URL}/clases/profesores`, {
           headers: {
             "Authorization": `Bearer ${token}`
           }
         });
+        if (response.status === 403) {
+          setAutorizado(false);
+          return;
+        }
         if (!response.ok) {
           throw new Error("Error al obtener profesores");
         }
@@ -96,7 +99,7 @@ export default function ClasesCrear({ setActiveModule = null }) {
   const cargarEstudiantes = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE}/api/alumnos/`, {
+        const response = await fetch(`${API_URL}/alumnos/`, {
           headers: {
             "Authorization": `Bearer ${token}`
           }
@@ -193,10 +196,10 @@ export default function ClasesCrear({ setActiveModule = null }) {
 
     try {
       console.log("[CREAR-DEBUG] Clases a enviar:", JSON.stringify(clasesParaEnviar, null, 2));
-      console.log("[CREAR-DEBUG] URL del endpoint:", `${API_URL}/batch`);
+      console.log("[CREAR-DEBUG] URL del endpoint:", `${API_URL}/clases/batch`);
       console.log("[CREAR-DEBUG] Datos enviados:", clasesParaEnviar);
-      
-      const response = await fetchAutenticado(`${API_URL}/batch`, {
+
+      const response = await fetchAutenticado(`${API_URL}/clases/batch`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -245,6 +248,7 @@ export default function ClasesCrear({ setActiveModule = null }) {
       setHoraFin(null);
       setRepeticiones([]);
       setRepetirClase("");
+      setAlumnosSeleccionados([]);
     } catch (error) {
       console.error("Error al guardar la clase:", error);
     }
@@ -277,7 +281,7 @@ export default function ClasesCrear({ setActiveModule = null }) {
 
   if (!autorizado) {
     return (
-      <Box sx={{ backgroundColor: "#222222", minHeight: "100vh", color: "white", p: 4 }}>
+      <Box sx={{ color: "white", marginLeft: 3, marginRight: 3 }}>
         <Typography variant="h5" gutterBottom>
           No tienes permisos para acceder a esta sección.
         </Typography>
@@ -718,7 +722,7 @@ export default function ClasesCrear({ setActiveModule = null }) {
             </Box>
           ))}
         </LocalizationProvider>
-        <Box mt={3} px={3} display="flex" gap={3}>
+        <Box mt={3} px={3} display="flex" gap={3} mb={1}>
           <ListaEstudiantes
             lista={listaEstudiantes}
             titulo="Lista de todos los estudiantes"

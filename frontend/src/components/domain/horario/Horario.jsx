@@ -30,7 +30,7 @@ export default function Clases() {
       {viewMode === "list" && (
         <Box>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="h4" gutterBottom sx={{ color: "#2196F3" }}>
+            <Typography variant="h4" gutterBottom sx={{ color: "#2196F3", marginLeft: 2 }}>
               {active === "dia" && "📅 Horario diario"}
               {active === "semanal" && "📅 Horario semanal"}
               {active === "mes" && "📅 Horario mensual"}
@@ -74,7 +74,7 @@ export default function Clases() {
                 </ToggleButton>
               </ToggleButtonGroup>
 
-              <Box display="flex" gap={1}>
+              <Box display="flex" gap={1} mr={2}>
               <Button
                 disabled={active === "dia"}
                 onClick={() => setActive("dia")}

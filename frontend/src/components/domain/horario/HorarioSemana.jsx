@@ -149,11 +149,12 @@ export default function HorarioSemana() {
 
   return (
       <Box sx={{ padding: 2, backgroundColor: "#333", color: "white" }}>
-
-          <Box display="flex" alignItems="center" justifyContent="start" gap={2}>
-    <Typography variant="h6" marginRight={3}>
-      Filtros:
-    </Typography>
+    <Box display="flex" alignItems="center" gap={2} mb={2}>
+            <Typography variant="h6" marginRight={3}>
+              Filtros:
+            </Typography>
+          </Box>
+    <Box display="flex" alignItems="center" justifyContent="start" gap={2}>
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
       <DatePicker
         label="Selecciona una fecha"
@@ -315,7 +316,7 @@ export default function HorarioSemana() {
                   borderRadius: 2,
                   minHeight: "150px",
                   textAlign: "center",
-                  width: "210px"
+                  width: "190px"
                 }}
               >
                 <Typography variant="subtitle2" sx={{ color: "#bbb" }}>{numeroDia}</Typography>

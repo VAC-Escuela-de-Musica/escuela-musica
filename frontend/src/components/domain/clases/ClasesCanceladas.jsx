@@ -8,6 +8,7 @@ const ClasesCanceladas = ({ setActiveModule = null }) => {
   const [canceledClases, setCanceledClases] = useState([]);
   const [filtroActivo, setFiltroActivo] = useState("todas");
   const [nombresProfesores, setNombresProfesores] = useState({});
+  const [autorizado, setAutorizado] = useState(true);
 
   const fetchAutenticado = async (url, options = {}) => {
     const token = localStorage.getItem("token");
@@ -28,6 +29,10 @@ const ClasesCanceladas = ({ setActiveModule = null }) => {
     if (!id || nombresProfesores[id]) return;
     try {
       const response = await fetchAutenticado(`${API_URL}/profesor/${id}`);
+      if (response.status === 403) {
+        setAutorizado(false);
+        return;
+      }
       if (response.ok) {
         const data = await response.json();
         setNombresProfesores(prev => ({ ...prev, [id]: data.data.nombreCompleto }));
@@ -40,6 +45,10 @@ const ClasesCanceladas = ({ setActiveModule = null }) => {
   const fetchCanceledClasses = async () => {
     try {
       const response = await fetchAutenticado(`${API_URL}/canceled_all`);
+      if (response.status === 403) {
+        setAutorizado(false);
+        return;
+      }
       if (!response.ok) {
         throw new Error("Error al obtener las clases canceladas.");
       }
@@ -55,6 +64,10 @@ const ClasesCanceladas = ({ setActiveModule = null }) => {
   const fetchPreviousCanceledClasses = async () => {
     try {
       const response = await fetchAutenticado(`${API_URL}/canceled_previous`);
+      if (response.status === 403) {
+        setAutorizado(false);
+        return;
+      }
       if (!response.ok) {
         throw new Error("Error al obtener las clases canceladas anteriores.");
       }
@@ -70,6 +83,10 @@ const ClasesCanceladas = ({ setActiveModule = null }) => {
   const fetchTodayCanceledClasses = async () => {
     try {
       const response = await fetchAutenticado(`${API_URL}/canceled_today`);
+      if (response.status === 403) {
+        setAutorizado(false);
+        return;
+      }
       if (!response.ok) {
         throw new Error("Error al obtener las clases canceladas de hoy.");
       }
@@ -85,6 +102,10 @@ const ClasesCanceladas = ({ setActiveModule = null }) => {
   const fetchNextCanceledClasses = async () => {
     try {
       const response = await fetchAutenticado(`${API_URL}/canceled_next`);
+      if (response.status === 403) {
+        setAutorizado(false);
+        return;
+      }
       if (!response.ok) {
         throw new Error("Error al obtener las clases canceladas próximas.");
       }
@@ -113,8 +134,21 @@ const ClasesCanceladas = ({ setActiveModule = null }) => {
     }
   }, [filtroActivo]);
 
+  if (!autorizado) {
+      return (
+        <Box sx={{ color: "white", marginLeft: 3, marginRight: 3 }}>
+          <Typography variant="h5" gutterBottom>
+            No tienes permisos para acceder a esta sección.
+          </Typography>
+          <Typography>
+            Puedes navegar a otro módulo desde el menú lateral.
+          </Typography>
+        </Box>
+      );
+    }
+
   return (
-    <Box sx={{ color: "white", marginLeft: 3, marginRight: 3 }}>
+    <Box sx={{ color: "white", marginLeft: 3, marginRight: 3, marginBottom: 3 }}>
       <Typography variant="h4" gutterBottom>
         Clases Canceladas
       </Typography>

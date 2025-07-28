@@ -9,11 +9,11 @@ const ListaEstudiantes = ({ lista, titulo, onItemClick, textoBoton, colorBoton }
         {titulo}
       </Typography>
       <FixedSizeList
-        height={200}
+        height={500}
         width="100%"
         itemSize={60}
         itemCount={lista.length}
-        style={{ backgroundColor: "#333", color: "white", borderRadius: 4 }}
+        style={{ backgroundColor: "#333", color: "white", borderRadius: 4, mb: 2 }}
       >
         {({ index, style }) => {
           const estudiante = lista[index];
