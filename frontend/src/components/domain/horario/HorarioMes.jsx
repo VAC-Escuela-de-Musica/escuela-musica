@@ -149,11 +149,13 @@ export default function HorarioMes() {
 
     return (
         <Box sx={{ padding: 2, backgroundColor: "#333", color: "white" }}>
-            
+            <Box display="flex" alignItems="center" gap={2} mb={2}>
+            <Typography variant="h6" marginRight={3}>
+              Filtros:
+            </Typography>
+          </Box>
             <Box display="flex" alignItems="center" justifyContent="start" gap={2}>
-              <Typography variant="h6" marginRight={3}>
-                Filtros:
-              </Typography>
+              
 
               <FormControl>
                 <InputLabel sx={{ color: "white" }}>Mes</InputLabel>
