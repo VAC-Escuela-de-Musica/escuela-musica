@@ -350,7 +350,7 @@ const InternalMessageManager = () => {
           recipientType: 'all_students',
           recipient: ''
         });
-        setQuickSuccess('Mensaje enviado exitosamente');
+        setQuickSuccess('Mensaje Listo para Enviar, dele click en el boton de enviar mensaje en la lista de historial');
         
         // Limpiar el mensaje de éxito después de 3 segundos
         setTimeout(() => setQuickSuccess(null), 3000);
