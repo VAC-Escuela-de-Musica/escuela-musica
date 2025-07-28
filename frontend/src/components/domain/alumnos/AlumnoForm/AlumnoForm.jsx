@@ -353,55 +353,110 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
               onChange={handleChange}
               gridField="email"
             />
-            <LocalizationProvider
-              dateAdapter={AdapterDateFns}
-              adapterLocale={es}
-            >
-              <DatePicker
-                label="Fecha de Ingreso"
-                value={form.fechaIngreso}
-                onChange={handleFechaIngresoChange}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    name="fechaIngreso"
-                    error={!!fieldErrors.fechaIngreso}
-                    helperText={fieldErrors.fechaIngreso}
-                    fullWidth
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "rgba(51, 51, 51, 1)",
-                        color: "#ffffff",
-                        "& fieldset": {
-                          borderColor: "#555555",
+            <Box sx={{ gridColumn: { xs: "1", md: "span 1" } }}>
+              <LocalizationProvider
+                dateAdapter={AdapterDateFns}
+                adapterLocale={es}
+              >
+                <DatePicker
+                  label="Fecha de Ingreso"
+                  value={form.fechaIngreso}
+                  onChange={handleFechaIngresoChange}
+                  slotProps={{
+                    textField: {
+                      name: "fechaIngreso",
+                      error: !!fieldErrors.fechaIngreso,
+                      helperText: fieldErrors.fechaIngreso,
+                      fullWidth: true,
+                      margin: "normal",
+                      variant: "outlined",
+                      sx: {
+                        "& .MuiOutlinedInput-root": {
+                          backgroundColor: "#2a2a2a !important",
+                          color: "#ffffff",
+                          "& input": {
+                            backgroundColor: "transparent !important",
+                            color: "#ffffff",
+                          },
+                          "& fieldset": {
+                            borderColor: "#555555",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "#777777",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#2196f3",
+                          },
                         },
-                        "&:hover fieldset": {
+                        "& .MuiInputLabel-root": {
+                          color: "#aaaaaa",
+                          "&.Mui-focused": {
+                            color: "#2196f3",
+                          },
+                        },
+                        "& .MuiFormHelperText-root": {
+                          color: "#aaaaaa",
+                          "&.Mui-error": {
+                            color: "#f44336",
+                          },
+                        },
+                        "& .MuiIconButton-root": {
+                          color: "#aaaaaa",
+                        },
+                        // Estilos específicos para MUI X DatePicker
+                        "& .MuiPickersTextField-root": {
+                          backgroundColor: "#2a2a2a !important",
+                        },
+                        "& .MuiPickersInputBase-root": {
+                          backgroundColor: "#2a2a2a !important",
+                          color: "#ffffff",
+                        },
+                        "& .MuiPickersInputBase-input": {
+                          backgroundColor: "transparent !important",
+                          color: "#ffffff",
+                        },
+                        "& .MuiPickersOutlinedInput-root": {
+                          backgroundColor: "#2a2a2a !important",
+                          color: "#ffffff",
+                        },
+                      },
+                    },
+                    popper: {
+                      sx: {
+                        "& .MuiPaper-root": {
+                          backgroundColor: "#2a2a2a",
+                          color: "#ffffff",
+                        },
+                        "& .MuiPickersDay-root": {
+                          color: "#ffffff",
+                          "&:hover": {
+                            backgroundColor: "#444444",
+                          },
+                          "&.Mui-selected": {
+                            backgroundColor: "#2196f3",
+                            "&:hover": {
+                              backgroundColor: "#1976d2",
+                            },
+                          },
+                        },
+                        "& .MuiPickersCalendarHeader-root": {
+                          color: "#ffffff",
+                        },
+                        "& .MuiPickersArrowSwitcher-button": {
+                          color: "#ffffff",
+                        },
+                        "& .MuiDayCalendar-weekDayLabel": {
+                          color: "#aaaaaa",
+                        },
+                        "& .MuiPickersDay-today": {
                           borderColor: "#2196f3",
                         },
-                        "&.Mui-focused fieldset": {
-                          borderColor: "#2196f3",
-                        },
                       },
-                      "& .MuiInputLabel-root": {
-                        color: "#aaaaaa",
-                        "&.Mui-focused": {
-                          color: "#2196f3",
-                        },
-                      },
-                      "& .MuiFormHelperText-root": {
-                        color: "#aaaaaa",
-                        "&.Mui-error": {
-                          color: "#f44336",
-                        },
-                      },
-                      "& .MuiIconButton-root": {
-                        color: "#aaaaaa",
-                      },
-                    }}
-                  />
-                )}
-              />
-            </LocalizationProvider>
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+            </Box>
             <AlumnoDatos
               values={form}
               errors={fieldErrors}
@@ -528,8 +583,8 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
       disableAutoFocus
       PaperProps={{
         sx: {
-          backgroundColor: "rgba(42, 42, 42, 1)",
-          color: "rgba(42, 42, 42, 1))",
+          backgroundColor: "#2a2a2a",
+          color: "#ffffff",
           borderRadius: 3,
           boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
         },

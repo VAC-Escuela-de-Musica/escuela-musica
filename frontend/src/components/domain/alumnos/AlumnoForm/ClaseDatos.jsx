@@ -11,6 +11,88 @@ import {
 } from "@mui/material";
 import { tipoCursoOpciones, modalidadOpciones, diasSemana } from "./constants";
 
+const darkTextFieldStyles = {
+  '& .MuiOutlinedInput-root': {
+    backgroundColor: "#333333",
+    color: "#ffffff",
+    '& fieldset': {
+      borderColor: "#555555",
+    },
+    '&:hover fieldset': {
+      borderColor: "#777777",
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: "#2196f3",
+    },
+  },
+  '& .MuiInputLabel-root': {
+    color: "#aaaaaa",
+    '&.Mui-focused': {
+      color: "#2196f3",
+    },
+  },
+  '& .MuiFormHelperText-root': {
+    color: "#aaaaaa",
+  },
+};
+
+const darkSelectStyles = {
+  backgroundColor: "#333333",
+  color: "#ffffff",
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: "#555555",
+  },
+  '&:hover .MuiOutlinedInput-notchedOutline': {
+    borderColor: "#777777",
+  },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+    borderColor: "#2196f3",
+  },
+  '& .MuiSvgIcon-root': {
+    color: "#ffffff",
+  },
+};
+
+const darkInputLabelStyles = {
+  color: "#aaaaaa",
+  '&.Mui-focused': {
+    color: "#2196f3",
+  },
+};
+
+const darkMenuItemStyles = {
+  backgroundColor: "#333333",
+  color: "#ffffff",
+  '&:hover': {
+    backgroundColor: "#444444",
+  },
+  '&.Mui-selected': {
+    backgroundColor: "#2196f3",
+  },
+};
+
+const darkMenuProps = {
+  PaperProps: {
+    sx: {
+      backgroundColor: "#333333",
+      color: "#ffffff",
+      '& .MuiMenuItem-root': {
+        backgroundColor: "#333333",
+        color: "#ffffff",
+        '&:hover': {
+          backgroundColor: "#444444",
+        },
+        '&.Mui-selected': {
+          backgroundColor: "#2196f3",
+          '&:hover': {
+            backgroundColor: "#1976d2",
+          },
+        },
+      },
+    },
+  },
+};
+
 function ClaseDatos({ values, errors, onChange, onSelectChange }) {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 2 }}>
@@ -32,7 +114,7 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           required
           error={!!errors.curso}
           helperText={errors.curso}
-          sx={{ flex: 1 }}
+          sx={{ flex: 1, ...darkTextFieldStyles }}
         />
         <FormControl
           fullWidth
@@ -41,7 +123,7 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           sx={{ flex: 1 }}
           error={!!errors.tipoCurso}
         >
-          <InputLabel id="tipoCurso-label">Tipo de Curso</InputLabel>
+          <InputLabel id="tipoCurso-label" sx={darkInputLabelStyles}>Tipo de Curso</InputLabel>
           <Select
             labelId="tipoCurso-label"
             name="tipoCurso"
@@ -50,9 +132,10 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
             required
             label="Tipo de Curso"
             error={!!errors.tipoCurso}
+            sx={darkSelectStyles}
           >
             {tipoCursoOpciones.map((op) => (
-              <MenuItem key={op} value={op}>
+              <MenuItem key={op} value={op} sx={darkMenuItemStyles}>
                 {op}
               </MenuItem>
             ))}
@@ -85,7 +168,7 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           sx={{ flex: 1 }}
           error={!!errors.modalidadClase}
         >
-          <InputLabel id="modalidadClase-label">Modalidad de Clase</InputLabel>
+          <InputLabel id="modalidadClase-label" sx={darkInputLabelStyles}>Modalidad de Clase</InputLabel>
           <Select
             labelId="modalidadClase-label"
             name="modalidadClase"
@@ -94,9 +177,10 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
             required
             label="Modalidad de Clase"
             error={!!errors.modalidadClase}
+            sx={darkSelectStyles}
           >
             {modalidadOpciones.map((op) => (
-              <MenuItem key={op} value={op}>
+              <MenuItem key={op} value={op} sx={darkMenuItemStyles}>
                 {op}
               </MenuItem>
             ))}
@@ -121,7 +205,7 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           sx={{ flex: 1 }}
           error={!!errors.dia}
         >
-          <InputLabel id="dia-label">Día</InputLabel>
+          <InputLabel id="dia-label" sx={darkInputLabelStyles}>Día</InputLabel>
           <Select
             labelId="dia-label"
             name="dia"
@@ -130,9 +214,10 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
             required
             label="Día"
             error={!!errors.dia}
+            sx={darkSelectStyles}
           >
             {diasSemana.map((dia) => (
-              <MenuItem key={dia} value={dia}>
+              <MenuItem key={dia} value={dia} sx={darkMenuItemStyles}>
                 {dia}
               </MenuItem>
             ))}
@@ -171,7 +256,7 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           required
           error={!!errors.hora}
           helperText={errors.hora}
-          sx={{ flex: 1 }}
+          sx={{ flex: 1, ...darkTextFieldStyles }}
         />
       </Box>
     </Box>
