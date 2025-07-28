@@ -735,7 +735,7 @@ export default function ClasesCrear({ setActiveModule = null }) {
           />
           <ListaEstudiantes
             lista={alumnosSeleccionados}
-            titulo="Estudiantes registrados en esta clase"
+            titulo="Estudiantes a registrar en esta clase"
             textoBoton="Quitar"
             colorBoton="#F75C03"
             onItemClick={(est) => {
