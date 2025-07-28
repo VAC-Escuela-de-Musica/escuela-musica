@@ -1,13 +1,26 @@
 import { formatearHora, esHoraValida } from "./utils";
 // Subcomponente: datos de clase
 import React from "react";
-import { TextField, Box, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import {
+  TextField,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import { tipoCursoOpciones, modalidadOpciones, diasSemana } from "./constants";
 
 function ClaseDatos({ values, errors, onChange, onSelectChange }) {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          gap: 2,
+        }}
+      >
         <TextField
           label="Curso"
           name="curso"
@@ -21,7 +34,13 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           helperText={errors.curso}
           sx={{ flex: 1 }}
         />
-        <FormControl fullWidth margin="normal" variant="outlined" sx={{ flex: 1 }} error={!!errors.tipoCurso}>
+        <FormControl
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          sx={{ flex: 1 }}
+          error={!!errors.tipoCurso}
+        >
           <InputLabel id="tipoCurso-label">Tipo de Curso</InputLabel>
           <Select
             labelId="tipoCurso-label"
@@ -33,14 +52,39 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
             error={!!errors.tipoCurso}
           >
             {tipoCursoOpciones.map((op) => (
-              <MenuItem key={op} value={op}>{op}</MenuItem>
+              <MenuItem key={op} value={op}>
+                {op}
+              </MenuItem>
             ))}
           </Select>
-          {errors.tipoCurso && <div style={{color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px'}}>{errors.tipoCurso}</div>}
+          {errors.tipoCurso && (
+            <div
+              style={{
+                color: "#d32f2f",
+                fontSize: "0.75rem",
+                marginTop: "3px",
+                marginLeft: "14px",
+              }}
+            >
+              {errors.tipoCurso}
+            </div>
+          )}
         </FormControl>
       </Box>
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-        <FormControl fullWidth margin="normal" variant="outlined" sx={{ flex: 1 }} error={!!errors.modalidadClase}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          gap: 2,
+        }}
+      >
+        <FormControl
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          sx={{ flex: 1 }}
+          error={!!errors.modalidadClase}
+        >
           <InputLabel id="modalidadClase-label">Modalidad de Clase</InputLabel>
           <Select
             labelId="modalidadClase-label"
@@ -52,12 +96,31 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
             error={!!errors.modalidadClase}
           >
             {modalidadOpciones.map((op) => (
-              <MenuItem key={op} value={op}>{op}</MenuItem>
+              <MenuItem key={op} value={op}>
+                {op}
+              </MenuItem>
             ))}
           </Select>
-          {errors.modalidadClase && <div style={{color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px'}}>{errors.modalidadClase}</div>}
+          {errors.modalidadClase && (
+            <div
+              style={{
+                color: "#d32f2f",
+                fontSize: "0.75rem",
+                marginTop: "3px",
+                marginLeft: "14px",
+              }}
+            >
+              {errors.modalidadClase}
+            </div>
+          )}
         </FormControl>
-        <FormControl fullWidth margin="normal" variant="outlined" sx={{ flex: 1 }} error={!!errors.dia}>
+        <FormControl
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          sx={{ flex: 1 }}
+          error={!!errors.dia}
+        >
           <InputLabel id="dia-label">Día</InputLabel>
           <Select
             labelId="dia-label"
@@ -69,23 +132,36 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
             error={!!errors.dia}
           >
             {diasSemana.map((dia) => (
-              <MenuItem key={dia} value={dia}>{dia}</MenuItem>
+              <MenuItem key={dia} value={dia}>
+                {dia}
+              </MenuItem>
             ))}
           </Select>
-          {errors.dia && <div style={{color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px'}}>{errors.dia}</div>}
+          {errors.dia && (
+            <div
+              style={{
+                color: "#d32f2f",
+                fontSize: "0.75rem",
+                marginTop: "3px",
+                marginLeft: "14px",
+              }}
+            >
+              {errors.dia}
+            </div>
+          )}
         </FormControl>
         <TextField
           label="Hora (HH:MM)"
           name="hora"
           value={values.hora}
-          onChange={e => {
+          onChange={(e) => {
             const formatted = formatearHora(e.target.value);
             // Llama al handler original con el valor formateado
             onChange({
               target: {
                 name: "hora",
-                value: formatted
-              }
+                value: formatted,
+              },
             });
           }}
           placeholder="Ej: 16:00"
@@ -93,8 +169,8 @@ function ClaseDatos({ values, errors, onChange, onSelectChange }) {
           margin="normal"
           variant="outlined"
           required
-          error={values.hora && !esHoraValida(values.hora)}
-          helperText={values.hora && !esHoraValida(values.hora) ? "Hora no válida (HH:MM)" : ""}
+          error={!!errors.hora}
+          helperText={errors.hora}
           sx={{ flex: 1 }}
         />
       </Box>

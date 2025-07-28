@@ -36,9 +36,18 @@ import PersonIcon from "@mui/icons-material/Person";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import BadgeIcon from "@mui/icons-material/Badge";
+import PhoneIcon from "@mui/icons-material/Phone";
+import EmailIcon from "@mui/icons-material/Email";
+import SchoolIcon from "@mui/icons-material/School";
+import CategoryIcon from "@mui/icons-material/Category";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import EventIcon from "@mui/icons-material/Event";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { jsPDF } from "jspdf";
-import { useAuth } from '../../../context/AuthContext.jsx';
-import UnauthorizedAccess from '../../common/UnauthorizedAccess.jsx';
+import { useAuth } from "../../../context/AuthContext.jsx";
+import UnauthorizedAccess from "../../common/UnauthorizedAccess.jsx";
 
 function AlumnosList() {
   const { isAdmin } = useAuth();
@@ -46,7 +55,7 @@ function AlumnosList() {
   // Verificar permisos de acceso (solo admin puede gestionar estudiantes)
   if (!isAdmin()) {
     return (
-      <UnauthorizedAccess 
+      <UnauthorizedAccess
         title="Gestión de Estudiantes"
         message="Solo administradores pueden gestionar la información de estudiantes."
         suggestion="Contacta al administrador si necesitas consultar o modificar datos de estudiantes."
@@ -116,9 +125,19 @@ function AlumnosList() {
     localStorage.setItem("alumnos_showForm", "false");
   };
   const handleSubmitForm = async (formData) => {
+    // Función para obtener el valor de una cookie por nombre
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(";").shift();
+      return null;
+    };
+
+    const csrfToken = getCookie("csrf-token");
+
     if (editingAlumno && editingAlumno._id) {
       try {
-        await updateAlumno(editingAlumno._id, formData);
+        await updateAlumno(editingAlumno._id, formData, csrfToken);
         fetchAlumnos();
         setShowForm(false);
         setEditingAlumno(null);
@@ -126,11 +145,11 @@ function AlumnosList() {
         localStorage.setItem("alumnos_showForm", "false");
         showNotification("Alumno actualizado exitosamente", "success");
       } catch (err) {
-        alert("Error al actualizar alumno");
+        throw err; // lanza el error para que el formulario lo capture
       }
     } else {
       try {
-        await createAlumno(formData);
+        await createAlumno(formData, csrfToken);
         fetchAlumnos();
         setShowForm(false);
         setEditingAlumno(null);
@@ -138,7 +157,7 @@ function AlumnosList() {
         localStorage.setItem("alumnos_showForm", "false");
         showNotification("Alumno creado exitosamente", "success");
       } catch (err) {
-        alert("Error al crear alumno");
+        throw err; // Lanza el error para que el formulario lo capture
       }
     }
   };
@@ -195,180 +214,302 @@ function AlumnosList() {
   };
 
   return (
-    <Box sx={{ padding: 2 }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        backgroundColor: "#2a2a2a",
+        color: "#ffffff",
+        p: 3,
+      }}
+    >
+      {/* Título */}
       <Typography
         variant="h4"
-        sx={{ color: "#43a047", mb: 2, fontWeight: "bold" }}
+        sx={{
+          color: "#2196f3",
+          fontWeight: "bold",
+          fontSize: { xs: "1.8rem", md: "2.5rem" },
+          mb: 4,
+        }}
       >
         Lista de Alumnos
       </Typography>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+
+      {/* Barra de búsqueda y botón agregar en la misma línea */}
+      <Box
+        sx={{
+          display: "flex",
+          gap: 2,
+          mb: 4,
+          alignItems: "center",
+          flexDirection: { xs: "column", sm: "row" },
+        }}
+      >
         <TextField
-          label="Buscar alumno por nombre, email, RUT o curso..."
+          placeholder="Buscar alumno por nombre, email, RUT o curso..."
           variant="outlined"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{
             flex: 1,
-            background: "#222",
-            input: { color: "#fff" },
-            label: { color: "#aaa" },
-            borderRadius: 1,
-          }}
-          InputProps={{
-            sx: { color: "#fff" },
+            maxWidth: { xs: "100%", sm: 600 },
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "#333333",
+              color: "#ffffff",
+              borderRadius: 2,
+              "& fieldset": {
+                borderColor: "#555555",
+              },
+              "&:hover fieldset": {
+                borderColor: "#2196f3",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "#2196f3",
+              },
+            },
+            "& .MuiInputBase-input::placeholder": {
+              color: "#aaaaaa",
+              opacity: 1,
+            },
           }}
         />
         <Button
           variant="contained"
-          color="success"
           startIcon={<AddIcon />}
-          sx={{
-            textTransform: "uppercase",
-            fontWeight: "bold",
-            fontSize: 16,
-            px: 3,
-            py: 1.5,
-            borderRadius: 1,
-          }}
           onClick={handleCreate}
+          sx={{
+            bgcolor: "#2196f3",
+            color: "#fff",
+            fontWeight: "bold",
+            textTransform: "uppercase",
+            px: { xs: 2, md: 3 },
+            py: { xs: 1.2, md: 1.5 },
+            borderRadius: 2,
+            fontSize: { xs: "0.8rem", md: "1rem" },
+            minWidth: { xs: "100%", sm: "auto" },
+            whiteSpace: "nowrap",
+            "&:hover": {
+              bgcolor: "#1976d2",
+            },
+          }}
         >
           Agregar Alumno
         </Button>
       </Box>
+      {/* Tabla de alumnos */}
       <TableContainer
         component={Paper}
-        sx={{ borderRadius: 3, boxShadow: 2, overflowX: "auto" }}
+        sx={{
+          backgroundColor: "#3a3a3a",
+          borderRadius: 3,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+          overflow: "hidden",
+        }}
       >
         <Table
           sx={{
-            tableLayout: "auto",
-            width: "100%",
-            fontSize: "0.92rem",
+            minWidth: 650,
+            "& .MuiTableCell-root": {
+              color: "#ffffff",
+              borderBottom: "1px solid #444444",
+            },
           }}
         >
-          <TableHead sx={{ background: "#e8f5e9" }}>
+          <TableHead sx={{ backgroundColor: "#4a4a4a" }}>
             <TableRow>
-              <TableCell align="center" sx={{ fontSize: "0.92rem" }}>
+              <TableCell
+                align="center"
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: "0.9rem",
+                  color: "#ffffff",
+                }}
+              >
                 N°
               </TableCell>
               <TableCell
                 align="center"
-                sx={{ fontSize: "0.92rem" }}
-              ></TableCell>
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: "0.9rem",
+                  color: "#ffffff",
+                }}
+              >
+                {/* Avatar column */}
+              </TableCell>
               <TableCell
                 sx={{
                   cursor: "pointer",
                   fontWeight: "bold",
-                  fontSize: "0.92rem",
+                  fontSize: "0.9rem",
+                  color: "#ffffff",
+                  "&:hover": { color: "#2196f3" },
                 }}
                 onClick={() => handleSort("nombreAlumno")}
               >
-                Nombre{" "}
-                {sortBy === "nombreAlumno"
-                  ? sortOrder === "asc"
-                    ? "▲"
-                    : "▼"
-                  : ""}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <AccountCircleIcon sx={{ fontSize: "1.1rem" }} />
+                  Nombre{" "}
+                  {sortBy === "nombreAlumno"
+                    ? sortOrder === "asc"
+                      ? "▲"
+                      : "▼"
+                    : ""}
+                </Box>
               </TableCell>
               <TableCell
                 sx={{
                   cursor: "pointer",
                   fontWeight: "bold",
-                  fontSize: "0.92rem",
+                  fontSize: "0.9rem",
+                  color: "#ffffff",
+                  "&:hover": { color: "#2196f3" },
                 }}
                 onClick={() => handleSort("rutAlumno")}
               >
-                RUT{" "}
-                {sortBy === "rutAlumno"
-                  ? sortOrder === "asc"
-                    ? "▲"
-                    : "▼"
-                  : ""}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <BadgeIcon sx={{ fontSize: "1.1rem" }} />
+                  RUT{" "}
+                  {sortBy === "rutAlumno"
+                    ? sortOrder === "asc"
+                      ? "▲"
+                      : "▼"
+                    : ""}
+                </Box>
               </TableCell>
               <TableCell
                 sx={{
                   cursor: "pointer",
                   fontWeight: "bold",
-                  fontSize: "0.92rem",
+                  fontSize: "0.9rem",
+                  color: "#ffffff",
+                  "&:hover": { color: "#2196f3" },
                 }}
                 onClick={() => handleSort("telefonoAlumno")}
               >
-                Teléfono{" "}
-                {sortBy === "telefonoAlumno"
-                  ? sortOrder === "asc"
-                    ? "▲"
-                    : "▼"
-                  : ""}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <PhoneIcon sx={{ fontSize: "1.1rem" }} />
+                  Teléfono{" "}
+                  {sortBy === "telefonoAlumno"
+                    ? sortOrder === "asc"
+                      ? "▲"
+                      : "▼"
+                    : ""}
+                </Box>
               </TableCell>
               <TableCell
                 sx={{
                   cursor: "pointer",
                   fontWeight: "bold",
-                  fontSize: "0.92rem",
+                  fontSize: "0.9rem",
+                  color: "#ffffff",
+                  "&:hover": { color: "#2196f3" },
                 }}
                 onClick={() => handleSort("curso")}
               >
-                Curso{" "}
-                {sortBy === "curso" ? (sortOrder === "asc" ? "▲" : "▼") : ""}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <SchoolIcon sx={{ fontSize: "1.1rem" }} />
+                  Curso{" "}
+                  {sortBy === "curso" ? (sortOrder === "asc" ? "▲" : "▼") : ""}
+                </Box>
               </TableCell>
               <TableCell
                 sx={{
                   cursor: "pointer",
                   fontWeight: "bold",
-                  fontSize: "0.92rem",
+                  fontSize: "0.9rem",
+                  color: "#ffffff",
                   display: { xs: "none", sm: "table-cell" },
+                  "&:hover": { color: "#2196f3" },
                 }}
                 onClick={() => handleSort("tipoCurso")}
               >
-                Tipo de Curso{" "}
-                {sortBy === "tipoCurso"
-                  ? sortOrder === "asc"
-                    ? "▲"
-                    : "▼"
-                  : ""}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <CategoryIcon sx={{ fontSize: "1.1rem" }} />
+                  Tipo de Curso{" "}
+                  {sortBy === "tipoCurso"
+                    ? sortOrder === "asc"
+                      ? "▲"
+                      : "▼"
+                    : ""}
+                </Box>
               </TableCell>
               <TableCell
                 sx={{
                   cursor: "pointer",
                   fontWeight: "bold",
-                  fontSize: "0.92rem",
+                  fontSize: "0.9rem",
+                  color: "#ffffff",
                   display: { xs: "none", sm: "table-cell" },
+                  "&:hover": { color: "#2196f3" },
                 }}
                 onClick={() => handleSort("modalidadClase")}
               >
-                Modalidad{" "}
-                {sortBy === "modalidadClase"
-                  ? sortOrder === "asc"
-                    ? "▲"
-                    : "▼"
-                  : ""}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <LocationOnIcon sx={{ fontSize: "1.1rem" }} />
+                  Modalidad{" "}
+                  {sortBy === "modalidadClase"
+                    ? sortOrder === "asc"
+                      ? "▲"
+                      : "▼"
+                    : ""}
+                </Box>
               </TableCell>
               <TableCell
                 sx={{
                   cursor: "pointer",
                   fontWeight: "bold",
-                  fontSize: "0.92rem",
+                  fontSize: "0.9rem",
+                  color: "#ffffff",
                   display: { xs: "none", sm: "table-cell" },
+                  "&:hover": { color: "#2196f3" },
                 }}
                 onClick={() => handleSort("fechaIngreso")}
               >
-                Fecha Ingreso{" "}
-                {sortBy === "fechaIngreso"
-                  ? sortOrder === "asc"
-                    ? "▲"
-                    : "▼"
-                  : ""}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <EventIcon sx={{ fontSize: "1.1rem" }} />
+                  Fecha Ingreso{" "}
+                  {sortBy === "fechaIngreso"
+                    ? sortOrder === "asc"
+                      ? "▲"
+                      : "▼"
+                    : ""}
+                </Box>
               </TableCell>
-              <TableCell align="center" sx={{ fontSize: "0.92rem" }}>
-                Acciones
+              <TableCell
+                align="center"
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: "0.9rem",
+                  color: "#ffffff",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 1,
+                  }}
+                >
+                  <SettingsIcon sx={{ fontSize: "1.1rem" }} />
+                  Acciones
+                </Box>
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {sortedAlumnos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} align="center">
+                <TableCell
+                  colSpan={10}
+                  align="center"
+                  sx={{
+                    color: "#aaaaaa",
+                    fontStyle: "italic",
+                    py: 4,
+                  }}
+                >
                   No hay alumnos registrados.
                 </TableCell>
               </TableRow>
@@ -377,53 +518,81 @@ function AlumnosList() {
                 <TableRow
                   key={alumno._id}
                   hover
-                  sx={{ cursor: "pointer" }}
+                  sx={{
+                    cursor: "pointer",
+                    "&:hover": {
+                      backgroundColor: "#4a4a4a",
+                    },
+                    "&:nth-of-type(even)": {
+                      backgroundColor: "#404040",
+                    },
+                  }}
                   onClick={() => {
                     setSelectedAlumno(alumno);
                     setOpenFicha(true);
                     setTabIndex(0);
                   }}
                 >
-                  <TableCell align="center">{idx + 1}</TableCell>
+                  <TableCell align="center" sx={{ color: "#ffffff" }}>
+                    {idx + 1}
+                  </TableCell>
                   <TableCell align="center">
                     <Avatar
                       src={alumno.fotoUrl || ""}
                       alt={alumno.nombreAlumno}
                       sx={{
-                        width: 36,
-                        height: 36,
-                        bgcolor: "#eee",
-                        color: "#222",
+                        width: 40,
+                        height: 40,
+                        bgcolor: "#2196f3",
+                        color: "#ffffff",
                         fontSize: "1rem",
+                        fontWeight: "bold",
                       }}
                     >
                       {!alumno.fotoUrl && alumno.nombreAlumno
-                        ? alumno.nombreAlumno[0]
+                        ? alumno.nombreAlumno[0].toUpperCase()
                         : null}
                     </Avatar>
                   </TableCell>
-                  <TableCell sx={{ fontSize: "0.92rem" }}>
+                  <TableCell
+                    sx={{
+                      fontSize: "0.9rem",
+                      color: "#ffffff",
+                      fontWeight: "500",
+                    }}
+                  >
                     {alumno.nombreAlumno}
                   </TableCell>
                   <TableCell
                     sx={{
                       whiteSpace: "nowrap",
-                      fontSize: "0.92rem",
+                      fontSize: "0.9rem",
                       letterSpacing: "1px",
-                      verticalAlign: "middle",
+                      color: "#cccccc",
                     }}
                   >
                     {alumno.rutAlumno || "-"}
                   </TableCell>
-                  <TableCell sx={{ fontSize: "0.92rem" }}>
+                  <TableCell
+                    sx={{
+                      fontSize: "0.9rem",
+                      color: "#cccccc",
+                    }}
+                  >
                     {alumno.telefonoAlumno || "-"}
                   </TableCell>
-                  <TableCell sx={{ fontSize: "0.92rem" }}>
+                  <TableCell
+                    sx={{
+                      fontSize: "0.9rem",
+                      color: "#cccccc",
+                    }}
+                  >
                     {alumno.curso || "-"}
                   </TableCell>
                   <TableCell
                     sx={{
-                      fontSize: "0.92rem",
+                      fontSize: "0.9rem",
+                      color: "#cccccc",
                       display: { xs: "none", sm: "table-cell" },
                     }}
                   >
@@ -431,7 +600,8 @@ function AlumnosList() {
                   </TableCell>
                   <TableCell
                     sx={{
-                      fontSize: "0.92rem",
+                      fontSize: "0.9rem",
+                      color: "#cccccc",
                       display: { xs: "none", sm: "table-cell" },
                     }}
                   >
@@ -440,9 +610,9 @@ function AlumnosList() {
                   <TableCell
                     sx={{
                       whiteSpace: "nowrap",
-                      fontSize: "0.92rem",
+                      fontSize: "0.9rem",
                       letterSpacing: "1px",
-                      verticalAlign: "middle",
+                      color: "#cccccc",
                       display: { xs: "none", sm: "table-cell" },
                     }}
                   >
@@ -453,34 +623,49 @@ function AlumnosList() {
                       sx={{ display: "flex", justifyContent: "center", gap: 1 }}
                     >
                       <IconButton
-                        color="info"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedAlumno(alumno);
                           setOpenFicha(true);
                           setTabIndex(0);
                         }}
-                        sx={{ p: 1 }}
+                        sx={{
+                          p: 1,
+                          color: "#2196f3",
+                          "&:hover": {
+                            backgroundColor: "rgba(33, 150, 243, 0.1)",
+                          },
+                        }}
                       >
                         <PersonIcon />
                       </IconButton>
                       <IconButton
-                        color="primary"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEdit(alumno);
                         }}
-                        sx={{ p: 1 }}
+                        sx={{
+                          p: 1,
+                          color: "#2196f3",
+                          "&:hover": {
+                            backgroundColor: "rgba(33, 150, 243, 0.1)",
+                          },
+                        }}
                       >
                         <EditIcon />
                       </IconButton>
                       <IconButton
-                        color="error"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDelete(alumno);
                         }}
-                        sx={{ p: 1 }}
+                        sx={{
+                          p: 1,
+                          color: "#f44336",
+                          "&:hover": {
+                            backgroundColor: "rgba(244, 67, 54, 0.1)",
+                          },
+                        }}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -492,6 +677,8 @@ function AlumnosList() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Formulario de agregar/editar alumno */}
       {showForm && (
         <AlumnoForm
           initialData={editingAlumno}
@@ -507,10 +694,10 @@ function AlumnosList() {
         scroll="paper"
         PaperProps={{
           sx: {
-            borderRadius: 6,
-            background: "#fff",
-            color: "#222",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+            borderRadius: 3,
+            background: "#2a2a2a",
+            color: "#ffffff",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
             minHeight: 520,
             px: { xs: 2, md: 6 },
             py: { xs: 2, md: 4 },
@@ -521,35 +708,40 @@ function AlumnosList() {
           sx={{
             fontWeight: "bold",
             fontSize: 28,
-            color: "#43a047",
+            color: "#2196f3",
             pb: 0,
             display: "flex",
             alignItems: "center",
             gap: 1,
+            backgroundColor: "#2a2a2a",
           }}
         >
-          <PersonIcon sx={{ fontSize: 32, color: "#43a047", mr: 1 }} />
+          <PersonIcon sx={{ fontSize: 32, color: "#2196f3", mr: 1 }} />
           Ficha del Alumno
         </DialogTitle>
         <DialogContent
           dividers
           sx={{
-            background: "#fff",
+            background: "#2a2a2a",
             px: { xs: 2, md: 6 },
             py: { xs: 2, md: 4 },
             maxHeight: "65vh",
             minHeight: "500px",
             overflowY: "auto",
             borderRadius: 4,
-            boxShadow: "0 4px 24px rgba(67,160,71,0.10)",
+            borderColor: "#444444",
+            boxShadow: "0 4px 24px rgba(33,150,243,0.10)",
             "&::-webkit-scrollbar": {
               width: "8px",
-              background: "#d5ccccff",
+              background: "#333333",
               borderRadius: "8px",
             },
             "&::-webkit-scrollbar-thumb": {
-              background: "#fefdfdff",
+              background: "#555555",
               borderRadius: "8px",
+              "&:hover": {
+                background: "#666666",
+              },
             },
           }}
         >
@@ -565,8 +757,8 @@ function AlumnosList() {
                   sx={{
                     width: 72,
                     height: 72,
-                    bgcolor: "#e8f5e9",
-                    color: "#43a047",
+                    bgcolor: "#2196f3",
+                    color: "#ffffff",
                     fontSize: 32,
                     boxShadow: 2,
                   }}
@@ -578,11 +770,11 @@ function AlumnosList() {
                 <Box>
                   <Typography
                     variant="h5"
-                    sx={{ fontWeight: "bold", color: "#43a047" }}
+                    sx={{ fontWeight: "bold", color: "#2196f3" }}
                   >
                     {selectedAlumno.nombreAlumno}
                   </Typography>
-                  <Typography sx={{ color: "#666", fontSize: 16 }}>
+                  <Typography sx={{ color: "#cccccc", fontSize: 16 }}>
                     {selectedAlumno.curso || "-"} &bull;{" "}
                     {selectedAlumno.tipoCurso || "-"}
                   </Typography>
@@ -595,7 +787,18 @@ function AlumnosList() {
                 onChange={(e, newValue) => setTabIndex(newValue)}
                 textColor="primary"
                 indicatorColor="primary"
-                sx={{ mb: 2 }}
+                sx={{ 
+                  mb: 2,
+                  "& .MuiTab-root": {
+                    color: "#aaaaaa",
+                    "&.Mui-selected": {
+                      color: "#2196f3",
+                    },
+                  },
+                  "& .MuiTabs-indicator": {
+                    backgroundColor: "#2196f3",
+                  },
+                }}
                 variant="scrollable"
                 scrollButtons="auto"
               >
@@ -608,40 +811,40 @@ function AlumnosList() {
                 <Box>
                   <Typography
                     variant="subtitle1"
-                    sx={{ color: "#43a047", fontWeight: "bold", mb: 2 }}
+                    sx={{ color: "#2196f3", fontWeight: "bold", mb: 2 }}
                   >
                     Datos Personales
                   </Typography>
                   <Grid container spacing={4}>
                     <Grid item xs={12} sm={6}>
-                      <Typography sx={{ mb: 2 }}>
+                      <Typography sx={{ mb: 2, color: "#ffffff" }}>
                         <strong>RUT:</strong> {selectedAlumno.rutAlumno || "-"}
                       </Typography>
-                      <Typography sx={{ mb: 2 }}>
+                      <Typography sx={{ mb: 2, color: "#ffffff" }}>
                         <strong>Dirección:</strong>{" "}
                         {selectedAlumno.direccion || "-"}
                       </Typography>
-                      <Typography sx={{ mb: 2 }}>
+                      <Typography sx={{ mb: 2, color: "#ffffff" }}>
                         <strong>Teléfono:</strong>{" "}
                         {selectedAlumno.telefonoAlumno || "-"}
                       </Typography>
-                      <Typography sx={{ mb: 2 }}>
+                      <Typography sx={{ mb: 2, color: "#ffffff" }}>
                         <strong>Email:</strong> {selectedAlumno.email || "-"}
                       </Typography>
-                      <Typography sx={{ mb: 2 }}>
+                      <Typography sx={{ mb: 2, color: "#ffffff" }}>
                         <strong>RRSS:</strong> {selectedAlumno.rrss || "-"}
                       </Typography>
-                      <Typography sx={{ mb: 2 }}>
+                      <Typography sx={{ mb: 2, color: "#ffffff" }}>
                         <strong>Fecha de ingreso:</strong>{" "}
                         {formatFecha(selectedAlumno.fechaIngreso)}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                      <Typography sx={{ mb: 2 }}>
+                      <Typography sx={{ mb: 2, color: "#ffffff" }}>
                         <strong>Modalidad Clase:</strong>{" "}
                         {selectedAlumno.modalidadClase || "-"}
                       </Typography>
-                      <Typography sx={{ mb: 2 }}>
+                      <Typography sx={{ mb: 2, color: "#ffffff" }}>
                         <strong>Clase:</strong> {selectedAlumno.clase || "-"}
                       </Typography>
                     </Grid>
@@ -653,50 +856,50 @@ function AlumnosList() {
                 <Box>
                   <Typography
                     variant="subtitle1"
-                    sx={{ color: "#43a047", fontWeight: "bold", mb: 2 }}
+                    sx={{ color: "#2196f3", fontWeight: "bold", mb: 2 }}
                   >
                     Otros Datos
                   </Typography>
                   <Box sx={{ mb: 2 }}>
-                    <Typography sx={{ mb: 1 }}>
+                    <Typography sx={{ mb: 1, color: "#ffffff" }}>
                       <strong>Conocimientos Previos:</strong>{" "}
                       {selectedAlumno.conocimientosPrevios ? "Sí" : "No"}
                     </Typography>
-                    <Typography sx={{ mb: 1 }}>
+                    <Typography sx={{ mb: 1, color: "#ffffff" }}>
                       <strong>Instrumentos:</strong>{" "}
                       {Array.isArray(selectedAlumno.instrumentos)
                         ? selectedAlumno.instrumentos.join(", ")
                         : selectedAlumno.instrumentos || "-"}
                     </Typography>
-                    <Typography sx={{ mb: 1 }}>
+                    <Typography sx={{ mb: 1, color: "#ffffff" }}>
                       <strong>Estilos Musicales:</strong>{" "}
                       {Array.isArray(selectedAlumno.estilosMusicales)
                         ? selectedAlumno.estilosMusicales.join(", ")
                         : selectedAlumno.estilosMusicales || "-"}
                     </Typography>
-                    <Typography sx={{ mb: 1 }}>
+                    <Typography sx={{ mb: 1, color: "#ffffff" }}>
                       <strong>Otro Estilo:</strong>{" "}
                       {selectedAlumno.otroEstilo || "-"}
                     </Typography>
-                    <Typography sx={{ mb: 1 }}>
+                    <Typography sx={{ mb: 1, color: "#ffffff" }}>
                       <strong>Referente Musical:</strong>{" "}
                       {selectedAlumno.referenteMusical || "-"}
                     </Typography>
-                    <Typography sx={{ mb: 1 }}>
+                    <Typography sx={{ mb: 1, color: "#ffffff" }}>
                       <strong>Condición de Aprendizaje:</strong>{" "}
                       {selectedAlumno.condicionAprendizaje ? "Sí" : "No"}
                     </Typography>
-                    <Typography sx={{ mb: 1 }}>
+                    <Typography sx={{ mb: 1, color: "#ffffff" }}>
                       <strong>Condición Médica:</strong>{" "}
                       {selectedAlumno.condicionMedica ? "Sí" : "No"}
                     </Typography>
                     {selectedAlumno.condicionMedica && (
-                      <Typography sx={{ mb: 1 }}>
+                      <Typography sx={{ mb: 1, color: "#ffffff" }}>
                         <strong>Detalle:</strong>{" "}
                         {selectedAlumno.detalleCondicionMedica || "-"}
                       </Typography>
                     )}
-                    <Typography sx={{ mb: 1 }}>
+                    <Typography sx={{ mb: 1, color: "#ffffff" }}>
                       <strong>Observaciones:</strong>{" "}
                       {selectedAlumno.observaciones || "-"}
                     </Typography>
@@ -708,22 +911,22 @@ function AlumnosList() {
                 <Box>
                   <Typography
                     variant="subtitle1"
-                    sx={{ color: "#43a047", fontWeight: "bold", mb: 2 }}
+                    sx={{ color: "#2196f3", fontWeight: "bold", mb: 2 }}
                   >
                     Datos de Apoderado
                   </Typography>
                   <Grid container spacing={0}>
                     <Grid item xs={12} sm={6}>
                       <Box sx={{ mb: 2 }}>
-                        <Typography sx={{ mb: 1 }}>
+                        <Typography sx={{ mb: 1, color: "#ffffff" }}>
                           <strong>Nombre Apoderado:</strong>{" "}
                           {selectedAlumno.nombreApoderado || "-"}
                         </Typography>
-                        <Typography sx={{ mb: 1 }}>
+                        <Typography sx={{ mb: 1, color: "#ffffff" }}>
                           <strong>RUT Apoderado:</strong>{" "}
                           {selectedAlumno.rutApoderado || "-"}
                         </Typography>
-                        <Typography sx={{ mb: 1 }}>
+                        <Typography sx={{ mb: 1, color: "#ffffff" }}>
                           <strong>Teléfono Apoderado:</strong>{" "}
                           {selectedAlumno.telefonoApoderado || "-"}
                         </Typography>
@@ -735,10 +938,10 @@ function AlumnosList() {
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ background: "#fff", px: 6, py: 3 }}>
+        <DialogActions sx={{ background: "#3a3a3a", px: 6, py: 3, borderTop: "1px solid #444444" }}>
           <Button
             variant="contained"
-            color="success"
+            color="primary"
             onClick={() => {
               const doc = new jsPDF("p", "mm", "a4");
               doc.setFontSize(14);
@@ -904,29 +1107,44 @@ function AlumnosList() {
           </Button>
           <Button
             onClick={() => setOpenFicha(false)}
-            color="info"
+            variant="outlined"
             sx={{
               fontWeight: "bold",
               px: 3,
               py: 1,
               fontSize: 16,
               borderRadius: 2,
+              borderColor: "#2196f3",
+              color: "#2196f3",
+              "&:hover": {
+                backgroundColor: "rgba(33, 150, 243, 0.1)",
+                borderColor: "#1976d2",
+              },
             }}
           >
             CERRAR
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Notificación de éxito */}
       <Snackbar
         open={showSuccess}
-        autoHideDuration={3000}
+        autoHideDuration={4000}
         onClose={() => setShowSuccess(false)}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <MuiAlert
           onClose={() => setShowSuccess(false)}
           severity="success"
-          sx={{ width: "100%" }}
+          variant="filled"
+          sx={{
+            width: "100%",
+            fontWeight: "500",
+            "& .MuiAlert-icon": {
+              color: "#ffffff",
+            },
+          }}
         >
           {successMsg}
         </MuiAlert>

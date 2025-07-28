@@ -3,6 +3,39 @@ import { formatearRut } from "./utils/rutUtils";
 import React from "react";
 import { TextField, Box } from "@mui/material";
 
+// Estilos oscuros para los TextField
+const darkTextFieldStyles = {
+  "& .MuiOutlinedInput-root": {
+    backgroundColor: "#333333",
+    color: "#ffffff",
+    "& fieldset": {
+      borderColor: "#555555",
+    },
+    "&:hover fieldset": {
+      borderColor: "#2196f3",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#2196f3",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    color: "#aaaaaa",
+    "&.Mui-focused": {
+      color: "#2196f3",
+    },
+  },
+  "& .MuiInputBase-input::placeholder": {
+    color: "#aaaaaa",
+    opacity: 1,
+  },
+  "& .MuiFormHelperText-root": {
+    color: "#aaaaaa",
+    "&.Mui-error": {
+      color: "#f44336",
+    },
+  },
+};
+
 function ApoderadoDatos({ values, errors, onChange, gridField }) {
   if (gridField === "nombreApoderado") {
     return (
@@ -17,6 +50,7 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
         variant="outlined"
         error={!!errors.nombreApoderado}
         helperText={errors.nombreApoderado}
+        sx={darkTextFieldStyles}
       />
     );
   }
@@ -27,8 +61,8 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
       onChange({
         target: {
           name: "rutApoderado",
-          value: formatted
-        }
+          value: formatted,
+        },
       });
     };
     return (
@@ -41,14 +75,19 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
         margin="normal"
         variant="outlined"
         error={!!errors.rutApoderado}
-        helperText={errors.rutApoderado ? 'El RUT no es válido. Debe tener puntos y guion.' : ''}
+        helperText={
+          errors.rutApoderado
+            ? "El RUT no es válido. Debe tener puntos y guion."
+            : ""
+        }
         placeholder="Ejemplo: 12.345.678-9"
+        sx={darkTextFieldStyles}
       />
     );
   }
   if (gridField === "telefonoApoderado") {
     return (
-      <Box sx={{ display: 'flex', gap: 1 }}>
+      <Box sx={{ display: "flex", gap: 1 }}>
         <TextField
           label="Código País"
           name="codigoPaisApoderado"
@@ -56,7 +95,7 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
           onChange={onChange}
           margin="normal"
           variant="outlined"
-          sx={{ width: 100 }}
+          sx={{ ...darkTextFieldStyles, width: 100 }}
           inputProps={{ maxLength: 4 }}
         />
         <TextField
@@ -72,6 +111,7 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
           error={!!errors.telefonoApoderado}
           helperText={errors.telefonoApoderado}
           placeholder="Ejemplo: 912345678"
+          sx={darkTextFieldStyles}
         />
       </Box>
     );
@@ -88,6 +128,7 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
         margin="normal"
         variant="outlined"
         placeholder="Ejemplo: Av. Siempre Viva 123"
+        sx={darkTextFieldStyles}
       />
     );
   }
@@ -104,10 +145,17 @@ function ApoderadoDatos({ values, errors, onChange, gridField }) {
         error={!!errors.emailApoderado}
         helperText={errors.emailApoderado}
         placeholder="Ejemplo: apoderado@email.com"
+        sx={darkTextFieldStyles}
       />
     );
   }
-  if (gridField === "rutAlumno" || gridField === "edadAlumno" || gridField === "telefonoAlumno" || gridField === "email" || gridField === "fechaIngreso") {
+  if (
+    gridField === "rutAlumno" ||
+    gridField === "edadAlumno" ||
+    gridField === "telefonoAlumno" ||
+    gridField === "email" ||
+    gridField === "fechaIngreso"
+  ) {
     // Para mantener la simetría, si la columna de apoderado no tiene campo equivalente, retorna un div vacío
     return <div />;
   }

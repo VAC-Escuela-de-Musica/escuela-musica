@@ -6,6 +6,39 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import React from "react";
 import { TextField, Box, InputAdornment } from "@mui/material";
 
+// Estilos oscuros para los TextField
+const darkTextFieldStyles = {
+  "& .MuiOutlinedInput-root": {
+    backgroundColor: "#333333",
+    color: "#ffffff",
+    "& fieldset": {
+      borderColor: "#555555",
+    },
+    "&:hover fieldset": {
+      borderColor: "#2196f3",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#2196f3",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    color: "#aaaaaa",
+    "&.Mui-focused": {
+      color: "#2196f3",
+    },
+  },
+  "& .MuiInputBase-input::placeholder": {
+    color: "#aaaaaa",
+    opacity: 1,
+  },
+  "& .MuiFormHelperText-root": {
+    color: "#aaaaaa",
+    "&.Mui-error": {
+      color: "#f44336",
+    },
+  },
+};
+
 function AlumnoDatos({ values, errors, onChange, gridField }) {
   if (gridField === "nombreAlumno") {
     return (
@@ -20,7 +53,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
         variant="outlined"
         error={!!errors.nombreAlumno}
         helperText={errors.nombreAlumno}
-        sx={{ mb: 0 }}
+        sx={{ ...darkTextFieldStyles, mb: 0 }}
       />
     );
   }
@@ -52,7 +85,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
             : ""
         }
         placeholder="Ejemplo: 12.345.678-9"
-        sx={{ mb: 0 }}
+        sx={{ ...darkTextFieldStyles, mb: 0 }}
       />
     );
   }
@@ -72,7 +105,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
         error={!!errors.edadAlumno}
         helperText={errors.edadAlumno}
         placeholder="Edad entre 1 y 99 años"
-        sx={{ mb: 0 }}
+        sx={{ ...darkTextFieldStyles, mb: 0 }}
         onWheel={(e) => e.target.blur()} // <-- Agrega esta línea
       />
     );
@@ -87,7 +120,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
           onChange={onChange}
           margin="normal"
           variant="outlined"
-          sx={{ width: 100, mb: 0, minWidth: 0 }}
+          sx={{ ...darkTextFieldStyles, width: 100, mb: 0, minWidth: 0 }}
           inputProps={{ maxLength: 4 }}
           fullWidth={false}
         />
@@ -103,7 +136,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
           error={!!errors.telefonoAlumno}
           helperText={errors.telefonoAlumno}
           placeholder="Ejemplo: 912345678"
-          sx={{ mb: 0, minWidth: 0 }}
+          sx={{ ...darkTextFieldStyles, mb: 0, minWidth: 0 }}
         />
       </Box>
     );
@@ -121,7 +154,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
         error={!!errors.email}
         helperText={errors.email}
         placeholder="Ejemplo: alumno@email.com"
-        sx={{ mb: 0 }}
+        sx={{ ...darkTextFieldStyles, mb: 0 }}
       />
     );
   }
@@ -138,7 +171,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
         error={!!errors.direccion}
         helperText={errors.direccion}
         placeholder="Ejemplo: Calle 123, Ciudad"
-        sx={{ mb: 0 }}
+        sx={{ ...darkTextFieldStyles, mb: 0 }}
       />
     );
   }
@@ -205,7 +238,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
         variant="outlined"
         error={!!errors.rrss}
         helperText={errors.rrss}
-        sx={{ mb: 0 }}
+        sx={{ ...darkTextFieldStyles, mb: 0 }}
       />
     );
   }
@@ -227,7 +260,7 @@ function AlumnoDatos({ values, errors, onChange, gridField }) {
           "Mínimo 6 caracteres. El alumno podrá cambiarla luego."
         }
         placeholder="Contraseña segura"
-        sx={{ mb: 0 }}
+        sx={{ ...darkTextFieldStyles, mb: 0 }}
       />
     );
   }

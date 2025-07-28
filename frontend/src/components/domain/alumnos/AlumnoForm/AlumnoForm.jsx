@@ -110,6 +110,10 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
         "email",
         "fechaIngreso",
       ];
+      // Solo incluir password si es un alumno nuevo o si se está mostrando el campo de cambio de contraseña
+      if (!safeInitialData._id || showPasswordField) {
+        requiredFields.push("password");
+      }
     }
     if (activeStep === 1) {
       requiredFields = ["nombreApoderado", "rutApoderado", "telefonoApoderado"];
@@ -118,7 +122,7 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
       // Puedes agregar campos obligatorios si lo deseas
     }
     if (activeStep === 3) {
-      requiredFields = ["curso", "tipoCurso", "modalidadClase"];
+      requiredFields = ["curso", "tipoCurso", "modalidadClase", "dia", "hora"];
     }
     let errors = {};
     requiredFields.forEach((key) => {
@@ -212,13 +216,64 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     const telefonoApoderado =
       (form.codigoPaisApoderado || "") + (form.telefonoApoderado || "");
 
+    // Convertir la fecha al formato ISO string para el servidor
+    const fechaIngresoFormatted =
+      form.fechaIngreso instanceof Date
+        ? form.fechaIngreso.toISOString().split("T")[0] // Formato YYYY-MM-DD
+        : form.fechaIngreso;
+
     const dataToSend = {
       ...form,
       clase,
       telefonoAlumno,
       telefonoApoderado,
-      fechaIngreso: form.fechaIngreso,
+      fechaIngreso: fechaIngresoFormatted,
     };
+
+    // Limpiar campos vacíos que pueden causar problemas
+    if (!dataToSend.rrss) dataToSend.rrss = "";
+    if (!dataToSend.direccion) dataToSend.direccion = "";
+    if (!dataToSend.otroEstilo) dataToSend.otroEstilo = "";
+    if (!dataToSend.referenteMusical) dataToSend.referenteMusical = "";
+    if (!dataToSend.detalleCondicionAprendizaje)
+      dataToSend.detalleCondicionAprendizaje = "";
+    if (!dataToSend.detalleCondicionMedica)
+      dataToSend.detalleCondicionMedica = "";
+    if (!dataToSend.observaciones) dataToSend.observaciones = "";
+    if (!dataToSend.emailApoderado) dataToSend.emailApoderado = "";
+
+    // Asegurar que los arrays no estén vacíos o tengan elementos vacíos
+    if (
+      !Array.isArray(dataToSend.instrumentos) ||
+      dataToSend.instrumentos.length === 0
+    ) {
+      dataToSend.instrumentos = [];
+    } else {
+      dataToSend.instrumentos = dataToSend.instrumentos.filter(
+        (i) => i.trim() !== ""
+      );
+    }
+
+    if (
+      !Array.isArray(dataToSend.estilosMusicales) ||
+      dataToSend.estilosMusicales.length === 0
+    ) {
+      dataToSend.estilosMusicales = [];
+    } else {
+      dataToSend.estilosMusicales = dataToSend.estilosMusicales.filter(
+        (e) => e.trim() !== ""
+      );
+    }
+
+    // Asegurar que los valores booleanos estén correctamente establecidos
+    dataToSend.conocimientosPrevios = Boolean(dataToSend.conocimientosPrevios);
+    dataToSend.condicionAprendizaje = Boolean(dataToSend.condicionAprendizaje);
+    dataToSend.condicionMedica = Boolean(dataToSend.condicionMedica);
+
+    // Eliminar campos que no están en el schema
+    delete dataToSend.codigoPaisAlumno;
+    delete dataToSend.codigoPaisApoderado;
+
     if (
       safeInitialData._id &&
       (!showPasswordField || form.password === "********")
@@ -229,7 +284,23 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
     try {
       await onSubmit(dataToSend);
     } catch (err) {
-      setError(err.message || "Error al guardar el alumno");
+      let errorMessage = "Error al guardar el alumno";
+
+      if (err.response?.data) {
+        if (typeof err.response.data === "string") {
+          errorMessage = err.response.data;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        } else {
+          errorMessage = JSON.stringify(err.response.data);
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
       setShowError(true);
     }
   };
@@ -297,6 +368,36 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
                     error={!!fieldErrors.fechaIngreso}
                     helperText={fieldErrors.fechaIngreso}
                     fullWidth
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "rgba(51, 51, 51, 1)",
+                        color: "#ffffff",
+                        "& fieldset": {
+                          borderColor: "#555555",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "#2196f3",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#2196f3",
+                        },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#aaaaaa",
+                        "&.Mui-focused": {
+                          color: "#2196f3",
+                        },
+                      },
+                      "& .MuiFormHelperText-root": {
+                        color: "#aaaaaa",
+                        "&.Mui-error": {
+                          color: "#f44336",
+                        },
+                      },
+                      "& .MuiIconButton-root": {
+                        color: "#aaaaaa",
+                      },
+                    }}
                   />
                 )}
               />
@@ -324,9 +425,17 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
             {safeInitialData._id && !showPasswordField && (
               <Button
                 variant="outlined"
-                color="secondary"
                 onClick={() => setShowPasswordField(true)}
-                sx={{ gridColumn: "1 / -1", mt: 1 }}
+                sx={{
+                  gridColumn: "1 / -1",
+                  mt: 1,
+                  borderColor: "#2196f3",
+                  color: "#2196f3",
+                  "&:hover": {
+                    backgroundColor: "rgba(33, 150, 243, 0.1)",
+                    borderColor: "#1976d2",
+                  },
+                }}
               >
                 Cambiar contraseña
               </Button>
@@ -417,14 +526,64 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
       scroll="paper"
       disableEnforceFocus
       disableAutoFocus
+      PaperProps={{
+        sx: {
+          backgroundColor: "rgba(42, 42, 42, 1)",
+          color: "rgba(42, 42, 42, 1))",
+          borderRadius: 3,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+        },
+      }}
     >
-      <DialogTitle>
+      <DialogTitle
+        sx={{
+          backgroundColor: "#3a3a3a",
+          color: "#2196f3",
+          fontWeight: "bold",
+          fontSize: "1.5rem",
+          borderBottom: "1px solid #444444",
+        }}
+      >
         {safeInitialData && safeInitialData._id
           ? "Editar Alumno"
           : "Agregar Alumno"}
       </DialogTitle>
-      <DialogContent dividers>
-        <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3 }}>
+      <DialogContent
+        dividers
+        sx={{
+          backgroundColor: "#2a2a2a",
+          borderColor: "#444444",
+        }}
+      >
+        <Stepper
+          activeStep={activeStep}
+          alternativeLabel
+          sx={{
+            mb: 3,
+            "& .MuiStepLabel-label": {
+              color: "#ffffff",
+              "&.Mui-active": {
+                color: "#2196f3",
+                fontWeight: "bold",
+              },
+              "&.Mui-completed": {
+                color: "#2196f3",
+              },
+            },
+            "& .MuiStepIcon-root": {
+              color: "#555555",
+              "&.Mui-active": {
+                color: "#2196f3",
+              },
+              "&.Mui-completed": {
+                color: "#2196f3",
+              },
+            },
+            "& .MuiStepConnector-line": {
+              borderColor: "#555555",
+            },
+          }}
+        >
           {steps.map((label) => (
             <Step key={label}>
               <StepLabel>{label}</StepLabel>
@@ -441,7 +600,26 @@ function AlumnoForm({ initialData = {}, onSubmit, onClose }) {
           {renderStepContent()}
         </Box>
       </DialogContent>
-      <DialogActions>
+      <DialogActions
+        sx={{
+          backgroundColor: "#3a3a3a",
+          borderTop: "1px solid #444444",
+          "& .MuiButton-outlined": {
+            borderColor: "#2196f3",
+            color: "#2196f3",
+            "&:hover": {
+              backgroundColor: "rgba(33, 150, 243, 0.1)",
+              borderColor: "#1976d2",
+            },
+          },
+          "& .MuiButton-text": {
+            color: "#ffffff",
+            "&:hover": {
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
+            },
+          },
+        }}
+      >
         {activeStep > 0 && (
           <Button onClick={handleBack} variant="outlined">
             Anterior
