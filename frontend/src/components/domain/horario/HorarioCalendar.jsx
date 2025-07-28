@@ -54,6 +54,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nombresProfesores, setNombresProfesores] = useState({});
   const [currentTitle, setCurrentTitle] = useState('');
+  const [currentView, setCurrentView] = useState('timeGridWeek');
   const calendarRef = useRef(null);
 
   const obtenerNombreProfesor = async (id) => {
@@ -204,6 +205,7 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
   const handleViewChange = (view) => {
     const calendarApi = calendarRef.current.getApi();
     calendarApi.changeView(view);
+    setCurrentView(view); // Update the state to reflect the new view
     setTimeout(updateCalendarTitle, 50);
   };
 
@@ -213,10 +215,13 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     headerToolbar: false,
     events: eventos,
     eventClick: handleEventClick,
-    height: 'auto',
-    aspectRatio: 1.35,
+    height: 750,
+    aspectRatio: 1.0,
     slotMinTime: '08:00:00',
     slotMaxTime: '22:00:00',
+    slotDuration: '01:00:00',
+    slotLabelInterval: '01:00:00',
+    slotHeight: 60,
     allDaySlot: false,
     nowIndicator: true,
     editable: false,
@@ -232,7 +237,8 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
     slotLabelFormat: {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false,
+      omitZeroMinute: false
     },
     eventTimeFormat: {
       hour: '2-digit',
@@ -240,7 +246,12 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
       hour12: false
     },
     datesSet: updateCalendarTitle,
-    viewDidMount: updateCalendarTitle
+    viewDidMount: updateCalendarTitle,
+    dayHeaderFormat: { weekday: 'long', day: 'numeric', month: 'short' },
+    slotLabelClassNames: ['custom-time-label'],
+    dayMaxEvents: false,
+    moreLinkClick: 'popover',
+    expandRows: true
   };
 
   if (loading) {
@@ -337,11 +348,32 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
           >
             Hoy
           </Button>
+
+          {/* Leyenda de colores al lado del botón HOY */}
+          <Box display="flex" gap={1} ml={2}>
+            <Chip 
+              label="Programada" 
+              size="small"
+              sx={{ backgroundColor: '#2196F3', color: 'white' }} 
+            />
+            {!isStudent() && (
+              <Chip 
+                label="Cancelada" 
+                size="small"
+                sx={{ backgroundColor: '#f44336', color: 'white' }} 
+              />
+            )}
+            <Chip 
+              label="Completada" 
+              size="small"
+              sx={{ backgroundColor: '#4caf50', color: 'white' }} 
+            />
+          </Box>
         </Box>
 
         {/* Vista toggles */}
         <ToggleButtonGroup
-          value="timeGridWeek"
+          value={currentView}
           exclusive
           onChange={(e, newValue) => {
             if (newValue) handleViewChange(newValue);
@@ -382,33 +414,12 @@ const HorarioCalendar = ({ viewMode, handleViewModeChange, alumnoId = null }) =>
         </Box>
       )}
 
-      {/* Leyenda de colores */}
-      <Box display="flex" gap={1} mb={2}>
-        <Chip 
-          label="Programada" 
-          size="small"
-          sx={{ backgroundColor: '#2196F3', color: 'white' }} 
-        />
-        {!isStudent() && (
-          <Chip 
-            label="Cancelada" 
-            size="small"
-            sx={{ backgroundColor: '#f44336', color: 'white' }} 
-          />
-        )}
-        <Chip 
-          label="Completada" 
-          size="small"
-          sx={{ backgroundColor: '#4caf50', color: 'white' }} 
-        />
-      </Box>
-
       {/* Calendario */}
       <Box 
         className="calendar-container"
         sx={{
           mt: 2,
-          minHeight: '600px',
+          minHeight: '800px',
         }}
       >
         <FullCalendar
