@@ -114,7 +114,7 @@ const ClasesCanceladas = ({ setActiveModule = null }) => {
   }, [filtroActivo]);
 
   return (
-    <Box sx={{ color: "white" }}>
+    <Box sx={{ color: "white", marginLeft: 3, marginRight: 3 }}>
       <Typography variant="h4" gutterBottom>
         Clases Canceladas
       </Typography>
