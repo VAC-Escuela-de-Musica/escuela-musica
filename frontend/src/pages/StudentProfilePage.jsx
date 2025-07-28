@@ -18,14 +18,18 @@ import {
   Breadcrumbs,
   Link,
   Button,
-  Snackbar
+  Snackbar,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   Person as PersonIcon,
   CalendarToday as CalendarTodayIcon,
   Lock as LockIcon,
   CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon
+  Error as ErrorIcon,
+  Home as HomeIcon,
+  ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext.jsx';
 import { API_ENDPOINTS, API_HEADERS } from '../config/api.js';
@@ -38,6 +42,8 @@ const StudentProfilePage = () => {
   const [error, setError] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
     if (user?.id) {
@@ -74,7 +80,7 @@ const StudentProfilePage = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
           <CircularProgress />
         </Box>
@@ -83,19 +89,45 @@ const StudentProfilePage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
+      <Box sx={{ mb: { xs: 2, md: 4 } }}>
+        <Typography 
+          variant={isMobile ? "h5" : "h4"} 
+          component="h1" 
+          gutterBottom 
+          sx={{ 
+            fontWeight: 600, 
+            color: 'text.primary',
+            textAlign: { xs: 'center', md: 'left' }
+          }}
+        >
           Mi Perfil de Estudiante
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography 
+          variant="body1" 
+          color="text.secondary" 
+          sx={{ 
+            mb: 2,
+            textAlign: { xs: 'center', md: 'left' }
+          }}
+        >
           Información personal de solo lectura
         </Typography>
         
         {/* Breadcrumbs */}
-        <Breadcrumbs sx={{ mb: 3 }}>
-          <Link color="inherit" href="/estudiante">
+        <Breadcrumbs sx={{ mb: 3, justifyContent: { xs: 'center', md: 'flex-start' } }}>
+          <Link 
+            color="inherit" 
+            href="/estudiante"
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              textDecoration: 'none',
+              '&:hover': { textDecoration: 'underline' }
+            }}
+          >
+            <HomeIcon sx={{ fontSize: 16, mr: 0.5 }} />
             Inicio
           </Link>
           <Typography color="text.primary">Mi Perfil</Typography>
@@ -108,26 +140,35 @@ const StudentProfilePage = () => {
         </Alert>
       )}
 
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, md: 3 }}>
         {/* Información principal */}
         <Grid item xs={12} md={4}>
           <Card sx={{ height: 'fit-content' }}>
-            <CardContent sx={{ textAlign: 'center', py: 4 }}>
+            <CardContent sx={{ 
+              textAlign: 'center', 
+              py: { xs: 3, md: 4 },
+              px: { xs: 2, md: 3 }
+            }}>
               <Avatar
                 sx={{
-                  width: 120,
-                  height: 120,
+                  width: { xs: 100, sm: 120 },
+                  height: { xs: 100, sm: 120 },
                   mx: 'auto',
                   mb: 2,
                   bgcolor: 'primary.main',
-                  fontSize: '3rem',
+                  fontSize: { xs: '2.5rem', sm: '3rem' },
                   fontWeight: 'bold'
                 }}
               >
                 {getInitials(studentData?.nombreAlumno || user?.username)}
               </Avatar>
               
-              <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 600 }}>
+              <Typography 
+                variant={isMobile ? "h6" : "h5"} 
+                component="h2" 
+                gutterBottom 
+                sx={{ fontWeight: 600 }}
+              >
                 {studentData?.nombreAlumno || user?.username || 'Estudiante'}
               </Typography>
               
@@ -138,7 +179,7 @@ const StudentProfilePage = () => {
                 sx={{ mb: 2 }}
               />
               
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 Miembro desde {new Date(user?.createdAt || Date.now()).toLocaleDateString()}
               </Typography>
               
@@ -146,6 +187,7 @@ const StudentProfilePage = () => {
                 variant="outlined"
                 startIcon={<LockIcon />}
                 onClick={() => setChangePasswordDialogOpen(true)}
+                fullWidth={isMobile}
                 sx={{ 
                   mt: 1,
                   borderColor: 'primary.main',
@@ -166,31 +208,73 @@ const StudentProfilePage = () => {
         {/* Información personal (solo lectura) */}
         <Grid item xs={12} md={8}>
           <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <Typography 
+                variant={isMobile ? "h6" : "h5"} 
+                gutterBottom 
+                sx={{ 
+                  mb: 3, 
+                  fontWeight: 600,
+                  textAlign: { xs: 'center', md: 'left' }
+                }}
+              >
                 Información Personal
               </Typography>
               
-              <List>
-                <ListItem>
-                  <ListItemIcon>
+              <List sx={{ p: 0 }}>
+                <ListItem sx={{ 
+                  px: 0, 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  alignItems: { xs: 'flex-start', sm: 'center' },
+                  textAlign: { xs: 'center', sm: 'left' }
+                }}>
+                  <ListItemIcon sx={{ 
+                    minWidth: { xs: 'auto', sm: 40 },
+                    mb: { xs: 1, sm: 0 }
+                  }}>
                     <PersonIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText
                     primary="Nombre Completo"
                     secondary={studentData?.nombreAlumno || 'No especificado'}
+                    primaryTypographyProps={{ 
+                      variant: 'body2', 
+                      fontWeight: 600,
+                      textAlign: { xs: 'center', sm: 'left' }
+                    }}
+                    secondaryTypographyProps={{ 
+                      variant: 'body1',
+                      textAlign: { xs: 'center', sm: 'left' }
+                    }}
                   />
                 </ListItem>
                 
-                <Divider />
+                <Divider sx={{ my: 2 }} />
                 
-                <ListItem>
-                  <ListItemIcon>
+                <ListItem sx={{ 
+                  px: 0,
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  alignItems: { xs: 'flex-start', sm: 'center' },
+                  textAlign: { xs: 'center', sm: 'left' }
+                }}>
+                  <ListItemIcon sx={{ 
+                    minWidth: { xs: 'auto', sm: 40 },
+                    mb: { xs: 1, sm: 0 }
+                  }}>
                     <CalendarTodayIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText
                     primary="Fecha de Ingreso"
                     secondary={new Date(studentData?.fechaCreacion || user?.createdAt || Date.now()).toLocaleDateString()}
+                    primaryTypographyProps={{ 
+                      variant: 'body2', 
+                      fontWeight: 600,
+                      textAlign: { xs: 'center', sm: 'left' }
+                    }}
+                    secondaryTypographyProps={{ 
+                      variant: 'body1',
+                      textAlign: { xs: 'center', sm: 'left' }
+                    }}
                   />
                 </ListItem>
               </List>
